@@ -1,10 +1,13 @@
 [build]
   base    = "nout/frontend"
   command = "npm run build"
-  publish = "nout/frontend/dist"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
 
 [functions]
-  directory    = "nout/frontend/netlify/functions"
+  directory    = "netlify/functions"
   node_bundler = "esbuild"
 
 [[redirects]]
