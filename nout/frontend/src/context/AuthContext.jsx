@@ -7,6 +7,40 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    if (!user) { setUnreadCount(0); return }
+
+    supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('receiver_id', user.id)
+      .eq('is_read', false)
+      .then(({ count: c }) => setUnreadCount(c ?? 0))
+
+    const channel = supabase
+      .channel(`unread-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${user.id}`,
+      }, () => setUnreadCount(prev => prev + 1))
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${user.id}`,
+      }, (payload) => {
+        if (payload.new.is_read && !payload.old.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1))
+        }
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [user?.id])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -78,7 +112,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user, profile, loading,
       register, login, loginWithGoogle, logout, updateProfile,
-      isAdmin, isModerator,
+      isAdmin, isModerator, unreadCount,
     }}>
       {!loading && children}
     </AuthContext.Provider>

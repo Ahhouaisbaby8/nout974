@@ -1,11 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { useUnreadCount } from '../../hooks/useUnreadCount'
 
 export default function BottomNav() {
-  const { user } = useAuth()
+  const { user, unreadCount: unread } = useAuth()
   const { pathname } = useLocation()
-  const unread = useUnreadCount()
 
   const active = (path) =>
     pathname === path ? 'text-nout-primary' : 'text-gray-400'

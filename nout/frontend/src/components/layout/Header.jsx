@@ -1,12 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
-import { useUnreadCount } from '../../hooks/useUnreadCount'
 
 export default function Header() {
-  const { user, profile, logout, isAdmin } = useAuth()
+  const { user, profile, logout, isAdmin, unreadCount: unread } = useAuth()
   const navigate = useNavigate()
-  const unread = useUnreadCount()
 
   const handleLogout = async () => {
     await logout()
