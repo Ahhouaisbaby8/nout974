@@ -32,6 +32,6 @@ export const isFavorite = async (userId, listingId) => {
     .select('id')
     .eq('user_id', userId)
     .eq('listing_id', listingId)
-    .single()
+    .maybeSingle()
   return !!data
 }

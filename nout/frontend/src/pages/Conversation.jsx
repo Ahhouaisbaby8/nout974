@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { getMessages, sendMessage, markAsRead, subscribeToMessages } from '../services/messages'
 import { getProfile } from '../services/profiles'
 import { supabase } from '../services/supabase'
+import { getAvatarUrl } from '../utils/avatar'
 import { formatRelativeDate } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
@@ -75,9 +76,7 @@ export default function Conversation() {
     }
   }
 
-  const avatarUrl = otherUser?.avatar_url
-    ? supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data.publicUrl
-    : null
+  const avatarUrl = getAvatarUrl(otherUser?.avatar_url)
 
   if (loading) return <div className="flex justify-center py-24"><Spinner size="lg" /></div>
 

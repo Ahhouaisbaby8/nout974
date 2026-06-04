@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getConversations } from '../services/messages'
 import { formatRelativeDate } from '../utils/formatters'
-import { supabase } from '../services/supabase'
+import { getAvatarUrl } from '../utils/avatar'
 
 const WELCOME_KEY = 'nout_welcome_seen'
 
@@ -49,10 +49,6 @@ export default function Messages() {
     setShowWelcome(false)
   }
 
-  const getAvatarUrl = (profile) =>
-    profile?.avatar_url
-      ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
-      : null
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -106,7 +102,7 @@ export default function Messages() {
       ) : (
         <div className="flex flex-col gap-2">
           {conversations.map(({ other, lastMessage, unread }) => {
-            const avatarUrl = getAvatarUrl(other)
+            const avatarUrl = getAvatarUrl(other?.avatar_url)
             const isMine = lastMessage.sender_id === user.id
             return (
               <button

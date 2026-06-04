@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { loadStripe } from '@stripe/stripe-js'
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
 import { useAuth } from '../context/AuthContext'
 import { getListingById, deleteListing } from '../services/listings'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'

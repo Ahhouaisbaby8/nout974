@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getProfile } from '../services/profiles'
 import { getUserListings } from '../services/listings'
-import { supabase } from '../services/supabase'
+import { getAvatarUrl } from '../utils/avatar'
 import { formatRelativeDate } from '../utils/formatters'
 import ListingCard from '../components/ui/ListingCard'
 import Spinner from '../components/ui/Spinner'
@@ -44,9 +44,7 @@ export default function Profile() {
     </div>
   )
 
-  const avatarUrl = profile.avatar_url
-    ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
-    : null
+  const avatarUrl = getAvatarUrl(profile.avatar_url)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">

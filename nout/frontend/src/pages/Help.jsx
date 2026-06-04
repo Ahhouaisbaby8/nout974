@@ -1,9 +1,109 @@
-﻿export default function Help() {
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
+const FAQ = [
+  {
+    q: "Comment créer un compte ?",
+    a: "Clique sur \"S'inscrire\" en haut de la page. Tu peux t'inscrire avec ton adresse email ou directement avec ton compte Google en un seul clic.",
+  },
+  {
+    q: "Comment publier une annonce ?",
+    a: "Une fois connecté, clique sur le bouton \"Publier\" dans la navigation. Ajoute jusqu'à 5 photos, décris ton article, choisis une catégorie, un état et un prix, puis valide. Ton annonce sera visible immédiatement après modération.",
+  },
+  {
+    q: "Comment contacter un vendeur ?",
+    a: "Sur la page d'une annonce, clique sur \"Contacter le vendeur\". La conversation s'ouvre dans ta messagerie. Tu dois être connecté pour envoyer un message.",
+  },
+  {
+    q: "Comment fonctionne le paiement ?",
+    a: "Le paiement en ligne est sécurisé via Stripe. L'argent est transféré directement au vendeur. NOUT prend une petite commission de 10 % pour couvrir les frais de la plateforme.",
+  },
+  {
+    q: "Puis-je modifier ou supprimer mon annonce ?",
+    a: "Oui. Ouvre ton annonce et tu verras les boutons \"Modifier\" et \"Supprimer\" si tu en es le propriétaire. La suppression est définitive.",
+  },
+  {
+    q: "Que faire en cas de problème avec un acheteur ou un vendeur ?",
+    a: "Utilise le bouton \"Signaler\" sur le profil ou l'annonce concernée. Notre équipe de modération examine chaque signalement dans les plus brefs délais.",
+  },
+  {
+    q: "Comment supprimer mon compte ?",
+    a: "Va dans Paramètres → Confidentialité. Tu peux demander la suppression de ton compte et de toutes tes données conformément au RGPD.",
+  },
+  {
+    q: "NOUT est-il gratuit ?",
+    a: "La publication et la navigation sont entièrement gratuites. Une commission de 10 % est prélevée uniquement sur les transactions en ligne.",
+  },
+]
+
+function FaqItem({ q, a }) {
+  const [open, setOpen] = useState(false)
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-h1 text-nout-dark">Help</h1>
-      <p className="text-nout-dark mt-4">Page en construction...</p>
+    <div className="border-b border-nout-border last:border-0">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex justify-between items-center py-4 text-left text-sm font-semibold text-nout-dark hover:text-nout-primary transition-colors"
+      >
+        {q}
+        <span className={`ml-4 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+      </button>
+      {open && (
+        <p className="pb-4 text-sm text-gray-600 leading-relaxed">{a}</p>
+      )}
     </div>
   )
 }
 
+export default function Help() {
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-10">
+
+      <div className="text-center mb-10">
+        <p className="text-5xl mb-4">💡</p>
+        <h1 className="text-3xl font-extrabold text-nout-dark">Centre d'aide</h1>
+        <p className="text-gray-500 mt-2">Toutes les réponses à tes questions sur NOUT.</p>
+      </div>
+
+      {/* Guides rapides */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+        {[
+          { icon: '🛍️', titre: 'Acheter', desc: 'Recherche, contact et paiement sécurisé', lien: '/recherche' },
+          { icon: '📸', titre: 'Vendre', desc: "Publie une annonce en moins de 2 minutes", lien: '/publier' },
+          { icon: '💬', titre: 'Messages', desc: 'Échange avec acheteurs et vendeurs', lien: '/messages' },
+        ].map(({ icon, titre, desc, lien }) => (
+          <Link
+            key={titre}
+            to={lien}
+            className="bg-white rounded-2xl shadow-sm p-5 text-center hover:shadow-md transition-shadow"
+          >
+            <p className="text-3xl mb-2">{icon}</p>
+            <p className="font-bold text-nout-dark text-sm">{titre}</p>
+            <p className="text-xs text-gray-400 mt-1">{desc}</p>
+          </Link>
+        ))}
+      </div>
+
+      {/* FAQ */}
+      <section className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+        <h2 className="text-xl font-bold text-nout-dark mb-4">Questions fréquentes</h2>
+        {FAQ.map(({ q, a }) => (
+          <FaqItem key={q} q={q} a={a} />
+        ))}
+      </section>
+
+      {/* Contact */}
+      <section className="bg-orange-50 rounded-2xl p-6 text-center">
+        <p className="text-2xl mb-2">📧</p>
+        <p className="font-bold text-nout-dark">Tu n'as pas trouvé ta réponse ?</p>
+        <p className="text-sm text-gray-500 mt-1 mb-4">Écris-nous, on répond dans les 24 h.</p>
+        <a
+          href="mailto:contact@nout974.re"
+          className="btn-primary px-8 py-3 text-sm inline-block"
+        >
+          Contacter l'équipe NOUT
+        </a>
+      </section>
+
+    </div>
+  )
+}

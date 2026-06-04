@@ -21,6 +21,7 @@ import PaymentSuccess from './pages/PaymentSuccess'
 
 // Pages privées
 import CreateListing from './pages/CreateListing'
+import EditListing   from './pages/EditListing'
 import Messages      from './pages/Messages'
 import Conversation  from './pages/Conversation'
 import Orders        from './pages/Orders'
@@ -81,6 +82,7 @@ export default function App() {
 
           {/* Privé */}
           <Route path="/publier"    element={<PrivateRoute><CreateListing /></PrivateRoute>} />
+          <Route path="/annonce/:id/modifier" element={<PrivateRoute><EditListing /></PrivateRoute>} />
           <Route path="/messages"   element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/messages/:id" element={<PrivateRoute><Conversation /></PrivateRoute>} />
           <Route path="/commandes"  element={<PrivateRoute><Orders /></PrivateRoute>} />

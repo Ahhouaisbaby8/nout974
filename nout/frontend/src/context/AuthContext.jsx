@@ -25,12 +25,16 @@ export function AuthProvider({ children }) {
   }, [])
 
   const fetchProfile = async (userId) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      if (!error) setProfile(data)
+    } catch {
+      // profil non chargé — l'utilisateur reste connecté mais sans profil
+    }
   }
 
   // Inscription email — le trigger Supabase crée le profil automatiquement
