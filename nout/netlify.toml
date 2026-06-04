@@ -1,9 +1,12 @@
 [build]
-  base    = "nout/frontend"
+  base = "nout/frontend"
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  directory = "netlify/functions"
+
 [[redirects]]
   from = "/*"
-  to   = "/index.html"
+  to = "/index.html"
   status = 200
