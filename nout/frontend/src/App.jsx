@@ -41,6 +41,9 @@ import AdminFinances        from './pages/admin/Finances'
 import AdminRGPD            from './pages/admin/RGPD'
 import AdminSettings        from './pages/admin/SiteSettings'
 
+// Brand (dev uniquement)
+import BrandPage from './pages/BrandPage'
+
 // Légal
 import CGU            from './pages/legal/CGU'
 import CGV            from './pages/legal/CGV'
@@ -102,6 +105,9 @@ export default function App() {
             <Route path="rgpd"              element={<AdminRGPD />} />
             <Route path="parametres"        element={<AdminSettings />} />
           </Route>
+
+          {/* Brand — aperçu charte graphique (dev only) */}
+          {import.meta.env.DEV && <Route path="/brand" element={<BrandPage />} />}
 
           {/* Légal */}
           <Route path="/legal/cgu"             element={<CGU />} />

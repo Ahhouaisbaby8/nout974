@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
+import Logo from '../Logo'
 
 export default function Header() {
   const { user, profile, logout, isAdmin, unreadCount: unread } = useAuth()
@@ -18,8 +19,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold text-nout-primary tracking-tight">
-          NOUT
+        <Link to="/">
+          <Logo variant="color" size="md" />
         </Link>
 
         {/* Nav desktop */}

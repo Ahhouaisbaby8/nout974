@@ -1,0 +1,261 @@
+/* ============================================================
+   NOUT — Charte Graphique VANILLE 🌼
+   Direction : or vanille, crème chaude, tropical réunionnais
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+
+  /* Primaires */
+  --sol:          #E8A000;   /* or vanille — couleur signature */
+  --sol-dark:     #C78800;   /* hover / pressed */
+  --sol-light:    #FFB830;   /* ambre clair */
+  --sol-pale:     #FFF9E6;   /* fond teinté doré ultra-léger */
+
+  /* Accent */
+  --corail:       #FFB830;   /* ambre */
+  --miel:         #F0C040;   /* doré lumineux */
+
+  /* Fonds chauds */
+  --sable:        #FFFBF0;   /* fond principal (crème chaude) */
+  --vanille:      #FFF5D6;   /* fond secondaire */
+  --creme:        #FFF0B3;   /* fond cartes */
+
+  /* Textes */
+  --terre:        #2C1A00;   /* texte principal (cacao) */
+  --bois:         #5C3A00;   /* texte secondaire */
+  --brume:        #9D7E45;   /* placeholder / texte discret */
+
+  /* Bordures */
+  --bordure:      #F0D9A0;   /* bordure dorée légère */
+  --bordure-fort: #D4B866;   /* bordure accentuée */
+
+  /* États fonctionnels */
+  --succes:       #2D9B50;
+  --succes-bg:    #EDF7F1;
+  --erreur:       #E53E3E;
+  --erreur-bg:    #FEF0F0;
+  --alerte:       #DD6B20;
+  --alerte-bg:    #FFF8ED;
+  --info:         #0099B8;
+  --info-bg:      #E8F8FC;
+
+  /* Typographies */
+  --font-titre:   'Nunito', 'Segoe UI', sans-serif;
+  --font-corps:   'Inter', 'Segoe UI', sans-serif;
+
+  /* Échelle typographique */
+  --t-xs:    11px;
+  --t-sm:    13px;
+  --t-base:  14px;
+  --t-md:    16px;
+  --t-lg:    18px;
+  --t-xl:    20px;
+  --t-2xl:   24px;
+  --t-3xl:   32px;
+  --t-4xl:   40px;
+  --t-5xl:   48px;
+
+  /* Espacements */
+  --s-1:   4px;
+  --s-2:   8px;
+  --s-3:   12px;
+  --s-4:   16px;
+  --s-5:   20px;
+  --s-6:   24px;
+  --s-8:   32px;
+  --s-10:  40px;
+  --s-12:  48px;
+  --s-16:  64px;
+
+  /* Border-radius */
+  --r-sm:    6px;
+  --r-md:    10px;
+  --r-lg:    16px;
+  --r-xl:    24px;
+  --r-pill:  9999px;
+
+  /* Ombres (teintées cacao) */
+  --ombre-xs:   0 1px 3px rgba(44, 26, 0, 0.07);
+  --ombre-sm:   0 2px 8px rgba(44, 26, 0, 0.10);
+  --ombre-md:   0 4px 16px rgba(44, 26, 0, 0.13);
+  --ombre-lg:   0 8px 32px rgba(44, 26, 0, 0.16);
+  --ombre-glow: 0 0 24px rgba(232, 160, 0, 0.35);
+
+  /* Transitions */
+  --anim:      all 0.2s ease;
+  --anim-slow: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Classes utilitaires ─────────────────────────────────── */
+
+.nout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font-family: var(--font-corps);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  border-radius: var(--r-pill);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--anim);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nout-btn-sm  { padding: 6px 16px;  font-size: var(--t-xs); }
+.nout-btn-md  { padding: 10px 24px; font-size: var(--t-sm); }
+.nout-btn-lg  { padding: 14px 32px; font-size: var(--t-md); }
+
+.nout-btn-primary {
+  background: var(--sol);
+  color: var(--terre);       /* texte sombre sur fond doré → lisible */
+  border-color: var(--sol);
+}
+.nout-btn-primary:hover {
+  background: var(--sol-dark);
+  border-color: var(--sol-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--ombre-glow);
+}
+
+.nout-btn-secondary {
+  background: transparent;
+  color: var(--bois);
+  border-color: var(--bordure-fort);
+}
+.nout-btn-secondary:hover {
+  background: var(--sol-pale);
+  border-color: var(--sol);
+  color: var(--terre);
+}
+
+.nout-btn-ghost {
+  background: transparent;
+  color: var(--bois);
+  border-color: var(--bordure);
+}
+.nout-btn-ghost:hover {
+  border-color: var(--sol);
+  color: var(--sol-dark);
+}
+
+/* Badges */
+.nout-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  font-family: var(--font-corps);
+  letter-spacing: 0.02em;
+}
+
+.nout-badge-primary  { background: var(--sol-pale); color: var(--sol-dark); }
+.nout-badge-succes   { background: var(--succes-bg); color: var(--succes); }
+.nout-badge-erreur   { background: var(--erreur-bg); color: var(--erreur); }
+.nout-badge-alerte   { background: var(--alerte-bg); color: var(--alerte); }
+.nout-badge-info     { background: var(--info-bg); color: var(--info); }
+.nout-badge-neutre   { background: var(--vanille); color: var(--bois); }
+
+/* Tags catégorie */
+.nout-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: var(--vanille);
+  border: 1.5px solid var(--bordure);
+  border-radius: var(--r-pill);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--bois);
+  cursor: pointer;
+  transition: var(--anim);
+}
+.nout-tag:hover,
+.nout-tag.actif {
+  background: var(--sol-pale);
+  border-color: var(--sol);
+  color: var(--terre);
+}
+
+/* Cards */
+.nout-card {
+  background: #fff;
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--bordure);
+  box-shadow: var(--ombre-xs);
+  overflow: hidden;
+  transition: var(--anim);
+}
+.nout-card:hover {
+  box-shadow: var(--ombre-md);
+  border-color: var(--bordure-fort);
+  transform: translateY(-2px);
+}
+
+/* Inputs */
+.nout-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid var(--bordure);
+  border-radius: var(--r-md);
+  font-family: var(--font-corps);
+  font-size: var(--t-sm);
+  color: var(--terre);
+  background: #fff;
+  outline: none;
+  transition: var(--anim);
+}
+.nout-input:focus {
+  border-color: var(--sol);
+  box-shadow: 0 0 0 3px rgba(232, 160, 0, 0.18);
+}
+.nout-input::placeholder {
+  color: var(--brume);
+}
+
+/* Titre de section */
+.nout-titre {
+  font-family: var(--font-titre);
+  font-weight: 800;
+  color: var(--terre);
+  line-height: 1.2;
+}
+
+/* Lien */
+.nout-lien {
+  color: var(--sol-dark);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--anim);
+}
+.nout-lien:hover {
+  color: var(--terre);
+  text-decoration: underline;
+}
+
+/* Prix */
+.nout-prix {
+  font-family: var(--font-titre);
+  font-weight: 800;
+  color: var(--sol-dark);
+}
+
+/* Divider */
+.nout-divider {
+  border: none;
+  border-top: 1.5px solid var(--bordure);
+  margin: var(--s-6) 0;
+}
+
+/* Statuts annonce */
+.nout-statut-vendu    { background: var(--succes-bg); color: var(--succes); }
+.nout-statut-reserve  { background: var(--alerte-bg); color: var(--alerte); }
+.nout-statut-actif    { background: var(--sol-pale);  color: var(--sol-dark); }
