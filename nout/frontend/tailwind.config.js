@@ -7,35 +7,35 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* ── Palette VANILLE ── */
-        'nout-primary':   '#E8A000',   // or vanille — couleur signature
-        'nout-dark-pri':  '#C78800',   // hover / pressed
-        'nout-light-pri': '#FFB830',   // variante claire
-        'nout-pale-pri':  '#FFF9E6',   // fond teinté doré léger
+        /* ── Palette HIBISCUS 🌺 ── */
+        'nout-primary':   '#D94F5C',   // rouge hibiscus 974
+        'nout-dark-pri':  '#B83847',   // hover
+        'nout-light-pri': '#F07080',   // clair
+        'nout-pale-pri':  '#FFF0F2',   // fond rose pâle
 
-        'nout-accent':    '#FFB830',   // ambre / accent
-        'nout-gold':      '#F0C040',   // doré lumineux
+        'nout-accent':    '#FF8370',   // corail chaud
+        'nout-lagon':     '#0096C7',   // bleu lagon
 
-        'nout-secondary': '#FFFBF0',   // fond principal (crème chaude)
-        'nout-light':     '#FFF5D6',   // fond secondaire
-        'nout-creme':     '#FFF0B3',   // fond cartes
+        'nout-secondary': '#FDFBFB',   // fond principal
+        'nout-light':     '#FDF4F5',   // fond alternatif
+        'nout-card':      '#FFFFFF',   // fond cartes
 
-        'nout-dark':      '#2C1A00',   // texte principal (cacao)
-        'nout-mid':       '#5C3A00',   // texte secondaire
-        'nout-muted':     '#9D7E45',   // texte discret
+        'nout-dark':      '#1A0A0C',   // texte principal
+        'nout-mid':       '#5C2830',   // texte secondaire
+        'nout-muted':     '#9D666D',   // texte discret
 
-        'nout-border':    '#F0D9A0',   // bordure dorée légère
-        'nout-border-md': '#D4B866',   // bordure accentuée
+        'nout-border':    '#F0D0D3',   // bordure rose légère
+        'nout-border-md': '#E0A8AE',   // bordure accentuée
 
-        'nout-success':   '#2D9B50',
-        'nout-error':     '#E53E3E',
-        'nout-warning':   '#DD6B20',
-        'nout-info':      '#0099B8',
+        'nout-success':   '#15803D',
+        'nout-error':     '#B91C1C',
+        'nout-warning':   '#C2410C',
+        'nout-info':      '#0369A1',
       },
 
       fontFamily: {
-        sans:  ['Inter', 'Segoe UI', 'sans-serif'],
-        title: ['Nunito', 'Segoe UI', 'sans-serif'],
+        sans:  ['"DM Sans"', 'Segoe UI', 'sans-serif'],
+        title: ['"Plus Jakarta Sans"', 'Segoe UI', 'sans-serif'],
       },
 
       borderRadius: {
@@ -51,10 +51,10 @@ export default {
       },
 
       boxShadow: {
-        'nout-sm':   '0 2px 8px rgba(44, 26, 0, 0.10)',
-        'nout-md':   '0 4px 16px rgba(44, 26, 0, 0.13)',
-        'nout-lg':   '0 8px 32px rgba(44, 26, 0, 0.16)',
-        'nout-glow': '0 0 24px rgba(232, 160, 0, 0.35)',
+        'nout-sm':   '0 2px 8px rgba(26, 10, 12, 0.09)',
+        'nout-md':   '0 4px 20px rgba(26, 10, 12, 0.12)',
+        'nout-lg':   '0 8px 40px rgba(26, 10, 12, 0.15)',
+        'nout-glow': '0 0 28px rgba(217, 79, 92, 0.30)',
       },
     },
   },

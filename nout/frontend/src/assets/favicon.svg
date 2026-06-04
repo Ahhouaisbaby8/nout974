@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none" role="img" aria-label="NOUT">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" role="img" aria-label="NOUT">
 
-  <!-- Fond carré doré arrondi -->
-  <rect width="44" height="44" rx="11" fill="#E8A000"/>
+  <!-- Fond hibiscus arrondi -->
+  <rect width="44" height="44" rx="11" fill="#D94F5C"/>
 
-  <!-- N cacao (sombre sur fond doré) -->
-  <rect x="8"  y="10" width="6" height="24" rx="1.5" fill="#2C1A00"/>
-  <rect x="30" y="10" width="6" height="24" rx="1.5" fill="#2C1A00"/>
-  <polygon points="14,10 20,10 36,34 30,34" fill="#2C1A00"/>
+  <!-- N blanc, paths géométriques (rendu identique partout) -->
+  <rect x="9"  y="10" width="5.5" height="24" rx="1.5" fill="white"/>
+  <rect x="29.5" y="10" width="5.5" height="24" rx="1.5" fill="white"/>
+  <polygon points="14.5,10 20.5,10 35,34 29,34" fill="white"/>
 
 </svg>
