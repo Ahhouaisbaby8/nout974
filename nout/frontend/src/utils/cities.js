@@ -1,0 +1,28 @@
+export const REUNION_CITIES = [
+  'Saint-Denis',
+  'Saint-Paul',
+  'Saint-Pierre',
+  'Le Tampon',
+  'Saint-Louis',
+  'Saint-André',
+  'Saint-Benoît',
+  'Saint-Joseph',
+  'Saint-Leu',
+  'Sainte-Marie',
+  'Sainte-Suzanne',
+  'Sainte-Rose',
+  'Saint-Philippe',
+  'La Possession',
+  'Le Port',
+  'Bras-Panon',
+  'Salazie',
+  'Cilaos',
+  'Entre-Deux',
+  'Petite-Île',
+  'Les Avirons',
+  'L\'Étang-Salé',
+  'Trois-Bassins',
+  'La Plaine-des-Palmistes',
+]
+
+export const REUNION_CITIES_WITH_ALL = ['Toute La Réunion', ...REUNION_CITIES]
