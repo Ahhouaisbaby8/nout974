@@ -268,7 +268,7 @@ export default function ListingDetail() {
           )}
 
           {/* Partage WhatsApp */}
-          <
+          <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
