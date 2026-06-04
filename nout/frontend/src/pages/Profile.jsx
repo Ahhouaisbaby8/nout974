@@ -3,11 +3,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getProfile } from '../services/profiles'
 import { getUserListings } from '../services/listings'
+import { getSellerReviews } from '../services/reviews'
 import { getAvatarUrl } from '../utils/avatar'
 import { formatRelativeDate } from '../utils/formatters'
 import ListingCard from '../components/ui/ListingCard'
+import ReviewCard from '../components/ui/ReviewCard'
+import { Stars } from '../components/ui/ReviewCard'
 import Spinner from '../components/ui/Spinner'
 import BackButton from '../components/ui/BackButton'
+import ReportModal from '../components/ui/ReportModal'
 
 export default function Profile() {
   const { id } = useParams()
@@ -16,8 +20,10 @@ export default function Profile() {
 
   const [profile, setProfile]   = useState(null)
   const [listings, setListings] = useState([])
+  const [reviews, setReviews]   = useState([])
   const [loading, setLoading]   = useState(true)
-  const [notFound, setNotFound] = useState(false)
+  const [notFound, setNotFound]   = useState(false)
+  const [showReport, setShowReport] = useState(false)
 
   const isOwnProfile = user?.id === id
 
@@ -25,10 +31,12 @@ export default function Profile() {
     Promise.all([
       getProfile(id),
       getUserListings(id),
+      getSellerReviews(id),
     ])
-      .then(([p, l]) => {
+      .then(([p, l, r]) => {
         setProfile(p)
         setListings(l.filter(a => !a.is_sold && a.is_active))
+        setReviews(r)
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
@@ -84,15 +92,41 @@ export default function Profile() {
               ✏️ Modifier mon profil
             </Link>
           ) : user ? (
-            <button
-              onClick={() => navigate(`/messages/${id}`)}
-              className="btn-primary px-5 py-2 text-sm"
-            >
-              💬 Envoyer un message
-            </button>
+            <>
+              <button
+                onClick={() => navigate(`/messages/${id}`)}
+                className="btn-primary px-5 py-2 text-sm"
+              >
+                💬 Envoyer un message
+              </button>
+              <button
+                onClick={() => setShowReport(true)}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
+              >
+                🚩 Signaler
+              </button>
+            </>
           ) : null}
         </div>
       </div>
+
+      {/* ── AVIS VENDEUR ── */}
+      {reviews.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold text-nout-dark mb-3 flex items-center gap-2">
+            Avis
+            <span className="flex items-center gap-1">
+              <Stars rating={Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length)} />
+              <span className="text-sm font-normal text-gray-400 ml-1">
+                {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)} · {reviews.length} avis
+              </span>
+            </span>
+          </h2>
+          <div className="flex flex-col gap-3">
+            {reviews.slice(0, 5).map(r => <ReviewCard key={r.id} review={r} />)}
+          </div>
+        </div>
+      )}
 
       {/* ── ANNONCES ── */}
       <div className="mt-8">
@@ -121,6 +155,13 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {showReport && (
+        <ReportModal
+          targetUserId={id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   )
 }

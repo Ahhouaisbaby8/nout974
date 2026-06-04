@@ -1,9 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useUnreadCount } from '../../hooks/useUnreadCount'
 
 export default function BottomNav() {
   const { user } = useAuth()
   const { pathname } = useLocation()
+  const unread = useUnreadCount()
 
   const active = (path) =>
     pathname === path ? 'text-nout-primary' : 'text-gray-400'
@@ -34,10 +36,17 @@ export default function BottomNav() {
         <span className="text-xs text-nout-primary font-semibold">Publier</span>
       </Link>
 
-      <Link to="/messages" className={`flex flex-col items-center gap-0.5 text-xs ${active('/messages')}`}>
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
-        </svg>
+      <Link to="/messages" className={`relative flex flex-col items-center gap-0.5 text-xs ${active('/messages')}`}>
+        <div className="relative">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
+          </svg>
+          {unread > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </div>
         Messages
       </Link>
 

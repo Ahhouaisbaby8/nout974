@@ -1,19 +1,19 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../services/supabase'
+import { getAvatarUrl } from '../../utils/avatar'
+import { useUnreadCount } from '../../hooks/useUnreadCount'
 
 export default function Header() {
   const { user, profile, logout, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const unread = useUnreadCount()
 
   const handleLogout = async () => {
     await logout()
     navigate('/')
   }
 
-  const avatarUrl = profile?.avatar_url
-    ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
-    : null
+  const avatarUrl = getAvatarUrl(profile?.avatar_url)
 
   return (
     <header className="bg-nout-secondary border-b border-nout-border sticky top-0 z-50">
@@ -45,10 +45,16 @@ export default function Header() {
                 + Publier
               </Link>
 
-              <Link to="/messages" className="text-nout-dark hover:text-nout-primary transition-colors" title="Messages">
+              {/* Icône messages avec badge */}
+              <Link to="/messages" className="relative text-nout-dark hover:text-nout-primary transition-colors" title="Messages">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
                 </svg>
+                {unread > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
               </Link>
 
               <Link to={`/profil/${user.id}`} className="flex items-center gap-2">

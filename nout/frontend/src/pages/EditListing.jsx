@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById, updateListing, uploadListingImage } from '../services/listings'
+import { compressImage } from '../utils/imageCompressor'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
@@ -73,13 +74,13 @@ export default function EditListing() {
 
     setSaving(true)
     try {
-      // Upload uniquement les nouvelles photos (celles avec .file)
+      // Compression + upload des nouvelles photos uniquement
       const imageUrls = await Promise.all(
-        photos.map(p =>
-          p.file
-            ? uploadListingImage(p.file, user.id)
-            : Promise.resolve(p.url)
-        )
+        photos.map(async p => {
+          if (!p.file) return p.url
+          const compressed = await compressImage(p.file)
+          return uploadListingImage(compressed, user.id)
+        })
       )
 
       await updateListing(id, {

@@ -1,19 +1,23 @@
 import { supabase } from './supabase'
 
-export const getListings = async ({ category, city, minPrice, maxPrice, search, page = 1, limit = 20 } = {}) => {
+export const getListings = async ({ category, city, condition, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
   let query = supabase
     .from('listings')
     .select(`*, profiles(id, username, avatar_url)`, { count: 'exact' })
     .eq('is_sold', false)
     .eq('is_active', true)
-    .order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1)
 
-  if (category) query = query.eq('category', category)
-  if (city)     query = query.eq('city', city)
-  if (minPrice) query = query.gte('price', minPrice)
-  if (maxPrice) query = query.lte('price', maxPrice)
-  if (search)   query = query.ilike('title', `%${search}%`)
+  if (category)  query = query.eq('category', category)
+  if (city)      query = query.eq('city', city)
+  if (condition) query = query.eq('condition', condition)
+  if (minPrice)  query = query.gte('price', minPrice)
+  if (maxPrice)  query = query.lte('price', maxPrice)
+  if (search)    query = query.ilike('title', `%${search}%`)
+
+  if (sortBy === 'price_asc')  query = query.order('price', { ascending: true })
+  else if (sortBy === 'price_desc') query = query.order('price', { ascending: false })
+  else query = query.order('created_at', { ascending: false })
 
   return query
 }

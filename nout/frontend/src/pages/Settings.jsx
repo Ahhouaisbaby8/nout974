@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadAvatar } from '../services/profiles'
-import { supabase } from '../services/supabase'
+import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
 
@@ -24,9 +24,7 @@ export default function Settings() {
   const stripeStatus = searchParams.get('stripe') // 'success' | 'refresh' | null
   const [connectLoading, setConnectLoading] = useState(false)
 
-  const currentAvatarUrl = profile?.avatar_url
-    ? supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data.publicUrl
-    : null
+  const currentAvatarUrl = getAvatarUrl(profile?.avatar_url)
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0]

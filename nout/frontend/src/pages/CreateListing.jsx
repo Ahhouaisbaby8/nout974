@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
+import { compressImage } from '../utils/imageCompressor'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
@@ -54,9 +55,12 @@ export default function CreateListing() {
 
     setLoading(true)
     try {
-      // Upload des photos
+      // Compression + upload des photos
       const imageUrls = await Promise.all(
-        photos.map(p => uploadListingImage(p.file, user.id))
+        photos.map(async p => {
+          const compressed = await compressImage(p.file)
+          return uploadListingImage(compressed, user.id)
+        })
       )
 
       const listing = await createListing({

@@ -35,7 +35,8 @@ export default function Search() {
     condition:condition || undefined,
     minPrice: minPrice  || undefined,
     maxPrice: maxPrice  || undefined,
-  }), [query, category, city, condition, minPrice, maxPrice])
+    sortBy,
+  }), [query, category, city, condition, minPrice, maxPrice, sortBy])
 
   const runSearch = useCallback(async (reset = true) => {
     const p = reset ? 1 : page + 1
@@ -48,11 +49,10 @@ export default function Search() {
 
     try {
       const { data, count } = await getListings({ ...buildParams(), page: p, limit: PER_PAGE })
-      const sorted = sortListings(data ?? [], sortBy)
       if (reset) {
-        setListings(sorted)
+        setListings(data ?? [])
       } else {
-        setListings(prev => [...prev, ...sorted])
+        setListings(prev => [...prev, ...(data ?? [])])
         setPage(p)
       }
       setTotal(count ?? 0)
@@ -62,14 +62,7 @@ export default function Search() {
       setLoading(false)
       setLoadingMore(false)
     }
-  }, [buildParams, page, sortBy])
-
-  const sortListings = (data, sort) => {
-    const arr = [...data]
-    if (sort === 'price_asc')  return arr.sort((a, b) => a.price - b.price)
-    if (sort === 'price_desc') return arr.sort((a, b) => b.price - a.price)
-    return arr // recent par défaut (déjà trié par Supabase)
-  }
+  }, [buildParams, page])
 
   // Lancer la recherche au chargement + quand l'URL change
   useEffect(() => {
