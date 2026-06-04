@@ -9,3 +9,8 @@ screenshot*.png
 screenshot.js
 screenshot-tmp/
 package-lock.json
+
+# Captures de développement
+*.png
+start-backend.bat
+start-frontend.bat
