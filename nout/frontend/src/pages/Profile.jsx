@@ -70,6 +70,15 @@ export default function Profile() {
 
   const avatarUrl = getAvatarUrl(profile.avatar_url)
 
+  const avgRating  = reviews.length
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null
+
+  const memberMonths = Math.floor((Date.now() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24 * 30))
+  const memberLabel  = memberMonths < 1  ? '< 1 mois'
+    : memberMonths < 12 ? `${memberMonths} mois`
+    : `${Math.floor(memberMonths / 12)} an${Math.floor(memberMonths / 12) > 1 ? 's' : ''}`
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <BackButton />
@@ -123,6 +132,26 @@ export default function Profile() {
               </button>
             </>
           ) : null}
+        </div>
+      </div>
+
+      {/* ── MINI-STATS ── */}
+      <div className="grid grid-cols-3 gap-3 mt-4">
+        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+          <p className="text-2xl font-extrabold text-[#1A3A8F]">{listings.length}</p>
+          <p className="text-[11px] text-nout-muted mt-1">annonce{listings.length !== 1 ? 's' : ''} active{listings.length !== 1 ? 's' : ''}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+          <p className="text-2xl font-extrabold text-[#1A3A8F]">
+            {avgRating ? `${avgRating} ⭐` : '—'}
+          </p>
+          <p className="text-[11px] text-nout-muted mt-1">
+            {avgRating ? `${reviews.length} avis` : 'pas encore noté'}
+          </p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+          <p className="text-2xl font-extrabold text-[#1A3A8F]">{memberLabel}</p>
+          <p className="text-[11px] text-nout-muted mt-1">membre depuis</p>
         </div>
       </div>
 
