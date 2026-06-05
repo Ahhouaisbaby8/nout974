@@ -69,7 +69,7 @@ export default function Home() {
           </h1>
 
           <p className="text-[17px] text-white/75 mb-10 font-light">
-            Le marketplace 100&nbsp;% réunionnais, entre particuliers
+            Le marketplace 100&nbsp;% réunionnais, entre particuliers et professionnels
           </p>
 
           {/* Barre de recherche pill */}
