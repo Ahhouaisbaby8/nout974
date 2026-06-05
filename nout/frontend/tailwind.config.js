@@ -7,25 +7,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* ── Palette HIBISCUS 🌺 ── */
-        'nout-primary':   '#D94F5C',   // rouge hibiscus 974
-        'nout-dark-pri':  '#B83847',   // hover
-        'nout-light-pri': '#F07080',   // clair
-        'nout-pale-pri':  '#FFF0F2',   // fond rose pâle
+        /* ── Palette NUIT TROPICALE 🌊 ── */
+        'nout-primary':   '#2EC4B6',   // turquoise signature
+        'nout-dark-pri':  '#24A99D',   // hover turquoise
+        'nout-light-pri': '#5ED8CC',   // turquoise clair
+        'nout-pale-pri':  '#E0FAF8',   // fond teinté turquoise
 
-        'nout-accent':    '#FF8370',   // corail chaud
-        'nout-lagon':     '#0096C7',   // bleu lagon
+        'nout-accent':    '#0A1628',   // nuit profonde (CTA dark)
+        'nout-lagon':     '#0096C7',   // bleu lagon (info)
 
-        'nout-secondary': '#FDFBFB',   // fond principal
-        'nout-light':     '#FDF4F5',   // fond alternatif
+        'nout-secondary': '#F5FFFE',   // fond principal
+        'nout-light':     '#EDFCFB',   // fond alternatif
         'nout-card':      '#FFFFFF',   // fond cartes
 
-        'nout-dark':      '#1A0A0C',   // texte principal
-        'nout-mid':       '#5C2830',   // texte secondaire
-        'nout-muted':     '#9D666D',   // texte discret
+        'nout-dark':      '#0A1628',   // texte principal (nuit)
+        'nout-mid':       '#1A4A5A',   // texte secondaire
+        'nout-muted':     '#4A8A8A',   // texte discret
 
-        'nout-border':    '#F0D0D3',   // bordure rose légère
-        'nout-border-md': '#E0A8AE',   // bordure accentuée
+        'nout-border':    '#B2EDE8',   // bordure turquoise légère
+        'nout-border-md': '#7ED8D2',   // bordure accentuée
 
         'nout-success':   '#15803D',
         'nout-error':     '#B91C1C',
@@ -54,7 +54,7 @@ export default {
         'nout-sm':   '0 2px 8px rgba(26, 10, 12, 0.09)',
         'nout-md':   '0 4px 20px rgba(26, 10, 12, 0.12)',
         'nout-lg':   '0 8px 40px rgba(26, 10, 12, 0.15)',
-        'nout-glow': '0 0 28px rgba(217, 79, 92, 0.30)',
+        'nout-glow': '0 0 28px rgba(46, 196, 182, 0.35)',
       },
     },
   },

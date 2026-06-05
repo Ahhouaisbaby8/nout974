@@ -1,42 +1,42 @@
 /* ============================================================
-   NOUT — Charte Graphique HIBISCUS 🌺
-   Couleur signature : rouge hibiscus, fleur emblème de La Réunion
-   Style : coloré & chaleureux — Airbnb × Vinted × 974
+   NOUT — Charte Graphique NUIT TROPICALE 🌊
+   Couleur signature : turquoise lagon — La Réunion, océan Indien
+   Style : élégant & moderne — Airbnb × Vinted × 974
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 :root {
 
-  /* ── Hibiscus — couleur signature ── */
-  --hibiscus:        #D94F5C;   /* rouge hibiscus 974 */
-  --hibiscus-dark:   #B83847;   /* hover / actif */
-  --hibiscus-light:  #F07080;   /* variante claire */
-  --hibiscus-pale:   #FFF0F2;   /* fond teinté rose léger */
-  --hibiscus-bg:     #FEE8EB;   /* fond plus visible */
+  /* ── Turquoise — couleur signature ── */
+  --hibiscus:        #2EC4B6;   /* turquoise signature */
+  --hibiscus-dark:   #24A99D;   /* hover / actif */
+  --hibiscus-light:  #5ED8CC;   /* variante claire */
+  --hibiscus-pale:   #E0FAF8;   /* fond teinté turquoise */
+  --hibiscus-bg:     #C8F5F1;   /* fond plus visible */
 
   /* ── Accent ── */
-  --corail:          #FF8370;   /* corail chaud */
+  --corail:          #0A1628;   /* nuit profonde (CTA dark) */
   --lagon:           #0096C7;   /* bleu lagon (info, liens) */
 
-  /* ── Fonds neutres chauds ── */
-  --fond:            #FDFBFB;   /* fond principal (blanc chaud) */
-  --fond-alt:        #FDF4F5;   /* fond secondaire (rose très léger) */
+  /* ── Fonds neutres frais ── */
+  --fond:            #F5FFFE;   /* fond principal */
+  --fond-alt:        #EDFCFB;   /* fond secondaire */
   --fond-card:       #FFFFFF;   /* fond cartes */
 
   /* ── Textes ── */
-  --encre:           #1A0A0C;   /* texte principal (noir chaud hibiscus) */
-  --bois:            #5C2830;   /* texte secondaire */
-  --brume:           #9D666D;   /* texte discret / placeholder */
+  --encre:           #0A1628;   /* texte principal (nuit profonde) */
+  --bois:            #1A4A5A;   /* texte secondaire */
+  --brume:           #4A8A8A;   /* texte discret / placeholder */
 
   /* ── Bordures ── */
-  --bordure:         #F0D0D3;   /* bordure rose légère */
-  --bordure-fort:    #E0A8AE;   /* bordure accentuée */
+  --bordure:         #B2EDE8;   /* bordure turquoise légère */
+  --bordure-fort:    #7ED8D2;   /* bordure accentuée */
 
   /* ── États fonctionnels ── */
   --succes:          #15803D;
   --succes-bg:       #F0FDF4;
-  --erreur:          #B91C1C;   /* rouge plus sombre pour se distinguer du hibiscus */
+  --erreur:          #B91C1C;
   --erreur-bg:       #FEF2F2;
   --alerte:          #C2410C;
   --alerte-bg:       #FFF7ED;
@@ -72,11 +72,11 @@
   --r-pill: 9999px;
 
   /* ── Ombres ── */
-  --ombre-xs:   0 1px 3px rgba(26, 10, 12, 0.06);
-  --ombre-sm:   0 2px 8px rgba(26, 10, 12, 0.09);
-  --ombre-md:   0 4px 20px rgba(26, 10, 12, 0.12);
-  --ombre-lg:   0 8px 40px rgba(26, 10, 12, 0.15);
-  --ombre-glow: 0 0 28px rgba(217, 79, 92, 0.30);
+  --ombre-xs:   0 1px 3px rgba(10, 22, 40, 0.06);
+  --ombre-sm:   0 2px 8px rgba(10, 22, 40, 0.09);
+  --ombre-md:   0 4px 20px rgba(10, 22, 40, 0.12);
+  --ombre-lg:   0 8px 40px rgba(10, 22, 40, 0.15);
+  --ombre-glow: 0 0 28px rgba(46, 196, 182, 0.35);
 
   /* ── Transitions ── */
   --anim:      all 0.18s ease;

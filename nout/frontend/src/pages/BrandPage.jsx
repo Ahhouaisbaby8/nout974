@@ -1,4 +1,63 @@
 import Logo from '../components/Logo'
+import logoLagon      from '../assets/logo-lagon.svg'
+import logoNuit       from '../assets/logo-nuit.svg'
+import logoTurquoise  from '../assets/logo-turquoise.svg'
+import logoOcean      from '../assets/logo-ocean.svg'
+
+const DIRECTIONS = [
+  {
+    nom: '🌊 Lagon',
+    description: 'Bleu océan profond + accent lagon vif — lumineux, confiant',
+    src: logoLagon,
+    bg: '#F0F9FF',
+    accent: '#00B4D8',
+    couleurs: [
+      { nom: 'Océan',   hex: '#0077B6' },
+      { nom: 'Lagon',   hex: '#00B4D8' },
+      { nom: 'Ciel',    hex: '#48CAE4' },
+      { nom: 'Fond',    hex: '#F0F9FF' },
+    ],
+  },
+  {
+    nom: '🌌 Nuit Tropicale',
+    description: 'Texte nuit profonde + accent turquoise — élégant, contrasté',
+    src: logoNuit,
+    bg: '#F0FFFE',
+    accent: '#2EC4B6',
+    couleurs: [
+      { nom: 'Nuit',      hex: '#0A1628' },
+      { nom: 'Turquoise', hex: '#2EC4B6' },
+      { nom: 'Écume',     hex: '#CAF0F8' },
+      { nom: 'Fond',      hex: '#F0FFFE' },
+    ],
+  },
+  {
+    nom: '🌿 Turquoise',
+    description: 'Camaïeu vert-bleu mer — naturel, apaisant, ancré 974',
+    src: logoTurquoise,
+    bg: '#F0FDFC',
+    accent: '#83C5BE',
+    couleurs: [
+      { nom: 'Mer',     hex: '#006D77' },
+      { nom: 'Écume',   hex: '#83C5BE' },
+      { nom: 'Calme',   hex: '#EDFCFB' },
+      { nom: 'Fond',    hex: '#F0FDFC' },
+    ],
+  },
+  {
+    nom: '🎇 Océan Dégradé',
+    description: 'Dégradé nuit profonde → lagon — spectaculaire, moderne',
+    src: logoOcean,
+    bg: '#EFF9FF',
+    accent: '#0096C7',
+    couleurs: [
+      { nom: 'Nuit',    hex: '#023E8A' },
+      { nom: 'Lagon',   hex: '#0096C7' },
+      { nom: 'Ciel',    hex: '#48CAE4' },
+      { nom: 'Fond',    hex: '#EFF9FF' },
+    ],
+  },
+]
 
 const PALETTE = [
   { nom: 'Hibiscus (signature)', hex: '#D94F5C' },
@@ -47,15 +106,59 @@ export default function BrandPage() {
       <div className="max-w-5xl mx-auto">
 
         {/* En-tête */}
-        <div className="mb-12 p-10 rounded-2xl text-center" style={{ background: '#1A0A0C' }}>
-          <Logo variant="white" size="xl" className="mx-auto mb-5" />
+        <div className="mb-12 p-10 rounded-2xl text-center" style={{ background: '#0A1628' }}>
+          <p className="text-white/60 text-xs tracking-widest uppercase mb-6 font-semibold">
+            Exploration Identité Visuelle
+          </p>
+          <p className="text-white font-title text-3xl font-extrabold tracking-tight">NOUT 974</p>
           <p className="text-white/40 text-xs tracking-widest uppercase mt-2">
-            Charte Graphique — Direction Hibiscus 🌺 — 2026
+            Charte Graphique — Directions Océan — 2026
           </p>
         </div>
 
+        {/* 0. Comparaison directions logo */}
+        <Section titre="0. Comparaison — 4 Directions Logo">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {DIRECTIONS.map((dir) => (
+              <div
+                key={dir.nom}
+                className="rounded-2xl border-2 overflow-hidden"
+                style={{ borderColor: dir.accent }}
+              >
+                {/* Aperçu logo */}
+                <div
+                  className="flex flex-col items-start justify-center px-8 py-10"
+                  style={{ background: dir.bg }}
+                >
+                  <img src={dir.src} alt={dir.nom} className="h-12 w-auto object-contain" />
+                </div>
+
+                {/* Infos */}
+                <div className="bg-white px-6 py-4">
+                  <p className="font-title font-bold text-base text-nout-dark">{dir.nom}</p>
+                  <p className="text-xs text-nout-muted mt-1 mb-4">{dir.description}</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {dir.couleurs.map(c => (
+                      <div key={c.hex} className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded-full border border-black/10 inline-block" style={{ background: c.hex }} />
+                        <span className="text-[10px] font-mono text-nout-muted">{c.hex}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Logo sur fond sombre */}
+                <div className="flex items-center px-8 py-6" style={{ background: '#0A1628' }}>
+                  <img src={dir.src} alt={`${dir.nom} sur fond sombre`} className="h-8 w-auto object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+                  <span className="ml-4 text-white/30 text-xs">Rendu sur fond sombre</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+
         {/* 1. Logo */}
-        <Section titre="1. Logo — 3 variantes">
+        <Section titre="1. Logo Actuel (Hibiscus) — 3 variantes">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
             <div className="rounded-2xl border border-nout-border bg-white p-8 flex flex-col items-start gap-4">

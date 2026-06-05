@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 54" role="img" aria-label="NOUT — Marketplace réunionnaise">
+
+  <defs>
+    <!-- Dégradé nuit profonde → lagon clair, gauche vers droite -->
+    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#023E8A"/>
+      <stop offset="100%" stop-color="#00B4D8"/>
+    </linearGradient>
+    <linearGradient id="traitGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#0096C7"/>
+      <stop offset="100%" stop-color="#48CAE4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- NOUT — direction Océan : dégradé bleu nuit → lagon -->
+  <text
+    x="0" y="40"
+    font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif"
+    font-weight="800"
+    font-size="44"
+    fill="url(#oceanGrad)"
+    letter-spacing="-1"
+  >NOUT</text>
+
+  <!-- Accent : trait dégradé -->
+  <rect x="0" y="44" width="56" height="3" rx="1.5" fill="url(#traitGrad)"/>
+
+  <!-- RÉUNION 974 -->
+  <text
+    x="1" y="54"
+    font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif"
+    font-weight="600"
+    font-size="9.5"
+    fill="#0096C7"
+    letter-spacing="2.8"
+  >RÉUNION 974</text>
+
+</svg>

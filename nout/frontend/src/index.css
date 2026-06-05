@@ -16,8 +16,8 @@
     font-family: 'DM Sans', 'Segoe UI', sans-serif;
     font-size: 14px;
     line-height: 1.6;
-    color: #1A0A0C;
-    background-color: #FDFBFB;
+    color: #0A1628;
+    background-color: #F5FFFE;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -30,22 +30,22 @@
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-nout-primary text-white rounded-nout font-bold hover:bg-nout-dark-pri transition-all cursor-pointer;
+    @apply px-6 py-3 bg-[#2EC4B6] text-white rounded-full font-bold hover:bg-[#24A99D] transition-all cursor-pointer;
   }
 
   .btn-secondary {
-    @apply px-6 py-3 bg-white text-nout-primary border-2 border-nout-primary rounded-nout font-bold hover:bg-nout-pale-pri transition-all cursor-pointer;
+    @apply px-6 py-3 bg-white text-[#2EC4B6] border-2 border-[#2EC4B6] rounded-full font-bold hover:bg-[#E0FAF8] transition-all cursor-pointer;
   }
 
   .btn-disabled {
-    @apply px-6 py-3 bg-nout-border text-nout-muted rounded-nout cursor-not-allowed;
+    @apply px-6 py-3 bg-[#B2EDE8] text-[#4A8A8A] rounded-full cursor-not-allowed;
   }
 
   .card {
-    @apply bg-white rounded-card overflow-hidden shadow-nout-sm hover:shadow-nout-md transition-shadow;
+    @apply bg-white rounded-[16px] overflow-hidden shadow-sm hover:shadow-md transition-shadow;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-nout-border rounded-lg text-nout-dark focus:outline-none focus:border-nout-primary transition-colors bg-white;
+    @apply w-full px-4 py-3 border border-[#B2EDE8] rounded-lg text-[#0A1628] focus:outline-none focus:border-[#2EC4B6] transition-colors bg-white;
   }
 }

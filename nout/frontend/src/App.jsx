@@ -42,7 +42,8 @@ import AdminRGPD            from './pages/admin/RGPD'
 import AdminSettings        from './pages/admin/SiteSettings'
 
 // Brand (dev uniquement)
-import BrandPage from './pages/BrandPage'
+import BrandPage    from './pages/BrandPage'
+import BrandCompare from './pages/BrandCompare'
 
 // Légal
 import CGU            from './pages/legal/CGU'
@@ -107,7 +108,8 @@ export default function App() {
           </Route>
 
           {/* Brand — aperçu charte graphique (dev only) */}
-          {import.meta.env.DEV && <Route path="/brand" element={<BrandPage />} />}
+          {import.meta.env.DEV && <Route path="/brand"         element={<BrandPage />} />}
+          {import.meta.env.DEV && <Route path="/brand-compare" element={<BrandCompare />} />}
 
           {/* Légal */}
           <Route path="/legal/cgu"             element={<CGU />} />

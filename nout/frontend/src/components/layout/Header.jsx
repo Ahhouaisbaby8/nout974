@@ -39,7 +39,7 @@ export default function Header() {
             <>
               <Link
                 to="/publier"
-                className="hidden sm:block px-4 py-2 bg-nout-primary text-white rounded-nout text-sm font-bold hover:bg-[#E55A25] transition-all"
+                className="hidden sm:block px-4 py-2 bg-nout-primary text-white rounded-nout text-sm font-bold hover:bg-[#24A99D] transition-all"
               >
                 + Publier
               </Link>
@@ -75,7 +75,7 @@ export default function Header() {
               <Link to="/connexion"   className="px-5 py-2 border-2 border-nout-primary text-nout-primary rounded-nout text-sm font-bold hover:bg-nout-primary hover:text-white transition-all">
                 Connexion
               </Link>
-              <Link to="/inscription" className="px-5 py-2 bg-nout-primary text-white rounded-nout text-sm font-bold hover:bg-[#E55A25] transition-all">
+              <Link to="/inscription" className="px-5 py-2 bg-nout-primary text-white rounded-nout text-sm font-bold hover:bg-[#24A99D] transition-all">
                 S'inscrire
               </Link>
             </>

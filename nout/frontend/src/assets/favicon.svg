@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" role="img" aria-label="NOUT">
 
-  <!-- Fond hibiscus arrondi -->
-  <rect width="44" height="44" rx="11" fill="#D94F5C"/>
+  <!-- Fond turquoise arrondi -->
+  <rect width="44" height="44" rx="11" fill="#2EC4B6"/>
 
-  <!-- N blanc, paths géométriques (rendu identique partout) -->
+  <!-- N blanc géométrique -->
   <rect x="9"  y="10" width="5.5" height="24" rx="1.5" fill="white"/>
   <rect x="29.5" y="10" width="5.5" height="24" rx="1.5" fill="white"/>
   <polygon points="14.5,10 20.5,10 35,34 29,34" fill="white"/>

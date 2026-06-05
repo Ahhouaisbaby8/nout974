@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 54" role="img" aria-label="NOUT — Marketplace réunionnaise">
 
-  <!-- NOUT — Nuit Tropicale : texte nuit profonde + accent turquoise -->
+  <!-- NOUT — direction Turquoise : camaïeu vert-bleu mer, doux et naturel -->
   <text
     x="0" y="40"
     font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif"
     font-weight="800"
     font-size="44"
-    fill="#0A1628"
+    fill="#006D77"
     letter-spacing="-1"
   >NOUT</text>
 
-  <!-- Accent turquoise signature -->
-  <rect x="0" y="44" width="56" height="3" rx="1.5" fill="#2EC4B6"/>
+  <!-- Accent : trait écume turquoise clair -->
+  <rect x="0" y="44" width="56" height="3" rx="1.5" fill="#83C5BE"/>
 
   <!-- RÉUNION 974 -->
   <text
@@ -19,7 +19,7 @@
     font-family="'Plus Jakarta Sans', 'Segoe UI', sans-serif"
     font-weight="600"
     font-size="9.5"
-    fill="#2EC4B6"
+    fill="#006D77"
     letter-spacing="2.8"
   >RÉUNION 974</text>
 
