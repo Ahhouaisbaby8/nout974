@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getListingById, deleteListing, updateListing } from '../services/listings'
+import { getListingById, deleteListing, updateListing, getSimilarListings } from '../services/listings'
 import { sendMessage } from '../services/messages'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
@@ -9,6 +9,8 @@ import { getAvatarUrl } from '../utils/avatar'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import ReportModal from '../components/ui/ReportModal'
+import ListingCard from '../components/ui/ListingCard'
+import SkeletonCard from '../components/ui/SkeletonCard'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -25,6 +27,8 @@ export default function ListingDetail() {
   const [payError, setPayError] = useState('')
   const [showReport, setShowReport] = useState(false)
   const [showOffer, setShowOffer]   = useState(false)
+  const [similar, setSimilar]             = useState([])
+  const [loadingSimilar, setLoadingSimilar] = useState(false)
   const [offerAmount, setOfferAmount] = useState('')
   const [offerSending, setOfferSending] = useState(false)
 
@@ -33,6 +37,13 @@ export default function ListingDetail() {
       .then(data => {
         setListing(data)
         document.title = `${data.title} — ${formatPrice(data.price)} | NOUT 974`
+        if (data.category) {
+          setLoadingSimilar(true)
+          getSimilarListings(data.category, data.id)
+            .then(setSimilar)
+            .catch(() => {})
+            .finally(() => setLoadingSimilar(false))
+        }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
@@ -355,6 +366,19 @@ export default function ListingDetail() {
 
         </div>
       </div>
+
+      {/* ── ANNONCES SIMILAIRES ── */}
+      {(loadingSimilar || similar.length > 0) && (
+        <div className="mt-12">
+          <h2 className="text-xl font-extrabold text-nout-dark mb-4">Annonces similaires</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {loadingSimilar
+              ? Array.from({ length: 4 }, (_, i) => <SkeletonCard key={i} />)
+              : similar.map(l => <ListingCard key={l.id} listing={l} />)
+            }
+          </div>
+        </div>
+      )}
 
       {showReport && (
         <ReportModal

@@ -70,6 +70,20 @@ export const uploadListingImage = async (file, userId) => {
   return supabase.storage.from('listings').getPublicUrl(path).data.publicUrl
 }
 
+export const getSimilarListings = async (category, excludeId, limit = 4) => {
+  const { data, error } = await supabase
+    .from('listings')
+    .select('*, profiles(id, username, avatar_url)')
+    .eq('category', category)
+    .eq('is_sold', false)
+    .eq('is_active', true)
+    .neq('id', excludeId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data ?? []
+}
+
 export const getUserListings = async (userId) => {
   const { data, error } = await supabase
     .from('listings')
