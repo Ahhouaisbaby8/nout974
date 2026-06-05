@@ -14,9 +14,18 @@ export default function Footer() {
 
           {/* Colonne identité */}
           <div>
-            <span className="font-title font-extrabold text-[26px] text-white tracking-tight leading-none block mb-3">
-              NOUT
-            </span>
+            <div className="flex flex-col leading-none mb-3">
+              <span className="font-title font-black text-[26px] text-white tracking-[0.2em] leading-none">
+                NOUT
+              </span>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00C4B4] flex-shrink-0" />
+                <span className="font-title font-semibold text-[8px] tracking-[0.28em] text-[#00C4B4] uppercase leading-none">
+                  La Réunion 974
+                </span>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00C4B4] flex-shrink-0" />
+              </div>
+            </div>
             <p className="text-sm text-white/60 italic font-title leading-relaxed">
               Nout dressing.<br />
               Nout maison.<br />

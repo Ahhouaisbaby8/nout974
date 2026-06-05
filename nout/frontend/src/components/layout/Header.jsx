@@ -26,10 +26,17 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
 
         {/* ── LOGO ── */}
-        <Link to="/" className="flex-shrink-0 mr-2">
-          <span className="font-title font-extrabold text-[22px] text-nout-roi tracking-tight leading-none">
+        <Link to="/" className="flex-shrink-0 mr-2 flex flex-col leading-none">
+          <span className="font-title font-black text-[20px] text-[#0A0F2C] tracking-[0.18em] leading-none">
             NOUT
           </span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#00C4B4] flex-shrink-0" />
+            <span className="font-title font-semibold text-[7px] tracking-[0.26em] text-[#00C4B4] uppercase leading-none">
+              La Réunion 974
+            </span>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#00C4B4] flex-shrink-0" />
+          </div>
         </Link>
 
         {/* ── BARRE DE RECHERCHE DESKTOP ── */}

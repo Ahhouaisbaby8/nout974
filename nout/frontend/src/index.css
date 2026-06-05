@@ -27,6 +27,37 @@
   h4 { font-size: 16px; font-weight: 600; line-height: 1.3; }
 }
 
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sunsetCycle {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes palmSway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50%       { transform: rotate(2deg); }
+}
+
+@keyframes palmSwayR {
+  0%, 100% { transform: rotate(2.5deg); }
+  50%       { transform: rotate(-2deg); }
+}
+
+@keyframes float974 {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-14px) scale(1.01); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50%       { opacity: 0.85; transform: scale(1.5); }
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -35,6 +66,22 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  .hero-fade-up   { animation: heroFadeUp 0.65s ease both; }
+  .hero-fade-up-1 { animation: heroFadeUp 0.65s ease 0.12s both; }
+  .hero-fade-up-2 { animation: heroFadeUp 0.65s ease 0.26s both; }
+
+  .hero-sunset {
+    background: linear-gradient(135deg,
+      #FF8C42, #E8455A, #9B35B5, #1A3A8F, #0A0F2C, #0E7FAB, #00C4B4, #FF8C42
+    );
+    background-size: 500% 500%;
+    animation: sunsetCycle 16s ease infinite;
+  }
+
+  .palm-left  { transform-origin: bottom center; animation: palmSway  4.5s ease-in-out infinite; }
+  .palm-right { transform-origin: bottom center; animation: palmSwayR 3.8s ease-in-out infinite; }
+  .float-974  { animation: float974 7s ease-in-out infinite; }
+  .twinkle    { animation: twinkle 3s ease-in-out infinite; }
 }
 
 @layer components {

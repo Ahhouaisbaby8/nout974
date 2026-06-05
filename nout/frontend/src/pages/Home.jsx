@@ -60,22 +60,93 @@ export default function Home() {
     <div>
 
       {/* ── A) HERO ──────────────────────────────────────────────── */}
-      <section className="bg-nout-hero min-h-[420px] flex items-center px-4 py-16">
-        <div className="max-w-3xl mx-auto w-full text-center">
+      <section className="hero-sunset relative overflow-hidden flex items-center px-4 py-12">
 
-          <h1 className="font-title font-extrabold text-[38px] sm:text-[52px] leading-[1.1] text-white mb-4 tracking-tight">
-            NOUT 974 —<br />
+        {/* Lueur basse coucher de soleil */}
+        <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
+             style={{ background: 'linear-gradient(to top, rgba(255,120,60,0.18), transparent)' }} />
+
+        {/* Étoiles / particules */}
+        <div className="absolute inset-0 pointer-events-none select-none">
+          {[
+            { top:'12%', left:'8%',  delay:'0s',    size:'w-1 h-1',     color:'bg-white' },
+            { top:'22%', left:'18%', delay:'1.1s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'9%',  left:'32%', delay:'0.6s',  size:'w-1.5 h-1.5', color:'bg-[#00C4B4]' },
+            { top:'18%', left:'55%', delay:'1.8s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'8%',  right:'28%',delay:'0.3s',  size:'w-1.5 h-1.5', color:'bg-white' },
+            { top:'20%', right:'18%',delay:'1.4s',  size:'w-1 h-1',     color:'bg-[#00C4B4]' },
+            { top:'30%', right:'10%',delay:'2.1s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'6%',  left:'70%', delay:'0.9s',  size:'w-1 h-1',     color:'bg-white' },
+          ].map((s, i) => (
+            <div key={i}
+              className={`absolute rounded-full twinkle ${s.size} ${s.color}`}
+              style={{ top: s.top, left: s.left, right: s.right, animationDelay: s.delay }}
+            />
+          ))}
+        </div>
+
+        {/* 974 flottant en arrière-plan */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+          <span
+            className="font-title font-black text-white float-974"
+            style={{ fontSize: 'clamp(140px, 32vw, 280px)', opacity: 0.055, letterSpacing: '0.1em', lineHeight: 1 }}
+          >
+            974
+          </span>
+        </div>
+
+        {/* Palmier gauche */}
+        <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none hidden sm:block">
+          <svg width="170" height="300" viewBox="0 0 170 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22"
+                  stroke="rgba(4,2,0,0.52)" strokeWidth="13" strokeLinecap="round"/>
+            <path d="M93 22 Q52 38 12 26"   stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+            <path d="M93 22 Q70 2 42 -8"    stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+            <path d="M93 22 Q132 36 165 27" stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+            <path d="M93 22 Q118 4 148 -4"  stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+            <path d="M93 22 Q91 0 88 -18"   stroke="rgba(4,2,0,0.4)"  strokeWidth="5" strokeLinecap="round"/>
+            <path d="M93 22 Q62 48 34 58"   stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+            <path d="M93 22 Q124 48 152 56" stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+            <circle cx="93" cy="29" r="7"   fill="rgba(4,2,0,0.42)"/>
+            <circle cx="101" cy="24" r="5"  fill="rgba(4,2,0,0.36)"/>
+            <circle cx="85"  cy="25" r="5"  fill="rgba(4,2,0,0.36)"/>
+          </svg>
+        </div>
+
+        {/* Palmier droit */}
+        <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none hidden sm:block">
+          <svg width="170" height="275" viewBox="0 0 170 275" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16"
+                  stroke="rgba(4,2,0,0.52)" strokeWidth="12" strokeLinecap="round"/>
+            <path d="M78 16 Q118 30 158 20"  stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+            <path d="M78 16 Q104 -2 134 -10" stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+            <path d="M78 16 Q40 30 6 22"     stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+            <path d="M78 16 Q54 -1 26 -8"    stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+            <path d="M78 16 Q80 -4 83 -22"   stroke="rgba(4,2,0,0.4)"  strokeWidth="5" strokeLinecap="round"/>
+            <path d="M78 16 Q110 42 138 52"  stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+            <path d="M78 16 Q48 42 20 54"    stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+            <circle cx="78" cy="23" r="7"    fill="rgba(4,2,0,0.42)"/>
+            <circle cx="86" cy="18" r="5"    fill="rgba(4,2,0,0.36)"/>
+            <circle cx="70" cy="19" r="5"    fill="rgba(4,2,0,0.36)"/>
+          </svg>
+        </div>
+
+        {/* Contenu principal */}
+        <div className="relative z-10 max-w-3xl mx-auto w-full text-center">
+
+          <h1 className="hero-fade-up font-title font-extrabold text-[34px] sm:text-[48px] leading-[1.1] text-white mb-3 tracking-tight">
+            NOUT<br />
             <span className="text-nout-turquoise">Marketplace de La Réunion</span>
           </h1>
 
-          <p className="text-[17px] text-white/75 mb-10 font-light">
+          <p className="hero-fade-up-1 text-[16px] text-white/75 mb-8 font-light">
             Le marketplace 100&nbsp;% réunionnais, entre particuliers et professionnels
           </p>
 
           {/* Barre de recherche pill */}
           <form
             onSubmit={handleSearch}
-            className="flex items-center bg-white rounded-full shadow-2xl px-2 py-2 gap-1 max-w-2xl mx-auto"
+            className="hero-fade-up-2 flex items-center bg-white rounded-full shadow-2xl px-2 py-2 gap-1 max-w-2xl mx-auto"
           >
             <input
               type="text"
