@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById, deleteListing, updateListing } from '../services/listings'
+import { sendMessage } from '../services/messages'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
@@ -23,6 +24,9 @@ export default function ListingDetail() {
   const [paying,   setPaying]   = useState(false)
   const [payError, setPayError] = useState('')
   const [showReport, setShowReport] = useState(false)
+  const [showOffer, setShowOffer]   = useState(false)
+  const [offerAmount, setOfferAmount] = useState('')
+  const [offerSending, setOfferSending] = useState(false)
 
   useEffect(() => {
     getListingById(id)
@@ -79,7 +83,28 @@ export default function ListingDetail() {
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${listing.title} — ${formatPrice(listing.price)} | NOUT 974\n${window.location.href}`)}`
+  const handleSendOffer = async () => {
+    const amount = parseFloat(offerAmount)
+    if (!amount || amount <= 0) return
+    setOfferSending(true)
+    try {
+      await sendMessage({
+        senderId: user.id,
+        receiverId: seller.id,
+        listingId: id,
+        content: `💰 Offre : ${amount} €\nPour l'annonce : ${listing.title}`,
+      })
+      setShowOffer(false)
+      setOfferAmount('')
+      navigate(`/messages/${seller.id}?annonce=${id}`)
+    } catch {
+      alert("Erreur lors de l'envoi de l'offre.")
+    } finally {
+      setOfferSending(false)
+    }
+  }
+
+  const whatsappUrl =`https://wa.me/?text=${encodeURIComponent(`${listing.title} — ${formatPrice(listing.price)} | NOUT 974\n${window.location.href}`)}`
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
@@ -252,6 +277,12 @@ export default function ListingDetail() {
                     {paying ? 'Redirection…' : `💳 Acheter — ${formatPrice(listing.price)}`}
                   </button>
                   <button
+                    onClick={() => setShowOffer(true)}
+                    className="w-full py-3 rounded-nout border-2 border-[#00C4B4] text-[#00C4B4] font-bold text-sm hover:bg-[#00C4B4] hover:text-white transition-all"
+                  >
+                    💰 Faire une offre
+                  </button>
+                  <button
                     onClick={() => navigate(`/messages/${seller?.id}?annonce=${id}`)}
                     className="btn-secondary w-full py-3 text-sm"
                   >
@@ -297,6 +328,44 @@ export default function ListingDetail() {
           listingId={id}
           onClose={() => setShowReport(false)}
         />
+      )}
+
+      {showOffer && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-lg font-bold text-nout-dark mb-1">💰 Faire une offre</h3>
+            <p className="text-sm text-gray-400 mb-4 truncate">{listing.title}</p>
+            <div className="relative mb-2">
+              <input
+                type="number"
+                min="1"
+                step="0.5"
+                placeholder="Montant proposé"
+                value={offerAmount}
+                onChange={e => setOfferAmount(e.target.value)}
+                className="input-field w-full pr-8"
+                autoFocus
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">€</span>
+            </div>
+            <p className="text-xs text-gray-400 mb-5">Prix demandé : {formatPrice(listing.price)}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowOffer(false); setOfferAmount('') }}
+                className="flex-1 py-3 rounded-nout border-2 border-gray-200 text-gray-500 font-semibold text-sm hover:bg-gray-50 transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSendOffer}
+                disabled={!offerAmount || parseFloat(offerAmount) <= 0 || offerSending}
+                className="flex-1 btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {offerSending ? 'Envoi…' : 'Envoyer'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

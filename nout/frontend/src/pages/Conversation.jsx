@@ -132,7 +132,25 @@ export default function Conversation() {
         )}
 
         {messages.map((msg) => {
-          const isMine = msg.sender_id === user.id
+          const isMine  = msg.sender_id === user.id
+          const isOffer = msg.content.startsWith('💰 Offre :')
+
+          if (isOffer) {
+            const lines  = msg.content.split('\n')
+            const amount = lines[0].replace('💰 Offre : ', '')
+            const title  = lines[1]?.replace("Pour l'annonce : ", '') ?? ''
+            return (
+              <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[75%] px-4 py-3 rounded-2xl border-2 border-amber-300 bg-amber-50 ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
+                  <p className="text-xs font-semibold text-amber-600 mb-1">💰 Proposition d'offre</p>
+                  <p className="text-2xl font-extrabold text-amber-700">{amount}</p>
+                  {title && <p className="text-xs text-gray-500 mt-1 truncate max-w-[180px]">{title}</p>}
+                  <p className="text-[10px] mt-1.5 text-gray-400">{formatRelativeDate(msg.created_at)}</p>
+                </div>
+              </div>
+            )
+          }
+
           return (
             <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
