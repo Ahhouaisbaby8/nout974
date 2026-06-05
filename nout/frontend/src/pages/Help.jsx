@@ -16,7 +16,7 @@ const FAQ = [
   },
   {
     q: "Comment fonctionne le paiement ?",
-    a: "Le paiement en ligne est sécurisé via Stripe. L'argent est transféré directement au vendeur. NOUT prend une petite commission de 10 % pour couvrir les frais de la plateforme.",
+    a: "Le paiement en ligne est sécurisé via Stripe. L'argent est transféré directement au vendeur. De petits frais de service sont appliqués à l'acheteur pour couvrir les frais de traitement et de sécurisation de la transaction.",
   },
   {
     q: "Puis-je modifier ou supprimer mon annonce ?",
@@ -32,7 +32,7 @@ const FAQ = [
   },
   {
     q: "NOUT est-il gratuit ?",
-    a: "La publication et la navigation sont entièrement gratuites. Une commission de 10 % est prélevée uniquement sur les transactions en ligne.",
+    a: "La publication et la navigation sont entièrement gratuites. Des frais de service de 5 % sont appliqués uniquement sur les transactions en ligne.",
   },
 ]
 
