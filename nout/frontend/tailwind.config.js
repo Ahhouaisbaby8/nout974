@@ -37,7 +37,7 @@ export default {
 
       fontFamily: {
         sans:  ['"Inter"', 'Segoe UI', 'sans-serif'],
-        title: ['"Syne"', 'Segoe UI', 'sans-serif'],
+        title: ['"Montserrat"', 'Segoe UI', 'sans-serif'],
       },
 
       backgroundImage: {

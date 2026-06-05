@@ -63,14 +63,13 @@ export default function Home() {
       <section className="bg-nout-hero min-h-[420px] flex items-center px-4 py-16">
         <div className="max-w-3xl mx-auto w-full text-center">
 
-          <h1 className="font-title font-extrabold text-[42px] sm:text-[52px] leading-[1.08] text-white mb-4 tracking-tight">
-            Nout Dressing.<br />
-            Nout Maison.<br />
-            <span className="text-nout-turquoise">Nout 974.</span>
+          <h1 className="font-title font-extrabold text-[38px] sm:text-[52px] leading-[1.1] text-white mb-4 tracking-tight">
+            NOUT 974 —<br />
+            <span className="text-nout-turquoise">Marketplace de La Réunion</span>
           </h1>
 
-          <p className="text-[18px] text-white/75 mb-10 font-light">
-            La marketplace de La Réunion
+          <p className="text-[17px] text-white/75 mb-10 font-light">
+            Le marketplace 100&nbsp;% réunionnais, entre particuliers
           </p>
 
           {/* Barre de recherche pill */}

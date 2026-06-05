@@ -21,7 +21,7 @@
   --nout-gradient-accent: linear-gradient(135deg, #0E7FAB 0%, #00C4B4 100%);
 
   /* ── Typographies ── */
-  --nout-font-title: 'Syne', sans-serif;
+  --nout-font-title: 'Montserrat', sans-serif;
   --nout-font-body:  'Inter', sans-serif;
 
   /* Aliases rétro-compat (utilisés par les anciens composants) */
