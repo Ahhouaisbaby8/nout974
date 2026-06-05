@@ -8,6 +8,7 @@ import { getFavoriteIds } from '../services/favorites'
 import ListingCard from '../components/ui/ListingCard'
 import PriceRangeSection from '../components/PriceRangeSection'
 import Spinner from '../components/ui/Spinner'
+import SkeletonCard from '../components/ui/SkeletonCard'
 
 const HOW_IT_WORKS = [
   {
@@ -212,8 +213,8 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Spinner />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }, (_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : listings.length === 0 ? (
           <div className="text-center py-16 text-nout-muted">

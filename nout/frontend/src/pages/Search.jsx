@@ -7,6 +7,7 @@ import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
 import ListingCard from '../components/ui/ListingCard'
 import Spinner from '../components/ui/Spinner'
+import SkeletonCard from '../components/ui/SkeletonCard'
 
 const PRICE_MAX = 5000
 const PER_PAGE  = 20
@@ -213,7 +214,9 @@ export default function Search() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }, (_, i) => <SkeletonCard key={i} />)}
+        </div>
       ) : listings.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <p className="text-5xl mb-4">🔍</p>
