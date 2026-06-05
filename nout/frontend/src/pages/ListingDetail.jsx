@@ -124,6 +124,10 @@ export default function ListingDetail() {
   const isOwner    = user?.id === listing.user_id
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
+
+  const fraisFixe      = 1.00
+  const fraisVariable  = listing.price * 0.05
+  const totalAcheteur  = listing.price + fraisFixe + fraisVariable
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
   const isSellerActive = listing.created_at &&
@@ -305,6 +309,25 @@ export default function ListingDetail() {
               )}
               {user ? (
                 <>
+                  {/* Récapitulatif des frais */}
+                  <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-100 space-y-2">
+                    <div className="flex justify-between text-gray-500">
+                      <span>Prix de l'article</span>
+                      <span>{formatPrice(listing.price)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <span>Frais de service</span>
+                      <span>{formatPrice(fraisFixe)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <span>Frais de traitement sécurisé</span>
+                      <span>{formatPrice(fraisVariable)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
+                      <span>Total</span>
+                      <span>{formatPrice(totalAcheteur)}</span>
+                    </div>
+                  </div>
                   <button
                     onClick={async () => {
                       setPaying(true)
@@ -327,7 +350,7 @@ export default function ListingDetail() {
                     disabled={paying}
                     className={`btn-primary w-full py-4 text-base ${paying ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
-                    {paying ? 'Redirection…' : `💳 Acheter — ${formatPrice(listing.price)}`}
+                    {paying ? 'Redirection…' : `💳 Acheter — ${formatPrice(totalAcheteur)}`}
                   </button>
                   <button
                     onClick={() => setShowOffer(true)}

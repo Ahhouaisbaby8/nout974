@@ -3,7 +3,6 @@ const { createClient } = require('@supabase/supabase-js')
 
 const stripe    = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase  = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const COMMISSION = 0.10 // 10 % pour NOUT
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -35,16 +34,22 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: "Le vendeur n'a pas encore activé les paiements. Contacte-le directement." }) }
     }
 
-    const amount     = Math.round(listing.price * 100) // en centimes
-    const appFee     = Math.round(amount * COMMISSION)
-    const siteUrl    = process.env.URL || 'http://localhost:8888'
+    const prixArticle    = listing.price
+    const fraisFixe      = 1.00
+    const fraisVariable  = prixArticle * 0.05
+    const totalFraisNout = fraisFixe + fraisVariable
+    const totalAcheteur  = prixArticle + totalFraisNout
+
+    const amountCents  = Math.round(totalAcheteur * 100)
+    const appFeeCents  = Math.round(totalFraisNout * 100)
+    const siteUrl      = process.env.URL || 'http://localhost:8888'
 
     // Créer la commande en base
     const { data: order } = await supabase.from('orders').insert({
       buyer_id:        buyerId,
       seller_id:       listing.user_id,
       listing_id:      listingId,
-      total_price:     listing.price,
+      total_price:     totalAcheteur,
       shipping_method: 'hand',
       status:          'pending',
     }).select().single()
@@ -59,12 +64,12 @@ exports.handler = async (event) => {
             name:   listing.title,
             images: listing.images?.slice(0, 1) ?? [],
           },
-          unit_amount: amount,
+          unit_amount: amountCents,
         },
         quantity: 1,
       }],
       payment_intent_data: {
-        application_fee_amount: appFee,
+        application_fee_amount: appFeeCents,
         transfer_data: { destination: listing.profiles.stripe_account_id },
       },
       metadata: { orderId: order.id, listingId },
