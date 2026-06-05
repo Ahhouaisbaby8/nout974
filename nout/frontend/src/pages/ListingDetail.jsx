@@ -126,6 +126,8 @@ export default function ListingDetail() {
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
+  const isSellerActive = listing.created_at &&
+    Date.now() - new Date(listing.created_at).getTime() < 30 * 24 * 60 * 60 * 1000
 
   const handleSendOffer = async () => {
     const amount = parseFloat(offerAmount)
@@ -245,6 +247,12 @@ export default function ListingDetail() {
               )}
               <div>
                 <p className="font-semibold text-nout-dark">{seller.username}</p>
+                {isSellerActive && (
+                  <span className="flex items-center gap-1 text-emerald-600 text-[11px] font-semibold mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                    Vendeur actif
+                  </span>
+                )}
                 <p className="text-xs text-gray-400">Membre depuis {formatRelativeDate(seller.created_at)}</p>
               </div>
               <span className="ml-auto text-gray-300">›</span>

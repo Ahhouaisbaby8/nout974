@@ -79,6 +79,12 @@ export default function Profile() {
     : memberMonths < 12 ? `${memberMonths} mois`
     : `${Math.floor(memberMonths / 12)} an${Math.floor(memberMonths / 12) > 1 ? 's' : ''}`
 
+  const latestListing = listings.reduce((latest, l) =>
+    !latest || new Date(l.created_at) > new Date(latest.created_at) ? l : latest
+  , null)
+  const isSellerActive = latestListing &&
+    Date.now() - new Date(latestListing.created_at).getTime() < 30 * 24 * 60 * 60 * 1000
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <BackButton />
@@ -98,7 +104,15 @@ export default function Profile() {
 
         {/* Infos */}
         <div className="flex-1 text-center sm:text-left">
-          <h1 className="text-2xl font-extrabold text-nout-dark">{profile.username}</h1>
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+            <h1 className="text-2xl font-extrabold text-nout-dark">{profile.username}</h1>
+            {isSellerActive && (
+              <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                Vendeur actif
+              </span>
+            )}
+          </div>
           {profile.city && (
             <p className="text-sm text-gray-400 mt-1">📍 {profile.city}</p>
           )}
