@@ -14,8 +14,10 @@ export default function Conversation() {
   const [searchParams] = useSearchParams()
   const listingId = searchParams.get('annonce') ?? null
 
-  const { user } = useAuth()
+  const { user, refreshUnreadCount } = useAuth()
   const bottomRef = useRef(null)
+  const scrollContainerRef = useRef(null)
+  const isInitialLoad = useRef(true)
 
   const [otherUser, setOtherUser] = useState(null)
   const [messages, setMessages]   = useState([])
@@ -23,23 +25,45 @@ export default function Conversation() {
   const [loading, setLoading]     = useState(true)
   const [sending, setSending]     = useState(false)
 
+  const isNearBottom = () => {
+    const el = scrollContainerRef.current
+    if (!el) return true
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100
+  }
+
+  // Réinitialiser le flag quand on change de conversation
+  useEffect(() => {
+    isInitialLoad.current = true
+  }, [otherUserId])
+
   // Charger le profil de l'interlocuteur + les messages
   useEffect(() => {
+    setLoading(true)
+    setMessages([])
+    setOtherUser(null)
     Promise.all([
       getProfile(otherUserId),
       getMessages(user.id, otherUserId, listingId),
     ]).then(([profile, msgs]) => {
       setOtherUser(profile)
       setMessages(msgs)
-      // Marquer comme lus
+      // Marquer comme lus et rafraîchir le badge
       const unread = msgs.filter(m => !m.is_read && m.sender_id === otherUserId).map(m => m.id)
-      if (unread.length) markAsRead(unread)
+      if (unread.length) markAsRead(unread).then(() => refreshUnreadCount())
     }).finally(() => setLoading(false))
   }, [user.id, otherUserId, listingId])
 
   // Scroll automatique vers le bas
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!messages.length) return
+    if (isInitialLoad.current) {
+      // Premier chargement : scroll instantané sans animation
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+      isInitialLoad.current = false
+    } else if (isNearBottom()) {
+      // Nouveau message : scroll doux seulement si déjà près du bas
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
   }, [messages])
 
   // Temps réel — nouveaux messages entrants
@@ -47,7 +71,7 @@ export default function Conversation() {
     const channel = subscribeToMessages(user.id, (payload) => {
       if (payload.new.sender_id === otherUserId) {
         setMessages(prev => [...prev, payload.new])
-        markAsRead([payload.new.id])
+        markAsRead([payload.new.id]).then(() => refreshUnreadCount())
       }
     })
     return () => supabase.removeChannel(channel)
@@ -99,7 +123,7 @@ export default function Conversation() {
       </div>
 
       {/* ── MESSAGES ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
         {messages.length === 0 && (
           <div className="text-center text-gray-400 text-sm py-8">
             <p className="text-3xl mb-2">👋</p>

@@ -105,3 +105,8 @@
     @apply w-full px-4 py-3 border border-[#B2EDE8] rounded-lg text-[#0A1628] focus:outline-none focus:border-[#2EC4B6] transition-colors bg-white;
   }
 }
+
+@keyframes slideInRight {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}

@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getConversations } from '../services/messages'
+import { supabase } from '../services/supabase'
 import { formatRelativeDate } from '../utils/formatters'
 import { getAvatarUrl } from '../utils/avatar'
 
@@ -21,28 +22,46 @@ export default function Messages() {
   const [loading, setLoading] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
 
+  const loadConversations = useCallback(async () => {
+    try {
+      const msgs = await getConversations(user.id)
+      const map = new Map()
+      for (const msg of msgs) {
+        // Null safety : le profil peut être absent si le compte a été supprimé
+        const senderId = msg.sender?.id ?? msg.sender_id
+        const other = senderId === user.id ? msg.receiver : msg.sender
+        if (!other) continue
+        if (!map.has(other.id)) {
+          map.set(other.id, { other, lastMessage: msg, unread: 0 })
+        }
+        if (!msg.is_read && msg.receiver_id === user.id) {
+          map.get(other.id).unread++
+        }
+      }
+      setConversations(Array.from(map.values()))
+    } catch {
+      setConversations([])
+    }
+  }, [user.id])
+
   useEffect(() => {
     if (!localStorage.getItem(WELCOME_KEY)) setShowWelcome(true)
+    loadConversations().finally(() => setLoading(false))
+  }, [loadConversations])
 
-    getConversations(user.id)
-      .then(msgs => {
-        // Grouper par interlocuteur (dernier message par personne)
-        const map = new Map()
-        for (const msg of msgs) {
-          const other = msg.sender.id === user.id ? msg.receiver : msg.sender
-          if (!other) continue
-          if (!map.has(other.id)) {
-            map.set(other.id, { other, lastMessage: msg, unread: 0 })
-          }
-          if (!msg.is_read && msg.receiver_id === user.id) {
-            map.get(other.id).unread++
-          }
-        }
-        setConversations(Array.from(map.values()))
-      })
-      .catch(() => setConversations([]))
-      .finally(() => setLoading(false))
-  }, [user.id])
+  // Temps réel : mise à jour de la liste quand un message arrive
+  useEffect(() => {
+    const channel = supabase
+      .channel(`messages-list-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${user.id}`,
+      }, () => loadConversations())
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [user.id, loadConversations])
 
   const dismissWelcome = () => {
     localStorage.setItem(WELCOME_KEY, '1')
@@ -108,8 +127,11 @@ export default function Messages() {
               <button
                 key={other.id}
                 onClick={() => navigate(`/messages/${other.id}`)}
-                className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4 text-left w-full"
+                className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center gap-3 text-left w-full"
               >
+                {/* Point bleu — indicateur non lu (largeur fixe pour aligner toutes les lignes) */}
+                <span className={`flex-shrink-0 w-2.5 h-2.5 rounded-full transition-all ${unread > 0 ? 'bg-[#1A3A8F]' : 'bg-transparent'}`} />
+
                 {/* Avatar */}
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={other.username} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
@@ -122,14 +144,14 @@ export default function Messages() {
                 {/* Contenu */}
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
-                    <p className={`font-semibold text-sm truncate ${unread > 0 ? 'text-nout-dark' : 'text-gray-700'}`}>
+                    <p className={`text-sm truncate ${unread > 0 ? 'font-semibold text-[#1A1A2E]' : 'font-medium text-gray-700'}`}>
                       {other.username}
                     </p>
                     <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
                       {formatRelativeDate(lastMessage.created_at)}
                     </span>
                   </div>
-                  <p className={`text-sm truncate mt-0.5 ${unread > 0 ? 'font-semibold text-nout-dark' : 'text-gray-400'}`}>
+                  <p className={`text-sm truncate mt-0.5 ${unread > 0 ? 'font-semibold text-[#1A1A2E]' : 'text-gray-400'}`}>
                     {isMine ? 'Toi : ' : ''}{lastMessage.content}
                   </p>
                 </div>

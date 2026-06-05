@@ -4,7 +4,7 @@ export const getConversations = async (userId) => {
   const { data, error } = await supabase
     .from('messages')
     .select(`
-      id, content, created_at, is_read,
+      id, content, created_at, is_read, sender_id, receiver_id,
       listing_id, listings(title, images),
       sender:profiles!sender_id(id, username, avatar_url),
       receiver:profiles!receiver_id(id, username, avatar_url)
@@ -51,7 +51,7 @@ export const markAsRead = async (messageIds) => {
 
 export const subscribeToMessages = (userId, callback) =>
   supabase
-    .channel('messages')
+    .channel(`conv-recv-${userId}`)
     .on('postgres_changes', {
       event: 'INSERT',
       schema: 'public',

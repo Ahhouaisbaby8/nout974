@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
 
 const AuthContext = createContext(null)
@@ -105,6 +105,16 @@ export function AuthProvider({ children }) {
     setProfile(prev => ({ ...prev, ...updates }))
   }
 
+  const refreshUnreadCount = useCallback(async () => {
+    if (!user) return
+    const { count: c } = await supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('receiver_id', user.id)
+      .eq('is_read', false)
+    setUnreadCount(c ?? 0)
+  }, [user?.id])
+
   const isAdmin     = profile?.role === 'admin'
   const isModerator = profile?.role === 'moderator' || isAdmin
 
@@ -112,7 +122,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user, profile, loading,
       register, login, loginWithGoogle, logout, updateProfile,
-      isAdmin, isModerator, unreadCount,
+      isAdmin, isModerator, unreadCount, refreshUnreadCount,
     }}>
       {!loading && children}
     </AuthContext.Provider>

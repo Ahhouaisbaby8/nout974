@@ -5,6 +5,7 @@ import Header      from './components/layout/Header'
 import Footer      from './components/layout/Footer'
 import BottomNav   from './components/layout/BottomNav'
 import CookieBanner from './components/legal/CookieBanner'
+import MessageToast from './components/MessageToast'
 
 // Pages publiques
 import Home           from './pages/Home'
@@ -123,6 +124,7 @@ export default function App() {
       <Footer />
       <BottomNav />
       <CookieBanner />
+      <MessageToast />
     </div>
   )
 }
