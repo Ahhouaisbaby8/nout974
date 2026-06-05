@@ -195,15 +195,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── D) SECTION PRIX ──────────────────────────────────────── */}
-      <PriceRangeSection />
-
-      {/* ── C) ANNONCES RÉCENTES ─────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pb-14">
+      {/* ── C) NOUVEAUTÉS ────────────────────────────────────────── */}
+      <section className="max-w-7xl mx-auto px-4 pt-8 pb-10">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="font-title font-bold text-[22px] text-nout-texte">
-            Nouvelles annonces
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-title font-bold text-[22px] text-nout-texte">Nouveautés</h2>
+            <span className="bg-nout-turquoise text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
+          </div>
           <button
             onClick={() => navigate('/recherche')}
             className="text-nout-turquoise text-sm font-semibold hover:underline"
@@ -237,6 +235,9 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* ── D) SECTION PRIX ──────────────────────────────────────── */}
+      <PriceRangeSection />
 
       {/* ── E) COMMENT ÇA MARCHE ─────────────────────────────────── */}
       <section className="bg-nout-creme py-16 px-4">
