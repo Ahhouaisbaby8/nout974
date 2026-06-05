@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { getFavorites, removeFavorite } from '../services/favorites'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import Spinner from '../components/ui/Spinner'
+import SkeletonCard from '../components/ui/SkeletonCard'
 
 export default function Favorites() {
   const { user } = useAuth()
@@ -26,7 +27,14 @@ export default function Favorites() {
     }
   }
 
-  if (loading) return <div className="flex justify-center py-24"><Spinner size="lg" /></div>
+  if (loading) return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="h-8 w-40 bg-gray-200 rounded-full animate-pulse mb-6" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)}
+      </div>
+    </div>
+  )
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

@@ -66,7 +66,40 @@ export default function ListingDetail() {
   }
 
   if (loading) return (
-    <div className="flex justify-center py-24"><Spinner size="lg" /></div>
+    <div className="max-w-5xl mx-auto px-4 py-6 animate-pulse">
+      <div className="h-5 w-20 bg-gray-200 rounded-full mb-4" />
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="aspect-square bg-gray-200 rounded-2xl" />
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            <div className="h-6 w-20 bg-gray-200 rounded-full" />
+            <div className="h-6 w-16 bg-gray-200 rounded-full" />
+          </div>
+          <div>
+            <div className="h-7 bg-gray-200 rounded-full w-3/4 mb-3" />
+            <div className="h-9 bg-gray-200 rounded-full w-1/3" />
+          </div>
+          <div className="flex gap-3">
+            <div className="h-4 w-24 bg-gray-100 rounded-full" />
+            <div className="h-4 w-20 bg-gray-100 rounded-full" />
+          </div>
+          <div className="bg-gray-100 rounded-xl p-4 space-y-2">
+            <div className="h-3 bg-gray-200 rounded-full w-full" />
+            <div className="h-3 bg-gray-200 rounded-full w-5/6" />
+            <div className="h-3 bg-gray-200 rounded-full w-4/6" />
+          </div>
+          <div className="bg-gray-100 rounded-xl p-4 flex gap-3">
+            <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-gray-200 rounded-full w-1/3" />
+              <div className="h-3 bg-gray-200 rounded-full w-1/2" />
+            </div>
+          </div>
+          <div className="h-12 bg-gray-200 rounded-xl" />
+          <div className="h-10 bg-gray-100 rounded-xl" />
+        </div>
+      </div>
+    </div>
   )
 
   if (notFound) return (
