@@ -31,13 +31,26 @@ export const getMessages = async (userId, otherUserId, listingId = null) => {
   return data
 }
 
-export const sendMessage = async ({ senderId, receiverId, listingId = null, content }) => {
+export const sendMessage = async ({ senderId, receiverId, listingId = null, content, senderName = 'NOUT' }) => {
   const { data, error } = await supabase
     .from('messages')
     .insert({ sender_id: senderId, receiver_id: receiverId, listing_id: listingId ?? undefined, content })
     .select()
     .single()
   if (error) throw error
+
+  // Notification push best-effort (pas de blocage si échec)
+  fetch('/.netlify/functions/send-push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      receiver_id: receiverId,
+      title: senderName,
+      body: content.length > 80 ? content.slice(0, 80) + '…' : content,
+      url: `/messages/${senderId}`,
+    }),
+  }).catch(() => {})
+
   return data
 }
 

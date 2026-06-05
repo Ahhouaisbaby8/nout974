@@ -14,7 +14,7 @@ export default function Conversation() {
   const [searchParams] = useSearchParams()
   const listingId = searchParams.get('annonce') ?? null
 
-  const { user, refreshUnreadCount } = useAuth()
+  const { user, profile, refreshUnreadCount } = useAuth()
   const bottomRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const isInitialLoad = useRef(true)
@@ -91,6 +91,7 @@ export default function Conversation() {
         receiverId: otherUserId,
         listingId,
         content: text,
+        senderName: profile?.username,
       })
       setMessages(prev => [...prev, msg])
     } catch {

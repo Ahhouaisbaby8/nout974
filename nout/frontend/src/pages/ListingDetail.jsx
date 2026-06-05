@@ -14,7 +14,7 @@ import SkeletonCard from '../components/ui/SkeletonCard'
 
 export default function ListingDetail() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
 
   const [listing, setListing]   = useState(null)
@@ -139,6 +139,7 @@ export default function ListingDetail() {
         receiverId: seller.id,
         listingId: id,
         content: `💰 Offre : ${amount} €\nPour l'annonce : ${listing.title}`,
+        senderName: profile?.username,
       })
       setShowOffer(false)
       setOfferAmount('')

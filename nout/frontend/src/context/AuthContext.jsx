@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 
 const AuthContext = createContext(null)
 
@@ -114,6 +115,8 @@ export function AuthProvider({ children }) {
       .eq('is_read', false)
     setUnreadCount(c ?? 0)
   }, [user?.id])
+
+  usePushNotifications(user?.id)
 
   const isAdmin     = profile?.role === 'admin'
   const isModerator = profile?.role === 'moderator' || isAdmin
