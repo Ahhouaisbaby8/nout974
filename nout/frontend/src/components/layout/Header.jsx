@@ -1,81 +1,130 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
-import Logo from '../Logo'
 
 export default function Header() {
   const { user, profile, logout, isAdmin, unreadCount: unread } = useAuth()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const [query, setQuery] = useState('')
 
   const handleLogout = async () => {
     await logout()
     navigate('/')
   }
 
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (query.trim()) navigate(`/recherche?q=${encodeURIComponent(query.trim())}`)
+    else navigate('/recherche')
+  }
+
   const avatarUrl = getAvatarUrl(profile?.avatar_url)
 
   return (
-    <header className="bg-nout-secondary border-b border-nout-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <header className="bg-white border-b border-[#E8EFF5] sticky top-0 z-50 shadow-nout-sm">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
 
-        {/* Logo */}
-        <Link to="/">
-          <Logo variant="color" size="md" />
+        {/* ── LOGO ── */}
+        <Link to="/" className="flex-shrink-0 mr-2">
+          <span className="font-title font-extrabold text-[22px] text-nout-roi tracking-tight leading-none">
+            NOUT
+          </span>
         </Link>
 
-        {/* Nav desktop */}
-        <nav className="hidden md:flex gap-6 text-sm">
-          <Link to="/"         className="text-nout-dark hover:text-nout-primary transition-colors">Accueil</Link>
-          <Link to="/a-propos" className="text-nout-dark hover:text-nout-primary transition-colors">À propos</Link>
-          <Link to="/aide"     className="text-nout-dark hover:text-nout-primary transition-colors">Aide</Link>
+        {/* ── BARRE DE RECHERCHE DESKTOP ── */}
+        <form
+          onSubmit={handleSearch}
+          className="hidden md:flex flex-1 max-w-sm items-center gap-2 bg-gray-50 border border-transparent rounded-full px-4 py-2 transition-all focus-within:border-nout-turquoise focus-within:bg-white focus-within:shadow-nout-sm"
+        >
+          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Rechercher sur NOUT…"
+            className="flex-1 bg-transparent outline-none text-sm text-nout-texte placeholder-gray-400 min-w-0"
+          />
+        </form>
+
+        {/* ── NAV DESKTOP ── */}
+        <nav className="hidden lg:flex items-center gap-5 text-[14px] ml-2">
+          <Link to="/"         className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Accueil</Link>
+          <Link to="/a-propos" className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
+          <Link to="/aide"     className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
           {isAdmin && (
-            <Link to="/admin" className="text-nout-primary font-semibold hover:underline">Admin</Link>
+            <Link to="/admin" className="text-nout-roi font-semibold hover:text-nout-lagon transition-colors">
+              Admin
+            </Link>
           )}
         </nav>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3">
+        {/* ── ACTIONS ── */}
+        <div className="ml-auto flex items-center gap-2">
+
           {user ? (
             <>
+              {/* Bouton Vendre */}
               <Link
                 to="/publier"
-                className="hidden sm:block px-4 py-2 bg-nout-primary text-white rounded-nout text-sm font-bold hover:bg-[#24A99D] transition-all"
+                className="hidden sm:flex items-center gap-1 px-4 py-2 text-white text-[13px] font-semibold rounded-full bg-nout-accent hover:opacity-90 transition-opacity"
               >
-                + Publier
+                <span className="text-base leading-none">+</span> Vendre
               </Link>
 
               {/* Icône messages avec badge */}
-              <Link to="/messages" className="relative text-nout-dark hover:text-nout-primary transition-colors" title="Messages">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <Link
+                to="/messages"
+                title="Messages"
+                className="relative w-9 h-9 flex items-center justify-center rounded-full text-nout-muted hover:bg-gray-100 hover:text-nout-turquoise transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
                 </svg>
                 {unread > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
                     {unread > 9 ? '9+' : unread}
                   </span>
                 )}
               </Link>
 
-              <Link to={`/profil/${user.id}`} className="flex items-center gap-2">
+              {/* Avatar */}
+              <Link to={`/profil/${user.id}`} className="flex-shrink-0">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={profile?.username} className="w-8 h-8 rounded-full object-cover border-2 border-nout-primary" />
+                  <img
+                    src={avatarUrl}
+                    alt={profile?.username}
+                    className="w-8 h-8 rounded-full object-cover border-2 border-nout-turquoise"
+                  />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-nout-primary text-white flex items-center justify-center text-sm font-bold">
+                  <div className="w-8 h-8 rounded-full bg-nout-roi text-white flex items-center justify-center text-xs font-bold font-title">
                     {profile?.username?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase()}
                   </div>
                 )}
               </Link>
 
-              <button onClick={handleLogout} className="text-sm text-[#666] hover:text-nout-error transition-colors">
-                Déconnexion
+              {/* Déconnexion desktop */}
+              <button
+                onClick={handleLogout}
+                className="hidden lg:block text-xs text-nout-muted hover:text-red-500 transition-colors ml-1"
+              >
+                Déco
               </button>
             </>
           ) : (
             <>
-              <Link to="/connexion"   className="px-5 py-2 border-2 border-nout-primary text-nout-primary rounded-nout text-sm font-bold hover:bg-nout-primary hover:text-white transition-all">
+              <Link
+                to="/connexion"
+                className="px-4 py-2 border-2 border-nout-roi text-nout-roi rounded-full text-[13px] font-semibold hover:bg-nout-roi hover:text-white transition-all"
+              >
                 Connexion
               </Link>
-              <Link to="/inscription" className="px-5 py-2 bg-nout-primary text-white rounded-nout text-sm font-bold hover:bg-[#24A99D] transition-all">
+              <Link
+                to="/inscription"
+                className="hidden sm:block px-4 py-2 text-white text-[13px] font-semibold rounded-full bg-nout-accent hover:opacity-90 transition-opacity"
+              >
                 S'inscrire
               </Link>
             </>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { getListings } from '../services/listings'
+import { getFavoriteIds } from '../services/favorites'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
 import ListingCard from '../components/ui/ListingCard'
@@ -10,6 +12,7 @@ const PRICE_MAX = 5000
 const PER_PAGE  = 20
 
 export default function Search() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
 
   // Lire les filtres depuis l'URL
@@ -27,6 +30,7 @@ export default function Search() {
   const [page,      setPage]      = useState(1)
   const [loading,   setLoading]   = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [favIds,    setFavIds]    = useState(new Set())
 
   const buildParams = useCallback(() => ({
     search:   query    || undefined,
@@ -63,6 +67,11 @@ export default function Search() {
       setLoadingMore(false)
     }
   }, [buildParams, page])
+
+  useEffect(() => {
+    if (!user) { setFavIds(new Set()); return }
+    getFavoriteIds(user.id).then(setFavIds).catch(() => {})
+  }, [user?.id])
 
   // Lancer la recherche au chargement + quand l'URL change
   useEffect(() => {
@@ -219,7 +228,7 @@ export default function Search() {
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {listings.map(l => <ListingCard key={l.id} listing={l} />)}
+            {listings.map(l => <ListingCard key={l.id} listing={l} isFavorited={favIds.has(l.id)} />)}
           </div>
 
           {listings.length < total && (

@@ -2,54 +2,85 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer className="bg-nout-dark text-white mt-16">
+    <footer className="bg-nout-nuit text-white mt-16">
+
+      {/* Ligne accent turquoise */}
+      <div className="h-[3px] bg-nout-accent" />
+
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
 
+        {/* ── GRILLE 4 COLONNES ── */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
+
+          {/* Colonne identité */}
           <div>
-            <h4 className="text-lg font-bold mb-4 text-nout-primary">NOUT</h4>
-            <p className="text-sm text-gray-400">Marketplace de seconde main pour La Réunion 974</p>
-            <p className="text-xs text-gray-500 mt-3">contact@nout974.re</p>
-            <p className="text-xs text-gray-500">Saint-Denis, Réunion 974</p>
+            <span className="font-title font-extrabold text-[26px] text-white tracking-tight leading-none block mb-3">
+              NOUT
+            </span>
+            <p className="text-sm text-white/60 italic font-title leading-relaxed">
+              Nout dressing.<br />
+              Nout maison.<br />
+              Nout 974.
+            </p>
+            <div className="mt-4 space-y-1">
+              <p className="text-xs text-white/40">contact@nout974.re</p>
+              <p className="text-xs text-white/40">Saint-Denis, La Réunion 974</p>
+            </div>
           </div>
 
+          {/* Colonne navigation */}
           <div>
-            <h4 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-300">Navigation</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/"         className="text-gray-400 hover:text-nout-primary transition-colors">Accueil</Link></li>
-              <li><Link to="/a-propos" className="text-gray-400 hover:text-nout-primary transition-colors">À propos</Link></li>
-              <li><Link to="/aide"     className="text-gray-400 hover:text-nout-primary transition-colors">Aide & Contact</Link></li>
-              <li><Link to="/publier"  className="text-gray-400 hover:text-nout-primary transition-colors">Publier une annonce</Link></li>
+            <h4 className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-4">
+              Navigation
+            </h4>
+            <ul className="space-y-2.5">
+              <li><Link to="/"         className="text-sm text-white/60 hover:text-white transition-colors">Accueil</Link></li>
+              <li><Link to="/recherche" className="text-sm text-white/60 hover:text-white transition-colors">Annonces</Link></li>
+              <li><Link to="/a-propos" className="text-sm text-white/60 hover:text-white transition-colors">À propos</Link></li>
+              <li><Link to="/aide"     className="text-sm text-white/60 hover:text-white transition-colors">Aide & Contact</Link></li>
+              <li><Link to="/publier"  className="text-sm text-white/60 hover:text-white transition-colors">Publier une annonce</Link></li>
             </ul>
           </div>
 
+          {/* Colonne légal */}
           <div>
-            <h4 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-300">Légal</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/legal/cgu"            className="text-gray-400 hover:text-nout-primary transition-colors">CGU</Link></li>
-              <li><Link to="/legal/cgv"            className="text-gray-400 hover:text-nout-primary transition-colors">CGV</Link></li>
-              <li><Link to="/legal/confidentialite" className="text-gray-400 hover:text-nout-primary transition-colors">Confidentialité & RGPD</Link></li>
-              <li><Link to="/legal/cookies"        className="text-gray-400 hover:text-nout-primary transition-colors">Politique cookies</Link></li>
-              <li><Link to="/legal/mentions"       className="text-gray-400 hover:text-nout-primary transition-colors">Mentions légales</Link></li>
+            <h4 className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-4">
+              Légal
+            </h4>
+            <ul className="space-y-2.5">
+              <li><Link to="/legal/cgu"             className="text-sm text-white/60 hover:text-white transition-colors">CGU</Link></li>
+              <li><Link to="/legal/cgv"             className="text-sm text-white/60 hover:text-white transition-colors">CGV</Link></li>
+              <li><Link to="/legal/confidentialite" className="text-sm text-white/60 hover:text-white transition-colors">Confidentialité & RGPD</Link></li>
+              <li><Link to="/legal/cookies"         className="text-sm text-white/60 hover:text-white transition-colors">Politique cookies</Link></li>
+              <li><Link to="/legal/mentions"        className="text-sm text-white/60 hover:text-white transition-colors">Mentions légales</Link></li>
             </ul>
           </div>
 
+          {/* Colonne compte */}
           <div>
-            <h4 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-300">Mon compte</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/connexion"   className="text-gray-400 hover:text-nout-primary transition-colors">Connexion</Link></li>
-              <li><Link to="/inscription" className="text-gray-400 hover:text-nout-primary transition-colors">Inscription</Link></li>
-              <li><Link to="/favoris"     className="text-gray-400 hover:text-nout-primary transition-colors">Mes favoris</Link></li>
-              <li><Link to="/commandes"   className="text-gray-400 hover:text-nout-primary transition-colors">Mes commandes</Link></li>
+            <h4 className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-4">
+              Mon compte
+            </h4>
+            <ul className="space-y-2.5">
+              <li><Link to="/connexion"   className="text-sm text-white/60 hover:text-white transition-colors">Connexion</Link></li>
+              <li><Link to="/inscription" className="text-sm text-white/60 hover:text-white transition-colors">Inscription</Link></li>
+              <li><Link to="/favoris"     className="text-sm text-white/60 hover:text-white transition-colors">Mes favoris</Link></li>
+              <li><Link to="/commandes"   className="text-sm text-white/60 hover:text-white transition-colors">Mes commandes</Link></li>
             </ul>
           </div>
 
         </div>
 
-        <div className="border-t border-gray-700 pt-8 text-center text-xs text-gray-500">
-          <p>© {new Date().getFullYear()} NOUT — Marketplace 974. Tous droits réservés.</p>
-          <p className="mt-1">Paiements sécurisés par Stripe · SIRET : [à compléter]</p>
+        {/* ── PIED DE PAGE ── */}
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p className="text-xs text-white/30">
+            © {new Date().getFullYear()} NOUT — Marketplace 974. Tous droits réservés.
+          </p>
+          <p className="text-xs text-white/30">
+            Paiements sécurisés par <span className="text-white/50">Stripe</span>
+          </p>
         </div>
+
       </div>
     </footer>
   )

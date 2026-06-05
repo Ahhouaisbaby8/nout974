@@ -1,99 +1,91 @@
 /* ============================================================
-   NOUT — Charte Graphique NUIT TROPICALE 🌊
-   Couleur signature : turquoise lagon — La Réunion, océan Indien
-   Style : élégant & moderne — Airbnb × Vinted × 974
+   NOUT — Charte Graphique V2 — Depop × StockX × 974
+   Palette : Bleu Nuit Profond + Lagon + Turquoise Vif
    ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 :root {
 
-  /* ── Turquoise — couleur signature ── */
-  --hibiscus:        #2EC4B6;   /* turquoise signature */
-  --hibiscus-dark:   #24A99D;   /* hover / actif */
-  --hibiscus-light:  #5ED8CC;   /* variante claire */
-  --hibiscus-pale:   #E0FAF8;   /* fond teinté turquoise */
-  --hibiscus-bg:     #C8F5F1;   /* fond plus visible */
+  /* ── Couleurs principales ── */
+  --nout-nuit:      #0A0F2C;   /* Fond sombre profond */
+  --nout-roi:       #1A3A8F;   /* Bleu roi signature */
+  --nout-lagon:     #0E7FAB;   /* Bleu lagon */
+  --nout-turquoise: #00C4B4;   /* Turquoise vif accent */
+  --nout-creme:     #F5F0E8;   /* Crème fond clair */
+  --nout-blanc:     #FFFFFF;
+  --nout-texte:     #1A1A2E;   /* Texte principal */
+  --nout-muted:     #6B7A99;   /* Texte secondaire */
 
-  /* ── Accent ── */
-  --corail:          #0A1628;   /* nuit profonde (CTA dark) */
-  --lagon:           #0096C7;   /* bleu lagon (info, liens) */
-
-  /* ── Fonds neutres frais ── */
-  --fond:            #F5FFFE;   /* fond principal */
-  --fond-alt:        #EDFCFB;   /* fond secondaire */
-  --fond-card:       #FFFFFF;   /* fond cartes */
-
-  /* ── Textes ── */
-  --encre:           #0A1628;   /* texte principal (nuit profonde) */
-  --bois:            #1A4A5A;   /* texte secondaire */
-  --brume:           #4A8A8A;   /* texte discret / placeholder */
-
-  /* ── Bordures ── */
-  --bordure:         #B2EDE8;   /* bordure turquoise légère */
-  --bordure-fort:    #7ED8D2;   /* bordure accentuée */
-
-  /* ── États fonctionnels ── */
-  --succes:          #15803D;
-  --succes-bg:       #F0FDF4;
-  --erreur:          #B91C1C;
-  --erreur-bg:       #FEF2F2;
-  --alerte:          #C2410C;
-  --alerte-bg:       #FFF7ED;
-  --info:            #0369A1;
-  --info-bg:         #EFF6FF;
+  /* ── Dégradés Depop-inspired ── */
+  --nout-gradient-card:   linear-gradient(135deg, #E8F0FF 0%, #EEF2FF 50%, #E0F4F8 100%);
+  --nout-gradient-hero:   linear-gradient(135deg, #0A0F2C 0%, #1A3A8F 50%, #0E7FAB 100%);
+  --nout-gradient-accent: linear-gradient(135deg, #0E7FAB 0%, #00C4B4 100%);
 
   /* ── Typographies ── */
-  --font-titre:  'Plus Jakarta Sans', 'Segoe UI', sans-serif;
-  --font-corps:  'DM Sans', 'Segoe UI', sans-serif;
+  --nout-font-title: 'Syne', sans-serif;
+  --nout-font-body:  'Inter', sans-serif;
 
-  /* ── Échelle typographique ── */
-  --t-xs:    11px;
-  --t-sm:    13px;
-  --t-base:  14px;
-  --t-md:    16px;
-  --t-lg:    18px;
-  --t-xl:    20px;
-  --t-2xl:   24px;
-  --t-3xl:   32px;
-  --t-4xl:   40px;
-  --t-5xl:   48px;
+  /* Aliases rétro-compat (utilisés par les anciens composants) */
+  --font-titre: var(--nout-font-title);
+  --font-corps: var(--nout-font-body);
 
-  /* ── Espacements ── */
-  --s-1: 4px;  --s-2: 8px;   --s-3: 12px;  --s-4: 16px;
-  --s-5: 20px; --s-6: 24px;  --s-8: 32px;  --s-10: 40px;
-  --s-12: 48px; --s-16: 64px;
+  /* ── Espacements & effets ── */
+  --nout-radius-card: 16px;
+  --nout-radius-btn:  50px;
+  --nout-shadow-card: 0 4px 24px rgba(10,15,44,0.10);
+  --nout-shadow-hover: 0 8px 32px rgba(14,127,171,0.18);
 
-  /* ── Radius ── */
+  /* Aliases rétro-compat */
   --r-sm:   6px;
   --r-md:   10px;
-  --r-lg:   16px;
+  --r-lg:   var(--nout-radius-card);
   --r-xl:   24px;
-  --r-pill: 9999px;
+  --r-pill: var(--nout-radius-btn);
+  --ombre-xs:   0 1px 3px rgba(10,15,44,0.06);
+  --ombre-sm:   var(--nout-shadow-card);
+  --ombre-md:   0 4px 20px rgba(10,15,44,0.12);
+  --ombre-lg:   0 8px 40px rgba(10,15,44,0.15);
+  --ombre-glow: 0 0 28px rgba(0,196,180,0.35);
 
-  /* ── Ombres ── */
-  --ombre-xs:   0 1px 3px rgba(10, 22, 40, 0.06);
-  --ombre-sm:   0 2px 8px rgba(10, 22, 40, 0.09);
-  --ombre-md:   0 4px 20px rgba(10, 22, 40, 0.12);
-  --ombre-lg:   0 8px 40px rgba(10, 22, 40, 0.15);
-  --ombre-glow: 0 0 28px rgba(46, 196, 182, 0.35);
+  /* ── Couleurs fonctionnelles ── */
+  --hibiscus:       var(--nout-turquoise);
+  --hibiscus-dark:  #00A89A;
+  --hibiscus-light: #33D0C4;
+  --hibiscus-pale:  #E0FAF8;
+  --hibiscus-bg:    #C8F5F1;
+  --corail:         var(--nout-nuit);
+  --lagon:          var(--nout-lagon);
+  --fond:           #F8FAFF;
+  --fond-alt:       #EEF2FF;
+  --fond-card:      #FFFFFF;
+  --encre:          var(--nout-texte);
+  --bois:           #2A3A6A;
+  --brume:          var(--nout-muted);
+  --bordure:        #D6E0F5;
+  --bordure-fort:   #A8BDE8;
+  --succes:         #15803D;
+  --succes-bg:      #F0FDF4;
+  --erreur:         #B91C1C;
+  --erreur-bg:      #FEF2F2;
+  --alerte:         #C2410C;
+  --alerte-bg:      #FFF7ED;
+  --info:           var(--nout-roi);
+  --info-bg:        #EFF6FF;
 
   /* ── Transitions ── */
   --anim:      all 0.18s ease;
   --anim-slow: all 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── Utilitaires ────────────────────────────────────────── */
+/* ── Utilitaires ── */
 
-/* Boutons */
 .nout-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--s-2);
-  font-family: var(--font-corps);
-  font-weight: 700;
-  border-radius: var(--r-pill);
+  gap: 8px;
+  font-family: var(--nout-font-body);
+  font-weight: 600;
+  border-radius: var(--nout-radius-btn);
   border: 2px solid transparent;
   cursor: pointer;
   transition: var(--anim);
@@ -101,30 +93,29 @@
   white-space: nowrap;
   line-height: 1;
 }
-.nout-btn-sm  { padding: 7px 18px;  font-size: var(--t-xs); }
-.nout-btn-md  { padding: 11px 26px; font-size: var(--t-sm); }
-.nout-btn-lg  { padding: 15px 36px; font-size: var(--t-md); }
+.nout-btn-sm  { padding: 7px 18px;  font-size: 11px; }
+.nout-btn-md  { padding: 11px 26px; font-size: 13px; }
+.nout-btn-lg  { padding: 15px 36px; font-size: 15px; }
 
 .nout-btn-primary {
-  background: var(--hibiscus);
+  background: var(--nout-gradient-accent);
   color: #fff;
-  border-color: var(--hibiscus);
+  border-color: transparent;
 }
 .nout-btn-primary:hover {
-  background: var(--hibiscus-dark);
-  border-color: var(--hibiscus-dark);
+  opacity: 0.9;
   transform: translateY(-1px);
-  box-shadow: var(--ombre-glow);
+  box-shadow: var(--nout-shadow-hover);
 }
 .nout-btn-primary:active { transform: translateY(0); }
 
 .nout-btn-secondary {
   background: #fff;
-  color: var(--hibiscus);
-  border-color: var(--hibiscus);
+  color: var(--nout-roi);
+  border-color: var(--nout-roi);
 }
 .nout-btn-secondary:hover {
-  background: var(--hibiscus-pale);
+  background: var(--fond-alt);
 }
 
 .nout-btn-ghost {
@@ -133,8 +124,8 @@
   border-color: var(--bordure);
 }
 .nout-btn-ghost:hover {
-  border-color: var(--hibiscus);
-  color: var(--hibiscus);
+  border-color: var(--nout-turquoise);
+  color: var(--nout-turquoise);
 }
 
 /* Badges */
@@ -143,53 +134,32 @@
   align-items: center;
   gap: 4px;
   padding: 3px 10px;
-  border-radius: var(--r-pill);
+  border-radius: var(--nout-radius-btn);
   font-size: 11px;
   font-weight: 700;
-  font-family: var(--font-corps);
+  font-family: var(--nout-font-body);
   letter-spacing: 0.03em;
 }
-.nout-badge-primary { background: var(--hibiscus-pale); color: var(--hibiscus-dark); }
+.nout-badge-primary { background: var(--fond-alt);      color: var(--nout-roi); }
 .nout-badge-succes  { background: var(--succes-bg);     color: var(--succes); }
 .nout-badge-erreur  { background: var(--erreur-bg);     color: var(--erreur); }
 .nout-badge-alerte  { background: var(--alerte-bg);     color: var(--alerte); }
 .nout-badge-info    { background: var(--info-bg);       color: var(--info); }
 .nout-badge-neutre  { background: var(--fond-alt);      color: var(--bois); }
 
-/* Tags */
-.nout-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 14px;
-  background: #fff;
-  border: 1.5px solid var(--bordure);
-  border-radius: var(--r-pill);
-  font-size: var(--t-xs);
-  font-weight: 600;
-  color: var(--bois);
-  cursor: pointer;
-  transition: var(--anim);
-}
-.nout-tag:hover, .nout-tag.actif {
-  background: var(--hibiscus-pale);
-  border-color: var(--hibiscus);
-  color: var(--hibiscus-dark);
-}
-
 /* Cards */
 .nout-card {
   background: var(--fond-card);
-  border-radius: var(--r-lg);
-  border: 1.5px solid var(--bordure);
-  box-shadow: var(--ombre-xs);
+  border-radius: var(--nout-radius-card);
+  border: 1px solid var(--bordure);
+  box-shadow: var(--nout-shadow-card);
   overflow: hidden;
-  transition: var(--anim);
+  transition: var(--anim-slow);
 }
 .nout-card:hover {
-  box-shadow: var(--ombre-md);
-  border-color: var(--bordure-fort);
-  transform: translateY(-3px);
+  box-shadow: var(--nout-shadow-hover);
+  border-color: var(--nout-turquoise);
+  transform: translateY(-4px);
 }
 
 /* Input */
@@ -198,29 +168,29 @@
   padding: 11px 16px;
   border: 1.5px solid var(--bordure);
   border-radius: var(--r-md);
-  font-family: var(--font-corps);
-  font-size: var(--t-sm);
+  font-family: var(--nout-font-body);
+  font-size: 13px;
   color: var(--encre);
   background: #fff;
   outline: none;
   transition: var(--anim);
 }
 .nout-input:focus {
-  border-color: var(--hibiscus);
-  box-shadow: 0 0 0 3px rgba(217, 79, 92, 0.15);
+  border-color: var(--nout-turquoise);
+  box-shadow: 0 0 0 3px rgba(0,196,180,0.15);
 }
 .nout-input::placeholder { color: var(--brume); }
 
 /* Prix */
 .nout-prix {
-  font-family: var(--font-titre);
-  font-weight: 800;
-  color: var(--encre);
+  font-family: var(--nout-font-title);
+  font-weight: 700;
+  color: var(--nout-roi);
 }
 
 /* Lien */
 .nout-lien {
-  color: var(--hibiscus);
+  color: var(--nout-turquoise);
   font-weight: 600;
   text-decoration: none;
   transition: var(--anim);
@@ -230,6 +200,27 @@
 /* Divider */
 .nout-divider {
   border: none;
-  border-top: 1.5px solid var(--bordure);
-  margin: var(--s-6) 0;
+  border-top: 1px solid var(--bordure);
+  margin: 24px 0;
+}
+
+/* Tags */
+.nout-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  background: #fff;
+  border: 1.5px solid var(--bordure);
+  border-radius: var(--nout-radius-btn);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bois);
+  cursor: pointer;
+  transition: var(--anim);
+}
+.nout-tag:hover, .nout-tag.actif {
+  background: var(--fond-alt);
+  border-color: var(--nout-roi);
+  color: var(--nout-roi);
 }

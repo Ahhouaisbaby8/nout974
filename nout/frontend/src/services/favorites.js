@@ -35,3 +35,11 @@ export const isFavorite = async (userId, listingId) => {
     .maybeSingle()
   return !!data
 }
+
+export const getFavoriteIds = async (userId) => {
+  const { data } = await supabase
+    .from('favorites')
+    .select('listing_id')
+    .eq('user_id', userId)
+  return new Set((data ?? []).map(f => f.listing_id))
+}

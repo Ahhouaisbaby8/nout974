@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { getListingById, deleteListing, updateListing } from '../services/listings'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
+import { getAvatarUrl } from '../utils/avatar'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import ReportModal from '../components/ui/ReportModal'
@@ -162,9 +163,17 @@ export default function ListingDetail() {
               to={`/profil/${seller.id}`}
               className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow"
             >
-              <div className="w-12 h-12 rounded-full bg-nout-primary text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
-                {seller.username?.[0]?.toUpperCase() ?? '?'}
-              </div>
+              {getAvatarUrl(seller.avatar_url) ? (
+                <img
+                  src={getAvatarUrl(seller.avatar_url)}
+                  alt={seller.username}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-nout-primary flex-shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-nout-primary text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+                  {seller.username?.[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
               <div>
                 <p className="font-semibold text-nout-dark">{seller.username}</p>
                 <p className="text-xs text-gray-400">Membre depuis {formatRelativeDate(seller.created_at)}</p>

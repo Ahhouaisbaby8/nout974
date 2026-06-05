@@ -7,35 +7,43 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* ── Palette NUIT TROPICALE 🌊 ── */
-        'nout-primary':   '#2EC4B6',   // turquoise signature
-        'nout-dark-pri':  '#24A99D',   // hover turquoise
-        'nout-light-pri': '#5ED8CC',   // turquoise clair
-        'nout-pale-pri':  '#E0FAF8',   // fond teinté turquoise
+        /* ── Palette NOUT V2 — Depop × StockX × 974 ── */
+        'nout-nuit':      '#0A0F2C',   // fond sombre profond
+        'nout-roi':       '#1A3A8F',   // bleu roi signature
+        'nout-lagon':     '#0E7FAB',   // bleu lagon
+        'nout-turquoise': '#00C4B4',   // turquoise vif accent
+        'nout-creme':     '#F5F0E8',   // crème fond clair
+        'nout-texte':     '#1A1A2E',   // texte principal
+        'nout-muted':     '#6B7A99',   // texte secondaire
+        'nout-fond':      '#F8FAFF',   // fond général
+        'nout-fond-alt':  '#EEF2FF',   // fond alternatif
+        'nout-border':    '#D6E0F5',   // bordure légère
 
-        'nout-accent':    '#0A1628',   // nuit profonde (CTA dark)
-        'nout-lagon':     '#0096C7',   // bleu lagon (info)
-
-        'nout-secondary': '#F5FFFE',   // fond principal
-        'nout-light':     '#EDFCFB',   // fond alternatif
-        'nout-card':      '#FFFFFF',   // fond cartes
-
-        'nout-dark':      '#0A1628',   // texte principal (nuit)
-        'nout-mid':       '#1A4A5A',   // texte secondaire
-        'nout-muted':     '#4A8A8A',   // texte discret
-
-        'nout-border':    '#B2EDE8',   // bordure turquoise légère
-        'nout-border-md': '#7ED8D2',   // bordure accentuée
-
+        /* Aliases rétro-compat (anciens composants) */
+        'nout-primary':   '#00C4B4',
+        'nout-dark-pri':  '#00A89A',
+        'nout-pale-pri':  '#E0FAF8',
+        'nout-secondary': '#F8FAFF',
+        'nout-light':     '#EEF2FF',
+        'nout-card':      '#FFFFFF',
+        'nout-dark':      '#1A1A2E',
+        'nout-mid':       '#2A3A6A',
+        'nout-border-md': '#A8BDE8',
         'nout-success':   '#15803D',
         'nout-error':     '#B91C1C',
         'nout-warning':   '#C2410C',
-        'nout-info':      '#0369A1',
+        'nout-info':      '#1A3A8F',
       },
 
       fontFamily: {
-        sans:  ['"DM Sans"', 'Segoe UI', 'sans-serif'],
-        title: ['"Plus Jakarta Sans"', 'Segoe UI', 'sans-serif'],
+        sans:  ['"Inter"', 'Segoe UI', 'sans-serif'],
+        title: ['"Syne"', 'Segoe UI', 'sans-serif'],
+      },
+
+      backgroundImage: {
+        'nout-hero':   'linear-gradient(135deg, #0A0F2C 0%, #1A3A8F 50%, #0E7FAB 100%)',
+        'nout-accent': 'linear-gradient(135deg, #0E7FAB 0%, #00C4B4 100%)',
+        'nout-card-grad': 'linear-gradient(135deg, #E8F0FF 0%, #EEF2FF 50%, #E0F4F8 100%)',
       },
 
       borderRadius: {
@@ -51,10 +59,11 @@ export default {
       },
 
       boxShadow: {
-        'nout-sm':   '0 2px 8px rgba(26, 10, 12, 0.09)',
-        'nout-md':   '0 4px 20px rgba(26, 10, 12, 0.12)',
-        'nout-lg':   '0 8px 40px rgba(26, 10, 12, 0.15)',
-        'nout-glow': '0 0 28px rgba(46, 196, 182, 0.35)',
+        'nout-sm':   '0 2px 8px rgba(10,15,44,0.08)',
+        'nout-md':   '0 4px 24px rgba(10,15,44,0.10)',
+        'nout-lg':   '0 8px 40px rgba(10,15,44,0.15)',
+        'nout-glow': '0 0 28px rgba(0,196,180,0.35)',
+        'nout-hover':'0 8px 32px rgba(14,127,171,0.18)',
       },
     },
   },

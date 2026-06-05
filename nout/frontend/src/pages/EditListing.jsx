@@ -58,6 +58,8 @@ export default function EditListing() {
   }
 
   const removePhoto = (index) => {
+    const removed = photos[index]
+    if (removed?.preview) URL.revokeObjectURL(removed.preview)
     setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 

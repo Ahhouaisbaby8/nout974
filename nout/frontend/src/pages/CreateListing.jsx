@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
@@ -24,6 +24,10 @@ export default function CreateListing() {
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
 
+  useEffect(() => {
+    return () => photos.forEach(p => URL.revokeObjectURL(p.preview))
+  }, [])
+
   const handleFiles = (files) => {
     const selected = Array.from(files).slice(0, MAX_PHOTOS - photos.length)
     const newPhotos = selected.map(file => ({
@@ -34,6 +38,8 @@ export default function CreateListing() {
   }
 
   const removePhoto = (index) => {
+    const removed = photos[index]
+    if (removed?.preview) URL.revokeObjectURL(removed.preview)
     setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 

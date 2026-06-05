@@ -117,7 +117,7 @@ export default function Conversation() {
                   : 'bg-white text-nout-dark shadow-sm rounded-bl-sm'
               }`}>
                 <p className="whitespace-pre-line">{msg.content}</p>
-                <p className={`text-[10px] mt-1 ${isMine ? 'text-orange-200' : 'text-gray-400'}`}>
+                <p className={`text-[10px] mt-1 ${isMine ? 'text-white/60' : 'text-gray-400'}`}>
                   {formatRelativeDate(msg.created_at)}
                 </p>
               </div>
