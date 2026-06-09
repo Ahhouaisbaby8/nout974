@@ -17,6 +17,7 @@ const REASON_ICONS = {
   'Arnaque / fraude':                                  '💸',
   'Contenu interdit (prostitution, drogues, armes...)': '🚫',
   'Insultes / harcèlement':                            '😡',
+  'Spam ou doublon':                                   '🔁',
   'Autre':                                             '❓',
 }
 
