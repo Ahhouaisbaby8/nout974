@@ -34,7 +34,7 @@ export const getReports = async (filter = 'pending') => {
   let q = supabase
     .from('reports')
     .select(`
-      id, reason, details, status, created_at,
+      id, reason, details, status, created_at, message_id, admin_note,
       reporter:profiles!reporter_id(id, username),
       listing:listings!listing_id(id, title),
       reported_profile:profiles!user_id(id, username)
@@ -52,6 +52,14 @@ export const updateReportStatus = async (id, status) => {
   const { error } = await supabase
     .from('reports')
     .update({ status })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export const updateAdminNote = async (id, note) => {
+  const { error } = await supabase
+    .from('reports')
+    .update({ admin_note: note })
     .eq('id', id)
   if (error) throw error
 }
