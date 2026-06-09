@@ -220,6 +220,17 @@ export default function AdminReports() {
             const reasonIcon  = REASON_ICONS[r.reason] ?? '🚩'
             const actLoading  = !!actionLoading[r.id]
 
+            console.log('[Report debug]', {
+              id: r.id,
+              status: r.status,
+              listing_id: r.listing_id,
+              user_id: r.user_id,
+              message_id: r.message_id,
+              listing: r.listing,
+              reported_profile: r.reported_profile,
+              isListing, isUser, isMessage,
+            })
+
             return (
               <div key={r.id} className="bg-white rounded-xl shadow-sm p-5">
 
