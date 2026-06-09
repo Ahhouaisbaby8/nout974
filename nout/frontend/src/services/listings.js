@@ -77,6 +77,11 @@ export const uploadListingImage = async (file, userId) => {
   return supabase.storage.from('listings').getPublicUrl(path).data.publicUrl
 }
 
+export const adminUpdateListing = async (id, updates) => {
+  const { error } = await supabase.from('listings').update(updates).eq('id', id)
+  if (error) throw error
+}
+
 export const getSimilarListings = async (category, excludeId, limit = 4) => {
   const { data, error } = await supabase
     .from('listings')

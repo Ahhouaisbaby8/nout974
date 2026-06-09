@@ -34,7 +34,7 @@ export const getReports = async (filter = 'pending') => {
   let q = supabase
     .from('reports')
     .select(`
-      id, reason, details, status, created_at, message_id, admin_note,
+      id, reason, details, status, created_at, listing_id, user_id, message_id, admin_note,
       reporter:profiles!reporter_id(id, username),
       listing:listings!listing_id(id, title),
       reported_profile:profiles!user_id(id, username)

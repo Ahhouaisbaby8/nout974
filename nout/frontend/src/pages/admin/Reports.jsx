@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { getReports, updateReportStatus, updateAdminNote } from '../../services/reports'
 import { updateProfile } from '../../services/profiles'
-import { updateListing } from '../../services/listings'
+import { adminUpdateListing } from '../../services/listings'
 import { formatRelativeDate } from '../../utils/formatters'
 
 const STATUS_LABELS = {
@@ -124,11 +124,14 @@ export default function AdminReports() {
   const handleAction = async (report, action) => {
     setActionLoading(prev => ({ ...prev, [report.id]: true }))
     try {
+      const listingId = report.listing?.id ?? report.listing_id
+      const userId    = report.reported_profile?.id ?? report.user_id
+
       if (action === 'remove_listing') {
-        await updateListing(report.listing.id, { is_active: false, is_sold: true })
+        await adminUpdateListing(listingId, { is_active: false, is_sold: true })
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'deactivate_listing') {
-        await updateListing(report.listing.id, { is_active: false })
+        await adminUpdateListing(listingId, { is_active: false })
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'warn_user') {
         const { data: { session } } = await supabase.auth.getSession()
@@ -138,17 +141,17 @@ export default function AdminReports() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ userId: report.reported_profile.id }),
+          body: JSON.stringify({ userId }),
         })
         if (!res.ok) throw new Error('Erreur envoi email')
         await updateReportStatus(report.id, 'resolved')
         setActionFeedback(prev => ({ ...prev, [report.id]: '✅ Avertissement envoyé par email' }))
       } else if (action === 'suspend_user') {
         const suspendedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        await updateProfile(report.reported_profile.id, { is_suspended: true, suspended_until: suspendedUntil })
+        await updateProfile(userId, { is_suspended: true, suspended_until: suspendedUntil })
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'ban_user') {
-        await updateProfile(report.reported_profile.id, { is_banned: true })
+        await updateProfile(userId, { is_banned: true })
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'resolved' || action === 'ignored') {
         await updateReportStatus(report.id, action)
@@ -210,9 +213,9 @@ export default function AdminReports() {
           )}
 
           {reports.map(r => {
-            const isListing = !!r.listing
-            const isUser    = !!r.reported_profile && !isListing
-            const isMessage = !!r.message_id && !isListing && !r.reported_profile
+            const isListing = !!r.listing_id
+            const isUser    = !!r.user_id && !isListing
+            const isMessage = !!r.message_id && !isListing && !r.user_id
             const statusInfo  = STATUS_LABELS[r.status] ?? STATUS_LABELS.pending
             const reasonIcon  = REASON_ICONS[r.reason] ?? '🚩'
             const actLoading  = !!actionLoading[r.id]
