@@ -80,11 +80,14 @@ export default function CreateListing() {
     if (Number(price) > 50000) return setError('Le prix maximum est 50 000 €.')
     if (!city)               return setError('Choisis ta ville.')
 
-    const wordCheck = containsForbiddenWord([title, description, size, material].join(' '))
-    if (wordCheck.found) return setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
-
     setLoading(true)
     try {
+      const wordCheck = containsForbiddenWord([title, description, size, material].join(' '))
+      if (wordCheck.found) {
+        setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
+        return
+      }
+
       // Compression + upload des photos
       const imageUrls = await Promise.all(
         photos.map(async p => {
