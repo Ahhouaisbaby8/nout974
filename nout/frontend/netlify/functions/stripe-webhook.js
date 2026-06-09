@@ -158,6 +158,8 @@ exports.handler = async (event) => {
               </div>
             `
           )
+        }
+
         // Push navigateur acheteur
         if (order.buyer_id) {
           fetch(`${SITE_URL}/.netlify/functions/send-push`, {
