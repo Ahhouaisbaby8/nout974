@@ -71,6 +71,8 @@ exports.handler = async (event) => {
         .from('orders')
         .select(`
           total_price,
+          buyer_id,
+          seller_id,
           buyer:profiles!buyer_id(email, username),
           seller:profiles!seller_id(email, username),
           listing:listings!listing_id(title, price)
@@ -156,6 +158,32 @@ exports.handler = async (event) => {
               </div>
             `
           )
+        // Push navigateur acheteur
+        if (order.buyer_id) {
+          fetch(`${SITE_URL}/.netlify/functions/send-push`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              receiver_id: order.buyer_id,
+              title: '✅ Achat confirmé — NOUT 974',
+              body: `Tu viens d'acheter ${annonce?.title ?? 'un article'} pour ${Number(total_price).toFixed(2)} €`,
+              url: '/commandes',
+            }),
+          }).catch(err => console.error('send-push acheteur:', err.message))
+        }
+
+        // Push navigateur vendeur
+        if (order.seller_id) {
+          fetch(`${SITE_URL}/.netlify/functions/send-push`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              receiver_id: order.seller_id,
+              title: '🎉 Tu as fait une vente — NOUT 974',
+              body: `Tu viens de vendre ${annonce?.title ?? 'un article'} pour ${Number(annonce?.price ?? 0).toFixed(2)} €`,
+              url: '/messages',
+            }),
+          }).catch(err => console.error('send-push vendeur:', err.message))
         }
       }
     }
