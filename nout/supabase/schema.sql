@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS listings (
   condition   TEXT NOT NULL CHECK (condition IN ('neuf','tres-bon','bon','acceptable','use')),
   images      TEXT[] DEFAULT '{}',
   city        TEXT NOT NULL,
+  size        TEXT,
+  material    TEXT,
   views       INTEGER DEFAULT 0,
   is_sold     BOOLEAN DEFAULT FALSE,
   is_active   BOOLEAN DEFAULT TRUE,
