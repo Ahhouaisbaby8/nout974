@@ -34,13 +34,16 @@ const sendEmail = async (to, subject, html) => {
 }
 
 exports.handler = async (event) => {
+  console.log('Webhook reçu :', new Date().toISOString())
+
   const sig  = event.headers['stripe-signature']
   const body = event.body
 
   let stripeEvent
   try {
     stripeEvent = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
-  } catch {
+  } catch (err) {
+    console.error('Signature webhook invalide :', err.message)
     return { statusCode: 400, body: 'Signature webhook invalide.' }
   }
 
