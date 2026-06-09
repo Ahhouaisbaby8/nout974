@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadAvatar } from '../services/profiles'
+import { supabase } from '../services/supabase'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
@@ -236,9 +237,13 @@ export default function Settings() {
             onClick={async () => {
               setConnectLoading(true)
               try {
+                const { data: { session: authSession } } = await supabase.auth.getSession()
                 const res = await fetch('/.netlify/functions/create-connect-account', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
+                  },
                   body: JSON.stringify({ userId: user.id }),
                 })
                 const data = await res.json()

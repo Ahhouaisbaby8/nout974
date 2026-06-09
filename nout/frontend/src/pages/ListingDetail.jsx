@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById, deleteListing, updateListing, getSimilarListings } from '../services/listings'
+import { supabase } from '../services/supabase'
 import { sendMessage } from '../services/messages'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
@@ -333,9 +334,13 @@ export default function ListingDetail() {
                       setPaying(true)
                       setPayError('')
                       try {
+                        const { data: { session: authSession } } = await supabase.auth.getSession()
                         const res = await fetch('/.netlify/functions/create-checkout-session', {
                           method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
+                          },
                           body: JSON.stringify({ listingId: id, buyerId: user.id }),
                         })
                         const data = await res.json()

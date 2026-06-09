@@ -6,9 +6,25 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 )
 
+// Rate limiter en mémoire — 20 req/min par IP
+const _rateLimits = new Map()
+function isRateLimited(ip) {
+  const max = 20, windowMs = 60_000, now = Date.now()
+  const entry = _rateLimits.get(ip) ?? { count: 0, resetAt: now + windowMs }
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs }
+  entry.count++
+  _rateLimits.set(ip, entry)
+  return entry.count > max
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' }
+  }
+
+  const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()
+  if (isRateLimited(ip)) {
+    return { statusCode: 429, body: 'Trop de tentatives.' }
   }
 
   try {

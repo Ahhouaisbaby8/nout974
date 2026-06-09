@@ -1,21 +1,63 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 
-const stripe    = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase  = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+
+const ALLOWED_ORIGIN = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
+
+// Rate limiter en mémoire — 10 req/min par IP
+const _rateLimits = new Map()
+function isRateLimited(ip) {
+  const max = 10, windowMs = 60_000, now = Date.now()
+  const entry = _rateLimits.get(ip) ?? { count: 0, resetAt: now + windowMs }
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs }
+  entry.count++
+  _rateLimits.set(ip, entry)
+  return entry.count > max
+}
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   }
 
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders, body: '' }
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
+  }
+
+  const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Rate limiting
+  const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()
+  if (isRateLimited(ip)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: 'Trop de tentatives. Réessaie dans une minute.' }) }
+  }
+
+  // Vérification JWT — l'appelant doit être authentifié
+  const authHeader = event.headers['authorization'] || event.headers['Authorization']
+  const token = authHeader?.replace('Bearer ', '').trim()
+  if (!token) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Non authentifié.' }) }
+  }
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !authUser) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Session invalide.' }) }
   }
 
   try {
     const { listingId, buyerId } = JSON.parse(event.body)
+
+    // L'utilisateur authentifié doit être le buyer déclaré
+    if (authUser.id !== buyerId) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
+    }
 
     // Récupérer l'annonce + le compte Stripe du vendeur
     const { data: listing, error } = await supabase
