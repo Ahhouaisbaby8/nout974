@@ -9,7 +9,7 @@ const SITE_URL = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.a
 const sendEmail = async (to, subject, html) => {
   if (!process.env.RESEND_API_KEY) return
   try {
-    await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -22,8 +22,13 @@ const sendEmail = async (to, subject, html) => {
         html,
       }),
     })
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error(`Resend error ${res.status} (destinataire: ${to}):`, errBody)
+    } else {
+      console.log(`Email envoyé OK à ${to}`)
+    }
   } catch (err) {
-    // Email non bloquant : on logue sans faire échouer le webhook
     console.error('Email error:', err.message)
   }
 }
