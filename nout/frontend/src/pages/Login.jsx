@@ -6,7 +6,8 @@ export default function Login() {
   const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const rawRedirect = searchParams.get('redirect') || '/'
+  const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/'
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')

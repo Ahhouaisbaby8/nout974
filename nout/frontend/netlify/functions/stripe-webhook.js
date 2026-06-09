@@ -1,6 +1,14 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 
+const escHtml = (str) =>
+  String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
@@ -94,12 +102,12 @@ exports.handler = async (event) => {
                   <div style="text-align:center;margin-bottom:24px">
                     <span style="font-size:48px">✅</span>
                     <h1 style="color:#1A3A8F;font-size:22px;margin:12px 0 4px">Achat confirmé !</h1>
-                    <p style="color:#6B7A99;margin:0">Bonjour ${buyer.username}, ton paiement a bien été reçu.</p>
+                    <p style="color:#6B7A99;margin:0">Bonjour ${escHtml(buyer.username)}, ton paiement a bien été reçu.</p>
                   </div>
 
                   <div style="background:#F5F0E8;border-radius:12px;padding:20px;margin:20px 0">
                     <p style="margin:0 0 8px;color:#6B7A99;font-size:13px">Article acheté</p>
-                    <p style="margin:0 0 4px;font-weight:bold;color:#1A1A2E;font-size:16px">${annonce?.title ?? 'Article'}</p>
+                    <p style="margin:0 0 4px;font-weight:bold;color:#1A1A2E;font-size:16px">${escHtml(annonce?.title ?? 'Article')}</p>
                     <p style="margin:0;font-size:24px;font-weight:800;color:#1A3A8F">${Number(total_price).toFixed(2)} €</p>
                   </div>
 
@@ -132,12 +140,12 @@ exports.handler = async (event) => {
                   <div style="text-align:center;margin-bottom:24px">
                     <span style="font-size:48px">🎉</span>
                     <h1 style="color:#1A3A8F;font-size:22px;margin:12px 0 4px">Félicitations !</h1>
-                    <p style="color:#6B7A99;margin:0">Bonjour ${seller.username}, tu viens de vendre un article !</p>
+                    <p style="color:#6B7A99;margin:0">Bonjour ${escHtml(seller.username)}, tu viens de vendre un article !</p>
                   </div>
 
                   <div style="background:#F5F0E8;border-radius:12px;padding:20px;margin:20px 0">
                     <p style="margin:0 0 8px;color:#6B7A99;font-size:13px">Article vendu</p>
-                    <p style="margin:0 0 4px;font-weight:bold;color:#1A1A2E;font-size:16px">${annonce?.title ?? 'Ton article'}</p>
+                    <p style="margin:0 0 4px;font-weight:bold;color:#1A1A2E;font-size:16px">${escHtml(annonce?.title ?? 'Ton article')}</p>
                     <p style="margin:0;font-size:24px;font-weight:800;color:#00C4B4">${Number(annonce?.price ?? 0).toFixed(2)} €</p>
                     <p style="margin:8px 0 0;font-size:12px;color:#6B7A99">La commission NOUT est déduite automatiquement — le solde sera viré sur ton compte Stripe.</p>
                   </div>

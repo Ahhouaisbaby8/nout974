@@ -58,7 +58,9 @@ export function AuthProvider({ children }) {
           const savedRedirect = sessionStorage.getItem('nout_auth_redirect')
           if (savedRedirect) {
             sessionStorage.removeItem('nout_auth_redirect')
-            window.location.replace(savedRedirect)
+            if (savedRedirect.startsWith('/')) {
+              window.location.replace(savedRedirect)
+            }
           }
         }
       } else {
