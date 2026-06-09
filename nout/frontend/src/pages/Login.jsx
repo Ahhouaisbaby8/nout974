@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export default function Login() {
   const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/'
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -17,7 +19,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login({ email, password })
-      navigate('/')
+      navigate(redirect)
     } catch {
       setError('Email ou mot de passe incorrect.')
     } finally {
@@ -28,6 +30,7 @@ export default function Login() {
   const handleGoogle = async () => {
     setError('')
     try {
+      if (redirect !== '/') sessionStorage.setItem('nout_auth_redirect', redirect)
       await loginWithGoogle()
     } catch {
       setError('Impossible de se connecter avec Google.')

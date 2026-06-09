@@ -366,9 +366,38 @@ export default function ListingDetail() {
                   </button>
                 </>
               ) : (
-                <Link to="/connexion" className="btn-primary w-full py-4 text-base text-center">
-                  💬 Contacter le vendeur
-                </Link>
+                <>
+                  <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-100 space-y-2">
+                    <div className="flex justify-between text-gray-500">
+                      <span>Prix de l'article</span>
+                      <span>{formatPrice(listing.price)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <span>Frais de service</span>
+                      <span>{formatPrice(fraisFixe)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-500">
+                      <span>Frais de traitement sécurisé</span>
+                      <span>{formatPrice(fraisVariable)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
+                      <span>Total</span>
+                      <span>{formatPrice(totalAcheteur)}</span>
+                    </div>
+                  </div>
+                  <Link
+                    to={`/connexion?redirect=/annonce/${id}`}
+                    className="btn-primary w-full py-4 text-base text-center block"
+                  >
+                    💳 Acheter — {formatPrice(totalAcheteur)}
+                  </Link>
+                  <Link
+                    to={`/connexion?redirect=/annonce/${id}`}
+                    className="btn-secondary w-full py-3 text-sm text-center block"
+                  >
+                    💬 Contacter le vendeur
+                  </Link>
+                </>
               )}
             </div>
           )}

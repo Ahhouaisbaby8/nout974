@@ -50,10 +50,20 @@ export function AuthProvider({ children }) {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setProfile(null)
+      if (session?.user) {
+        fetchProfile(session.user.id)
+        if (event === 'SIGNED_IN') {
+          const savedRedirect = sessionStorage.getItem('nout_auth_redirect')
+          if (savedRedirect) {
+            sessionStorage.removeItem('nout_auth_redirect')
+            window.location.replace(savedRedirect)
+          }
+        }
+      } else {
+        setProfile(null)
+      }
     })
 
     return () => subscription.unsubscribe()
