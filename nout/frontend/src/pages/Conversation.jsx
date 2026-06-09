@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import DOMPurify from 'dompurify'
+import { containsForbiddenWord } from '../utils/forbiddenWords'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMessages, sendMessage, markAsRead, subscribeToMessages } from '../services/messages'
@@ -27,6 +28,7 @@ export default function Conversation() {
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [contentVisible, setContentVisible] = useState(false)
   const [containerHeight, setContainerHeight] = useState(null)
+  const [msgError, setMsgError] = useState('')
 
   // ── Bug 1 fix : scroll limité au conteneur, jamais sur le body ──
   const scrollToBottom = useCallback((behavior = 'instant') => {
@@ -125,6 +127,13 @@ export default function Conversation() {
     e.preventDefault()
     if (!content.trim() || sending) return
     const text = DOMPurify.sanitize(content.trim(), { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+
+    const wordCheck = containsForbiddenWord(text)
+    if (wordCheck.found) {
+      setMsgError('Ce message contient un terme non autorisé sur NOUT.')
+      return
+    }
+    setMsgError('')
     setContent('')
     setSending(true)
     try {
@@ -236,6 +245,11 @@ export default function Conversation() {
       </div>
 
       {/* ── SAISIE ── */}
+      {msgError && (
+        <div className="bg-red-50 border-t border-red-200 px-4 py-2 text-xs text-red-600 flex-shrink-0">
+          ⛔ {msgError}
+        </div>
+      )}
       <form
         onSubmit={handleSend}
         className="bg-white border-t border-nout-border px-4 py-3 flex gap-3 items-end flex-shrink-0"

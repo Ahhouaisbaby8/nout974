@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import DOMPurify from 'dompurify'
+import { containsForbiddenWord } from '../utils/forbiddenWords'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
@@ -78,6 +79,9 @@ export default function CreateListing() {
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
     if (Number(price) > 50000) return setError('Le prix maximum est 50 000 €.')
     if (!city)               return setError('Choisis ta ville.')
+
+    const wordCheck = containsForbiddenWord([title, description, size, material].join(' '))
+    if (wordCheck.found) return setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
 
     setLoading(true)
     try {
