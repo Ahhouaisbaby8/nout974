@@ -25,30 +25,8 @@ export default function CreateListing() {
   const [material, setMaterial]   = useState('')
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
-  const [aiLoading, setAiLoading] = useState(false)
-
   const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
   const SIZES_CHAUSSURES = ['36', '37', '38', '39', '40', '41', '42', '43', '44']
-
-  const generateDescription = async () => {
-    if (!title.trim()) return setError('Remplis le titre avant de générer une description.')
-    setError('')
-    setAiLoading(true)
-    try {
-      const res = await fetch('/.netlify/functions/generate-description', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titre: title, categorie: category, taille: size, composition: material }),
-      })
-      const data = await res.json()
-      if (data.description) setDesc(data.description)
-      else setError("La génération a échoué. Réessaie.")
-    } catch {
-      setError("Impossible de contacter l'assistant IA.")
-    } finally {
-      setAiLoading(false)
-    }
-  }
 
   useEffect(() => {
     return () => photos.forEach(p => URL.revokeObjectURL(p.preview))
@@ -210,24 +188,7 @@ export default function CreateListing() {
               onChange={(e) => setDesc(e.target.value)}
               className="input-field resize-none"
             />
-            <div className="flex items-center justify-between mt-1">
-              <button
-                type="button"
-                onClick={generateDescription}
-                disabled={aiLoading}
-                className="flex items-center gap-1.5 text-xs font-medium text-[#1A3A8F] hover:text-[#0E7FAB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {aiLoading ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-[#1A3A8F] border-t-transparent rounded-full animate-spin" />
-                    Génération en cours…
-                  </>
-                ) : (
-                  <>✨ Générer une description avec l'IA</>
-                )}
-              </button>
-              <p className="text-xs text-gray-400">{description.length}/1000</p>
-            </div>
+            <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/1000</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
