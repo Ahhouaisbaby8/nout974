@@ -37,9 +37,11 @@ export const getListingById = async (id) => {
 }
 
 export const createListing = async (listing) => {
+  const price = Number(listing.price)
+  if (isNaN(price) || price < 0 || price > 50000) throw new Error('Prix invalide.')
   const { data, error } = await supabase
     .from('listings')
-    .insert(listing)
+    .insert({ ...listing, price })
     .select()
     .single()
   if (error) throw error
@@ -47,6 +49,11 @@ export const createListing = async (listing) => {
 }
 
 export const updateListing = async (id, updates) => {
+  if ('price' in updates) {
+    const price = Number(updates.price)
+    if (isNaN(price) || price < 0 || price > 50000) throw new Error('Prix invalide.')
+    updates = { ...updates, price }
+  }
   const { data, error } = await supabase
     .from('listings')
     .update(updates)

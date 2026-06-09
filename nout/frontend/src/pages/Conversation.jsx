@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import DOMPurify from 'dompurify'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMessages, sendMessage, markAsRead, subscribeToMessages } from '../services/messages'
@@ -123,7 +124,7 @@ export default function Conversation() {
   const handleSend = async (e) => {
     e.preventDefault()
     if (!content.trim() || sending) return
-    const text = content.trim()
+    const text = DOMPurify.sanitize(content.trim(), { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
     setContent('')
     setSending(true)
     try {

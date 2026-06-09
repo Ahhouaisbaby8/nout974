@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import DOMPurify from 'dompurify'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadAvatar } from '../services/profiles'
@@ -53,6 +54,8 @@ export default function Settings() {
     setError('')
     setSuccess(false)
 
+    const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+
     if (username.trim().length < 3) return setError('Le pseudo doit faire au moins 3 caractères.')
 
     setSaving(true)
@@ -61,9 +64,9 @@ export default function Settings() {
         await uploadAvatar(user.id, avatarFile)
       }
       await updateProfile({
-        username: username.trim(),
-        bio:      bio.trim(),
-        phone:    phone.trim(),
+        username: clean(username.trim()),
+        bio:      clean(bio.trim()),
+        phone:    clean(phone.trim()),
         city,
       })
       setSuccess(true)

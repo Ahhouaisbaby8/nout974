@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import DOMPurify from 'dompurify'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById, updateListing, uploadListingImage } from '../services/listings'
@@ -67,11 +68,14 @@ export default function EditListing() {
     e.preventDefault()
     setError('')
 
+    const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+
     if (photos.length === 0) return setError('Garde au moins une photo.')
     if (!title.trim())       return setError('Le titre est obligatoire.')
     if (!category)           return setError('Choisis une catégorie.')
     if (!condition)          return setError("Précise l'état de l'article.")
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
+    if (Number(price) > 50000) return setError('Le prix maximum est 50 000 €.')
     if (!city)               return setError('Choisis ta ville.')
 
     setSaving(true)
@@ -86,8 +90,8 @@ export default function EditListing() {
       )
 
       await updateListing(id, {
-        title:       title.trim(),
-        description: description.trim(),
+        title:       clean(title.trim()),
+        description: clean(description.trim()),
         category,
         condition,
         price:       Number(price),

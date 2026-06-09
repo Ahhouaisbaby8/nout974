@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
@@ -68,11 +69,14 @@ export default function CreateListing() {
     e.preventDefault()
     setError('')
 
+    const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+
     if (photos.length === 0) return setError('Ajoute au moins une photo.')
     if (!title.trim())       return setError('Le titre est obligatoire.')
     if (!category)           return setError('Choisis une catégorie.')
     if (!condition)          return setError("Précise l'état de l'article.")
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
+    if (Number(price) > 50000) return setError('Le prix maximum est 50 000 €.')
     if (!city)               return setError('Choisis ta ville.')
 
     setLoading(true)
@@ -87,15 +91,15 @@ export default function CreateListing() {
 
       const listing = await createListing({
         user_id:     user.id,
-        title:       title.trim(),
-        description: description.trim(),
+        title:       clean(title.trim()),
+        description: clean(description.trim()),
         category,
         condition,
         price:       Number(price),
         city,
         images:      imageUrls,
-        size:        size.trim() || null,
-        material:    material.trim() || null,
+        size:        clean(size.trim()) || null,
+        material:    clean(material.trim()) || null,
       })
 
       navigate(`/annonce/${listing.id}`)
