@@ -34,7 +34,8 @@ const sendEmail = async (to, subject, html) => {
 }
 
 exports.handler = async (event) => {
-  console.log('Webhook reçu :', new Date().toISOString())
+  console.log('🔔 WEBHOOK REÇU', event.httpMethod, new Date().toISOString())
+  console.log('Headers reçus :', JSON.stringify(event.headers))
 
   const sig  = event.headers['stripe-signature']
   const body = event.body
