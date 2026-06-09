@@ -5,6 +5,7 @@ import { uploadAvatar } from '../services/profiles'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
+import CropModal from '../components/ui/CropModal'
 
 export default function Settings() {
   const { user, profile, updateProfile } = useAuth()
@@ -15,6 +16,7 @@ export default function Settings() {
   const [city, setCity]         = useState(profile?.city ?? '')
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarFile, setAvatarFile]       = useState(null)
+  const [cropSrc, setCropSrc]             = useState(null)
   const [saving, setSaving]     = useState(false)
   const [success, setSuccess]   = useState(false)
   const [error, setError]       = useState('')
@@ -29,8 +31,20 @@ export default function Settings() {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
+    setCropSrc(URL.createObjectURL(file))
+    e.target.value = ''
+  }
+
+  const handleAvatarCropConfirm = (blob) => {
+    URL.revokeObjectURL(cropSrc)
+    setCropSrc(null)
+    setAvatarFile(blob)
+    setAvatarPreview(URL.createObjectURL(blob))
+  }
+
+  const handleAvatarCropCancel = () => {
+    URL.revokeObjectURL(cropSrc)
+    setCropSrc(null)
   }
 
   const handleSubmit = async (e) => {
@@ -68,6 +82,14 @@ export default function Settings() {
   const displayAvatar = avatarPreview ?? currentAvatarUrl
 
   return (
+    <>
+    {cropSrc && (
+      <CropModal
+        imageSrc={cropSrc}
+        onConfirm={handleAvatarCropConfirm}
+        onCancel={handleAvatarCropCancel}
+      />
+    )}
     <div className="max-w-lg mx-auto px-4 py-6">
       <BackButton />
       <h1 className="text-2xl font-extrabold text-nout-dark mt-4 mb-6">Mon profil</h1>
@@ -236,5 +258,6 @@ export default function Settings() {
       </div>
 
     </div>
+    </>
   )
 }

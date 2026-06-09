@@ -6,6 +6,7 @@ import { compressImage } from '../utils/imageCompressor'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
+import CropModal from '../components/ui/CropModal'
 
 const MAX_PHOTOS = 5
 
@@ -15,6 +16,7 @@ export default function CreateListing() {
   const fileInputRef = useRef(null)
 
   const [photos, setPhotos]       = useState([])   // { file, preview }
+  const [cropQueue, setCropQueue] = useState([])   // { file, src } en attente de recadrage
   const [title, setTitle]         = useState('')
   const [description, setDesc]    = useState('')
   const [category, setCategory]   = useState('')
@@ -34,11 +36,21 @@ export default function CreateListing() {
 
   const handleFiles = (files) => {
     const selected = Array.from(files).slice(0, MAX_PHOTOS - photos.length)
-    const newPhotos = selected.map(file => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }))
-    setPhotos(prev => [...prev, ...newPhotos].slice(0, MAX_PHOTOS))
+    const items = selected.map(file => ({ file, src: URL.createObjectURL(file) }))
+    setCropQueue(prev => [...prev, ...items])
+  }
+
+  const handleCropConfirm = (blob) => {
+    const current = cropQueue[0]
+    URL.revokeObjectURL(current.src)
+    const preview = URL.createObjectURL(blob)
+    setPhotos(prev => [...prev, { file: blob, preview }].slice(0, MAX_PHOTOS))
+    setCropQueue(prev => prev.slice(1))
+  }
+
+  const handleCropCancel = () => {
+    URL.revokeObjectURL(cropQueue[0].src)
+    setCropQueue(prev => prev.slice(1))
   }
 
   const removePhoto = (index) => {
@@ -95,6 +107,14 @@ export default function CreateListing() {
   }
 
   return (
+    <>
+    {cropQueue.length > 0 && (
+      <CropModal
+        imageSrc={cropQueue[0].src}
+        onConfirm={handleCropConfirm}
+        onCancel={handleCropCancel}
+      />
+    )}
     <div className="max-w-2xl mx-auto px-4 py-8">
       <BackButton />
 
@@ -315,5 +335,6 @@ export default function CreateListing() {
 
       </form>
     </div>
+    </>
   )
 }
