@@ -52,7 +52,7 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 overflow-y-auto max-h-[90dvh]" onClick={e => e.stopPropagation()}>
 
         {done ? (
           <div className="text-center py-4">

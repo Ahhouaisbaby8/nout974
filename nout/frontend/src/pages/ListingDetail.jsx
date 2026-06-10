@@ -455,7 +455,7 @@ export default function ListingDetail() {
 
       {showOffer && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl overflow-y-auto max-h-[90dvh]">
             <h3 className="text-lg font-bold text-nout-dark mb-1">💰 Faire une offre</h3>
             <p className="text-sm text-gray-400 mb-4 truncate">{listing.title}</p>
             <div className="relative mb-2">

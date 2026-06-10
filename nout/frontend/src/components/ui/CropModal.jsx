@@ -40,14 +40,16 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+      {/* overflow-y-auto permet le scroll si la modal est plus haute que le viewport (paysage mobile) */}
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden overflow-y-auto" style={{ maxHeight: '95dvh' }}>
 
-        <div className="px-5 py-4 border-b border-gray-100">
+        <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <h2 className="font-bold text-[#1A1A2E]">Recadrer la photo</h2>
           <p className="text-xs text-gray-400 mt-0.5">Format carré — glisse et zoome pour ajuster</p>
         </div>
 
-        <div className="relative w-full bg-black" style={{ height: 320 }}>
+        {/* Hauteur responsive : 320px max, réduit automatiquement sur mobile paysage */}
+        <div className="relative w-full bg-black overflow-hidden" style={{ height: 'min(320px, calc(100dvh - 220px))' }}>
           <Cropper
             image={imageSrc}
             crop={crop}
