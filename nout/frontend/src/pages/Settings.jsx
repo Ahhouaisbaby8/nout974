@@ -1,9 +1,7 @@
 import { useState, useRef } from 'react'
 import DOMPurify from 'dompurify'
-import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { uploadAvatar } from '../services/profiles'
-import { supabase } from '../services/supabase'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
@@ -24,9 +22,10 @@ export default function Settings() {
   const [error, setError]       = useState('')
 
   const fileInputRef = useRef(null)
-  const [searchParams] = useSearchParams()
-  const stripeStatus = searchParams.get('stripe') // 'success' | 'refresh' | null
-  const [connectLoading, setConnectLoading] = useState(false)
+  const [iban, setIban]           = useState(profile?.iban ?? '')
+  const [ibanSaving, setIbanSaving] = useState(false)
+  const [ibanSuccess, setIbanSuccess] = useState(false)
+  const [ibanError, setIbanError]   = useState('')
 
   const currentAvatarUrl = getAvatarUrl(profile?.avatar_url)
 
@@ -80,6 +79,24 @@ export default function Settings() {
       }
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleSaveIban = async () => {
+    setIbanError('')
+    setIbanSuccess(false)
+    const cleaned = iban.replace(/[\s-]/g, '').toUpperCase()
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(cleaned)) {
+      return setIbanError('Format IBAN invalide. Exemple : FR76 3000 6000 0112 3456 7890 189')
+    }
+    setIbanSaving(true)
+    try {
+      await updateProfile({ iban: cleaned })
+      setIbanSuccess(true)
+    } catch {
+      setIbanError('Erreur lors de l\'enregistrement. Réessaie.')
+    } finally {
+      setIbanSaving(false)
     }
   }
 
@@ -211,57 +228,49 @@ export default function Settings() {
 
       {/* ── SECTION PAIEMENTS VENDEUR ── */}
       <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
-        <h2 className="font-bold text-nout-dark mb-1">💳 Activer les paiements</h2>
+        <h2 className="font-bold text-nout-dark mb-1">💳 Recevoir mes paiements</h2>
         <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-          Pour recevoir de l'argent via NOUT, connecte ton compte Stripe. C'est gratuit et sécurisé — Stripe gère tous les virements directement sur ton compte bancaire.
+          Renseigne ton IBAN pour recevoir l'argent de tes ventes directement sur ton compte bancaire.
         </p>
 
-        {stripeStatus === 'success' && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 mb-4">
-            ✅ Ton compte vendeur est activé ! Tu peux maintenant recevoir des paiements.
-          </div>
-        )}
-        {stripeStatus === 'refresh' && (
-          <div className="bg-orange-50 border border-orange-200 text-orange-700 text-sm rounded-lg px-4 py-3 mb-4">
-            ⚠️ La session a expiré. Clique à nouveau sur le bouton pour finaliser.
-          </div>
-        )}
-
-        {profile?.stripe_account_id ? (
+        {(profile?.stripe_account_id || profile?.iban || ibanSuccess) ? (
           <div className="flex items-center gap-3">
             <span className="text-green-500 text-xl">✅</span>
             <div>
-              <p className="font-semibold text-nout-dark text-sm">Compte vendeur connecté</p>
-              <p className="text-xs text-gray-400">Tu peux vendre et recevoir des paiements sur NOUT.</p>
+              <p className="font-semibold text-nout-dark text-sm">Paiements activés</p>
+              <p className="text-xs text-gray-400">Ton compte bancaire est configuré.</p>
             </div>
           </div>
         ) : (
-          <button
-            onClick={async () => {
-              setConnectLoading(true)
-              try {
-                const { data: { session: authSession } } = await supabase.auth.getSession()
-                const res = await fetch('/.netlify/functions/create-connect-account', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
-                  },
-                  body: JSON.stringify({ userId: user.id }),
-                })
-                const data = await res.json()
-                if (data.url) window.location.href = data.url
-              } catch {
-                alert('Erreur. Réessaie.')
-              } finally {
-                setConnectLoading(false)
-              }
-            }}
-            disabled={connectLoading}
-            className={`btn-primary px-6 py-3 text-sm ${connectLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            {connectLoading ? 'Redirection vers Stripe…' : '🔗 Connecter mon compte Stripe'}
-          </button>
+          <div className="flex flex-col gap-3">
+            {ibanError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
+                {ibanError}
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">IBAN</label>
+              <input
+                type="text"
+                placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
+                value={iban}
+                onChange={(e) => setIban(e.target.value.toUpperCase())}
+                className="input-field"
+                maxLength={42}
+              />
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              🔒 Ton IBAN est chiffré et sécurisé. Il sera utilisé uniquement pour virer tes gains.
+            </p>
+            <button
+              type="button"
+              onClick={handleSaveIban}
+              disabled={ibanSaving}
+              className={`btn-primary px-6 py-3 text-sm ${ibanSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              {ibanSaving ? 'Enregistrement…' : 'Enregistrer mon IBAN'}
+            </button>
+          </div>
         )}
       </div>
 

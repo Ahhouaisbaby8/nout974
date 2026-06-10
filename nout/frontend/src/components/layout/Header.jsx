@@ -45,7 +45,14 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
 
         {/* ── LOGO ── */}
-        <Link to="/" className="flex-shrink-0 mr-2 flex flex-col leading-none">
+        <Link
+          to="/"
+          className="flex-shrink-0 mr-2 flex flex-col leading-none"
+          onClick={() => {
+            if (document.scrollingElement) document.scrollingElement.scrollTop = 0
+            window.scrollTo(0, 0)
+          }}
+        >
           <span className="font-title font-black text-[20px] text-[#0A0F2C] tracking-[0.18em] leading-none">
             NOUT
           </span>
