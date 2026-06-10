@@ -10,7 +10,9 @@ screenshot.js
 screenshot-tmp/
 package-lock.json
 
-# Captures de développement
-*.png
+# Captures de développement (screenshots locaux)
+screenshot*.png
+# Exclure les assets publics du filtre PNG
+!nout/frontend/public/*.png
 start-backend.bat
 start-frontend.bat

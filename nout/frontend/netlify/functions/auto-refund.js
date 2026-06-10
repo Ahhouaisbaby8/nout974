@@ -237,6 +237,33 @@ exports.handler = async (event) => {
         )
       }
 
+      // ── PUSH NAVIGATEUR ──
+      const pushBase = `${SITE_URL}/.netlify/functions/send-push`
+      if (order.buyer_id) {
+        fetch(pushBase, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            receiver_id: order.buyer_id,
+            title: '💸 Tu as été remboursé — NOUT 974',
+            body: `${montant} € remboursés pour ${order.listing?.title ?? 'ton article'}.`,
+            url: '/commandes',
+          }),
+        }).catch(err => console.error('send-push acheteur auto-refund:', err.message))
+      }
+      if (order.seller_id) {
+        fetch(pushBase, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            receiver_id: order.seller_id,
+            title: '⏰ Remise non confirmée — NOUT 974',
+            body: `L'acheteur a été remboursé. Ton annonce ${order.listing?.title ?? ''} est remise en ligne.`,
+            url: '/commandes',
+          }),
+        }).catch(err => console.error('send-push vendeur auto-refund:', err.message))
+      }
+
       refunded++
       console.log(`✅ Order ${orderId} remboursée et annonce remise en ligne.`)
 

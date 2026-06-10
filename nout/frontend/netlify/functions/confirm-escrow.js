@@ -290,6 +290,35 @@ exports.handler = async (event) => {
       )
     }
 
+    // ── PUSH NAVIGATEUR ──
+    const pushBase = `${SITE_URL}/.netlify/functions/send-push`
+    if (order.buyer_id) {
+      fetch(pushBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiver_id: order.buyer_id,
+          title: '🤝 Remise confirmée — NOUT 974',
+          body: `La transaction pour ${order.listing?.title ?? 'ton article'} est terminée.`,
+          url: '/commandes',
+        }),
+      }).catch(err => console.error('send-push acheteur confirm-escrow:', err.message))
+    }
+    if (order.seller_id) {
+      fetch(pushBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiver_id: order.seller_id,
+          title: orderStatus === 'completed' ? '💸 Virement en route — NOUT 974' : '⚠️ Active tes paiements — NOUT 974',
+          body: orderStatus === 'completed'
+            ? `${prixAffiche} € vont être virés sur ton compte.`
+            : `Active tes paiements dans Paramètres pour recevoir ${prixAffiche} €.`,
+          url: '/parametres',
+        }),
+      }).catch(err => console.error('send-push vendeur confirm-escrow:', err.message))
+    }
+
     return {
       statusCode: 200,
       headers,

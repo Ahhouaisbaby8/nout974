@@ -43,9 +43,9 @@ exports.handler = async (event) => {
     const rows = await res.json()
     if (!rows.length) return { statusCode: 200, body: 'Pas d\'abonnement enregistré' }
 
-    await webpush.sendNotification(
-      rows[0].subscription,
-      JSON.stringify({ title, body, url })
+    const payload = JSON.stringify({ title, body, url })
+    await Promise.allSettled(
+      rows.map(row => webpush.sendNotification(row.subscription, payload))
     )
 
     return { statusCode: 200, body: 'OK' }

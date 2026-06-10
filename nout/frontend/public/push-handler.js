@@ -3,8 +3,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title ?? 'NOUT 974', {
       body: data.body ?? 'Nouveau message',
-      icon: '/nout-icon.svg',
-      badge: '/nout-icon.svg',
+      icon: '/nout-icon-192.png',
+      badge: '/nout-icon-192.png',
       vibrate: [100, 50, 100],
       data: { url: data.url ?? '/messages' },
     })
