@@ -105,7 +105,7 @@ exports.handler = async (event) => {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
-    if (order.status === 'completed') {
+    if (order.status === 'completed' || order.status === 'payout_pending') {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette remise a déjà été confirmée.' }) }
     }
 
@@ -149,9 +149,11 @@ exports.handler = async (event) => {
 
     // Transfert Stripe vers le vendeur
     // Montant = prix de l'article (sans les frais acheteur que NOUT conserve)
-    const prixArticle     = Number(order.listing?.price ?? 0)
-    const transferCents   = Math.round(prixArticle * 100)
-    const vendorStripeId  = order.seller?.stripe_account_id
+    const prixArticle    = Number(order.listing?.price ?? 0)
+    const transferCents  = Math.round(prixArticle * 100)
+    const vendorStripeId = order.seller?.stripe_account_id
+
+    let transferOk = false
 
     if (vendorStripeId) {
       try {
@@ -161,18 +163,21 @@ exports.handler = async (event) => {
           destination: vendorStripeId,
           metadata:    { order_id },
         })
+        transferOk = true
         console.log(`Transfert Stripe OK : ${transferCents / 100} € → ${vendorStripeId}`)
       } catch (stripeErr) {
-        // Le confirmed_at est déjà posé — loguer l'échec pour traitement manuel
+        // confirmed_at déjà posé — l'échec Stripe doit être traité manuellement
         console.error(`TRANSFERT ÉCHOUÉ (order ${order_id}) :`, stripeErr.message)
       }
     } else {
-      // Le vendeur n'a pas encore de compte Stripe — on le note et on lui envoie le lien
-      console.log(`Vendeur sans compte Stripe (order ${order_id}) — transfert en attente`)
+      console.log(`Vendeur sans compte Stripe (order ${order_id}) — statut payout_pending`)
     }
 
-    // Marquer la commande comme complète
-    await supabase.from('orders').update({ status: 'completed' }).eq('id', order_id)
+    // Statut selon disponibilité du compte Stripe vendeur :
+    // - 'completed'      → remise confirmée + transfert déclenché
+    // - 'payout_pending' → remise confirmée mais vendeur sans compte Stripe (transfert à faire après onboarding)
+    const orderStatus = (vendorStripeId && transferOk) ? 'completed' : 'payout_pending'
+    await supabase.from('orders').update({ status: orderStatus }).eq('id', order_id)
 
     // ── EMAILS ──
     const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
@@ -253,7 +258,7 @@ exports.handler = async (event) => {
 
       await sendEmail(
         order.seller.email,
-        'Ton virement est en route 🎉',
+        vendorStripeId && transferOk ? 'Ton virement est en route 🎉' : 'Active tes paiements pour recevoir ton argent 💸',
         `
           <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px 24px;background:#F8FAFF">
             <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">

@@ -9,8 +9,9 @@ import EscrowConfirm from '../components/EscrowConfirm'
 const STATUS_LABELS = {
   pending:   { label: 'En attente',   color: 'bg-yellow-100 text-yellow-700' },
   paid:      { label: 'Paiement reçu', color: 'bg-blue-100 text-blue-700' },
-  completed: { label: 'Remise faite', color: 'bg-green-100 text-green-700' },
-  refunded:  { label: 'Remboursé',    color: 'bg-gray-100 text-gray-500' },
+  completed:      { label: 'Remise faite',      color: 'bg-green-100 text-green-700' },
+  payout_pending: { label: 'Virement en attente', color: 'bg-orange-100 text-orange-700' },
+  refunded:       { label: 'Remboursé',           color: 'bg-gray-100 text-gray-500' },
   shipped:   { label: 'Expédié',      color: 'bg-purple-100 text-purple-700' },
   delivered: { label: 'Livré',        color: 'bg-green-100 text-green-700' },
   cancelled: { label: 'Annulé',       color: 'bg-gray-100 text-gray-500' },
