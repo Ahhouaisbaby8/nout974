@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
@@ -6,9 +6,12 @@ import { getAvatarUrl } from '../../utils/avatar'
 export default function Header() {
   const { user, profile, logout, isAdmin, unreadCount: unread } = useAuth()
   const navigate  = useNavigate()
-  const [query, setQuery] = useState('')
+  const [query, setQuery]     = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
 
   const handleLogout = async () => {
+    setMenuOpen(false)
     await logout()
     navigate('/')
   }
@@ -19,7 +22,23 @@ export default function Header() {
     else navigate('/recherche')
   }
 
+  // Ferme le dropdown si clic en dehors
+  useEffect(() => {
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   const avatarUrl = getAvatarUrl(profile?.avatar_url)
+
+  const menuLinks = [
+    { to: `/profil/${user?.id}`, icon: '👤', label: 'Mon profil' },
+    { to: '/commandes?tab=achats', icon: '🛍️', label: 'Mes achats' },
+    { to: '/commandes?tab=ventes', icon: '📦', label: 'Mes ventes' },
+    { to: '/parametres', icon: '⚙️', label: 'Paramètres' },
+  ]
 
   return (
     <header className="bg-white border-b border-[#E8EFF5] sticky top-0 z-50 shadow-nout-sm">
@@ -97,28 +116,66 @@ export default function Header() {
                 )}
               </Link>
 
-              {/* Avatar */}
-              <Link to={`/profil/${user.id}`} className="flex-shrink-0">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={profile?.username}
-                    className="w-8 h-8 rounded-full object-cover border-2 border-nout-turquoise"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-nout-roi text-white flex items-center justify-center text-xs font-bold font-title">
-                    {profile?.username?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase()}
+              {/* Avatar + dropdown menu */}
+              <div ref={menuRef} className="relative">
+                <button
+                  onClick={() => setMenuOpen(o => !o)}
+                  className="flex-shrink-0 focus:outline-none"
+                  aria-label="Menu utilisateur"
+                  aria-expanded={menuOpen}
+                >
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={profile?.username}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-nout-turquoise hover:opacity-90 transition-opacity"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-nout-roi text-white flex items-center justify-center text-xs font-bold font-title hover:opacity-90 transition-opacity">
+                      {profile?.username?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </button>
+
+                {/* Dropdown */}
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-lg border border-[#E8EFF5] py-2 z-50 animate-fade-in">
+
+                    {/* En-tête profil */}
+                    <div className="px-4 py-2 mb-1 border-b border-[#F0F4F8]">
+                      <p className="text-xs font-semibold text-[#0A0F2C] truncate">
+                        {profile?.username ?? 'Mon compte'}
+                      </p>
+                      <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
+                    </div>
+
+                    {/* Liens navigation */}
+                    {menuLinks.map(({ to, icon, label }) => (
+                      <Link
+                        key={to}
+                        to={to}
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A1A2E] hover:bg-[#F8FAFF] hover:text-[#1A3A8F] transition-colors"
+                      >
+                        <span className="text-base w-5 text-center">{icon}</span>
+                        {label}
+                      </Link>
+                    ))}
+
+                    {/* Séparateur + Déconnexion */}
+                    <div className="border-t border-[#F0F4F8] mt-1 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <span className="text-base w-5 text-center">🚪</span>
+                        Déconnexion
+                      </button>
+                    </div>
+
                   </div>
                 )}
-              </Link>
-
-              {/* Déconnexion desktop */}
-              <button
-                onClick={handleLogout}
-                className="hidden lg:block text-xs text-nout-muted hover:text-red-500 transition-colors ml-1"
-              >
-                Déco
-              </button>
+              </div>
             </>
           ) : (
             <>

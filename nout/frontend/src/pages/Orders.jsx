@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMyOrders } from '../services/orders'
 import { formatPrice, formatDate } from '../utils/formatters'
@@ -7,19 +7,25 @@ import Spinner from '../components/ui/Spinner'
 import EscrowConfirm from '../components/EscrowConfirm'
 
 const STATUS_LABELS = {
-  pending:   { label: 'En attente',  color: 'bg-yellow-100 text-yellow-700' },
-  paid:      { label: 'Payé',        color: 'bg-blue-100 text-blue-700' },
-  shipped:   { label: 'Expédié',     color: 'bg-purple-100 text-purple-700' },
-  delivered: { label: 'Livré',       color: 'bg-green-100 text-green-700' },
-  cancelled: { label: 'Annulé',      color: 'bg-gray-100 text-gray-500' },
-  disputed:  { label: 'Litige',      color: 'bg-red-100 text-red-600' },
+  pending:   { label: 'En attente',   color: 'bg-yellow-100 text-yellow-700' },
+  paid:      { label: 'Paiement reçu', color: 'bg-blue-100 text-blue-700' },
+  completed: { label: 'Remise faite', color: 'bg-green-100 text-green-700' },
+  refunded:  { label: 'Remboursé',    color: 'bg-gray-100 text-gray-500' },
+  shipped:   { label: 'Expédié',      color: 'bg-purple-100 text-purple-700' },
+  delivered: { label: 'Livré',        color: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'Annulé',       color: 'bg-gray-100 text-gray-500' },
+  disputed:  { label: 'Litige',       color: 'bg-red-100 text-red-600' },
 }
 
 export default function Orders() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [orders, setOrders]   = useState([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab]         = useState('achats')
+
+  // Lit ?tab= dans l'URL ; 'achats' par défaut
+  const tab = searchParams.get('tab') === 'ventes' ? 'ventes' : 'achats'
+  const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
 
   useEffect(() => {
     getMyOrders(user.id)
