@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { getMyOrders } from '../services/orders'
 import { formatPrice, formatDate } from '../utils/formatters'
 import Spinner from '../components/ui/Spinner'
+import EscrowConfirm from '../components/EscrowConfirm'
 
 const STATUS_LABELS = {
   pending:   { label: 'En attente',  color: 'bg-yellow-100 text-yellow-700' },
@@ -81,40 +82,48 @@ export default function Orders() {
             const image   = order.listing?.images?.[0]
             const other   = tab === 'achats' ? order.seller : order.buyer
             return (
-              <div key={order.id} className="bg-white rounded-2xl shadow-sm p-4 flex gap-4">
-                {/* Image */}
-                <Link to={`/annonce/${order.listing?.id}`} className="flex-shrink-0">
-                  <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
-                    {image ? (
-                      <img src={image} alt={order.listing?.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-3xl text-gray-300">📷</div>
-                    )}
-                  </div>
-                </Link>
-
-                {/* Infos */}
-                <div className="flex-1 min-w-0">
-                  <Link to={`/annonce/${order.listing?.id}`}>
-                    <p className="font-semibold text-nout-dark text-sm truncate hover:text-nout-primary transition-colors">
-                      {order.listing?.title ?? 'Article supprimé'}
-                    </p>
+              <div key={order.id} className="bg-white rounded-2xl shadow-sm p-4">
+                <div className="flex gap-4">
+                  {/* Image */}
+                  <Link to={`/annonce/${order.listing?.id}`} className="flex-shrink-0">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                      {image ? (
+                        <img src={image} alt={order.listing?.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-3xl text-gray-300">📷</div>
+                      )}
+                    </div>
                   </Link>
-                  <p className="text-nout-primary font-extrabold mt-0.5">{formatPrice(order.total_price)}</p>
-                  {other && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      {tab === 'achats' ? 'Vendeur' : 'Acheteur'} : {other.username}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
+
+                  {/* Infos */}
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/annonce/${order.listing?.id}`}>
+                      <p className="font-semibold text-nout-dark text-sm truncate hover:text-nout-primary transition-colors">
+                        {order.listing?.title ?? 'Article supprimé'}
+                      </p>
+                    </Link>
+                    <p className="text-nout-primary font-extrabold mt-0.5">{formatPrice(order.total_price)}</p>
+                    {other && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {tab === 'achats' ? 'Vendeur' : 'Acheteur'} : {other.username}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
+                  </div>
+
+                  {/* Statut */}
+                  <div className="flex-shrink-0">
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${status.color}`}>
+                      {status.label}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Statut */}
-                <div className="flex-shrink-0">
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${status.color}`}>
-                    {status.label}
-                  </span>
-                </div>
+                {/* Confirmation escrow — visible uniquement pour le vendeur, statut paid */}
+                <EscrowConfirm
+                  order={order}
+                  onConfirmed={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
+                />
               </div>
             )
           })}

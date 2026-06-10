@@ -6,6 +6,9 @@
 [functions]
   directory = "netlify/functions"
 
+[functions."auto-refund"]
+  schedule = "0 * * * *"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

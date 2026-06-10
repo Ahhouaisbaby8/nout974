@@ -59,10 +59,10 @@ exports.handler = async (event) => {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
-    // Récupérer l'annonce + le compte Stripe du vendeur
+    // Récupérer l'annonce (plus besoin du stripe_account_id vendeur)
     const { data: listing, error } = await supabase
       .from('listings')
-      .select('*, profiles(id, stripe_account_id, email)')
+      .select('*, profiles(id, email)')
       .eq('id', listingId)
       .single()
 
@@ -72,9 +72,6 @@ exports.handler = async (event) => {
     if (listing.is_sold) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article a déjà été vendu.' }) }
     }
-    if (!listing.profiles?.stripe_account_id) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: "Le vendeur n'a pas encore activé les paiements. Contacte-le directement." }) }
-    }
 
     const prixArticle    = listing.price
     const fraisFixe      = 1.00
@@ -82,12 +79,11 @@ exports.handler = async (event) => {
     const totalFraisNout = fraisFixe + fraisVariable
     const totalAcheteur  = prixArticle + totalFraisNout
 
-    const amountCents  = Math.round(totalAcheteur * 100)
-    const appFeeCents  = Math.round(totalFraisNout * 100)
-    const siteUrl      = process.env.URL || 'http://localhost:8888'
+    const amountCents = Math.round(totalAcheteur * 100)
+    const siteUrl     = process.env.URL || 'http://localhost:8888'
 
     // Créer la commande en base
-    const { data: order } = await supabase.from('orders').insert({
+    const { data: order, error: orderError } = await supabase.from('orders').insert({
       buyer_id:        buyerId,
       seller_id:       listing.user_id,
       listing_id:      listingId,
@@ -96,7 +92,28 @@ exports.handler = async (event) => {
       status:          'pending',
     }).select().single()
 
-    // Créer la session Stripe Checkout
+    if (orderError || !order) {
+      console.error('Order insert error:', orderError?.message)
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la création de la commande.' }) }
+    }
+
+    // Générer le code escrow à 6 chiffres et le stocker AVANT la session Stripe
+    // (si Stripe échoue ensuite, la commande reste pending et le code expire naturellement)
+    const escrowCode = String(Math.floor(100000 + Math.random() * 900000))
+    const expiresAt  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+    const { error: escrowError } = await supabase.from('escrow_codes').insert({
+      order_id:   order.id,
+      code:       escrowCode,
+      expires_at: expiresAt,
+    })
+
+    if (escrowError) {
+      console.error('Escrow insert error:', escrowError.message)
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la création du code de remise.' }) }
+    }
+
+    // Créer la session Stripe Checkout — argent capturé sur le compte NOUT, pas de transfert vendeur
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{
@@ -111,8 +128,9 @@ exports.handler = async (event) => {
         quantity: 1,
       }],
       payment_intent_data: {
-        application_fee_amount: appFeeCents,
-        transfer_data: { destination: listing.profiles.stripe_account_id },
+        // Pas de transfer_data ni application_fee_amount : l'argent reste sur le compte Stripe NOUT.
+        // Le transfert au vendeur sera déclenché manuellement à la confirmation du code escrow.
+        metadata: { orderId: order.id, listingId },
       },
       metadata: { orderId: order.id, listingId },
       success_url: `${siteUrl}/paiement-succes?commande=${order.id}`,
