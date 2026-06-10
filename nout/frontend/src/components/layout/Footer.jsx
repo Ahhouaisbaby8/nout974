@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer className="bg-nout-nuit text-white mt-16">
+    <footer className="bg-nout-nuit text-white mt-16 pb-16 md:pb-0">
 
       {/* Ligne accent turquoise */}
       <div className="h-[3px] bg-nout-accent" />

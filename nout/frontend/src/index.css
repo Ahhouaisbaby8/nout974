@@ -11,6 +11,13 @@
     padding: 0;
   }
 
+  html {
+    /* Empêche le rebond iOS + le pull-to-refresh Android sur la page principale */
+    overscroll-behavior-y: none;
+    /* Corrige le bug iOS Safari où 100vh inclut la barre du navigateur */
+    height: -webkit-fill-available;
+  }
+
   body {
     font-family: 'Inter', 'Segoe UI', sans-serif;
     font-size: 14px;
@@ -18,6 +25,10 @@
     color: var(--nout-texte);
     background-color: #F8FAFF;
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    /* min-h en fallback iOS pour que flex-col remplisse bien le viewport */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
 
   h1, h2, h3, h4 { font-family: 'Montserrat', 'Segoe UI', sans-serif; }

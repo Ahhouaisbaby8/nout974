@@ -4,7 +4,14 @@ import { useAuth } from './context/AuthContext'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
-  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  useEffect(() => {
+    // document.scrollingElement = html sur Chrome/Firefox, body sur iOS Safari
+    // Assignation directe = toujours instantané, aucune animation
+    if (document.scrollingElement) {
+      document.scrollingElement.scrollTop = 0
+    }
+    window.scrollTo(0, 0)
+  }, [pathname])
   return null
 }
 

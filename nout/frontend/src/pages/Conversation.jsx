@@ -184,7 +184,7 @@ export default function Conversation() {
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto px-4 py-4 flex flex-col gap-3"
+          className="h-full overflow-y-auto overscroll-y-contain px-4 py-4 flex flex-col gap-3"
           style={{ opacity: contentVisible ? 1 : 0, transition: 'opacity 150ms ease' }}
         >
           {messages.length === 0 && (

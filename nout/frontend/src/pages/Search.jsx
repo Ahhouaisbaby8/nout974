@@ -48,6 +48,8 @@ export default function Search() {
     if (reset) {
       setLoading(true)
       setPage(1)
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0
+      window.scrollTo(0, 0)
     } else {
       setLoadingMore(true)
     }

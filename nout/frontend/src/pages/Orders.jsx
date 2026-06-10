@@ -26,7 +26,11 @@ export default function Orders() {
 
   // Lit ?tab= dans l'URL ; 'achats' par défaut
   const tab = searchParams.get('tab') === 'ventes' ? 'ventes' : 'achats'
-  const setTab = (t) => setSearchParams({ tab: t }, { replace: true })
+  const setTab = (t) => {
+    setSearchParams({ tab: t }, { replace: true })
+    if (document.scrollingElement) document.scrollingElement.scrollTop = 0
+    window.scrollTo(0, 0)
+  }
 
   useEffect(() => {
     getMyOrders(user.id)
