@@ -4,7 +4,7 @@ export default function LegalLayout({ title, lastUpdate, children }) {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <BackButton />
-      <div className="mt-6 bg-white rounded-2xl shadow-sm p-8">
+      <div className="mt-6 bg-white rounded-2xl shadow-sm p-4 sm:p-8">
         <h1 className="text-2xl font-extrabold text-nout-dark mb-1">{title}</h1>
         {lastUpdate && (
           <p className="text-xs text-gray-400 mb-8">Dernière mise à jour : {lastUpdate}</p>

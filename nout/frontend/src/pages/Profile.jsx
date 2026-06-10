@@ -152,11 +152,11 @@ export default function Profile() {
       {/* ── MINI-STATS ── */}
       <div className="grid grid-cols-3 gap-3 mt-4">
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-          <p className="text-2xl font-extrabold text-[#1A3A8F]">{listings.length}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{listings.length}</p>
           <p className="text-[11px] text-nout-muted mt-1">annonce{listings.length !== 1 ? 's' : ''} active{listings.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-          <p className="text-2xl font-extrabold text-[#1A3A8F]">
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">
             {avgRating ? `${avgRating} ⭐` : '—'}
           </p>
           <p className="text-[11px] text-nout-muted mt-1">
@@ -164,7 +164,7 @@ export default function Profile() {
           </p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-          <p className="text-2xl font-extrabold text-[#1A3A8F]">{memberLabel}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{memberLabel}</p>
           <p className="text-[11px] text-nout-muted mt-1">membre depuis</p>
         </div>
       </div>

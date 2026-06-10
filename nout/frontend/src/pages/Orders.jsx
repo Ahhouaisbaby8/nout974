@@ -108,11 +108,16 @@ export default function Orders() {
 
                   {/* Infos */}
                   <div className="flex-1 min-w-0">
-                    <Link to={`/annonce/${order.listing?.id}`}>
-                      <p className="font-semibold text-nout-dark text-sm truncate hover:text-nout-primary transition-colors">
-                        {order.listing?.title ?? 'Article supprimé'}
-                      </p>
-                    </Link>
+                    <div className="flex items-start justify-between gap-2">
+                      <Link to={`/annonce/${order.listing?.id}`} className="flex-1 min-w-0">
+                        <p className="font-semibold text-nout-dark text-sm truncate hover:text-nout-primary transition-colors">
+                          {order.listing?.title ?? 'Article supprimé'}
+                        </p>
+                      </Link>
+                      <span className={`flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </div>
                     <p className="text-nout-primary font-extrabold mt-0.5">{formatPrice(order.total_price)}</p>
                     {other && (
                       <p className="text-xs text-gray-400 mt-1">
@@ -120,13 +125,6 @@ export default function Orders() {
                       </p>
                     )}
                     <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
-                  </div>
-
-                  {/* Statut */}
-                  <div className="flex-shrink-0">
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${status.color}`}>
-                      {status.label}
-                    </span>
                   </div>
                 </div>
 
