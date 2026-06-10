@@ -1,5 +1,12 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 
 import Header      from './components/layout/Header'
 import Footer      from './components/layout/Footer'
@@ -69,6 +76,7 @@ function AdminRoute({ children }) {
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-nout-secondary">
+      <ScrollToTop />
       <Header />
 
       <main className="flex-1 pb-16 md:pb-0">

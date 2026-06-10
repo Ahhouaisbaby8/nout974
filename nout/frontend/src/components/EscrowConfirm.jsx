@@ -122,10 +122,10 @@ export default function EscrowConfirm({ order, onConfirmed }) {
       </div>
 
       {/* Corps */}
-      <div className="px-5 py-5">
+      <div className="px-3 sm:px-5 py-5">
 
         {/* Cases de saisie */}
-        <div className="flex justify-center gap-2 mb-4" onPaste={handlePaste}>
+        <div className="flex justify-center gap-1.5 sm:gap-2 mb-4" onPaste={handlePaste}>
           {digits.map((d, i) => (
             <input
               key={i}
@@ -136,10 +136,10 @@ export default function EscrowConfirm({ order, onConfirmed }) {
               value={d}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              disabled={loading || result?.type === 'success'}
+              disabled={loading || result?.type === 'success' || result?.type === 'expired'}
               aria-label={`Chiffre ${i + 1}`}
               className={`
-                w-11 h-14 text-center text-2xl font-bold font-mono rounded-xl
+                w-9 h-12 sm:w-11 sm:h-14 text-center text-xl sm:text-2xl font-bold font-mono rounded-xl
                 bg-white/10 text-white border-2 transition-all outline-none
                 ${d ? 'border-[#00C4B4]' : 'border-white/20'}
                 focus:border-[#00C4B4] focus:bg-white/15

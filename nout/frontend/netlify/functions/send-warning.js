@@ -3,6 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
+const SITE_URL        = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
 
 exports.handler = async (event) => {
   const corsHeaders = {
@@ -67,7 +68,7 @@ exports.handler = async (event) => {
             <p>Ton compte a reçu un <strong>avertissement</strong> suite à un signalement de la communauté NOUT 974.</p>
             <p>Nous te demandons de respecter les règles de la marketplace pour continuer à profiter du service. En cas de récidive, ton compte pourra être suspendu ou banni.</p>
             <p>Si tu penses qu'il s'agit d'une erreur, réponds à cet email.</p>
-            <p style="margin-top:32px;color:#6B7A99;font-size:13px">L'équipe NOUT 974 — <a href="https://effortless-tapioca-c6ab25.netlify.app">nout974.re</a></p>
+            <p style="margin-top:32px;color:#6B7A99;font-size:13px">L'équipe NOUT 974 — <a href="${SITE_URL}" style="color:#1A3A8F">nout974.re</a></p>
           </div>
         `,
       }),

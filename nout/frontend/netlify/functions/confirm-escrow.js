@@ -80,6 +80,11 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Paramètres manquants.' }) }
     }
 
+    // Validation stricte : le code doit être exactement 6 chiffres
+    if (!/^\d{6}$/.test(String(code).trim())) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Format de code invalide.' }) }
+    }
+
     // Récupérer la commande complète (vendeur, acheteur, annonce)
     const { data: order, error: orderError } = await supabase
       .from('orders')

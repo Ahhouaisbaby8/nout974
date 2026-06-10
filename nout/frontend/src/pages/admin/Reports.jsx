@@ -22,11 +22,11 @@ const REASON_ICONS = {
 }
 
 function BadgeType({ report }) {
-  if (report.listing)
+  if (report.listing_id)
     return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">Annonce</span>
   if (report.message_id)
     return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600">Message</span>
-  if (report.reported_profile)
+  if (report.user_id)
     return <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600">Utilisateur</span>
   return null
 }
@@ -220,17 +220,6 @@ export default function AdminReports() {
             const statusInfo  = STATUS_LABELS[r.status] ?? STATUS_LABELS.pending
             const reasonIcon  = REASON_ICONS[r.reason] ?? '🚩'
             const actLoading  = !!actionLoading[r.id]
-
-            console.log('[Report debug]', {
-              id: r.id,
-              status: r.status,
-              listing_id: r.listing_id,
-              user_id: r.user_id,
-              message_id: r.message_id,
-              listing: r.listing,
-              reported_profile: r.reported_profile,
-              isListing, isUser, isMessage,
-            })
 
             return (
               <div key={r.id} className="bg-white rounded-xl shadow-sm p-5">

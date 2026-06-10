@@ -69,8 +69,30 @@ exports.handler = async (event) => {
     if (error || !listing) {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'Annonce introuvable.' }) }
     }
+
+    // Un vendeur ne peut pas acheter sa propre annonce
+    if (listing.user_id === buyerId) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Tu ne peux pas acheter ta propre annonce.' }) }
+    }
+
     if (listing.is_sold) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article a déjà été vendu.' }) }
+    }
+
+    if (listing.is_active === false) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette annonce n\'est plus disponible.' }) }
+    }
+
+    // Vérification anti double-paiement (commande active existante pour cette annonce)
+    const { data: existingOrder } = await supabase
+      .from('orders')
+      .select('id, status')
+      .eq('listing_id', listingId)
+      .not('status', 'in', '("cancelled","refunded")')
+      .maybeSingle()
+
+    if (existingOrder) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article est déjà en cours d\'achat.' }) }
     }
 
     const prixArticle    = listing.price
