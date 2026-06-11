@@ -47,11 +47,11 @@ export default function Favorites() {
 
       {favorites.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-5xl mb-4">🤍</p>
-          <p className="text-base font-semibold text-nout-dark">Aucun favori pour l'instant</p>
-          <p className="text-sm mt-1">Clique sur le cœur d'une annonce pour la retrouver ici.</p>
-          <Link to="/recherche" className="btn-primary mt-6 px-8 inline-block">
-            Parcourir les annonces
+          <p className="text-5xl mb-4">❤️</p>
+          <p className="text-base font-semibold text-nout-dark">Tu n'as pas encore de favoris</p>
+          <p className="text-sm mt-2 text-gray-400">Explore les annonces et sauvegarde celles qui t'intéressent !</p>
+          <Link to="/" className="btn-primary mt-6 px-8 inline-block">
+            Explorer les annonces
           </Link>
         </div>
       ) : (

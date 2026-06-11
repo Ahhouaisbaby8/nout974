@@ -7,7 +7,8 @@ import { sendMessage } from '../services/messages'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
-import { Share2 } from 'lucide-react'
+import { Share2, Heart } from 'lucide-react'
+import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import ReportModal from '../components/ui/ReportModal'
@@ -38,6 +39,8 @@ export default function ListingDetail() {
   const [offerSending, setOfferSending] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [copyToast, setCopyToast]         = useState(false)
+  const [detailFav, setDetailFav] = useState(false)
+  const [favPulse, setFavPulse]   = useState(false)
 
   useEffect(() => {
     getListingById(id)
@@ -57,6 +60,12 @@ export default function ListingDetail() {
 
     return () => { document.title = 'NOUT — Marketplace seconde main La Réunion 974' }
   }, [id])
+
+  useEffect(() => {
+    if (user?.id) {
+      isFavorite(user.id, id).then(setDetailFav).catch(() => {})
+    }
+  }, [user?.id, id])
 
   const handleDelete = async () => {
     if (!confirm('Supprimer cette annonce définitivement ?')) return
@@ -180,6 +189,20 @@ export default function ListingDetail() {
     setShowShareMenu(false)
   }
 
+  const handleDetailFav = async () => {
+    if (!user) { navigate('/connexion'); return }
+    setFavPulse(true)
+    setTimeout(() => setFavPulse(false), 400)
+    const next = !detailFav
+    setDetailFav(next)
+    try {
+      if (next) await addFavorite(user.id, id)
+      else      await removeFavorite(user.id, id)
+    } catch {
+      setDetailFav(!next)
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
       <BackButton />
@@ -237,7 +260,17 @@ export default function ListingDetail() {
 
           {/* Titre + Prix */}
           <div>
-            <h1 className="text-2xl font-extrabold text-nout-dark leading-snug">{listing.title}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl font-extrabold text-nout-dark leading-snug flex-1">{listing.title}</h1>
+              <button
+                type="button"
+                onClick={handleDetailFav}
+                aria-label={detailFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                className={`flex-shrink-0 mt-1 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${detailFav ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200 hover:border-red-200'} ${favPulse ? 'scale-125' : ''}`}
+              >
+                <Heart className={`w-5 h-5 transition-all duration-200 ${detailFav ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-gray-400'}`} />
+              </button>
+            </div>
             <p className="text-3xl font-extrabold text-nout-primary mt-2">{formatPrice(listing.price)}</p>
           </div>
 

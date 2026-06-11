@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { Heart } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
@@ -7,8 +8,10 @@ import { CATEGORIES } from '../../utils/categories'
 
 export default function ListingCard({ listing, isFavorited = false }) {
   const { user } = useAuth()
-  const [fav, setFav] = useState(isFavorited)
+  const navigate  = useNavigate()
+  const [fav, setFav]         = useState(isFavorited)
   const [toggling, setToggling] = useState(false)
+  const [pulse, setPulse]     = useState(false)
 
   const imageUrl  = listing.images?.[0] ?? null
   const category  = CATEGORIES.find(c => c.id === listing.category)
@@ -17,8 +20,11 @@ export default function ListingCard({ listing, isFavorited = false }) {
   const handleFav = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!user || toggling) return
+    if (toggling) return
+    if (!user) { navigate('/connexion'); return }
     setToggling(true)
+    setPulse(true)
+    setTimeout(() => setPulse(false), 400)
     const next = !fav
     setFav(next)
     try {
@@ -69,21 +75,13 @@ export default function ListingCard({ listing, isFavorited = false }) {
         )}
 
         {/* Cœur favori — haut droite */}
-        {user && (
-          <button
-            onClick={handleFav}
-            aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform"
-          >
-            <svg
-              className={`w-4 h-4 transition-colors ${fav ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-white'}`}
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
-        )}
+        <button
+          onClick={handleFav}
+          aria-label={fav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          className={`absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-transform ${pulse ? 'scale-125' : 'hover:scale-110'}`}
+        >
+          <Heart className={`w-4 h-4 transition-all duration-200 ${fav ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-white'}`} />
+        </button>
       </div>
 
       {/* ── INFOS ── */}

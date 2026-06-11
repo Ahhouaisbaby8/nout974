@@ -34,10 +34,11 @@ export default function Header() {
   const avatarUrl = getAvatarUrl(profile?.avatar_url)
 
   const menuLinks = [
-    { to: `/profil/${user?.id}`, icon: '👤', label: 'Mon profil' },
+    { to: `/profil/${user?.id}`,   icon: '👤', label: 'Mon profil' },
+    { to: '/favoris',              icon: '❤️', label: 'Mes favoris' },
     { to: '/commandes?tab=achats', icon: '🛍️', label: 'Mes achats' },
     { to: '/commandes?tab=ventes', icon: '📦', label: 'Mes ventes' },
-    { to: '/parametres', icon: '⚙️', label: 'Paramètres' },
+    { to: '/parametres',           icon: '⚙️', label: 'Paramètres' },
   ]
 
   return (
