@@ -16,16 +16,11 @@ function makeIconSvg(size) {
   const ty = Math.round(s * 0.14)   // top y
   const by = Math.round(s * 0.86)   // bottom y
   const bh = by - ty
-  const dr = Math.round(s * 0.115)  // rayon dot
-  const dx = Math.round(s * 0.80)   // dot x
-  const dy = Math.round(s * 0.80)   // dot y
-
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
   <rect width="${s}" height="${s}" rx="${rx}" fill="#0D0D0D"/>
   <rect x="${lx}" y="${ty}" width="${bw}" height="${bh}" fill="white"/>
   <rect x="${rx2}" y="${ty}" width="${bw}" height="${bh}" fill="white"/>
   <polygon points="${lx},${ty} ${lx+bw},${ty} ${rx2+bw},${by} ${rx2},${by}" fill="white"/>
-  <circle cx="${dx}" cy="${dy}" r="${dr}" fill="#48CAE4"/>
 </svg>`
 }
 
