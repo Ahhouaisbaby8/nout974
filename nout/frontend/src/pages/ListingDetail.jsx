@@ -7,6 +7,7 @@ import { sendMessage } from '../services/messages'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
+import { Share2 } from 'lucide-react'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import ReportModal from '../components/ui/ReportModal'
@@ -35,6 +36,8 @@ export default function ListingDetail() {
   const [loadingSimilar, setLoadingSimilar] = useState(false)
   const [offerAmount, setOfferAmount] = useState('')
   const [offerSending, setOfferSending] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [copyToast, setCopyToast]         = useState(false)
 
   useEffect(() => {
     getListingById(id)
@@ -159,7 +162,23 @@ export default function ListingDetail() {
     }
   }
 
-  const whatsappUrl =`https://wa.me/?text=${encodeURIComponent(`${listing.title} — ${formatPrice(listing.price)} | NOUT 974\n${window.location.href}`)}`
+  const listingUrl       = `${window.location.origin}/annonce/${id}`
+  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Regarde cette annonce sur NOUT 974 🛍️\n${listing.title} — ${formatPrice(listing.price)}\n${listingUrl}`)}`
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title: listing.title, text: 'Regarde cette annonce sur NOUT 974 !', url: listingUrl }) } catch {}
+    } else {
+      setShowShareMenu(s => !s)
+    }
+  }
+
+  const handleCopyLink = async () => {
+    try { await navigator.clipboard.writeText(listingUrl) } catch {}
+    setCopyToast(true)
+    setTimeout(() => setCopyToast(false), 2500)
+    setShowShareMenu(false)
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
@@ -334,34 +353,62 @@ export default function ListingDetail() {
                       <span>{formatPrice(totalAcheteur)}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={async () => {
-                      setPaying(true)
-                      setPayError('')
-                      try {
-                        const { data: { session: authSession } } = await supabase.auth.getSession()
-                        const res = await fetch('/.netlify/functions/create-checkout-session', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
-                          },
-                          body: JSON.stringify({ listingId: id, buyerId: user.id }),
-                        })
-                        const data = await res.json()
-                        if (data.error) { setPayError(data.error); return }
-                        window.location.href = data.url
-                      } catch {
-                        setPayError('Erreur de connexion. Réessaie.')
-                      } finally {
-                        setPaying(false)
-                      }
-                    }}
-                    disabled={paying}
-                    className={`btn-primary w-full py-4 text-base ${paying ? 'opacity-60 cursor-not-allowed' : ''}`}
-                  >
-                    {paying ? 'Redirection…' : `💳 Acheter — ${formatPrice(totalAcheteur)}`}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        setPaying(true)
+                        setPayError('')
+                        try {
+                          const { data: { session: authSession } } = await supabase.auth.getSession()
+                          const res = await fetch('/.netlify/functions/create-checkout-session', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
+                            },
+                            body: JSON.stringify({ listingId: id, buyerId: user.id }),
+                          })
+                          const data = await res.json()
+                          if (data.error) { setPayError(data.error); return }
+                          window.location.href = data.url
+                        } catch {
+                          setPayError('Erreur de connexion. Réessaie.')
+                        } finally {
+                          setPaying(false)
+                        }
+                      }}
+                      disabled={paying}
+                      className={`btn-primary flex-1 py-4 text-base ${paying ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    >
+                      {paying ? 'Redirection…' : `💳 Acheter — ${formatPrice(totalAcheteur)}`}
+                    </button>
+                    <div className="relative flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleShare}
+                        className="btn-secondary h-full px-4 flex items-center justify-center"
+                        aria-label="Partager"
+                      >
+                        <Share2 className="w-5 h-5" />
+                      </button>
+                      {showShareMenu && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
+                          <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden w-52">
+                            <a href={whatsappShareUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setShowShareMenu(false)}>
+                              📱 WhatsApp
+                            </a>
+                            <button type="button" onClick={handleCopyLink} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left">
+                              📋 Copier le lien
+                            </button>
+                            <button type="button" onClick={() => setShowShareMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-gray-50 transition-colors w-full text-left border-t border-gray-100">
+                              ✖️ Fermer
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                   <button
                     onClick={() => setShowOffer(true)}
                     className="w-full py-3 rounded-nout border-2 border-[#00C4B4] text-[#00C4B4] font-bold text-sm hover:bg-[#00C4B4] hover:text-white transition-all"
@@ -395,12 +442,40 @@ export default function ListingDetail() {
                       <span>{formatPrice(totalAcheteur)}</span>
                     </div>
                   </div>
-                  <Link
-                    to={`/connexion?redirect=/annonce/${id}`}
-                    className="btn-primary w-full py-4 text-base text-center block"
-                  >
-                    💳 Acheter — {formatPrice(totalAcheteur)}
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/connexion?redirect=/annonce/${id}`}
+                      className="btn-primary flex-1 py-4 text-base text-center block"
+                    >
+                      💳 Acheter — {formatPrice(totalAcheteur)}
+                    </Link>
+                    <div className="relative flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleShare}
+                        className="btn-secondary h-full px-4 flex items-center justify-center"
+                        aria-label="Partager"
+                      >
+                        <Share2 className="w-5 h-5" />
+                      </button>
+                      {showShareMenu && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
+                          <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden w-52">
+                            <a href={whatsappShareUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setShowShareMenu(false)}>
+                              📱 WhatsApp
+                            </a>
+                            <button type="button" onClick={handleCopyLink} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left">
+                              📋 Copier le lien
+                            </button>
+                            <button type="button" onClick={() => setShowShareMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-gray-50 transition-colors w-full text-left border-t border-gray-100">
+                              ✖️ Fermer
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                   <Link
                     to={`/connexion?redirect=/annonce/${id}`}
                     className="btn-secondary w-full py-3 text-sm text-center block"
@@ -422,18 +497,6 @@ export default function ListingDetail() {
             </button>
           )}
 
-          {/* Partage WhatsApp */}
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-nout border-2 border-[#25D366] text-[#25D366] font-semibold text-sm hover:bg-[#25D366] hover:text-white transition-all"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            Partager sur WhatsApp
-          </a>
 
         </div>
       </div>
@@ -456,6 +519,12 @@ export default function ListingDetail() {
           listingId={id}
           onClose={() => setShowReport(false)}
         />
+      )}
+
+      {copyToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-nout-dark text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
+          ✅ Lien copié !
+        </div>
       )}
 
       {showOffer && (
