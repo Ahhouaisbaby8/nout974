@@ -19,15 +19,21 @@ export default defineConfig({
         lang: 'fr',
         icons: [
           {
-            src: '/nout-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/nout-icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/nout-icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/nout-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/nout-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
             purpose: 'maskable',
           },
         ],
