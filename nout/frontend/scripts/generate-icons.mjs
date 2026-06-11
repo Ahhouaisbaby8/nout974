@@ -10,14 +10,14 @@ const PUBLIC = join(__dirname, '..', 'public')
 function makeIconSvg(size) {
   const s  = size
   const rx = Math.round(s * 0.18)   // arrondi coins
-  const lx = Math.round(s * 0.17)   // barre gauche x
-  const bw = Math.round(s * 0.165)  // largeur barre
-  const rx2= Math.round(s * 0.665)  // barre droite x
-  const ty = Math.round(s * 0.14)   // top y
-  const by = Math.round(s * 0.86)   // bottom y
+  const lx = Math.round(s * 0.21)   // barre gauche x
+  const bw = Math.round(s * 0.145)  // largeur barre
+  const rx2= Math.round(s * 0.645)  // barre droite x
+  const ty = Math.round(s * 0.18)   // top y
+  const by = Math.round(s * 0.82)   // bottom y
   const bh = by - ty
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
-  <rect width="${s}" height="${s}" rx="${rx}" fill="#0D0D0D"/>
+  <rect width="${s}" height="${s}" rx="${rx}" fill="#1A1A2E"/>
   <rect x="${lx}" y="${ty}" width="${bw}" height="${bh}" fill="white"/>
   <rect x="${rx2}" y="${ty}" width="${bw}" height="${bh}" fill="white"/>
   <polygon points="${lx},${ty} ${lx+bw},${ty} ${rx2+bw},${by} ${rx2},${by}" fill="white"/>
