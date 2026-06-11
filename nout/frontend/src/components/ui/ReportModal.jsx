@@ -19,6 +19,7 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
   const [sending, setSending]         = useState(false)
   const [done, setDone]               = useState(false)
   const [alreadyReported, setAlready] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const isOther         = reason === 'Autre'
   const isListing       = !!listingId
@@ -44,7 +45,7 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
         setDone(true)
       }
     } catch {
-      alert('Erreur. Réessaie.')
+      setSubmitError('Erreur. Réessaie.')
     } finally {
       setSending(false)
     }
@@ -130,6 +131,9 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
                 </div>
               ) : null}
 
+              {submitError && (
+                <p className="text-sm text-red-500 text-center">{submitError}</p>
+              )}
               <button
                 type="submit"
                 disabled={!canSubmit || sending}

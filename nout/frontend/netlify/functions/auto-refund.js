@@ -135,10 +135,12 @@ exports.handler = async (event) => {
       }
 
       // Mettre à jour la commande + remettre l'annonce en vente
-      await Promise.all([
+      const [{ error: orderRefundErr }, { error: listingRelistErr }] = await Promise.all([
         supabase.from('orders').update({ status: 'refunded' }).eq('id', orderId),
         supabase.from('listings').update({ is_sold: false }).eq('id', order.listing_id),
       ])
+      if (orderRefundErr)   console.error(`Update order ${orderId} refunded:`, orderRefundErr.message)
+      if (listingRelistErr) console.error(`Update listing ${order.listing_id} is_sold false:`, listingRelistErr.message)
 
       // ── EMAILS ──
       const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')

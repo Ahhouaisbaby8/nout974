@@ -8,16 +8,26 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     image.onload = resolve
     image.onerror = reject
   })
+  // Limite la résolution à 1200px pour éviter les crashes mémoire sur mobile (iOS/Android)
+  const MAX_SIDE = 1200
+  const scale = Math.min(1, MAX_SIDE / pixelCrop.width, MAX_SIDE / pixelCrop.height)
+  const outW = Math.round(pixelCrop.width * scale)
+  const outH = Math.round(pixelCrop.height * scale)
   const canvas = document.createElement('canvas')
-  canvas.width  = pixelCrop.width
-  canvas.height = pixelCrop.height
+  canvas.width  = outW
+  canvas.height = outH
   const ctx = canvas.getContext('2d')
   ctx.drawImage(
     image,
     pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
-    0, 0, pixelCrop.width, pixelCrop.height
+    0, 0, outW, outH
   )
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92))
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) { reject(new Error('Recadrage impossible. Essaie une autre photo.')); return }
+      resolve(blob)
+    }, 'image/jpeg', 0.88)
+  })
 }
 
 export default function CropModal({ imageSrc, onConfirm, onCancel }) {
@@ -25,6 +35,7 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
   const [zoom, setZoom]                       = useState(1)
   const [croppedAreaPixels, setCroppedPixels] = useState(null)
   const [loading, setLoading]                 = useState(false)
+  const [error, setError]                     = useState('')
 
   const onCropComplete = useCallback((_, pixels) => {
     setCroppedPixels(pixels)
@@ -33,9 +44,15 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
   const handleConfirm = async () => {
     if (!croppedAreaPixels) return
     setLoading(true)
-    const blob = await getCroppedImg(imageSrc, croppedAreaPixels)
-    setLoading(false)
-    onConfirm(blob)
+    setError('')
+    try {
+      const blob = await getCroppedImg(imageSrc, croppedAreaPixels)
+      onConfirm(blob)
+    } catch (err) {
+      setError(err.message || 'Recadrage impossible. Essaie une autre photo.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -74,6 +91,9 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
             <span className="text-xs text-gray-400">+</span>
           </div>
 
+          {error && (
+            <p className="text-xs text-red-500 text-center mb-3">{error}</p>
+          )}
           <div className="flex gap-3">
             <button
               type="button"

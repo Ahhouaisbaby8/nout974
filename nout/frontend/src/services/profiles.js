@@ -22,7 +22,8 @@ export const updateProfile = async (userId, updates) => {
 }
 
 export const uploadAvatar = async (userId, file) => {
-  const ext  = file.name.split('.').pop()
+  const name = file.name ?? 'avatar.jpg'
+  const ext  = name.includes('.') ? name.split('.').pop() : 'jpg'
   const path = `${userId}/avatar.${ext}`
   const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
   if (error) throw error
@@ -34,7 +35,7 @@ export const uploadAvatar = async (userId, file) => {
 export const getProfileReviews = async (userId) => {
   const { data, error } = await supabase
     .from('reviews')
-    .select(`*, buyer:profiles!buyer_id(username, avatar_url)`)
+    .select(`*, buyer:profiles!reviews_reviewer_id_fkey(username, avatar_url)`)
     .eq('seller_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error

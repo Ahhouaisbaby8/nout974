@@ -45,6 +45,7 @@ export default function Settings() {
   const handleAvatarCropConfirm = (blob) => {
     URL.revokeObjectURL(cropSrc)
     setCropSrc(null)
+    if (!blob) return
     setAvatarFile(blob)
     setAvatarPreview(URL.createObjectURL(blob))
   }

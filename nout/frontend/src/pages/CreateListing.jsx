@@ -45,6 +45,7 @@ export default function CreateListing() {
   const handleCropConfirm = (blob) => {
     const current = cropQueue[0]
     URL.revokeObjectURL(current.src)
+    if (!blob) { setCropQueue(prev => prev.slice(1)); return }
     const preview = URL.createObjectURL(blob)
     setPhotos(prev => [...prev, { file: blob, preview }].slice(0, MAX_PHOTOS))
     setCropQueue(prev => prev.slice(1))
@@ -88,13 +89,19 @@ export default function CreateListing() {
         return
       }
 
-      // Compression + upload des photos
-      const imageUrls = await Promise.all(
-        photos.map(async p => {
-          const compressed = await compressImage(p.file)
-          return uploadListingImage(compressed, user.id)
-        })
+      // Compression + upload des photos avec timeout 45s
+      const uploadTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Délai dépassé. Vérifie ta connexion et réessaie.')), 45_000)
       )
+      const imageUrls = await Promise.race([
+        Promise.all(
+          photos.map(async p => {
+            const compressed = await compressImage(p.file)
+            return uploadListingImage(compressed, user.id)
+          })
+        ),
+        uploadTimeout,
+      ])
 
       const listing = await createListing({
         user_id:     user.id,

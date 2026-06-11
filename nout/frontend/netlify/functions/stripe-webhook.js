@@ -59,15 +59,17 @@ exports.handler = async (event) => {
 
     // 1. Mettre la commande en statut "paid"
     if (orderId) {
-      await supabase.from('orders').update({
+      const { error: orderUpdateErr } = await supabase.from('orders').update({
         status:            'paid',
         stripe_payment_id: session.payment_intent,
       }).eq('id', orderId)
+      if (orderUpdateErr) console.error(`webhook: update order ${orderId} paid:`, orderUpdateErr.message)
     }
 
     // 2. Marquer l'annonce comme vendue (la retire du catalogue)
     if (listingId) {
-      await supabase.from('listings').update({ is_sold: true }).eq('id', listingId)
+      const { error: listingUpdateErr } = await supabase.from('listings').update({ is_sold: true }).eq('id', listingId)
+      if (listingUpdateErr) console.error(`webhook: update listing ${listingId} is_sold:`, listingUpdateErr.message)
     }
 
     // 3. Récupérer les données pour les emails

@@ -84,14 +84,20 @@ export default function EditListing() {
 
     setSaving(true)
     try {
-      // Compression + upload des nouvelles photos uniquement
-      const imageUrls = await Promise.all(
-        photos.map(async p => {
-          if (!p.file) return p.url
-          const compressed = await compressImage(p.file)
-          return uploadListingImage(compressed, user.id)
-        })
+      // Compression + upload des nouvelles photos avec timeout 45s
+      const uploadTimeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Délai dépassé. Vérifie ta connexion et réessaie.')), 45_000)
       )
+      const imageUrls = await Promise.race([
+        Promise.all(
+          photos.map(async p => {
+            if (!p.file) return p.url
+            const compressed = await compressImage(p.file)
+            return uploadListingImage(compressed, user.id)
+          })
+        ),
+        uploadTimeout,
+      ])
 
       await updateListing(id, {
         title:       clean(title.trim()),
@@ -104,8 +110,8 @@ export default function EditListing() {
       })
 
       navigate(`/annonce/${id}`)
-    } catch {
-      setError("Une erreur est survenue. Vérifie ta connexion et réessaie.")
+    } catch (err) {
+      setError(err.message || "Une erreur est survenue. Vérifie ta connexion et réessaie.")
     } finally {
       setSaving(false)
     }
@@ -158,7 +164,8 @@ export default function EditListing() {
                   <button
                     type="button"
                     onClick={() => removePhoto(i)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full text-xs flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                    aria-label="Supprimer cette photo"
                   >
                     ✕
                   </button>

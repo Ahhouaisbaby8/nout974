@@ -1,7 +1,14 @@
 export const compressImage = (file, maxWidth = 1200, quality = 0.82) =>
-  new Promise((resolve, reject) => {
+  new Promise((resolve) => {
+    let settled = false
+    const done = (result) => { if (!settled) { settled = true; resolve(result) } }
+
+    // Fallback après 10s si canvas.toBlob ne répond jamais (bug iOS/Android sous pression mémoire)
+    const fallbackTimer = setTimeout(() => done(file), 10_000)
+
     const img = new Image()
     const url = URL.createObjectURL(file)
+
     img.onload = () => {
       URL.revokeObjectURL(url)
       const scale  = Math.min(1, maxWidth / img.width)
@@ -11,20 +18,21 @@ export const compressImage = (file, maxWidth = 1200, quality = 0.82) =>
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
       canvas.toBlob(
         (blob) => {
-          if (!blob) {
-            reject(new Error('Compression échouée. Essaie une photo plus petite ou un autre format.'))
-            return
-          }
+          clearTimeout(fallbackTimer)
+          if (!blob) { done(file); return }  // fallback original si compression échoue
           const baseName = (file.name ?? 'image').replace(/\.[^.]+$/, '')
-          resolve(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }))
+          done(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }))
         },
         'image/jpeg',
         quality
       )
     }
+
     img.onerror = () => {
+      clearTimeout(fallbackTimer)
       URL.revokeObjectURL(url)
-      resolve(file)
+      done(file)  // fallback original si l'image ne peut pas être lue
     }
+
     img.src = url
   })

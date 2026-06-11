@@ -25,7 +25,10 @@ export default function ListingDetail() {
   const [deleting, setDeleting] = useState(false)
   const [markingVendu, setMarkingVendu] = useState(false)
   const [paying,   setPaying]   = useState(false)
-  const [payError, setPayError] = useState('')
+  const [payError, setPayError]       = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [markError, setMarkError]     = useState('')
+  const [offerError, setOfferError]   = useState('')
   const [showReport, setShowReport] = useState(false)
   const [showOffer, setShowOffer]   = useState(false)
   const [similar, setSimilar]             = useState([])
@@ -59,7 +62,7 @@ export default function ListingDetail() {
       await deleteListing(id)
       navigate('/')
     } catch {
-      alert('Erreur lors de la suppression.')
+      setDeleteError('Erreur lors de la suppression.')
       setDeleting(false)
     }
   }
@@ -71,7 +74,7 @@ export default function ListingDetail() {
       const updated = await updateListing(id, { is_sold: true })
       setListing(prev => ({ ...prev, ...updated }))
     } catch {
-      alert('Erreur. Réessaie.')
+      setMarkError('Erreur. Réessaie.')
     } finally {
       setMarkingVendu(false)
     }
@@ -150,7 +153,7 @@ export default function ListingDetail() {
       setOfferAmount('')
       navigate(`/messages/${seller.id}?annonce=${id}`)
     } catch {
-      alert("Erreur lors de l'envoi de l'offre.")
+      setOfferError("Erreur lors de l'envoi de l'offre.")
     } finally {
       setOfferSending(false)
     }
@@ -292,6 +295,8 @@ export default function ListingDetail() {
                   {markingVendu ? 'Mise à jour…' : '✅ Marquer comme vendu'}
                 </button>
               )}
+              {deleteError && <p className="text-sm text-red-500 text-center">{deleteError}</p>}
+              {markError   && <p className="text-sm text-red-500 text-center">{markError}</p>}
             </div>
 
           /* Boutons — ARTICLE VENDU */
@@ -472,6 +477,7 @@ export default function ListingDetail() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">€</span>
             </div>
             <p className="text-xs text-gray-400 mb-5">Prix demandé : {formatPrice(listing.price)}</p>
+            {offerError && <p className="text-sm text-red-500 text-center mb-3">{offerError}</p>}
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowOffer(false); setOfferAmount('') }}
