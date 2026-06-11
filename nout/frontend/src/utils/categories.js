@@ -1,18 +1,11 @@
 export const CATEGORIES = [
-  { id: 'vetements', label: 'Vêtements', icon: '👗' },
-  { id: 'chaussures', label: 'Chaussures', icon: '👟' },
-  { id: 'electronique', label: 'Électronique', icon: '📱' },
-  { id: 'electromenager', label: 'Électroménager', icon: '🏠' },
-  { id: 'meubles', label: 'Meubles', icon: '🛋️' },
-  { id: 'jouets', label: 'Jouets & Enfants', icon: '🧸' },
-  { id: 'sport', label: 'Sport & Loisirs', icon: '⚽' },
-  { id: 'livres', label: 'Livres & Médias', icon: '📚' },
-  { id: 'beaute', label: 'Beauté & Santé', icon: '💄' },
-  { id: 'voitures', label: 'Voitures & Motos', icon: '🚗' },
-  { id: 'bricolage', label: 'Bricolage & Jardinage', icon: '🔧' },
-  { id: 'collection', label: 'Collection & Art', icon: '🎨' },
-  { id: 'animaux', label: 'Animaux', icon: '🐾' },
-  { id: 'autres', label: 'Autres', icon: '📦' },
+  { id: 'vetements-femme',   label: 'Vêtements femme',   icon: '👗' },
+  { id: 'vetements-homme',   label: 'Vêtements homme',   icon: '👔' },
+  { id: 'vetements-enfant',  label: 'Vêtements enfant',  icon: '🧒' },
+  { id: 'chaussures',        label: 'Chaussures',         icon: '👟' },
+  { id: 'accessoires',       label: 'Accessoires',        icon: '💍' },
+  { id: 'sacs',              label: 'Sacs',               icon: '👜' },
+  { id: 'beaute',            label: 'Beauté / Bien-être', icon: '💄' },
 ]
 
 export const CONDITIONS = [

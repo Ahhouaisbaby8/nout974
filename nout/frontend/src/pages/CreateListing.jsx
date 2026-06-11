@@ -267,7 +267,7 @@ export default function CreateListing() {
             <label className="block text-sm font-medium text-nout-dark mb-1">
               Taille <span className="text-gray-400 font-normal">(optionnel)</span>
             </label>
-            {category === 'vetements' ? (
+            {['vetements-femme', 'vetements-homme', 'vetements-enfant'].includes(category) ? (
               <select value={size} onChange={(e) => setSize(e.target.value)} className="input-field cursor-pointer">
                 <option value="">Choisir une taille…</option>
                 {SIZES_VETEMENTS.map(s => <option key={s} value={s}>{s}</option>)}
