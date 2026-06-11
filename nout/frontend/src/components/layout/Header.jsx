@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Heart } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
 
@@ -35,7 +36,7 @@ export default function Header() {
 
   const menuLinks = [
     { to: `/profil/${user?.id}`,   icon: '👤', label: 'Mon profil' },
-    { to: '/favoris',              icon: '❤️', label: 'Mes favoris' },
+    { to: '/favoris', icon: <Heart className="w-4 h-4 text-red-500 fill-red-500" />, label: 'Mes favoris' },
     { to: '/commandes?tab=achats', icon: '🛍️', label: 'Mes achats' },
     { to: '/commandes?tab=ventes', icon: '📦', label: 'Mes ventes' },
     { to: '/parametres',           icon: '⚙️', label: 'Paramètres' },
