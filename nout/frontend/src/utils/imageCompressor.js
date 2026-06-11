@@ -1,5 +1,5 @@
 export const compressImage = (file, maxWidth = 1200, quality = 0.82) =>
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
@@ -10,11 +10,21 @@ export const compressImage = (file, maxWidth = 1200, quality = 0.82) =>
       canvas.height = Math.round(img.height * scale)
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
       canvas.toBlob(
-        blob => resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })),
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Compression échouée. Essaie une photo plus petite ou un autre format.'))
+            return
+          }
+          const baseName = (file.name ?? 'image').replace(/\.[^.]+$/, '')
+          resolve(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }))
+        },
         'image/jpeg',
         quality
       )
     }
-    img.onerror = () => resolve(file)
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(file)
+    }
     img.src = url
   })

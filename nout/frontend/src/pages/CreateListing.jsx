@@ -111,7 +111,8 @@ export default function CreateListing() {
 
       navigate(`/annonce/${listing.id}`)
     } catch (err) {
-      setError("Une erreur est survenue. Vérifie ta connexion et réessaie.")
+      console.error('CreateListing error:', err)
+      setError(err.message || "Une erreur est survenue. Vérifie ta connexion et réessaie.")
     } finally {
       setLoading(false)
     }
