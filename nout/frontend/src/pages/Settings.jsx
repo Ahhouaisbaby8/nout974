@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import DOMPurify from 'dompurify'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../services/supabase'
 import { uploadAvatar } from '../services/profiles'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
@@ -8,7 +9,7 @@ import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
 
 export default function Settings() {
-  const { user, profile, updateProfile } = useAuth()
+  const { user, profile, updateProfile, logout } = useAuth()
 
   const [username, setUsername] = useState(profile?.username ?? '')
   const [bio, setBio]           = useState(profile?.bio ?? '')
@@ -26,6 +27,11 @@ export default function Settings() {
   const [ibanSaving, setIbanSaving] = useState(false)
   const [ibanSuccess, setIbanSuccess] = useState(false)
   const [ibanError, setIbanError]   = useState('')
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleting, setDeleting]   = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const currentAvatarUrl = getAvatarUrl(profile?.avatar_url)
 
@@ -97,6 +103,28 @@ export default function Settings() {
       setIbanError('Erreur lors de l\'enregistrement. Réessaie.')
     } finally {
       setIbanSaving(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'SUPPRIMER') return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue')
+      await logout()
+    } catch (err) {
+      setDeleteError(err.message)
+      setDeleting(false)
     }
   }
 
@@ -274,7 +302,78 @@ export default function Settings() {
         )}
       </div>
 
+      {/* ── SECTION CONFIDENTIALITÉ ── */}
+      <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
+        <h2 className="font-bold text-nout-dark mb-1">🔒 Confidentialité et compte</h2>
+        <p className="text-sm text-gray-500 mb-4 leading-relaxed">
+          La suppression de ton compte est définitive et irréversible.
+        </p>
+        <button
+          type="button"
+          onClick={() => { setShowDeleteModal(true); setDeleteConfirmText(''); setDeleteError('') }}
+          className="px-5 py-2.5 rounded-lg border-2 border-red-400 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
+        >
+          Supprimer mon compte
+        </button>
+      </div>
+
     </div>
+
+    {/* ── MODAL SUPPRESSION ── */}
+    {showDeleteModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="text-center mb-5">
+            <span className="text-4xl">⚠️</span>
+            <h3 className="font-title font-extrabold text-[18px] text-nout-dark mt-3 mb-2">
+              Supprimer ton compte ?
+            </h3>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              Cette action est irréversible. Toutes tes annonces, messages et données seront supprimés définitivement.
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+              Tape <span className="text-red-500 font-bold">SUPPRIMER</span> pour confirmer
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="SUPPRIMER"
+              className="input-field text-center font-mono tracking-widest"
+              autoComplete="off"
+            />
+          </div>
+
+          {deleteError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2 mb-4">
+              {deleteError}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+              className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirmText !== 'SUPPRIMER' || deleting}
+              className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {deleting ? 'Suppression…' : 'Supprimer définitivement'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   )
 }

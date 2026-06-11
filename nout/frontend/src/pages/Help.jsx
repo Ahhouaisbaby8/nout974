@@ -28,7 +28,7 @@ const FAQ = [
   },
   {
     q: "Comment supprimer mon compte ?",
-    a: "Va dans Paramètres → Confidentialité. Tu peux demander la suppression de ton compte et de toutes tes données conformément au RGPD.",
+    a: "Pour supprimer ton compte, contacte-nous à contact@nout974.re avec ton adresse email. Nous traiterons ta demande sous 48h conformément au RGPD.",
   },
   {
     q: "NOUT est-il gratuit ?",
