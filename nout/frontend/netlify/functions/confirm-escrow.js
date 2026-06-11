@@ -182,7 +182,15 @@ exports.handler = async (event) => {
     // - 'completed'      → remise confirmée + transfert déclenché
     // - 'payout_pending' → remise confirmée mais vendeur sans compte Stripe (transfert à faire après onboarding)
     const orderStatus = (vendorStripeId && transferOk) ? 'completed' : 'payout_pending'
-    await supabase.from('orders').update({ status: orderStatus }).eq('id', order_id)
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({ status: orderStatus })
+      .eq('id', order_id)
+    if (updateError) {
+      console.error(`ERREUR UPDATE orders status → ${orderStatus} (order ${order_id}):`, updateError.message)
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la mise à jour du statut de la commande.' }) }
+    }
+    console.log(`Order ${order_id} status → ${orderStatus}`)
 
     // ── EMAILS ──
     const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
