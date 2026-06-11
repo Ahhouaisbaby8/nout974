@@ -44,7 +44,8 @@ export default function Footer() {
               <li><Link to="/"         className="text-sm text-white/60 hover:text-white transition-colors">Accueil</Link></li>
               <li><Link to="/recherche" className="text-sm text-white/60 hover:text-white transition-colors">Annonces</Link></li>
               <li><Link to="/a-propos" className="text-sm text-white/60 hover:text-white transition-colors">À propos</Link></li>
-              <li><Link to="/aide"     className="text-sm text-white/60 hover:text-white transition-colors">Aide & Contact</Link></li>
+              <li><Link to="/aide"              className="text-sm text-white/60 hover:text-white transition-colors">Aide & Contact</Link></li>
+              <li><Link to="/comment-ca-marche" className="text-sm text-white/60 hover:text-white transition-colors">Comment ça marche</Link></li>
               <li><Link to="/publier"  className="text-sm text-white/60 hover:text-white transition-colors">Publier une annonce</Link></li>
             </ul>
           </div>

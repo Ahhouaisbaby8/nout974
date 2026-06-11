@@ -84,9 +84,10 @@ export default function Header() {
 
         {/* ── NAV DESKTOP ── */}
         <nav className="hidden lg:flex items-center gap-5 text-[14px] ml-2">
-          <Link to="/"         className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Accueil</Link>
-          <Link to="/a-propos" className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
-          <Link to="/aide"     className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
+          <Link to="/"                  className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Accueil</Link>
+          <Link to="/comment-ca-marche" className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Comment ça marche</Link>
+          <Link to="/a-propos"          className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
+          <Link to="/aide"              className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
           {isAdmin && (
             <Link to="/admin" className="text-nout-roi font-semibold hover:text-nout-lagon transition-colors">
               Admin
