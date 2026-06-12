@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js')
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
-const ALLOWED_ORIGIN = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
+const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
 
 // Rate limiter en mémoire — 10 req/min par IP
 const _rateLimits = new Map()

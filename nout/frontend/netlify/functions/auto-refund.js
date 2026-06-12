@@ -12,7 +12,7 @@ const escHtml = (str) =>
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
-const SITE_URL = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
+const SITE_URL = process.env.URL || 'https://nout.re'
 
 const sendEmail = async (to, subject, html) => {
   if (!process.env.RESEND_API_KEY) return

@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 )
 
-const ALLOWED_ORIGIN = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
+const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
 
 exports.handler = async (event) => {
   const corsHeaders = {

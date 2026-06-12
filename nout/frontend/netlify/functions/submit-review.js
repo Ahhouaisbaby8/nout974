@@ -5,8 +5,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 )
 
-const ALLOWED_ORIGIN = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
-const SITE_URL       = process.env.URL || 'https://effortless-tapioca-c6ab25.netlify.app'
+const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
+const SITE_URL       = process.env.URL || 'https://nout.re'
 
 const escHtml = (str) =>
   String(str ?? '')
