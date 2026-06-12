@@ -40,15 +40,18 @@ export const sendMessage = async ({ senderId, receiverId, listingId = null, cont
   if (error) throw error
 
   // Notification push best-effort (pas de blocage si échec)
-  fetch('/.netlify/functions/send-push', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      receiver_id: receiverId,
-      title: senderName,
-      body: content.length > 80 ? content.slice(0, 80) + '…' : content,
-      url: `/messages/${senderId}`,
-    }),
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session?.access_token) return
+    fetch('/.netlify/functions/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({
+        receiver_id: receiverId,
+        title: senderName,
+        body: content.length > 80 ? content.slice(0, 80) + '…' : content,
+        url: `/messages/${senderId}`,
+      }),
+    }).catch(() => {})
   }).catch(() => {})
 
   return data

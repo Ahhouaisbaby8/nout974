@@ -289,7 +289,7 @@ export default function Settings() {
               />
             </div>
             <p className="text-xs text-gray-400 leading-relaxed">
-              🔒 Ton IBAN est chiffré et sécurisé. Il sera utilisé uniquement pour virer tes gains.
+              Ton IBAN sera utilisé uniquement pour virer tes gains de vente.
             </p>
             <button
               type="button"

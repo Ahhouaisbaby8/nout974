@@ -303,7 +303,7 @@ exports.handler = async (event) => {
     if (order.buyer_id) {
       fetch(pushBase, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
         body: JSON.stringify({
           receiver_id: order.buyer_id,
           title: '🤝 Remise confirmée — NOUT 974',
@@ -315,7 +315,7 @@ exports.handler = async (event) => {
     if (order.seller_id) {
       fetch(pushBase, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
         body: JSON.stringify({
           receiver_id: order.seller_id,
           title: orderStatus === 'completed' ? '💸 Virement en route — NOUT 974' : '⚠️ Active tes paiements — NOUT 974',

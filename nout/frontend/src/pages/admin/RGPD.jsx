@@ -31,9 +31,17 @@ export default function AdminRGPD() {
     try {
       const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).single()
       if (!profile) { setResult('Aucun compte trouvé.'); return }
-      await supabase.from('profiles').delete().eq('id', profile.id)
-      setResult(`✅ Compte ${email} supprimé.`); setEmail('')
-    } catch { setResult('Erreur lors de la suppression.') }
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/admin-delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ targetUserId: profile.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue')
+      setResult(`✅ Compte ${email} supprimé définitivement.`)
+      setEmail('')
+    } catch (err) { setResult(`Erreur : ${err.message}`) }
     finally { setLoading(false) }
   }
 

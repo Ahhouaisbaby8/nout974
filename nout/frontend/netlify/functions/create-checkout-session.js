@@ -83,12 +83,14 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette annonce n\'est plus disponible.' }) }
     }
 
-    // Vérification anti double-paiement (commande active existante pour cette annonce)
+    // Vérification anti double-paiement — ignore les commandes pending > 1h (paiement abandonné)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { data: existingOrder } = await supabase
       .from('orders')
       .select('id, status')
       .eq('listing_id', listingId)
       .not('status', 'in', '("cancelled","refunded")')
+      .or(`status.neq.pending,created_at.gte.${oneHourAgo}`)
       .maybeSingle()
 
     if (existingOrder) {

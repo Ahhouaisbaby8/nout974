@@ -1,10 +1,13 @@
 const webpush = require('web-push')
+const { createClient } = require('@supabase/supabase-js')
 
 webpush.setVapidDetails(
   'mailto:contact@nout.re',
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 )
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
 // Rate limiter en mémoire — 20 req/min par IP
 const _rateLimits = new Map()
@@ -20,6 +23,24 @@ function isRateLimited(ip) {
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' }
+  }
+
+  // Auth : secret interne (appel fonction→fonction) OU JWT utilisateur (appel client)
+  const internalSecret = event.headers['x-internal-secret']
+  const authHeader = event.headers['authorization'] || event.headers['Authorization']
+
+  if (internalSecret) {
+    if (!process.env.CRON_SECRET || internalSecret !== process.env.CRON_SECRET) {
+      return { statusCode: 401, body: 'Non autorisé.' }
+    }
+  } else if (authHeader) {
+    const token = authHeader.replace('Bearer ', '').trim()
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+    if (error || !user) {
+      return { statusCode: 401, body: 'Session invalide.' }
+    }
+  } else {
+    return { statusCode: 401, body: 'Non authentifié.' }
   }
 
   const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()

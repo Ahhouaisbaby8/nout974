@@ -44,6 +44,22 @@ exports.handler = async (event) => {
 
   console.log('⏰ auto-refund démarré', new Date().toISOString())
 
+  // ── ANNULER LES COMMANDES PENDING EXPIRÉES (paiement abandonné > 1h) ──
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+  const { data: stalePending } = await supabase
+    .from('orders')
+    .select('id, listing_id')
+    .eq('status', 'pending')
+    .lt('created_at', oneHourAgo)
+
+  if (stalePending?.length > 0) {
+    await Promise.all(stalePending.map(async (o) => {
+      await supabase.from('orders').update({ status: 'cancelled' }).eq('id', o.id)
+      await supabase.from('listings').update({ is_sold: false }).eq('id', o.listing_id)
+    }))
+    console.log(`🧹 ${stalePending.length} commande(s) pending expirée(s) annulée(s).`)
+  }
+
   // Récupérer tous les codes expirés, non confirmés, non encore remboursés
   const { data: expiredCodes, error: fetchError } = await supabase
     .from('escrow_codes')
@@ -244,7 +260,7 @@ exports.handler = async (event) => {
       if (order.buyer_id) {
         fetch(pushBase, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
           body: JSON.stringify({
             receiver_id: order.buyer_id,
             title: '💸 Tu as été remboursé — NOUT 974',
@@ -256,7 +272,7 @@ exports.handler = async (event) => {
       if (order.seller_id) {
         fetch(pushBase, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
           body: JSON.stringify({
             receiver_id: order.seller_id,
             title: '⏰ Remise non confirmée — NOUT 974',
