@@ -29,18 +29,25 @@ export default function Profile() {
   const isOwnProfile = user?.id === id
 
   useEffect(() => {
-    Promise.all([
-      getProfile(id),
-      getUserListings(id),
-      getSellerReviews(id),
-    ])
-      .then(([p, l, r]) => {
+    const load = async () => {
+      try {
+        const p = await getProfile(id)
+        if (!p) { setNotFound(true); return }
         setProfile(p)
+        // Listings et avis non-bloquants : leur échec n'empêche pas d'afficher le profil
+        const [l, r] = await Promise.all([
+          getUserListings(id).catch(() => []),
+          getSellerReviews(id).catch(() => []),
+        ])
         setListings(l.filter(a => !a.is_sold && a.is_active))
         setReviews(r)
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false))
+      } catch {
+        setNotFound(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [id])
 
   if (loading) return (
