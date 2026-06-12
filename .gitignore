@@ -1,0 +1,56 @@
+# ============================================================
+# Fichiers système Windows
+# ============================================================
+NTUSER.DAT
+ntuser.dat
+ntuser.dat.LOG1
+ntuser.dat.LOG2
+ntuser.ini
+*.regtrans-ms
+*.blf
+*.TxR.*
+AMDRM_Install.log
+battery-report.html
+
+# ============================================================
+# Dossiers personnels Windows (ne jamais versionner)
+# ============================================================
+AppData/
+Downloads/
+Documents/
+Desktop/
+Music/
+Videos/
+Pictures/
+Contacts/
+Favorites/
+Links/
+Searches/
+OneDrive/
+Dropbox/
+3D Objects/
+Saved Games/
+WPS Cloud Files/
+
+# ============================================================
+# Outils et configuration locale
+# ============================================================
+.claude.json
+.claude/
+.config/
+.copilot/
+.dotnet/
+.dropbox_bi/
+.local/
+.vscode/
+.vscode-shared/
+.gitconfig
+
+# ============================================================
+# Fichiers de secrets (sécurité)
+# ============================================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
