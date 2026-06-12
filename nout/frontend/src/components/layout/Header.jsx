@@ -60,7 +60,7 @@ export default function Header() {
           </span>
           <div className="flex items-center gap-1.5 mt-0.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#00C4B4] flex-shrink-0" />
-            <span className="font-title font-semibold text-[7px] tracking-[0.26em] text-[#00C4B4] uppercase leading-none">
+            <span className="font-title font-semibold text-[7px] tracking-[0.26em] text-white uppercase leading-none">
               La Réunion 974
             </span>
             <div className="w-1.5 h-1.5 rounded-full bg-[#00C4B4] flex-shrink-0" />
