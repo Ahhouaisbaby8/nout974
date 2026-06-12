@@ -55,7 +55,7 @@ export default function CGU() {
 
       <Section title="7. Suspension et résiliation">
         <P>NOUT peut suspendre ou supprimer un compte sans préavis en cas de violation des présentes CGU, de comportement frauduleux ou de signalement avéré.</P>
-        <P>L'utilisateur peut supprimer son compte à tout moment depuis ses paramètres ou en contactant contact@nout974.re.</P>
+        <P>L'utilisateur peut supprimer son compte à tout moment depuis ses paramètres ou en contactant contact@nout.re.</P>
       </Section>
 
       <Section title="8. Modification des CGU">

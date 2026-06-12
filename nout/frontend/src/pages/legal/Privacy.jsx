@@ -8,7 +8,7 @@ export default function Privacy() {
         <P>Le responsable du traitement des données personnelles est :</P>
         <Ul items={[
           'Nom : Megarisse Amandine (NOUT)',
-          'Email : contact@nout974.re',
+          'Email : contact@nout.re',
           'Adresse : Saint-Denis, La Réunion (974)',
         ]} />
         <P>Conformément au Règlement Général sur la Protection des Données (RGPD – UE 2016/679) et à la loi Informatique et Libertés, NOUT s'engage à protéger vos données personnelles.</P>
@@ -76,7 +76,7 @@ export default function Privacy() {
           'Droit d\'opposition — refuser certains traitements',
           'Droit à la limitation — restreindre le traitement de vos données',
         ]} />
-        <P>Pour exercer vos droits, contactez : <strong>contact@nout974.re</strong>. Délai de réponse : 1 mois maximum.</P>
+        <P>Pour exercer vos droits, contactez : <strong>contact@nout.re</strong>. Délai de réponse : 1 mois maximum.</P>
         <P>Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> (www.cnil.fr).</P>
       </Section>
 

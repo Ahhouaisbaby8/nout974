@@ -46,7 +46,7 @@ export default function Cookies() {
       </Section>
 
       <Section title="5. Contact">
-        <P>Pour toute question relative aux cookies ou à la vie privée : <strong>contact@nout974.re</strong></P>
+        <P>Pour toute question relative aux cookies ou à la vie privée : <strong>contact@nout.re</strong></P>
       </Section>
 
     </LegalLayout>

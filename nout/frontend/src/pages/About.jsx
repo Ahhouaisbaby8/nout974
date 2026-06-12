@@ -69,7 +69,7 @@ export default function About() {
       <section className="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <h2 className="text-xl font-bold text-nout-dark mb-3">Nous contacter</h2>
         <div className="flex flex-col gap-2 text-sm text-gray-600">
-          <p>📧 <a href="mailto:contact@nout974.re" className="text-nout-primary hover:underline">contact@nout974.re</a></p>
+          <p>📧 <a href="mailto:contact@nout.re" className="text-nout-primary hover:underline">contact@nout.re</a></p>
           <p>📍 Saint-Denis, La Réunion (974)</p>
         </div>
       </section>

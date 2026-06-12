@@ -28,7 +28,7 @@ const FAQ = [
   },
   {
     q: "Comment supprimer mon compte ?",
-    a: "Pour supprimer ton compte, contacte-nous à contact@nout974.re avec ton adresse email. Nous traiterons ta demande sous 48h conformément au RGPD.",
+    a: "Pour supprimer ton compte, contacte-nous à contact@nout.re avec ton adresse email. Nous traiterons ta demande sous 48h conformément au RGPD.",
   },
   {
     q: "NOUT est-il gratuit ?",
@@ -97,7 +97,7 @@ export default function Help() {
         <p className="font-bold text-nout-dark">Tu n'as pas trouvé ta réponse ?</p>
         <p className="text-sm text-gray-500 mt-1 mb-4">Écris-nous, on répond dans les 24 h.</p>
         <a
-          href="mailto:contact@nout974.re"
+          href="mailto:contact@nout.re"
           className="btn-primary px-8 py-3 text-sm inline-block"
         >
           Contacter l'équipe NOUT

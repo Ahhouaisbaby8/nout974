@@ -51,6 +51,6 @@ exports.handler = async (event) => {
 
   } catch (err) {
     console.error('delete-account error:', err.message)
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur serveur. Contacte contact@nout974.re.' }) }
+    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur serveur. Contacte contact@nout.re.' }) }
   }
 }

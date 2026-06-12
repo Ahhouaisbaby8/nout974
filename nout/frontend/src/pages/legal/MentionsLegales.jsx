@@ -11,12 +11,12 @@ export default function MentionsLegales() {
           'Statut : Auto-entrepreneur',
           'SIRET : [À compléter]',
           'Adresse : Saint-Denis, La Réunion (974)',
-          'Email : contact@nout974.re',
+          'Email : contact@nout.re',
         ]} />
       </Section>
 
       <Section title="2. Directeur de la publication">
-        <P>Megarisse Amandine — contact@nout974.re</P>
+        <P>Megarisse Amandine — contact@nout.re</P>
       </Section>
 
       <Section title="3. Hébergement">

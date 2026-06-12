@@ -6,7 +6,7 @@ export default function AdminSiteSettings() {
       <div className="flex flex-col gap-4">
         {[
           { icon: '🌐', title: 'Domaine',            value: 'nout974.re',                         note: 'Configuré via Netlify' },
-          { icon: '📧', title: 'Email de contact',   value: 'contact@nout974.re',                 note: 'Affiché dans le footer et les pages légales' },
+          { icon: '📧', title: 'Email de contact',   value: 'contact@nout.re',                 note: 'Affiché dans le footer et les pages légales' },
           { icon: '💳', title: 'Commission Stripe',  value: '10 %',                               note: 'Modifiable dans netlify/functions/create-checkout-session.js' },
           { icon: '🏢', title: 'SIRET',              value: 'À compléter',                        note: 'Requis pour les mentions légales' },
           { icon: '🔒', title: 'Hébergement',        value: 'Netlify',                            note: 'Déploiement automatique depuis GitHub' },

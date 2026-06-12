@@ -68,7 +68,7 @@ export default function AdminRGPD() {
         <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
           <li>Délai de réponse : <strong>1 mois</strong> maximum après demande</li>
           <li>Conservation : durée de la relation + 3 ans</li>
-          <li>Contact DPO : contact@nout974.re</li>
+          <li>Contact DPO : contact@nout.re</li>
         </ul>
       </div>
     </div>

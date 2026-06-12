@@ -13,7 +13,10 @@ export default function ListingCard({ listing, isFavorited = false }) {
   const [toggling, setToggling] = useState(false)
   const [pulse, setPulse]     = useState(false)
 
-  const imageUrl  = listing.images?.[0] ?? null
+  const rawImage  = listing.images?.[0] ?? null
+  const imageUrl  = rawImage?.includes('supabase.co/storage')
+    ? `${rawImage}?width=400&height=400&resize=cover`
+    : rawImage
   const category  = CATEGORIES.find(c => c.id === listing.category)
   const views     = listing.views ?? 0
 

@@ -174,7 +174,7 @@ exports.handler = async (event) => {
 
                 <p style="color:#6B7A99;font-size:13px;line-height:1.6">
                   Le remboursement apparaît sur ton relevé bancaire sous 5 à 10 jours ouvrés selon ta banque.
-                  Une question ? Écris-nous à <a href="mailto:contact@nout974.re" style="color:#1A3A8F">contact@nout974.re</a>.
+                  Une question ? Écris-nous à <a href="mailto:contact@nout.re" style="color:#1A3A8F">contact@nout.re</a>.
                 </p>
 
                 <div style="text-align:center;margin-top:28px">
@@ -220,7 +220,7 @@ exports.handler = async (event) => {
 
                 <p style="color:#6B7A99;font-size:13px;line-height:1.6">
                   Si la remise a bien eu lieu mais que tu n'as pas pu saisir le code à temps, contacte-nous à
-                  <a href="mailto:contact@nout974.re" style="color:#1A3A8F">contact@nout974.re</a> avec le numéro de commande <strong>${orderId}</strong>.
+                  <a href="mailto:contact@nout.re" style="color:#1A3A8F">contact@nout.re</a> avec le numéro de commande <strong>${orderId}</strong>.
                 </p>
 
                 <div style="text-align:center;margin-top:28px">

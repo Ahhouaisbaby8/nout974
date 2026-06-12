@@ -30,7 +30,7 @@ export default function Footer() {
               La marketplace du 974
             </p>
             <div className="mt-4 space-y-1">
-              <p className="text-xs text-white/40">contact@nout974.re</p>
+              <p className="text-xs text-white/40">contact@nout.re</p>
               <p className="text-xs text-white/40">Saint-Denis, La Réunion 974</p>
             </div>
           </div>
