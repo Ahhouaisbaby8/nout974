@@ -11,6 +11,11 @@ import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 
 const MAX_PHOTOS = 5
+const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'chaussures']
+const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
+const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
+const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
+const COLORS = ['Blanc', 'Noir', 'Gris', 'Beige', 'Marron', 'Rouge', 'Rose', 'Orange', 'Jaune', 'Vert', 'Bleu', 'Violet', 'Multicolore']
 
 export default function EditListing() {
   const { id } = useParams()
@@ -23,7 +28,6 @@ export default function EditListing() {
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
 
-  // Photos : tableau mixte — string (URL existante) ou { file, preview } (nouvelle)
   const [photos, setPhotos]       = useState([])
   const [title, setTitle]         = useState('')
   const [description, setDesc]    = useState('')
@@ -31,11 +35,20 @@ export default function EditListing() {
   const [condition, setCondition] = useState('')
   const [price, setPrice]         = useState('')
   const [city, setCity]           = useState('')
+  const [size, setSize]           = useState('')
+  const [material, setMaterial]   = useState('')
+  const [brand, setBrand]         = useState('')
+  const [color, setColor]         = useState('')
+
+  const isClothing = CLOTHING_CATS.includes(category)
+  const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
+    : category === 'vetements-enfant' ? SIZES_ENFANT
+    : SIZES_VETEMENTS
+  const sizePlaceholder = category === 'chaussures' ? 'Pointure' : 'Taille'
 
   useEffect(() => {
     getListingById(id)
       .then(listing => {
-        // Seul le propriétaire peut modifier
         if (listing.user_id !== user.id) {
           navigate(`/annonce/${id}`)
           return
@@ -46,7 +59,10 @@ export default function EditListing() {
         setCondition(listing.condition)
         setPrice(String(listing.price))
         setCity(listing.city)
-        // Les images existantes sont des URLs (strings)
+        setSize(listing.size ?? '')
+        setMaterial(listing.material ?? '')
+        setBrand(listing.brand ?? '')
+        setColor(listing.color ?? '')
         setPhotos(listing.images?.map(url => ({ url })) ?? [])
       })
       .catch(() => setNotFound(true))
@@ -71,20 +87,20 @@ export default function EditListing() {
 
     const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
 
-    if (photos.length === 0) return setError('Garde au moins une photo.')
-    if (!title.trim())       return setError('Le titre est obligatoire.')
-    if (!category)           return setError('Choisis une catégorie.')
-    if (!condition)          return setError("Précise l'état de l'article.")
+    if (photos.length === 0)        return setError('Garde au moins une photo.')
+    if (!title.trim())              return setError('Le titre est obligatoire.')
+    if (!category)                  return setError('Choisis une catégorie.')
+    if (!condition)                 return setError("Précise l'état de l'article.")
+    if (isClothing && !size)        return setError('Indique la taille.')
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
-    if (Number(price) > 50000) return setError('Le prix maximum est 50 000 €.')
-    if (!city)               return setError('Choisis ta ville.')
+    if (Number(price) > 50000)      return setError('Le prix maximum est 50 000 €.')
+    if (!city)                      return setError('Choisis ta ville.')
 
-    const wordCheck = containsForbiddenWord([title, description].join(' '))
+    const wordCheck = containsForbiddenWord([title, description, material, brand].join(' '))
     if (wordCheck.found) return setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
 
     setSaving(true)
     try {
-      // Compression + upload des nouvelles photos avec timeout 45s
       const uploadTimeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Délai dépassé. Vérifie ta connexion et réessaie.')), 45_000)
       )
@@ -107,6 +123,10 @@ export default function EditListing() {
         price:       Number(price),
         city,
         images:      imageUrls,
+        size:        isClothing ? (size || null) : null,
+        material:    isClothing ? (clean(material.trim()) || null) : null,
+        brand:       isClothing ? (clean(brand.trim()) || null) : null,
+        color:       isClothing ? (color || null) : null,
       })
 
       navigate(`/annonce/${id}`)
@@ -256,6 +276,71 @@ export default function EditListing() {
             </div>
           </div>
         </section>
+
+        {/* ── DÉTAILS VÊTEMENT / CHAUSSURE ── */}
+        {isClothing && (
+          <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
+            <h2 className="font-bold text-nout-dark">
+              {category === 'chaussures' ? '👟 Détails chaussure' : '👗 Détails vêtement'}
+            </h2>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                {sizePlaceholder} <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                className="input-field cursor-pointer"
+              >
+                <option value="">Choisir {sizePlaceholder.toLowerCase()}…</option>
+                {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Marque <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="text"
+                maxLength={50}
+                placeholder="Ex : Nike, Zara, H&M…"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Matière <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="text"
+                maxLength={80}
+                placeholder="Ex : 100% coton, polyester…"
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Couleur <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <select
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="input-field cursor-pointer"
+              >
+                <option value="">Choisir une couleur…</option>
+                {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </section>
+        )}
 
         {/* ── PRIX & LIEU ── */}
         <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">

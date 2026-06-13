@@ -11,14 +11,19 @@ import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
 
 const MAX_PHOTOS = 5
+const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'chaussures']
+const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
+const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
+const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
+const COLORS = ['Blanc', 'Noir', 'Gris', 'Beige', 'Marron', 'Rouge', 'Rose', 'Orange', 'Jaune', 'Vert', 'Bleu', 'Violet', 'Multicolore']
 
 export default function CreateListing() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
 
-  const [photos, setPhotos]       = useState([])   // { file, preview }
-  const [cropQueue, setCropQueue] = useState([])   // { file, src } en attente de recadrage
+  const [photos, setPhotos]       = useState([])
+  const [cropQueue, setCropQueue] = useState([])
   const [title, setTitle]         = useState('')
   const [description, setDesc]    = useState('')
   const [category, setCategory]   = useState('')
@@ -27,14 +32,24 @@ export default function CreateListing() {
   const [city, setCity]           = useState('')
   const [size, setSize]           = useState('')
   const [material, setMaterial]   = useState('')
+  const [brand, setBrand]         = useState('')
+  const [color, setColor]         = useState('')
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
-  const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-  const SIZES_CHAUSSURES = ['36', '37', '38', '39', '40', '41', '42', '43', '44']
+
+  const isClothing = CLOTHING_CATS.includes(category)
+  const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
+    : category === 'vetements-enfant' ? SIZES_ENFANT
+    : SIZES_VETEMENTS
+  const sizePlaceholder = category === 'chaussures' ? 'Pointure' : 'Taille'
 
   useEffect(() => {
     return () => photos.forEach(p => URL.revokeObjectURL(p.preview))
   }, [])
+
+  useEffect(() => {
+    setSize('')
+  }, [category])
 
   const handleFiles = (files) => {
     const selected = Array.from(files).slice(0, MAX_PHOTOS - photos.length)
@@ -73,23 +88,23 @@ export default function CreateListing() {
 
     const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
 
-    if (photos.length === 0) return setError('Ajoute au moins une photo.')
-    if (!title.trim())       return setError('Le titre est obligatoire.')
-    if (!category)           return setError('Choisis une catégorie.')
-    if (!condition)          return setError("Précise l'état de l'article.")
+    if (photos.length === 0)        return setError('Ajoute au moins une photo.')
+    if (!title.trim())              return setError('Le titre est obligatoire.')
+    if (!category)                  return setError('Choisis une catégorie.')
+    if (!condition)                 return setError("Précise l'état de l'article.")
+    if (isClothing && !size)        return setError('Indique la taille.')
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
-    if (Number(price) > 50000) return setError('Le prix maximum est 50 000 €.')
-    if (!city)               return setError('Choisis ta ville.')
+    if (Number(price) > 50000)      return setError('Le prix maximum est 50 000 €.')
+    if (!city)                      return setError('Choisis ta ville.')
 
     setLoading(true)
     try {
-      const wordCheck = containsForbiddenWord([title, description, size, material].join(' '))
+      const wordCheck = containsForbiddenWord([title, description, material, brand].join(' '))
       if (wordCheck.found) {
         setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
         return
       }
 
-      // Compression + upload des photos avec timeout 45s
       const uploadTimeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Délai dépassé. Vérifie ta connexion et réessaie.')), 45_000)
       )
@@ -112,8 +127,10 @@ export default function CreateListing() {
         price:       Number(price),
         city,
         images:      imageUrls,
-        size:        clean(size.trim()) || null,
-        material:    clean(material.trim()) || null,
+        size:        isClothing ? (size || null) : null,
+        material:    isClothing ? (clean(material.trim()) || null) : null,
+        brand:       isClothing ? (clean(brand.trim()) || null) : null,
+        color:       isClothing ? (color || null) : null,
       })
 
       navigate(`/annonce/${listing.id}`)
@@ -262,49 +279,72 @@ export default function CreateListing() {
               </select>
             </div>
           </div>
-          {/* Taille */}
-          <div>
-            <label className="block text-sm font-medium text-nout-dark mb-1">
-              Taille <span className="text-gray-400 font-normal">(optionnel)</span>
-            </label>
-            {['vetements-femme', 'vetements-homme', 'vetements-enfant'].includes(category) ? (
-              <select value={size} onChange={(e) => setSize(e.target.value)} className="input-field cursor-pointer">
-                <option value="">Choisir une taille…</option>
-                {SIZES_VETEMENTS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            ) : category === 'chaussures' ? (
-              <select value={size} onChange={(e) => setSize(e.target.value)} className="input-field cursor-pointer">
-                <option value="">Choisir une pointure…</option>
-                {SIZES_CHAUSSURES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            ) : (
-              <input
-                type="text"
-                maxLength={30}
-                placeholder="Ex : 40x60 cm, 250 ml…"
+        </section>
+
+        {/* ── DÉTAILS VÊTEMENT / CHAUSSURE ── */}
+        {isClothing && (
+          <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
+            <h2 className="font-bold text-nout-dark">
+              {category === 'chaussures' ? '👟 Détails chaussure' : '👗 Détails vêtement'}
+            </h2>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                {sizePlaceholder} <span className="text-red-500">*</span>
+              </label>
+              <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
+                className="input-field cursor-pointer"
+              >
+                <option value="">Choisir {sizePlaceholder.toLowerCase()}…</option>
+                {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Marque <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="text"
+                maxLength={50}
+                placeholder="Ex : Nike, Zara, H&M…"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
                 className="input-field"
               />
-            )}
-          </div>
+            </div>
 
-          {/* Composition */}
-          <div>
-            <label className="block text-sm font-medium text-nout-dark mb-1">
-              Composition / Matière <span className="text-gray-400 font-normal">(optionnel)</span>
-            </label>
-            <input
-              type="text"
-              maxLength={80}
-              placeholder="Ex : 100% coton, Cuir synthétique…"
-              value={material}
-              onChange={(e) => setMaterial(e.target.value)}
-              className="input-field"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Matière <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="text"
+                maxLength={80}
+                placeholder="Ex : 100% coton, polyester…"
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+                className="input-field"
+              />
+            </div>
 
-        </section>
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Couleur <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <select
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="input-field cursor-pointer"
+              >
+                <option value="">Choisir une couleur…</option>
+                {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </section>
+        )}
 
         {/* ── PRIX & LIEU ── */}
         <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">

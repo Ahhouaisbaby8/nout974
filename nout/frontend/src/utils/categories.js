@@ -9,9 +9,9 @@ export const CATEGORIES = [
 ]
 
 export const CONDITIONS = [
-  { id: 'neuf', label: 'Neuf (avec étiquette)' },
-  { id: 'tres-bon', label: 'Très bon état' },
-  { id: 'bon', label: 'Bon état' },
-  { id: 'acceptable', label: 'État acceptable' },
-  { id: 'use', label: 'Usé' },
+  { id: 'neuf',       label: 'Neuf avec étiquette' },
+  { id: 'neuf-sans',  label: 'Neuf sans étiquette' },
+  { id: 'tres-bon',   label: 'Très bon état' },
+  { id: 'bon',        label: 'Bon état' },
+  { id: 'acceptable', label: 'État correct' },
 ]
