@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../services/supabase'
 import { formatRelativeDate } from '../../../utils/formatters'
+import { adminAction } from '../../../lib/adminApi'
 
 export default function UsersList() {
   const [users,   setUsers]   = useState([])
@@ -21,8 +22,12 @@ export default function UsersList() {
   )
 
   const changeRole = async (id, role) => {
-    await supabase.from('profiles').update({ role }).eq('id', id)
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u))
+    try {
+      await adminAction('set_role', id, { role })
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u))
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   return (

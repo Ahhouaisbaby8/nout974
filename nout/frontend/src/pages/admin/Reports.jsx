@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 import { getReports, updateReportStatus, updateAdminNote } from '../../services/reports'
-import { updateProfile } from '../../services/profiles'
-import { adminUpdateListing } from '../../services/listings'
+import { adminAction } from '../../lib/adminApi'
 import { formatRelativeDate } from '../../utils/formatters'
 
 const STATUS_LABELS = {
@@ -129,10 +128,10 @@ export default function AdminReports() {
       const userId    = report.reported_profile?.id ?? report.user_id
 
       if (action === 'remove_listing') {
-        await adminUpdateListing(listingId, { is_active: false, is_sold: true })
+        await adminAction('remove_listing', listingId)
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'deactivate_listing') {
-        await adminUpdateListing(listingId, { is_active: false })
+        await adminAction('suspend_listing', listingId)
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'warn_user') {
         const { data: { session } } = await supabase.auth.getSession()
@@ -148,11 +147,10 @@ export default function AdminReports() {
         await updateReportStatus(report.id, 'resolved')
         setActionFeedback(prev => ({ ...prev, [report.id]: '✅ Avertissement envoyé par email' }))
       } else if (action === 'suspend_user') {
-        const suspendedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        await updateProfile(userId, { is_suspended: true, suspended_until: suspendedUntil })
+        await adminAction('suspend_user', userId)
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'ban_user') {
-        await updateProfile(userId, { is_banned: true })
+        await adminAction('ban_user', userId)
         await updateReportStatus(report.id, 'resolved')
       } else if (action === 'resolved' || action === 'ignored') {
         await updateReportStatus(report.id, action)

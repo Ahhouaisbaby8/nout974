@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../services/supabase'
+import { adminAction } from '../../lib/adminApi'
 
 export default function AdminRGPD() {
   const [email,   setEmail]   = useState('')
@@ -31,14 +32,7 @@ export default function AdminRGPD() {
     try {
       const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).single()
       if (!profile) { setResult('Aucun compte trouvé.'); return }
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/.netlify/functions/admin-delete-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ targetUserId: profile.id }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue')
+      await adminAction('delete_user_rgpd', profile.id)
       setResult(`✅ Compte ${email} supprimé définitivement.`)
       setEmail('')
     } catch (err) { setResult(`Erreur : ${err.message}`) }

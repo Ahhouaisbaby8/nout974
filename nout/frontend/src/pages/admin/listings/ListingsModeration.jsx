@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../../services/supabase'
 import { formatRelativeDate } from '../../../utils/formatters'
+import { adminAction } from '../../../lib/adminApi'
 
 export default function ListingsModeration() {
   const [listings, setListings] = useState([])
@@ -22,9 +23,13 @@ export default function ListingsModeration() {
     q.then(({ data }) => setListings(data ?? [])).finally(() => setLoading(false))
   }, [filter])
 
-  const toggle = async (id, field, value) => {
-    await supabase.from('listings').update({ [field]: value }).eq('id', id)
-    setListings(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l))
+  const toggle = async (id, newValue) => {
+    try {
+      await adminAction(newValue ? 'restore_listing' : 'suspend_listing', id)
+      setListings(prev => prev.map(l => l.id === id ? { ...l, is_active: newValue } : l))
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   return (
@@ -83,7 +88,7 @@ export default function ListingsModeration() {
                     <div className="flex gap-2">
                       <Link to={`/annonce/${l.id}`} target="_blank" className="text-xs text-gray-400 hover:text-nout-primary">Voir</Link>
                       {!l.is_sold && (
-                        <button onClick={() => toggle(l.id, 'is_active', !l.is_active)}
+                        <button onClick={() => toggle(l.id, !l.is_active)}
                           className={`text-xs ${l.is_active ? 'text-red-500 hover:underline' : 'text-green-600 hover:underline'}`}>
                           {l.is_active ? 'Désactiver' : 'Activer'}
                         </button>
