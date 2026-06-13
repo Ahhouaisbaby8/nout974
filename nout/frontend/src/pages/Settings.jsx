@@ -262,45 +262,47 @@ export default function Settings() {
           Renseigne ton IBAN pour recevoir l'argent de tes ventes directement sur ton compte bancaire.
         </p>
 
-        {(profile?.stripe_account_id || profile?.iban || ibanSuccess) ? (
-          <div className="flex items-center gap-3">
-            <span className="text-green-500 text-xl">✅</span>
-            <div>
-              <p className="font-semibold text-nout-dark text-sm">Paiements activés</p>
-              <p className="text-xs text-gray-400">Ton compte bancaire est configuré.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {ibanError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
-                {ibanError}
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-nout-dark mb-1">IBAN</label>
-              <input
-                type="text"
-                placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
-                value={iban}
-                onChange={(e) => setIban(e.target.value.toUpperCase())}
-                className="input-field"
-                maxLength={42}
-              />
-            </div>
-            <p className="text-xs text-gray-400 leading-relaxed">
-              Ton IBAN sera utilisé uniquement pour virer tes gains de vente.
-            </p>
-            <button
-              type="button"
-              onClick={handleSaveIban}
-              disabled={ibanSaving}
-              className={`btn-primary px-6 py-3 text-sm ${ibanSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              {ibanSaving ? 'Enregistrement…' : 'Enregistrer mon IBAN'}
-            </button>
+        {(profile?.stripe_account_id || profile?.iban || ibanSuccess) && (
+          <div className="flex items-center gap-2 mb-4 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5">
+            <span className="text-green-500">✅</span>
+            <p className="font-semibold text-green-700 text-sm">Paiements activés</p>
           </div>
         )}
+
+        <div className="flex flex-col gap-3">
+          {ibanError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
+              {ibanError}
+            </div>
+          )}
+          {ibanSuccess && (
+            <div className="bg-green-50 border border-green-200 text-green-600 text-sm rounded-lg px-4 py-3">
+              IBAN enregistré avec succès.
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-nout-dark mb-1">IBAN</label>
+            <input
+              type="text"
+              placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
+              value={iban}
+              onChange={(e) => setIban(e.target.value.toUpperCase())}
+              className="input-field"
+              maxLength={42}
+            />
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Ton IBAN sera utilisé uniquement pour virer tes gains de vente.
+          </p>
+          <button
+            type="button"
+            onClick={handleSaveIban}
+            disabled={ibanSaving}
+            className={`btn-primary px-6 py-3 text-sm ${ibanSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            {ibanSaving ? 'Enregistrement…' : (profile?.iban ? 'Modifier mon IBAN' : 'Enregistrer mon IBAN')}
+          </button>
+        </div>
       </div>
 
       {/* ── SECTION CONFIDENTIALITÉ ── */}
