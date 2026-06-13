@@ -15,10 +15,10 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
 const SITE_URL        = process.env.URL || 'https://nout.re'
 
-// Rate limiter en mémoire — 10 tentatives/min par IP (protection brute-force code)
+// Rate limiter mémoire — 5 req/min par IP (première ligne de défense contre le flooding)
 const _rateLimits = new Map()
 function isRateLimited(ip) {
-  const max = 10, windowMs = 60_000, now = Date.now()
+  const max = 5, windowMs = 60_000, now = Date.now()
   const entry = _rateLimits.get(ip) ?? { count: 0, resetAt: now + windowMs }
   if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs }
   entry.count++
@@ -57,13 +57,13 @@ exports.handler = async (event) => {
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
 
-  // Rate limiting
+  // Rate limiting IP (flooding)
   const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()
   if (isRateLimited(ip)) {
     return { statusCode: 429, headers, body: JSON.stringify({ error: 'Trop de tentatives. Réessaie dans une minute.' }) }
   }
 
-  // Vérification JWT
+  // Validation JWT
   const token = (event.headers['authorization'] || event.headers['Authorization'] || '').replace('Bearer ', '').trim()
   if (!token) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'Non authentifié.' }) }
@@ -80,12 +80,12 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Paramètres manquants.' }) }
     }
 
-    // Validation stricte : le code doit être exactement 6 chiffres
+    // Le code doit être exactement 6 chiffres
     if (!/^\d{6}$/.test(String(code).trim())) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Format de code invalide.' }) }
     }
 
-    // Récupérer la commande complète (vendeur, acheteur, annonce)
+    // Récupérer la commande (vendeur, acheteur, annonce)
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -105,8 +105,10 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'Commande introuvable.' }) }
     }
 
-    // Seul le vendeur peut confirmer la remise
+    // Vérification d'autorisation : seul le vendeur de cette commande peut confirmer la remise
+    // L'identité du vendeur JWT est vérifiée ici avant toute opération sur le code escrow
     if (order.seller_id !== authUser.id) {
+      console.warn(`[confirm-escrow] Accès refusé — user_id: ${authUser.id} n'est pas le vendeur de la commande ${order_id} (vendeur attendu: ${order.seller_id})`)
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
@@ -114,10 +116,10 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette remise a déjà été confirmée.' }) }
     }
 
-    // Récupérer le code escrow
+    // Récupérer le code escrow avec les colonnes de rate limiting
     const { data: escrow, error: escrowError } = await supabase
       .from('escrow_codes')
-      .select('code, expires_at, confirmed_at')
+      .select('code, expires_at, confirmed_at, attempt_count, last_attempt_at, locked_until')
       .eq('order_id', order_id)
       .single()
 
@@ -133,16 +135,57 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ce code a expiré. Le paiement sera remboursé à l\'acheteur automatiquement.' }) }
     }
 
-    if (escrow.code !== String(code).trim()) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Code incorrect. Vérifie le code auprès de l\'acheteur.' }) }
+    // Vérification du verrou Supabase (rate limiter persistant)
+    if (escrow.locked_until && new Date(escrow.locked_until) > new Date()) {
+      const minutesLeft = Math.ceil((new Date(escrow.locked_until) - new Date()) / 60_000)
+      console.warn(`[confirm-escrow] Tentative sur compte bloqué — user_id: ${authUser.id}, order_id: ${order_id}, débloqué dans ${minutesLeft} min, ip: ${ip}`)
+      return {
+        statusCode: 429,
+        headers,
+        body: JSON.stringify({ error: `Compte bloqué. Réessaie dans ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.` }),
+      }
     }
 
-    // ── POINT DE NON-RETOUR ──
-    // On marque confirmed_at en premier pour éviter toute double confirmation
-    // même si la suite échoue. Le filtre .is('confirmed_at', null) est atomique.
+    // Vérification du code
+    if (escrow.code !== String(code).trim()) {
+      const newCount = (escrow.attempt_count ?? 0) + 1
+      console.warn(`[confirm-escrow] Code incorrect — user_id: ${authUser.id}, order_id: ${order_id}, buyer_id: ${order.buyer_id}, tentative: ${newCount}/${3}, ip: ${ip}, at: ${new Date().toISOString()}`)
+
+      const updates = {
+        attempt_count:   newCount,
+        last_attempt_at: new Date().toISOString(),
+      }
+
+      let errorMsg
+      let responseStatus = 400
+
+      if (newCount >= 3) {
+        updates.locked_until = new Date(Date.now() + 60 * 60_000).toISOString()
+        errorMsg       = 'Trop de tentatives. Compte bloqué pendant 1 heure.'
+        responseStatus = 429
+      } else if (newCount === 2) {
+        errorMsg = 'Code incorrect. Attention, dernière tentative !'
+      } else {
+        errorMsg = `Code incorrect. Il te reste ${3 - newCount} tentatives.`
+      }
+
+      await supabase
+        .from('escrow_codes')
+        .update(updates)
+        .eq('order_id', order_id)
+
+      return { statusCode: responseStatus, headers, body: JSON.stringify({ error: errorMsg }) }
+    }
+
+    // ── CODE CORRECT ──
+    // Point de non-retour : confirmed_at + reset du rate limiter en une seule opération atomique
     const { data: locked, error: lockError } = await supabase
       .from('escrow_codes')
-      .update({ confirmed_at: new Date().toISOString() })
+      .update({
+        confirmed_at:  new Date().toISOString(),
+        attempt_count: 0,
+        locked_until:  null,
+      })
       .eq('order_id', order_id)
       .is('confirmed_at', null)
       .select()
@@ -153,7 +196,6 @@ exports.handler = async (event) => {
     }
 
     // Transfert Stripe vers le vendeur
-    // Montant = prix de l'article (sans les frais acheteur que NOUT conserve)
     const prixArticle    = Number(order.listing?.price ?? 0)
     const transferCents  = Math.round(prixArticle * 100)
     const vendorStripeId = order.seller?.stripe_account_id
@@ -171,16 +213,12 @@ exports.handler = async (event) => {
         transferOk = true
         console.log(`Transfert Stripe OK : ${transferCents / 100} € → ${vendorStripeId}`)
       } catch (stripeErr) {
-        // confirmed_at déjà posé — l'échec Stripe doit être traité manuellement
         console.error(`TRANSFERT ÉCHOUÉ (order ${order_id}) :`, stripeErr.message)
       }
     } else {
       console.log(`Vendeur sans compte Stripe (order ${order_id}) — statut payout_pending`)
     }
 
-    // Statut selon disponibilité du compte Stripe vendeur :
-    // - 'completed'      → remise confirmée + transfert déclenché
-    // - 'payout_pending' → remise confirmée mais vendeur sans compte Stripe (transfert à faire après onboarding)
     const orderStatus = (vendorStripeId && transferOk) ? 'completed' : 'payout_pending'
     const { error: updateError } = await supabase
       .from('orders')
@@ -196,7 +234,6 @@ exports.handler = async (event) => {
     const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
     const prixAffiche  = prixArticle.toFixed(2)
 
-    // Email acheteur — remise confirmée
     if (order.buyer?.email) {
       await sendEmail(
         order.buyer.email,
@@ -242,7 +279,6 @@ exports.handler = async (event) => {
       )
     }
 
-    // Email vendeur — virement en route (ou invitation à activer les paiements)
     if (order.seller?.email) {
       const emailVendeur = vendorStripeId
         ? `

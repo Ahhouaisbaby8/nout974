@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext'
 export default function EscrowConfirm({ order, onConfirmed }) {
   const { user } = useAuth()
 
-  const [digits, setDigits]       = useState(['', '', '', '', '', ''])
-  const [expiresAt, setExpiresAt] = useState(null)
+  const [digits, setDigits]           = useState(['', '', '', '', '', ''])
+  const [expiresAt, setExpiresAt]     = useState(null)
   const [alreadyDone, setAlreadyDone] = useState(false)
-  const [loading, setLoading]     = useState(false)
-  const [result, setResult]       = useState(null) // { type: 'success'|'error'|'expired', msg }
+  const [isLocked, setIsLocked]       = useState(false)
+  const [loading, setLoading]         = useState(false)
+  const [result, setResult]           = useState(null) // { type: 'success'|'error'|'locked'|'expired', msg }
   const inputRefs = useRef([])
 
   // Guard : visible uniquement pour le vendeur avec statut 'paid'
@@ -19,13 +20,21 @@ export default function EscrowConfirm({ order, onConfirmed }) {
     if (!isEligible) return
     supabase
       .from('escrow_codes')
-      .select('expires_at, confirmed_at')
+      .select('expires_at, confirmed_at, locked_until')
       .eq('order_id', order.id)
       .single()
       .then(({ data }) => {
         if (!data) return
         if (data.confirmed_at) { setAlreadyDone(true); return }
         setExpiresAt(data.expires_at)
+        if (data.locked_until && new Date(data.locked_until) > new Date()) {
+          const minutesLeft = Math.ceil((new Date(data.locked_until) - new Date()) / 60_000)
+          setIsLocked(true)
+          setResult({
+            type: 'locked',
+            msg: `🔒 Compte bloqué. Réessaie dans ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`,
+          })
+        }
       })
   }, [order.id, isEligible])
 
@@ -57,7 +66,7 @@ export default function EscrowConfirm({ order, onConfirmed }) {
   // ── Submit ───────────────────────────────────────────────────
   const handleSubmit = async () => {
     const code = digits.join('')
-    if (code.length < 6 || loading) return
+    if (code.length < 6 || loading || isLocked) return
 
     setLoading(true)
     setResult(null)
@@ -79,45 +88,53 @@ export default function EscrowConfirm({ order, onConfirmed }) {
         setResult({ type: 'success', msg: '✅ Remise confirmée ! Ton virement est en route.' })
         onConfirmed?.()
       } else {
-        const err = data.error ?? ''
-        if (err.toLowerCase().includes('incorrect')) {
-          setResult({ type: 'error', msg: '❌ Code incorrect. Vérifie le code avec l\'acheteur.' })
-        } else if (err.toLowerCase().includes('expiré')) {
+        const errMsg = data.error || 'Une erreur est survenue. Réessaie.'
+
+        if (res.status === 429) {
+          // Bloqué (3 tentatives épuisées ou déjà bloqué)
+          setIsLocked(true)
+          setResult({ type: 'locked', msg: `🔒 ${errMsg}` })
+        } else if (errMsg.toLowerCase().includes('expiré')) {
           setResult({ type: 'expired', msg: '⏰ Ce code a expiré. L\'acheteur a été remboursé automatiquement.' })
-        } else if (err.toLowerCase().includes('déjà')) {
+        } else if (errMsg.toLowerCase().includes('déjà')) {
           setResult({ type: 'success', msg: '✅ Cette remise a déjà été confirmée.' })
         } else {
-          setResult({ type: 'error', msg: err || 'Une erreur est survenue. Réessaie.' })
+          setResult({ type: 'error', msg: `❌ ${errMsg}` })
         }
-        // Vider les cases sauf en cas de succès
+
         setDigits(['', '', '', '', '', ''])
-        setTimeout(() => inputRefs.current[0]?.focus(), 50)
+        if (res.status !== 429) {
+          setTimeout(() => inputRefs.current[0]?.focus(), 50)
+        }
       }
     } catch {
-      setResult({ type: 'error', msg: 'Erreur réseau. Vérifie ta connexion et réessaie.' })
+      setResult({ type: 'error', msg: '❌ Erreur réseau. Vérifie ta connexion et réessaie.' })
     } finally {
       setLoading(false)
     }
   }
 
-  const code = digits.join('')
+  const code       = digits.join('')
   const isComplete = code.length === 6
   const expiresDate = expiresAt
     ? new Date(expiresAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
     : null
+
+  const inputsDisabled = loading || isLocked || result?.type === 'success' || result?.type === 'expired'
+  const showButton     = !isLocked && result?.type !== 'success' && result?.type !== 'expired'
 
   return (
     <div className="mt-4 rounded-2xl overflow-hidden" style={{ background: '#0A0F2C' }}>
       {/* En-tête */}
       <div className="px-5 pt-5 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">🤝</span>
+          <span className="text-lg">{isLocked ? '🔒' : '🤝'}</span>
           <h3 className="font-title font-bold text-white text-base">
             Confirmer la remise en main propre
           </h3>
         </div>
         <p className="text-white/50 text-sm">
-          Demande le code à 6 chiffres à l'acheteur
+          {isLocked ? 'Saisie temporairement bloquée' : 'Demande le code à 6 chiffres à l\'acheteur'}
         </p>
       </div>
 
@@ -136,14 +153,14 @@ export default function EscrowConfirm({ order, onConfirmed }) {
               value={d}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              disabled={loading || result?.type === 'success' || result?.type === 'expired'}
+              disabled={inputsDisabled}
               aria-label={`Chiffre ${i + 1}`}
               className={`
                 w-9 h-12 sm:w-11 sm:h-14 text-center text-xl sm:text-2xl font-bold font-mono rounded-xl
                 bg-white/10 text-white border-2 transition-all outline-none
                 ${d ? 'border-[#00C4B4]' : 'border-white/20'}
                 focus:border-[#00C4B4] focus:bg-white/15
-                disabled:opacity-50 disabled:cursor-not-allowed
+                disabled:opacity-40 disabled:cursor-not-allowed
               `}
             />
           ))}
@@ -159,16 +176,18 @@ export default function EscrowConfirm({ order, onConfirmed }) {
         {/* Message résultat */}
         {result && (
           <div className={`rounded-xl px-4 py-3 text-sm mb-4 text-center font-medium ${
-            result.type === 'success' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-            result.type === 'expired' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' :
-                                        'bg-red-500/20 text-red-300 border border-red-500/30'
+            result.type === 'success'
+              ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+              : result.type === 'expired' || result.type === 'locked'
+              ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+              : 'bg-red-500/20 text-red-300 border border-red-500/30'
           }`}>
             {result.msg}
           </div>
         )}
 
         {/* Bouton */}
-        {result?.type !== 'success' && result?.type !== 'expired' && (
+        {showButton && (
           <button
             onClick={handleSubmit}
             disabled={!isComplete || loading}
