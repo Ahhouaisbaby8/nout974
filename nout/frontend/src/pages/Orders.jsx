@@ -135,6 +135,43 @@ function ReviewModal({ order, onClose, onSubmitted }) {
   )
 }
 
+function BuyerEscrowCode({ orderId }) {
+  const [code, setCode] = useState(null)
+
+  useEffect(() => {
+    supabase
+      .from('escrow_codes')
+      .select('code')
+      .eq('order_id', orderId)
+      .single()
+      .then(({ data }) => { if (data?.code) setCode(data.code) })
+  }, [orderId])
+
+  if (!code) return null
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+        📦 Mon code de remise
+      </p>
+      <p
+        className="text-center font-extrabold font-mono py-2 mb-2"
+        style={{ fontSize: '32px', color: '#007A6E', letterSpacing: '0.2em' }}
+      >
+        {code.split('').join(' ')}
+      </p>
+      <p className="text-xs text-gray-500 text-center mb-3 leading-relaxed">
+        Présente ce code au vendeur lors de la remise pour confirmer que tu as bien reçu ton article.
+      </p>
+      <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2.5">
+        <p className="text-xs text-orange-700 leading-relaxed">
+          ⚠️ <strong>Ne donne ce code QU'APRÈS</strong> avoir vérifié et récupéré ton article. Ce code libère le paiement au vendeur.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function Orders() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -273,19 +310,27 @@ export default function Orders() {
                     onConfirmed={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
                   />
 
-                  {/* Bouton avis — visible pour l'acheteur, commande terminée */}
+                  {/* Code de remise — visible pour l'acheteur, statut paid */}
+                  {tab === 'achats' && order.status === 'paid' && (
+                    <BuyerEscrowCode orderId={order.id} />
+                  )}
+
+                  {/* Remise confirmée + avis — visible pour l'acheteur, statut completed */}
                   {tab === 'achats' && order.status === 'completed' && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
-                      {!reviewedOrderIds.has(order.id) ? (
-                        <button
-                          onClick={() => setReviewTarget(order)}
-                          className="text-sm font-semibold text-[#0E7FAB] hover:text-[#1A3A8F] transition-colors flex items-center gap-1.5"
-                        >
-                          ⭐ Laisser un avis
-                        </button>
-                      ) : (
-                        <p className="text-xs text-gray-400">✅ Avis publié</p>
-                      )}
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-green-600">✅ Remise confirmée</p>
+                        {!reviewedOrderIds.has(order.id) ? (
+                          <button
+                            onClick={() => setReviewTarget(order)}
+                            className="text-sm font-semibold text-[#0E7FAB] hover:text-[#1A3A8F] transition-colors"
+                          >
+                            ⭐ Laisser un avis
+                          </button>
+                        ) : (
+                          <p className="text-xs text-gray-400">✅ Avis publié</p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
