@@ -5,12 +5,14 @@ import { formatRelativeDate } from '../../../utils/formatters'
 import { adminAction } from '../../../lib/adminApi'
 
 export default function UsersList() {
-  const [users,   setUsers]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [search,  setSearch]  = useState('')
+  const [users,      setUsers]      = useState([])
+  const [loading,    setLoading]    = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [banLoading, setBanLoading] = useState({})
+  const [banError,   setBanError]   = useState({})
 
   useEffect(() => {
-    supabase.from('profiles').select('id, username, email, role, city, created_at')
+    supabase.from('profiles').select('id, username, email, role, city, created_at, is_banned')
       .order('created_at', { ascending: false }).limit(100)
       .then(({ data }) => setUsers(data ?? []))
       .finally(() => setLoading(false))
@@ -30,6 +32,19 @@ export default function UsersList() {
     }
   }
 
+  const toggleBan = async (id, currentlyBanned) => {
+    setBanLoading(prev => ({ ...prev, [id]: true }))
+    setBanError(prev => ({ ...prev, [id]: null }))
+    try {
+      await adminAction(currentlyBanned ? 'unban_user' : 'ban_user', id)
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, is_banned: !currentlyBanned } : u))
+    } catch (err) {
+      setBanError(prev => ({ ...prev, [id]: err.message }))
+    } finally {
+      setBanLoading(prev => ({ ...prev, [id]: false }))
+    }
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-extrabold text-nout-dark mb-6">Utilisateurs</h1>
@@ -46,6 +61,7 @@ export default function UsersList() {
                 <th className="px-4 py-3 text-left">Inscrit</th>
                 <th className="px-4 py-3 text-left">Rôle</th>
                 <th className="px-4 py-3 text-left">Modifier rôle</th>
+                <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -58,9 +74,14 @@ export default function UsersList() {
                   <td className="px-4 py-3 text-gray-500">{u.city ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-400 text-xs">{formatRelativeDate(u.created_at)}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-1 rounded-full ${u.role === 'admin' ? 'bg-red-100 text-red-600' : u.role === 'moderator' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}>
-                      {u.role}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-xs px-2 py-1 rounded-full ${u.role === 'admin' ? 'bg-red-100 text-red-600' : u.role === 'moderator' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}>
+                        {u.role}
+                      </span>
+                      {u.is_banned && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-semibold">banni</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <select value={u.role} onChange={(e) => changeRole(u.id, e.target.value)}
@@ -69,6 +90,34 @@ export default function UsersList() {
                       <option value="moderator">moderator</option>
                       <option value="admin">admin</option>
                     </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    {(() => {
+                      const isProtected = u.role === 'admin' || u.email === 'amandine.megarisse@gmail.com'
+                      const isBanned    = u.is_banned === true
+                      const isLoading   = !!banLoading[u.id]
+                      return (
+                        <div>
+                          <button
+                            disabled={isProtected || isLoading}
+                            onClick={() => toggleBan(u.id, isBanned)}
+                            title={isProtected ? 'Action impossible sur ce compte' : ''}
+                            className={`text-xs font-semibold px-3 py-1 rounded-lg transition-colors ${
+                              isProtected
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : isBanned
+                                  ? 'text-green-600 hover:bg-green-50'
+                                  : 'text-red-500 hover:bg-red-50'
+                            }`}
+                          >
+                            {isLoading ? '…' : isBanned ? 'Débannir' : 'Bannir'}
+                          </button>
+                          {banError[u.id] && (
+                            <p className="text-xs text-red-500 mt-1 max-w-[120px]">{banError[u.id]}</p>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </td>
                 </tr>
               ))}
