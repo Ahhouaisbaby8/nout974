@@ -25,7 +25,7 @@ const sendEmail = async (to, subject, html) => {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: 'onboarding@resend.dev', to, subject, html }),
+      body: JSON.stringify({ from: 'NOUT <contact@nout.re>', to, subject, html }),
     })
     if (!res.ok) console.error(`Resend error ${res.status}:`, await res.text())
   } catch (err) {

@@ -24,7 +24,7 @@ const sendEmail = async (to, subject, html) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
+        from: 'NOUT <contact@nout.re>',
         to,
         subject,
         html,

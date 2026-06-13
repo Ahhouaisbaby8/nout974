@@ -24,6 +24,12 @@ export default function Register() {
     try {
       await register({ email, password })
       setSuccess(true)
+      // Email de bienvenue — non bloquant, silencieux si erreur
+      fetch('/.netlify/functions/send-welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }).catch(() => {})
     } catch (err) {
       if (err.message?.includes('already registered')) {
         setError('Cette adresse e-mail est déjà utilisée.')
