@@ -93,13 +93,17 @@ export default function Settings() {
     setIbanError('')
     setIbanSuccess(false)
     const cleaned = iban.replace(/[\s-]/g, '').toUpperCase()
-    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(cleaned)) {
-      return setIbanError('Format IBAN invalide. Exemple : FR76 3000 6000 0112 3456 7890 189')
+    if (!/^[A-Z]{2}/.test(cleaned)) {
+      return setIbanError('L\'IBAN doit commencer par 2 lettres (ex : FR, RE…)')
+    }
+    if (cleaned.length < 15) {
+      return setIbanError('L\'IBAN doit contenir au moins 15 caractères.')
     }
     setIbanSaving(true)
     try {
       await updateProfile({ iban: cleaned })
       setIbanSuccess(true)
+      setTimeout(() => setIbanSuccess(false), 3000)
     } catch {
       setIbanError('Erreur lors de l\'enregistrement. Réessaie.')
     } finally {
@@ -262,10 +266,10 @@ export default function Settings() {
           Renseigne ton IBAN pour recevoir l'argent de tes ventes directement sur ton compte bancaire.
         </p>
 
-        {(profile?.stripe_account_id || profile?.iban || ibanSuccess) && (
-          <div className="flex items-center gap-2 mb-4 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5">
-            <span className="text-green-500">✅</span>
-            <p className="font-semibold text-green-700 text-sm">Paiements activés</p>
+        {/* Toast succès — flottant, auto-disparaît après 3s */}
+        {ibanSuccess && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl flex items-center gap-2 pointer-events-none">
+            ✅ IBAN mis à jour
           </div>
         )}
 
@@ -275,25 +279,38 @@ export default function Settings() {
               {ibanError}
             </div>
           )}
-          {ibanSuccess && (
-            <div className="bg-green-50 border border-green-200 text-green-600 text-sm rounded-lg px-4 py-3">
-              IBAN enregistré avec succès.
-            </div>
-          )}
+
           <div>
             <label className="block text-sm font-medium text-nout-dark mb-1">IBAN</label>
             <input
               type="text"
               placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
               value={iban}
-              onChange={(e) => setIban(e.target.value.toUpperCase())}
+              onChange={(e) => { setIban(e.target.value.toUpperCase()); setIbanError('') }}
               className="input-field"
               maxLength={42}
             />
           </div>
+
+          {/* Badge Paiements activés — sous le champ */}
+          {(profile?.stripe_account_id || profile?.iban) && (
+            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <span className="text-green-500">✅</span>
+              <p className="font-semibold text-green-700 text-sm">Paiements activés</p>
+            </div>
+          )}
+
+          {/* Texte d'aide — uniquement si aucun IBAN enregistré */}
+          {!profile?.iban && (
+            <p className="text-xs text-nout-muted">
+              Renseigne ton IBAN pour recevoir tes ventes.
+            </p>
+          )}
+
           <p className="text-xs text-gray-400 leading-relaxed">
-            Ton IBAN sera utilisé uniquement pour virer tes gains de vente.
+            Ton IBAN sera utilisé uniquement pour recevoir tes paiements.
           </p>
+
           <button
             type="button"
             onClick={handleSaveIban}
