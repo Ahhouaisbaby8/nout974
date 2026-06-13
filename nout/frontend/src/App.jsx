@@ -58,6 +58,9 @@ import AdminFinances        from './pages/admin/Finances'
 import AdminRGPD            from './pages/admin/RGPD'
 import AdminSettings        from './pages/admin/SiteSettings'
 
+// Maintenance
+import Maintenance from './pages/Maintenance'
+
 // Brand (dev uniquement)
 import BrandPage    from './pages/BrandPage'
 import BrandCompare from './pages/BrandCompare'
@@ -81,7 +84,11 @@ function AdminRoute({ children }) {
   return children
 }
 
+const MAINTENANCE = import.meta.env.VITE_MAINTENANCE === 'true'
+
 export default function App() {
+  if (MAINTENANCE) return <Maintenance />
+
   return (
     <div className="min-h-screen flex flex-col bg-nout-secondary">
       <ScrollToTop />
