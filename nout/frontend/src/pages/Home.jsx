@@ -167,7 +167,7 @@ export default function Home() {
             </select>
             <button
               type="submit"
-              className="flex-shrink-0 bg-[#007A6E] hover:bg-[#006B61] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
+              className="flex-shrink-0 bg-nout-turquoise hover:bg-nout-dark-pri text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
             >
               Rechercher
             </button>
@@ -200,7 +200,7 @@ export default function Home() {
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <h2 className="font-title font-bold text-[22px] text-nout-texte">Nouveautés</h2>
-            <span className="bg-[#007A6E] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
+            <span className="bg-nout-turquoise text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
           </div>
           <button
             onClick={() => navigate('/recherche')}
