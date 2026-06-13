@@ -147,7 +147,7 @@ export default function Home() {
           {/* Barre de recherche pill */}
           <form
             onSubmit={handleSearch}
-            className="hero-fade-up-2 flex items-center bg-white rounded-full shadow-2xl px-2 py-2 gap-1 max-w-2xl mx-auto"
+            className="hero-fade-up-2 flex items-center bg-white border border-gray-200 rounded-full shadow-2xl px-2 py-2 gap-1 max-w-2xl mx-auto"
           >
             <input
               type="text"
@@ -167,7 +167,7 @@ export default function Home() {
             </select>
             <button
               type="submit"
-              className="flex-shrink-0 bg-[#007A6E] text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="flex-shrink-0 bg-[#007A6E] hover:bg-[#006B61] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
             >
               Rechercher
             </button>
@@ -204,7 +204,7 @@ export default function Home() {
           </div>
           <button
             onClick={() => navigate('/recherche')}
-            className="text-[#006B61] text-sm font-semibold hover:underline"
+            className="text-[#007A6E] text-sm font-semibold hover:underline"
           >
             Voir tout →
           </button>
