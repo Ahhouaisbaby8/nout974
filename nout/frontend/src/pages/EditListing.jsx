@@ -261,7 +261,7 @@ export default function EditListing() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className={category === 'beaute' ? 'col-span-2' : ''}>
               <label className="block text-sm font-medium text-nout-dark mb-1">Catégorie</label>
               <select
                 required
@@ -276,20 +276,22 @@ export default function EditListing() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-nout-dark mb-1">État</label>
-              <select
-                required
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-                className="input-field cursor-pointer"
-              >
-                <option value="">Choisir...</option>
-                {CONDITIONS.map(c => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
-                ))}
-              </select>
-            </div>
+            {category !== 'beaute' && (
+              <div>
+                <label className="block text-sm font-medium text-nout-dark mb-1">État</label>
+                <select
+                  required
+                  value={condition}
+                  onChange={(e) => setCondition(e.target.value)}
+                  className="input-field cursor-pointer"
+                >
+                  <option value="">Choisir...</option>
+                  {CONDITIONS.map(c => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </section>
 

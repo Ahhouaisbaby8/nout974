@@ -60,6 +60,7 @@ import AdminSettings        from './pages/admin/SiteSettings'
 
 // Maintenance
 import Maintenance from './pages/Maintenance'
+import NotFound    from './pages/NotFound'
 
 // Brand (dev uniquement)
 import BrandPage    from './pages/BrandPage'
@@ -143,6 +144,9 @@ export default function App() {
           <Route path="/legal/confidentialite" element={<Privacy />} />
           <Route path="/legal/cookies"         element={<Cookies />} />
           <Route path="/legal/mentions"        element={<MentionsLegales />} />
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 
