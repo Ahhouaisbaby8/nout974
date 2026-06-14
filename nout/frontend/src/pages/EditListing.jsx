@@ -10,6 +10,18 @@ import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 
+const traduireErreur = (error) => {
+  if (!error) return 'Une erreur est survenue.'
+  const msg = (error.message || error.toString()).toLowerCase()
+  if (msg.includes('listings_condition_check'))      return "L'état de l'article n'est pas valide."
+  if (msg.includes('violates check constraint'))     return "Une valeur saisie n'est pas acceptée."
+  if (msg.includes('violates not-null constraint'))  return 'Merci de remplir tous les champs obligatoires.'
+  if (msg.includes('duplicate key'))                 return 'Cette annonce existe déjà.'
+  if (msg.includes('jwt expired') || msg.includes('not authenticated')) return 'Session expirée, merci de te reconnecter.'
+  if (msg.includes('storage') || msg.includes('upload') || msg.includes('délai')) return "Erreur lors de l'upload photo. Réessaie."
+  return 'Une erreur est survenue. Réessaie.'
+}
+
 const MAX_PHOTOS = 5
 const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'chaussures']
 const FASHION_CATS   = [...CLOTHING_CATS, 'accessoires', 'sacs']
@@ -134,7 +146,8 @@ export default function EditListing() {
 
       navigate(`/annonce/${id}`)
     } catch (err) {
-      setError(err.message || "Une erreur est survenue. Vérifie ta connexion et réessaie.")
+      console.error('EditListing error:', err)
+      setError(traduireErreur(err))
     } finally {
       setSaving(false)
     }
