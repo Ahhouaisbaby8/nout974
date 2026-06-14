@@ -68,11 +68,13 @@ import BrandPage    from './pages/BrandPage'
 import BrandCompare from './pages/BrandCompare'
 
 // Légal
-import CGU            from './pages/legal/CGU'
-import CGV            from './pages/legal/CGV'
-import Privacy        from './pages/legal/Privacy'
-import Cookies        from './pages/legal/Cookies'
-import MentionsLegales from './pages/legal/MentionsLegales'
+import CGU                  from './pages/legal/CGU'
+import CGV                  from './pages/legal/CGV'
+import Privacy               from './pages/legal/Privacy'
+import Cookies               from './pages/legal/Cookies'
+import MentionsLegales       from './pages/legal/MentionsLegales'
+import CharteBonneConduite   from './pages/legal/CharteBonneConduite'
+import ReglementCatalogue    from './pages/legal/ReglementCatalogue'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -141,11 +143,13 @@ export default function App() {
           {import.meta.env.DEV && <Route path="/brand-compare" element={<BrandCompare />} />}
 
           {/* Légal */}
-          <Route path="/legal/cgu"             element={<CGU />} />
-          <Route path="/legal/cgv"             element={<CGV />} />
-          <Route path="/legal/confidentialite" element={<Privacy />} />
-          <Route path="/legal/cookies"         element={<Cookies />} />
-          <Route path="/legal/mentions"        element={<MentionsLegales />} />
+          <Route path="/legal/cgu"                      element={<CGU />} />
+          <Route path="/legal/cgv"                      element={<CGV />} />
+          <Route path="/legal/confidentialite"          element={<Privacy />} />
+          <Route path="/legal/cookies"                  element={<Cookies />} />
+          <Route path="/legal/mentions"                 element={<MentionsLegales />} />
+          <Route path="/legal/charte-bonne-conduite"    element={<CharteBonneConduite />} />
+          <Route path="/legal/reglement-catalogue"      element={<ReglementCatalogue />} />
 
           {/* 404 */}
           <Route path="*" element={<NotFound />} />

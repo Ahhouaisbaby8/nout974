@@ -56,11 +56,13 @@ export default function Footer() {
               Légal
             </h4>
             <ul className="space-y-2.5">
-              <li><Link to="/legal/cgu"             className="text-sm text-white/60 hover:text-white transition-colors">CGU</Link></li>
-              <li><Link to="/legal/cgv"             className="text-sm text-white/60 hover:text-white transition-colors">CGV</Link></li>
-              <li><Link to="/legal/confidentialite" className="text-sm text-white/60 hover:text-white transition-colors">Confidentialité & RGPD</Link></li>
-              <li><Link to="/legal/cookies"         className="text-sm text-white/60 hover:text-white transition-colors">Politique cookies</Link></li>
-              <li><Link to="/legal/mentions"        className="text-sm text-white/60 hover:text-white transition-colors">Mentions légales</Link></li>
+              <li><Link to="/legal/cgu"                   className="text-sm text-white/60 hover:text-white transition-colors">CGU</Link></li>
+              <li><Link to="/legal/cgv"                   className="text-sm text-white/60 hover:text-white transition-colors">CGV</Link></li>
+              <li><Link to="/legal/confidentialite"       className="text-sm text-white/60 hover:text-white transition-colors">Confidentialité & RGPD</Link></li>
+              <li><Link to="/legal/cookies"               className="text-sm text-white/60 hover:text-white transition-colors">Politique cookies</Link></li>
+              <li><Link to="/legal/mentions"              className="text-sm text-white/60 hover:text-white transition-colors">Mentions légales</Link></li>
+              <li><Link to="/legal/charte-bonne-conduite" className="text-sm text-white/60 hover:text-white transition-colors">Charte de conduite</Link></li>
+              <li><Link to="/legal/reglement-catalogue"   className="text-sm text-white/60 hover:text-white transition-colors">Règlement catalogue</Link></li>
             </ul>
           </div>
 

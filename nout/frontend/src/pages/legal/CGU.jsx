@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import LegalLayout, { Section, P, Ul } from '../../components/legal/LegalLayout'
 
 export default function CGU() {
@@ -64,6 +65,14 @@ export default function CGU() {
 
       <Section title="9. Droit applicable">
         <P>Les présentes CGU sont soumises au droit français. Tout litige relève de la compétence des tribunaux de Saint-Denis de La Réunion.</P>
+      </Section>
+
+      <Section title="10. Documents complémentaires">
+        <P>L'utilisation de NOUT est également soumise aux documents suivants :</P>
+        <Ul items={[
+          <><Link to="/legal/charte-bonne-conduite" className="text-nout-turquoise hover:underline font-medium">Charte de bonne conduite</Link> — règles de comportement entre acheteurs et vendeurs, comportements sanctionnés</>,
+          <><Link to="/legal/reglement-catalogue" className="text-nout-turquoise hover:underline font-medium">Règlement du catalogue</Link> — catégories autorisées, articles interdits, règles de publication</>,
+        ]} />
       </Section>
 
     </LegalLayout>
