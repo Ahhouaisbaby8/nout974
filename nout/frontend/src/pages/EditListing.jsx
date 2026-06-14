@@ -12,6 +12,7 @@ import Spinner from '../components/ui/Spinner'
 
 const MAX_PHOTOS = 5
 const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'chaussures']
+const FASHION_CATS   = [...CLOTHING_CATS, 'accessoires', 'sacs']
 const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
 const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
@@ -41,8 +42,10 @@ export default function EditListing() {
   const [color, setColor]         = useState('')
 
   const isClothing = CLOTHING_CATS.includes(category)
+  const isFashion  = FASHION_CATS.includes(category)
   const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
     : category === 'vetements-enfant' ? SIZES_ENFANT
+    : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
     : SIZES_VETEMENTS
   const sizePlaceholder = category === 'chaussures' ? 'Pointure' : 'Taille'
 
@@ -123,10 +126,10 @@ export default function EditListing() {
         price:       Number(price),
         city,
         images:      imageUrls,
-        size:        isClothing ? (size || null) : null,
-        material:    isClothing ? (clean(material.trim()) || null) : null,
-        brand:       isClothing ? (clean(brand.trim()) || null) : null,
-        color:       isClothing ? (color || null) : null,
+        size:        isFashion ? (size || null) : null,
+        material:    isFashion ? (clean(material.trim()) || null) : null,
+        brand:       isFashion ? (clean(brand.trim()) || null) : null,
+        color:       isFashion ? (color || null) : null,
       })
 
       navigate(`/annonce/${id}`)
@@ -277,16 +280,18 @@ export default function EditListing() {
           </div>
         </section>
 
-        {/* ── DÉTAILS VÊTEMENT / CHAUSSURE ── */}
-        {isClothing && (
+        {/* ── DÉTAILS VÊTEMENT / CHAUSSURE / ACCESSOIRE ── */}
+        {isFashion && (
           <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
             <h2 className="font-bold text-nout-dark">
-              {category === 'chaussures' ? '👟 Détails chaussure' : '👗 Détails vêtement'}
+              {category === 'chaussures' ? '👟 Détails chaussure'
+               : (category === 'accessoires' || category === 'sacs') ? '👜 Détails article'
+               : '👗 Détails vêtement'}
             </h2>
 
             <div>
               <label className="block text-sm font-medium text-nout-dark mb-1">
-                {sizePlaceholder} <span className="text-red-500">*</span>
+                {sizePlaceholder}{isClothing && <span className="text-red-500"> *</span>}
               </label>
               <select
                 value={size}
