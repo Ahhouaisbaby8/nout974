@@ -30,6 +30,7 @@ import Profile        from './pages/Profile'
 import About          from './pages/About'
 import Help           from './pages/Help'
 import HowItWorks     from './pages/HowItWorks'
+import InstallApp     from './pages/InstallApp'
 
 // Auth
 import Login          from './pages/Login'
@@ -105,6 +106,7 @@ export default function App() {
           <Route path="/a-propos"          element={<About />} />
           <Route path="/aide"              element={<Help />} />
           <Route path="/comment-ca-marche" element={<HowItWorks />} />
+          <Route path="/installer-app"    element={<InstallApp />} />
 
           {/* Auth */}
           <Route path="/connexion"      element={<Login />} />
