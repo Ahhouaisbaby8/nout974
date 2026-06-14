@@ -105,7 +105,7 @@ export default function EditListing() {
     if (photos.length === 0)        return setError('Garde au moins une photo.')
     if (!title.trim())              return setError('Le titre est obligatoire.')
     if (!category)                  return setError('Choisis une catégorie.')
-    if (!condition)                 return setError("Précise l'état de l'article.")
+    if (category !== 'beaute' && !condition) return setError("Précise l'état de l'article.")
     if (isClothing && !size)        return setError('Indique la taille.')
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
     if (Number(price) > 50000)      return setError('Le prix maximum est 50 000 €.')
@@ -134,7 +134,7 @@ export default function EditListing() {
         title:       clean(title.trim()),
         description: clean(description.trim()),
         category,
-        condition,
+        condition:   condition || null,
         price:       Number(price),
         city,
         images:      imageUrls,
