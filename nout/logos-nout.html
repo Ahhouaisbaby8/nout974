@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOUT 974 — Propositions Logo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --nuit:       #0A0F2C;
+      --roi:        #1A3A8F;
+      --lagon:      #0E7FAB;
+      --turquoise:  #00C4B4;
+      --fond:       #F8FAFF;
+      --muted:      #6B7A99;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--fond);
+      color: var(--nuit);
+      padding: 48px 24px 64px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    header h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 30px;
+      color: var(--roi);
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 14px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    header .bar {
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--turquoise), var(--lagon));
+      border-radius: 2px;
+      margin: 16px auto 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 28px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 28px 28px;
+      box-shadow: 0 2px 24px rgba(10,15,44,0.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      border: 1.5px solid transparent;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 6px 36px rgba(10,15,44,0.13);
+      border-color: var(--turquoise);
+    }
+    .card.dark {
+      background: var(--nuit);
+    }
+
+    .logo-zone {
+      width: 100%;
+      min-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .divider { width: 36px; height: 2px; background: var(--turquoise); border-radius: 1px; }
+    .divider.white { background: rgba(0,196,180,0.6); }
+
+    .card-label {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--roi);
+    }
+    .card.dark .card-label { color: var(--turquoise); }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .card.dark .card-desc { color: rgba(255,255,255,0.45); }
+
+    /* ===================== LOGOS ===================== */
+
+    /* N°1 — Wordmark + trait dégradé */
+    .l1 { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .l1-word {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 60px;
+      letter-spacing: 0.16em;
+      color: var(--roi);
+      line-height: 1;
+    }
+    .l1-line {
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--turquoise), var(--lagon));
+      border-radius: 2px;
+    }
+
+    /* N°2 — Split couleur N / OUT */
+    .l2 { display: flex; align-items: baseline; }
+    .l2-n  { font-family:'Montserrat',sans-serif; font-weight:900; font-size:68px; color:var(--turquoise); line-height:1; }
+    .l2-out{ font-family:'Montserrat',sans-serif; font-weight:900; font-size:68px; color:var(--roi);       line-height:1; }
+
+    /* N°3 — Badge / stamp */
+    .l3-badge {
+      background: var(--roi);
+      border-radius: 18px;
+      padding: 18px 36px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .l3-word {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 50px;
+      letter-spacing: 0.14em;
+      color: white;
+      line-height: 1;
+    }
+    .l3-974 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.35em;
+      color: var(--turquoise);
+    }
+
+    /* N°4 — Icône arrondie + texte + tagline */
+    .l4 { display: flex; align-items: center; gap: 16px; }
+    .l4-icon {
+      width: 54px; height: 54px;
+      background: linear-gradient(135deg, var(--roi), var(--lagon));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .l4-icon-letter {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 32px;
+      color: white;
+    }
+    .l4-txt { display: flex; flex-direction: column; }
+    .l4-word {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 30px;
+      letter-spacing: 0.1em;
+      color: var(--roi);
+      line-height: 1;
+    }
+    .l4-sub {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      color: var(--turquoise);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* N°5 — Version fond nuit */
+    .l5 { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .l5-word {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 60px;
+      letter-spacing: 0.2em;
+      color: white;
+      line-height: 1;
+    }
+    .l5-accent { display: flex; align-items: center; gap: 8px; }
+    .l5-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--turquoise); }
+    .l5-974 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.3em;
+      color: var(--turquoise);
+      text-transform: uppercase;
+    }
+
+    /* N°6 — Lowercase moderne */
+    .l6 { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .l6-word {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 62px;
+      color: var(--nuit);
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    .l6-sub {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    /* ================ SECTION ETUDE ================ */
+    .study {
+      max-width: 1080px;
+      margin: 60px auto 0;
+      background: white;
+      border-radius: 20px;
+      padding: 40px 40px 36px;
+      box-shadow: 0 2px 24px rgba(10,15,44,0.06);
+    }
+    .study h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--roi);
+      margin-bottom: 28px;
+      letter-spacing: 0.04em;
+    }
+    .study-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .study-item {
+      background: var(--fond);
+      border-radius: 12px;
+      padding: 18px 16px;
+      border-left: 3px solid var(--turquoise);
+    }
+    .study-brand {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--roi);
+      margin-bottom: 6px;
+    }
+    .study-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>NOUT 974 — Propositions Logo</h1>
+    <p>6 directions créatives · Étude marché 2024–2025 · Palette officielle NOUT</p>
+    <div class="bar"></div>
+  </header>
+
+  <div class="grid">
+
+    <!-- N°1 -->
+    <div class="card">
+      <div class="logo-zone">
+        <div class="l1">
+          <span class="l1-word">NOUT</span>
+          <div class="l1-line"></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-label">N°1 — Wordmark + trait dégradé</div>
+      <div class="card-desc">Simple, fort, intemporel. Le trait turquoise-lagon sous le nom apporte la couleur sans alourdir le logo. Inspiré de Depop et Vinted.</div>
+    </div>
+
+    <!-- N°2 -->
+    <div class="card">
+      <div class="logo-zone">
+        <div class="l2">
+          <span class="l2-n">N</span><span class="l2-out">OUT</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-label">N°2 — N turquoise / OUT bleu roi</div>
+      <div class="card-desc">La lettre N en turquoise crée un repère visuel immédiat. Style dynamique proche de StockX. Très lisible en header et sur mobile.</div>
+    </div>
+
+    <!-- N°3 -->
+    <div class="card">
+      <div class="logo-zone">
+        <div class="l3-badge">
+          <span class="l3-word">NOUT</span>
+          <span class="l3-974">974</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-label">N°3 — Badge ancré 974</div>
+      <div class="card-desc">Format badge/stamp, fond bleu roi. Le 974 en turquoise ancre La Réunion directement dans le logo. Idéal en favicon et icône d'application.</div>
+    </div>
+
+    <!-- N°4 -->
+    <div class="card">
+      <div class="logo-zone">
+        <div class="l4">
+          <div class="l4-icon">
+            <span class="l4-icon-letter">N</span>
+          </div>
+          <div class="l4-txt">
+            <span class="l4-word">NOUT</span>
+            <span class="l4-sub">La Réunion · 974</span>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-label">N°4 — Icône + texte + tagline</div>
+      <div class="card-desc">Icône arrondie dégradée + wordmark + tagline. La Réunion est intégrée directement. Format horizontal parfait pour le header du site.</div>
+    </div>
+
+    <!-- N°5 -->
+    <div class="card dark">
+      <div class="logo-zone">
+        <div class="l5">
+          <span class="l5-word">NOUT</span>
+          <div class="l5-accent">
+            <div class="l5-dot"></div>
+            <span class="l5-974">La Réunion 974</span>
+            <div class="l5-dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider white"></div>
+      <div class="card-label">N°5 — Version fond nuit</div>
+      <div class="card-desc">Logo blanc sur fond #0A0F2C avec les deux points turquoise. Version pour le header sombre, le footer, et toutes les communications nocturnes.</div>
+    </div>
+
+    <!-- N°6 -->
+    <div class="card">
+      <div class="logo-zone">
+        <div class="l6">
+          <span class="l6-word">nout</span>
+          <span class="l6-sub">marketplace · 974</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="card-label">N°6 — Lowercase moderne</div>
+      <div class="card-desc">Tendance majeure 2025 : les minuscules signalent une marque accessible et humaine. Style Notion, Figma. Avec la tagline "marketplace · 974" espacée.</div>
+    </div>
+
+  </div>
+
+  <!-- ÉTUDE DE MARCHÉ -->
+  <div class="study">
+    <h2>Étude de marché — Ce qui fonctionne (2024–2025)</h2>
+    <div class="study-grid">
+      <div class="study-item">
+        <div class="study-brand">Depop</div>
+        <div class="study-text">Wordmark rouge pur, Montserrat Bold, très lisible. Zéro icône, zéro fioriture. Le nom suffit.</div>
+      </div>
+      <div class="study-item">
+        <div class="study-brand">Vinted</div>
+        <div class="study-text">Vert unique, typographie ronde, lowercase. Accessible et moderne. Logo inchangé depuis 2021 = mémorisation maximale.</div>
+      </div>
+      <div class="study-item">
+        <div class="study-brand">StockX</div>
+        <div class="study-text">Split couleur entre "Stock" et "X". Identitaire fort, la lettre X est devenue une icône en elle-même.</div>
+      </div>
+      <div class="study-item">
+        <div class="study-brand">Vestiaire Collective</div>
+        <div class="study-text">Noir absolu, serif élégant. Positionnement luxe. Prouve que la police seule peut suffire à tout dire.</div>
+      </div>
+      <div class="study-item">
+        <div class="study-brand">Leboncoin</div>
+        <div class="study-text">Orange signature + wordmark. La couleur EST le logo. Une leçon : choisir UNE couleur forte et s'y tenir.</div>
+      </div>
+      <div class="study-item">
+        <div class="study-brand">Tendance 2025</div>
+        <div class="study-text">Minimalisme radical, un seul accent couleur, lowercase = accessible, tracking large = premium. Pas de clipart.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    NOUT 974 · contact@nout974.re · Palette : #1A3A8F · #00C4B4 · #0A0F2C · Police : Montserrat + Inter
+  </footer>
+
+</body>
+</html>

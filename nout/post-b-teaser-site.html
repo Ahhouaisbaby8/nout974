@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>NOUT — Post B</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; }
+.frame {
+  width:1080px; height:1080px;
+  background:linear-gradient(160deg,#0A0F2C 0%,#0E1A4A 55%,#0A2A3A 100%);
+  position:relative; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:40px;
+}
+canvas { position:absolute; top:0; left:0; width:1080px; height:1080px; }
+.logo-top {
+  display:flex; flex-direction:column; align-items:center; gap:12px; z-index:1;
+  opacity:0; animation:fadeUp 0.8s ease forwards; animation-delay:0.3s;
+}
+.logo-word { font-family:'Montserrat',sans-serif; font-weight:900; font-size:80px; letter-spacing:0.2em; color:white; line-height:1; }
+.logo-sub { display:flex; align-items:center; gap:10px; }
+.dot { width:8px; height:8px; border-radius:50%; background:#00C4B4; }
+.sub-txt { font-family:'Montserrat',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.32em; color:#00C4B4; text-transform:uppercase; }
+.phone-wrap {
+  z-index:1; opacity:0; transform:scale(0.88) translateY(20px);
+  animation:scaleIn 1s cubic-bezier(0.16,1,0.3,1) forwards; animation-delay:0.9s;
+}
+.phone { width:820px; border-radius:20px; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.7),0 0 0 1.5px rgba(255,255,255,0.1); }
+.browser-bar { background:#1A2340; padding:14px 20px; display:flex; align-items:center; gap:10px; }
+.b-dots { display:flex; gap:7px; }
+.b-dot { width:12px; height:12px; border-radius:50%; }
+.b-dot:nth-child(1){ background:#FF5F57; } .b-dot:nth-child(2){ background:#FFBD2E; } .b-dot:nth-child(3){ background:#28C840; }
+.b-url { flex:1; background:#0D1630; border-radius:6px; padding:6px 14px; font-family:'Inter',sans-serif; font-size:13px; color:#00C4B4; }
+.site-preview { background:#0A0F2C; padding:24px 28px 30px; }
+.mini-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.mini-logo { font-family:'Montserrat',sans-serif; font-weight:900; font-size:20px; color:white; letter-spacing:0.14em; }
+.mini-logo span { color:#00C4B4; font-size:9px; display:block; letter-spacing:0.3em; font-weight:600; margin-top:2px; }
+.mini-btns { display:flex; gap:8px; }
+.mini-btn { font-family:'Inter',sans-serif; font-size:11px; font-weight:500; padding:6px 14px; border-radius:18px; border:1.5px solid rgba(255,255,255,0.25); color:white; }
+.mini-btn.cta { background:#00C4B4; border-color:#00C4B4; color:#0A0F2C; font-weight:700; }
+.mini-hero { text-align:center; }
+.mini-title { font-family:'Montserrat',sans-serif; font-weight:900; font-size:34px; color:white; line-height:1.1; margin-bottom:8px; }
+.mini-title em { color:#00C4B4; font-style:normal; }
+.mini-sub { font-family:'Inter',sans-serif; font-size:13px; color:rgba(255,255,255,0.45); margin-bottom:20px; }
+.mini-search { display:flex; align-items:center; background:white; border-radius:34px; padding:10px 6px 10px 20px; gap:10px; max-width:500px; margin:0 auto; }
+.mini-search span { flex:1; font-family:'Inter',sans-serif; font-size:13px; color:#aaa; }
+.mini-search .srch { background:#00C4B4; color:#0A0F2C; border:none; border-radius:26px; padding:9px 24px; font-family:'Montserrat',sans-serif; font-weight:700; font-size:12px; }
+@keyframes fadeUp  { to { opacity:1; } }
+@keyframes scaleIn { to { opacity:1; transform:scale(1) translateY(0); } }
+</style>
+</head>
+<body>
+<div class="frame">
+  <canvas id="c"></canvas>
+  <div class="logo-top">
+    <div class="logo-word">NOUT</div>
+    <div class="logo-sub"><div class="dot"></div><span class="sub-txt">La Réunion 974</span><div class="dot"></div></div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="browser-bar">
+        <div class="b-dots"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div></div>
+        <div class="b-url">nout.re</div>
+      </div>
+      <div class="site-preview">
+        <div class="mini-header">
+          <div class="mini-logo">NOUT<span>· LA RÉUNION 974 ·</span></div>
+          <div class="mini-btns"><div class="mini-btn">Connexion</div><div class="mini-btn cta">S'inscrire</div></div>
+        </div>
+        <div class="mini-hero">
+          <div class="mini-title">Le marketplace <em>de La Réunion</em></div>
+          <div class="mini-sub">Achète et vends entre réunionnais, en toute confiance</div>
+          <div class="mini-search"><span>Que recherches-tu ?</span><button class="srch">Rechercher</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const c=document.getElementById('c'); c.width=1080; c.height=1080;
+const ctx=c.getContext('2d');
+const stars=Array.from({length:70},()=>({x:Math.random()*1080,y:Math.random()*1080,r:Math.random()*1.5+0.3,o:Math.random(),s:Math.random()*0.006+0.002}));
+function draw(){ ctx.clearRect(0,0,1080,1080); stars.forEach(s=>{ s.o+=s.s; if(s.o>1||s.o<0)s.s*=-1; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle=`rgba(255,255,255,${s.o*0.5})`; ctx.fill(); }); requestAnimationFrame(draw); }
+draw();
+</script>
+</body>
+</html>

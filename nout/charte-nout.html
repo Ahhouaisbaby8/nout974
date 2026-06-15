@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOUT 974 — Charte Graphique Complète</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --nuit:      #0A0F2C;
+  --roi:       #1A3A8F;
+  --lagon:     #0E7FAB;
+  --turquoise: #00C4B4;
+  --creme:     #F5F0E8;
+  --fond:      #F8FAFF;
+  --muted:     #6B7A99;
+  --blanc:     #FFFFFF;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#ECEEF5;color:var(--nuit);}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--nuit);
+  display:flex;align-items:center;gap:0;
+  padding:0 40px;
+  border-bottom:2px solid var(--turquoise);
+}
+nav a{
+  color:rgba(255,255,255,0.55);
+  font-family:'Montserrat',sans-serif;
+  font-weight:600;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+  text-decoration:none;padding:16px 18px;
+  border-bottom:2px solid transparent;
+  transition:color 0.2s,border-color 0.2s;
+}
+nav a:hover{color:#fff;border-bottom-color:var(--turquoise);}
+nav .nav-brand{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:18px;
+  color:#fff;letter-spacing:0.2em;margin-right:32px;
+}
+nav .nav-974{color:var(--turquoise);font-size:10px;margin-left:4px;}
+
+/* SECTIONS */
+section{padding:72px 40px;max-width:1100px;margin:0 auto;}
+.section-title{
+  font-family:'Montserrat',sans-serif;font-weight:800;font-size:22px;
+  color:var(--roi);letter-spacing:0.04em;margin-bottom:6px;
+}
+.section-sub{font-size:13px;color:var(--muted);margin-bottom:40px;letter-spacing:0.03em;}
+.section-bar{width:44px;height:3px;background:linear-gradient(90deg,var(--turquoise),var(--lagon));border-radius:2px;margin:10px 0 32px;}
+
+/* CARDS */
+.card{background:#fff;border-radius:20px;padding:36px 28px;box-shadow:0 2px 20px rgba(10,15,44,0.07);}
+.card.dark{background:var(--nuit);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+
+/* ============================================================
+   1. LOGO PRINCIPAL
+============================================================ */
+#logo .hero-logo{
+  background:var(--nuit);border-radius:24px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 40px;gap:12px;
+}
+.logo-main-word{
+  font-family:'Montserrat',sans-serif;font-weight:900;font-size:96px;
+  letter-spacing:0.22em;color:#fff;line-height:1;
+}
+.logo-main-accent{display:flex;align-items:center;gap:10px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--turquoise);}
+.logo-974{
+  font-family:'Montserrat',sans-serif;font-weight:600;font-size:14px;
+  letter-spacing:0.35em;color:var(--turquoise);text-transform:uppercase;
+}
+.logo-desc{
+  font-size:13px;color:var(--muted);text-align:center;line-height:1.7;
+  margin-top:20px;
+}
+
+/* ============================================================
+   2. DÉCLINAISONS
+============================================================ */
+.decli-card{
+  border-radius:16px;padding:28px 20px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+.decli-label{
+  font-family:'Montserrat',sans-serif;font-weight:700;font-size:10px;
+  letter-spacing:0.12em;text-transform:uppercase;
+}
+.decli-usage{font-size:11px;color:var(--muted);text-align:center;line-height:1.5;}
+
+/* Version principale sombre */
+.dv1{background:var(--nuit);}
+.dv1 .dw{font-family:'Montserrat',sans-serif;font-weight:900;font-size:42px;letter-spacing:0.2em;color:#fff;line-height:1;}
+.dv1 .da{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.dv1 .dd{width:5px;height:5px;border-radius:50%;background:var(--turquoise);}
+.dv1 .d9{font-family:'Montserrat',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.3em;color:var(--turquoise);}
+.dv1 .decli-label{color:var(--turquoise);}
+
+/* Version claire */
+.dv2{background:var(--fond);border:1.5px solid #DDE3F0;}
+.dv2 .dw{font-family:'Montserrat',sans-serif;font-weight:900;font-size:42px;letter-spacing:0.2em;color:var(--nuit);line-height:1;}
+.dv2 .da{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.dv2 .dd{width:5px;height:5px;border-radius:50%;background:var(--turquoise);}
+.dv2 .d9{font-family:'Montserrat',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.3em;color:var(--turquoise);}
+.dv2 .decli-label{color:var(--roi);}
+
+/* Version bleu roi */
+.dv3{background:var(--roi);}
+.dv3 .dw{font-family:'Montserrat',sans-serif;font-weight:900;font-size:42px;letter-spacing:0.2em;color:#fff;line-height:1;}
+.dv3 .da{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.dv3 .dd{width:5px;height:5px;border-radius:50%;background:var(--turquoise);}
+.dv3 .d9{font-family:'Montserrat',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.3em;color:var(--turquoise);}
+.dv3 .decli-label{color:var(--turquoise);}
+
+/* Version monochrome noir */
+.dv4{background:#fff;border:1.5px solid #DDE3F0;}
+.dv4 .dw{font-family:'Montserrat',sans-serif;font-weight:900;font-size:42px;letter-spacing:0.2em;color:var(--nuit);line-height:1;}
+.dv4 .da{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.dv4 .dd{width:5px;height:5px;border-radius:50%;background:var(--nuit);}
+.dv4 .d9{font-family:'Montserrat',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.3em;color:var(--nuit);}
+.dv4 .decli-label{color:var(--roi);}
+
+/* Favicon / icône */
+.dv5{background:var(--fond);border:1.5px solid #DDE3F0;}
+.favicon-box{
+  width:64px;height:64px;background:var(--nuit);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.favicon-n{font-family:'Montserrat',sans-serif;font-weight:900;font-size:38px;color:#fff;line-height:1;}
+.dv5 .decli-label{color:var(--roi);}
+
+/* Favicon clair */
+.dv6{background:var(--fond);border:1.5px solid #DDE3F0;}
+.favicon-box-light{
+  width:64px;height:64px;background:var(--fond);border:2px solid var(--nuit);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.favicon-n-dark{font-family:'Montserrat',sans-serif;font-weight:900;font-size:38px;color:var(--nuit);line-height:1;}
+.dv6 .decli-label{color:var(--roi);}
+
+/* Version horizontale */
+.dv7{background:var(--nuit);grid-column:span 2;}
+.dv7 .dh{display:flex;align-items:center;gap:18px;}
+.dv7 .dh-icon{width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.dv7 .dh-n{font-family:'Montserrat',sans-serif;font-weight:900;font-size:30px;color:#fff;}
+.dv7 .dh-txt{display:flex;flex-direction:column;}
+.dv7 .dh-w{font-family:'Montserrat',sans-serif;font-weight:900;font-size:28px;letter-spacing:0.18em;color:#fff;line-height:1;}
+.dv7 .dh-s{font-family:'Montserrat',sans-serif;font-weight:500;font-size:9px;letter-spacing:0.28em;color:var(--turquoise);text-transform:uppercase;margin-top:3px;}
+.dv7 .decli-label{color:var(--turquoise);}
+
+/* Tampon */
+.dv8{background:#fff;border:1.5px solid #DDE3F0;}
+.tampon{
+  width:100px;height:100px;border:3px solid var(--nuit);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+}
+.tampon-w{font-family:'Montserrat',sans-serif;font-weight:900;font-size:26px;letter-spacing:0.15em;color:var(--nuit);}
+.tampon-974{font-family:'Montserrat',sans-serif;font-weight:600;font-size:9px;letter-spacing:0.25em;color:var(--roi);}
+.dv8 .decli-label{color:var(--roi);}
+
+/* ============================================================
+   3. COULEURS
+============================================================ */
+.color-swatch{border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(10,15,44,0.1);}
+.swatch-top{height:100px;}
+.swatch-bot{padding:14px 16px;background:#fff;}
+.swatch-hex{font-family:'Montserrat',sans-serif;font-weight:700;font-size:14px;color:var(--nuit);}
+.swatch-name{font-size:11px;color:var(--muted);margin-top:2px;}
+.swatch-role{font-size:11px;color:var(--muted);margin-top:1px;font-style:italic;}
+
+/* ============================================================
+   4. TYPOGRAPHIE
+============================================================ */
+.typo-row{background:#fff;border-radius:14px;padding:28px;margin-bottom:16px;}
+.typo-sample{margin-bottom:8px;}
+.typo-meta{font-size:11px;color:var(--muted);letter-spacing:0.05em;}
+
+/* ============================================================
+   5. MOCKUPS
+============================================================ */
+
+/* Phone mockup */
+.phone{
+  width:220px;height:420px;
+  background:var(--nuit);border-radius:36px;
+  border:3px solid #222;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  box-shadow:0 20px 60px rgba(10,15,44,0.35);
+  position:relative;
+  flex-shrink:0;
+}
+.phone-notch{
+  width:80px;height:20px;background:#111;border-radius:0 0 14px 14px;
+  margin:0 auto;
+}
+.phone-header{
+  background:var(--nuit);padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.phone-logo-text{font-family:'Montserrat',sans-serif;font-weight:900;font-size:16px;letter-spacing:0.2em;color:#fff;}
+.phone-logo-dot{width:5px;height:5px;border-radius:50%;background:var(--turquoise);}
+.phone-body{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--fond);}
+.phone-card{background:#fff;border-radius:12px;height:80px;display:flex;align-items:center;padding:10px;gap:10px;box-shadow:0 1px 6px rgba(10,15,44,0.07);}
+.phone-img{width:60px;height:60px;border-radius:8px;flex-shrink:0;}
+.phone-card-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:11px;color:var(--nuit);}
+.phone-card-price{font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;color:var(--roi);margin-top:4px;}
+.phone-nav{background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:10px 0;}
+.phone-nav-item{font-size:18px;opacity:0.4;}
+.phone-nav-item.active{opacity:1;}
+
+/* Tote bag */
+.tote{
+  width:160px;height:200px;
+  background:var(--creme);
+  border-radius:4px 4px 16px 16px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;
+  box-shadow:0 8px 32px rgba(10,15,44,0.18);
+}
+.tote::before,.tote::after{
+  content:'';position:absolute;top:-30px;
+  width:16px;height:50px;
+  border-radius:8px;
+  background:#8B7355;
+}
+.tote::before{left:40px;transform:rotate(-8deg);}
+.tote::after{right:40px;transform:rotate(8deg);}
+.tote-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:28px;letter-spacing:0.2em;color:var(--nuit);}
+.tote-dots{display:flex;align-items:center;gap:5px;}
+.tote-dot{width:4px;height:4px;border-radius:50%;background:var(--turquoise);}
+.tote-sub{font-family:'Montserrat',sans-serif;font-weight:600;font-size:7px;letter-spacing:0.25em;color:var(--roi);}
+
+/* Business card */
+.bcard-wrap{display:flex;gap:20px;flex-direction:column;align-items:center;}
+.bcard{
+  width:320px;height:180px;border-radius:16px;
+  background:var(--nuit);
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  padding:24px 28px;
+  box-shadow:0 8px 32px rgba(10,15,44,0.3);
+  position:relative;overflow:hidden;
+}
+.bcard::before{
+  content:'';position:absolute;
+  top:-60px;right:-60px;
+  width:160px;height:160px;
+  border-radius:50%;
+  background:rgba(0,196,180,0.07);
+}
+.bcard-top{display:flex;align-items:center;gap:10px;}
+.bcard-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:24px;letter-spacing:0.2em;color:#fff;}
+.bcard-dot{width:5px;height:5px;border-radius:50%;background:var(--turquoise);}
+.bcard-bot{}
+.bcard-name{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:#fff;}
+.bcard-mail{font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;}
+.bcard-site{font-size:11px;color:var(--turquoise);margin-top:1px;}
+.bcard-line{width:100%;height:2px;background:linear-gradient(90deg,var(--turquoise),transparent);border-radius:1px;margin:12px 0;}
+
+/* Instagram story */
+.story{
+  width:180px;height:320px;
+  background:linear-gradient(160deg,var(--nuit) 0%,var(--roi) 60%,var(--lagon) 100%);
+  border-radius:20px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+  box-shadow:0 12px 40px rgba(10,15,44,0.3);
+  padding:20px;
+  position:relative;overflow:hidden;
+}
+.story::before{
+  content:'';position:absolute;bottom:-40px;right:-40px;
+  width:120px;height:120px;border-radius:50%;
+  background:rgba(0,196,180,0.12);
+}
+.story-label{font-family:'Montserrat',sans-serif;font-weight:500;font-size:10px;letter-spacing:0.2em;color:rgba(255,255,255,0.6);text-transform:uppercase;}
+.story-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:40px;letter-spacing:0.22em;color:#fff;line-height:1;}
+.story-acc{display:flex;align-items:center;gap:7px;}
+.story-dot{width:5px;height:5px;border-radius:50%;background:var(--turquoise);}
+.story-974{font-family:'Montserrat',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.28em;color:var(--turquoise);}
+.story-tag{font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,0.6);margin-top:8px;text-align:center;}
+
+/* Mockup row */
+.mockup-row{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;}
+.mockup-item{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.mockup-label{font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;font-family:'Montserrat',sans-serif;font-weight:600;}
+
+/* ============================================================
+   6. SUPPORTS GRAPHIQUES
+============================================================ */
+/* Bannière réseaux */
+.banner{
+  width:100%;height:140px;
+  background:linear-gradient(135deg,var(--nuit) 0%,var(--roi) 50%,var(--lagon) 100%);
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;
+  position:relative;overflow:hidden;
+}
+.banner::before{
+  content:'';position:absolute;right:-80px;top:-80px;
+  width:260px;height:260px;border-radius:50%;
+  background:rgba(0,196,180,0.08);
+}
+.banner-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:56px;letter-spacing:0.18em;color:#fff;}
+.banner-right{text-align:right;}
+.banner-tagline{font-family:'Montserrat',sans-serif;font-weight:600;font-size:14px;color:rgba(255,255,255,0.8);}
+.banner-sub{font-size:12px;color:var(--turquoise);margin-top:4px;letter-spacing:0.1em;}
+
+/* Post carré insta */
+.post{
+  width:240px;height:240px;
+  background:var(--nuit);
+  border-radius:16px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:8px;
+  box-shadow:0 8px 28px rgba(10,15,44,0.25);
+  position:relative;overflow:hidden;
+}
+.post::after{
+  content:'';position:absolute;
+  bottom:-60px;left:-60px;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(0,196,180,0.07);
+}
+.post-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:52px;letter-spacing:0.22em;color:#fff;}
+.post-acc{display:flex;align-items:center;gap:8px;}
+.post-dot{width:6px;height:6px;border-radius:50%;background:var(--turquoise);}
+.post-974{font-family:'Montserrat',sans-serif;font-weight:600;font-size:11px;letter-spacing:0.3em;color:var(--turquoise);}
+.post-txt{font-size:11px;color:rgba(255,255,255,0.5);text-align:center;padding:0 20px;margin-top:4px;font-style:italic;}
+
+/* ============================================================
+   7. RÈGLES D'USAGE
+============================================================ */
+.rule-ok{border-left:3px solid #22C55E;}
+.rule-ko{border-left:3px solid #EF4444;}
+.rule-card{background:#fff;border-radius:12px;padding:20px;font-size:13px;color:var(--nuit);line-height:1.5;}
+.rule-card strong{display:block;margin-bottom:6px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;}
+.rule-ok strong{color:#22C55E;}
+.rule-ko strong{color:#EF4444;}
+
+/* ============================================================
+   8. STRATÉGIE DE MARQUE
+============================================================ */
+.strat-card{background:#fff;border-radius:16px;padding:28px;border-top:3px solid var(--turquoise);}
+.strat-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--roi);margin-bottom:12px;}
+.strat-body{font-size:13px;color:#444;line-height:1.7;}
+.strat-body ul{margin-left:16px;margin-top:6px;}
+.strat-body li{margin-bottom:4px;}
+
+/* FOOTER */
+footer{
+  background:var(--nuit);
+  text-align:center;padding:32px 20px;
+  font-size:12px;color:rgba(255,255,255,0.35);
+  letter-spacing:0.08em;
+  margin-top:80px;
+}
+footer span{color:var(--turquoise);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">NOUT<span class="nav-974">974</span></div>
+  <a href="#logo">Logo</a>
+  <a href="#declinaisons">Déclinaisons</a>
+  <a href="#couleurs">Couleurs</a>
+  <a href="#typo">Typographie</a>
+  <a href="#mockups">Mockups</a>
+  <a href="#supports">Supports</a>
+  <a href="#charte">Règles</a>
+  <a href="#strategie">Stratégie</a>
+</nav>
+
+
+<!-- ══════════════════════════════════════════════════
+  1. LOGO PRINCIPAL
+══════════════════════════════════════════════════ -->
+<section id="logo">
+  <div class="section-title">Logo principal</div>
+  <div class="section-sub">Version de référence — Direction N°5 validée</div>
+  <div class="section-bar"></div>
+  <div class="card">
+    <div class="hero-logo">
+      <span class="logo-main-word">NOUT</span>
+      <div class="logo-main-accent">
+        <div class="logo-dot"></div>
+        <span class="logo-974">La Réunion 974</span>
+        <div class="logo-dot"></div>
+      </div>
+    </div>
+    <p class="logo-desc">Montserrat Black (900) · Tracking 0.22em · Fond #0A0F2C<br>Accent turquoise #00C4B4 · "La Réunion 974" en Montserrat SemiBold 600</p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  2. DÉCLINAISONS
+══════════════════════════════════════════════════ -->
+<section id="declinaisons">
+  <div class="section-title">Déclinaisons officielles</div>
+  <div class="section-sub">8 versions pour couvrir tous les contextes</div>
+  <div class="section-bar"></div>
+  <div class="grid-4">
+
+    <div class="decli-card dv1">
+      <div class="dw">NOUT</div>
+      <div class="da"><div class="dd"></div><div class="d9">La Réunion 974</div><div class="dd"></div></div>
+      <div class="decli-label">Principale — fond nuit</div>
+      <div class="decli-usage">Header, footer, sur fonds sombres, communications officielles</div>
+    </div>
+
+    <div class="decli-card dv2">
+      <div class="dw">NOUT</div>
+      <div class="da"><div class="dd"></div><div class="d9">La Réunion 974</div><div class="dd"></div></div>
+      <div class="decli-label">Version claire</div>
+      <div class="decli-usage">Sur fonds blancs ou très clairs. Email, documents internes</div>
+    </div>
+
+    <div class="decli-card dv3">
+      <div class="dw">NOUT</div>
+      <div class="da"><div class="dd"></div><div class="d9">La Réunion 974</div><div class="dd"></div></div>
+      <div class="decli-label">Version bleu roi</div>
+      <div class="decli-usage">Fond bleu roi. Utilisé pour les boutons et zones bleues du site</div>
+    </div>
+
+    <div class="decli-card dv4">
+      <div class="dw">NOUT</div>
+      <div class="da"><div class="dd"></div><div class="d9">La Réunion 974</div><div class="dd"></div></div>
+      <div class="decli-label">Monochrome — impression</div>
+      <div class="decli-usage">Documents en noir/blanc, tampons, contrats, factures imprimées</div>
+    </div>
+
+    <div class="decli-card dv5">
+      <div class="favicon-box"><span class="favicon-n">N</span></div>
+      <div class="decli-label">Favicon / icône app</div>
+      <div class="decli-usage">16×16, 32×32, 180×180. Onglet navigateur, raccourci téléphone</div>
+    </div>
+
+    <div class="decli-card dv6">
+      <div class="favicon-box-light"><span class="favicon-n-dark">N</span></div>
+      <div class="decli-label">Icône app — version claire</div>
+      <div class="decli-usage">Pour appareils avec fond blanc imposé (certain OS)</div>
+    </div>
+
+    <div class="decli-card dv7">
+      <div class="dh">
+        <div class="dh-icon"><span class="dh-n">N</span></div>
+        <div class="dh-txt">
+          <span class="dh-w">NOUT</span>
+          <span class="dh-s">La Réunion · 974</span>
+        </div>
+      </div>
+      <div class="decli-label">Horizontale — header site</div>
+      <div class="decli-usage">Version combinée icône + texte utilisée dans le header du site sur desktop</div>
+    </div>
+
+    <div class="decli-card dv8">
+      <div class="tampon">
+        <span class="tampon-w">NOUT</span>
+        <span class="tampon-974">LA RÉUNION · 974</span>
+      </div>
+      <div class="decli-label">Tampon / cachet</div>
+      <div class="decli-usage">Emballages, étiquettes, stickers, packaging commandes</div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  3. PALETTE COULEURS
+══════════════════════════════════════════════════ -->
+<section id="couleurs">
+  <div class="section-title">Palette officielle</div>
+  <div class="section-sub">5 couleurs primaires + 3 fonctionnelles</div>
+  <div class="section-bar"></div>
+  <div class="grid-4" style="margin-bottom:24px">
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#0A0F2C;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#0A0F2C</div>
+        <div class="swatch-name">Nuit</div>
+        <div class="swatch-role">Fond principal, texte fort</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#1A3A8F;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#1A3A8F</div>
+        <div class="swatch-name">Bleu Roi ★</div>
+        <div class="swatch-role">Logo, prix, CTA principal</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#0E7FAB;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#0E7FAB</div>
+        <div class="swatch-name">Lagon</div>
+        <div class="swatch-role">Dégradés, transition</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#00C4B4;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#00C4B4</div>
+        <div class="swatch-name">Turquoise ★</div>
+        <div class="swatch-role">Accent, hover, badges, dots logo</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#F5F0E8;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#F5F0E8</div>
+        <div class="swatch-name">Crème</div>
+        <div class="swatch-role">Sections alternatives, tote bag</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#F8FAFF;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#F8FAFF</div>
+        <div class="swatch-name">Fond général</div>
+        <div class="swatch-role">Arrière-plan pages</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#1A1A2E;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#1A1A2E</div>
+        <div class="swatch-name">Texte</div>
+        <div class="swatch-role">Corps de texte principal</div>
+      </div>
+    </div>
+
+    <div class="color-swatch">
+      <div class="swatch-top" style="background:#6B7A99;"></div>
+      <div class="swatch-bot">
+        <div class="swatch-hex">#6B7A99</div>
+        <div class="swatch-name">Muted</div>
+        <div class="swatch-role">Texte secondaire, labels</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;">
+      <strong style="font-family:'Montserrat',sans-serif;color:var(--roi);">Dégradés officiels :</strong><br>
+      Hero : <code style="background:#eee;padding:2px 6px;border-radius:4px;">135deg · #0A0F2C → #1A3A8F → #0E7FAB</code><br>
+      CTA / boutons : <code style="background:#eee;padding:2px 6px;border-radius:4px;">135deg · #0E7FAB → #00C4B4</code><br>
+      Cartes prix : <code style="background:#eee;padding:2px 6px;border-radius:4px;">135deg · #E8F0FF → #EEF2FF → #E0F4F8</code>
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  4. TYPOGRAPHIE
+══════════════════════════════════════════════════ -->
+<section id="typo">
+  <div class="section-title">Typographie</div>
+  <div class="section-sub">2 polices uniquement — Montserrat + Inter</div>
+  <div class="section-bar"></div>
+
+  <div class="typo-row">
+    <div class="typo-sample" style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:48px;color:#0A0F2C;letter-spacing:0.04em;">Montserrat Black</div>
+    <div class="typo-meta">Montserrat 900 — Logos, titres H1, prix, éléments d'impact</div>
+  </div>
+  <div class="typo-row">
+    <div class="typo-sample" style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:32px;color:#1A3A8F;">Montserrat Bold</div>
+    <div class="typo-meta">Montserrat 700 — Titres H2, H3, labels, boutons</div>
+  </div>
+  <div class="typo-row">
+    <div class="typo-sample" style="font-family:'Montserrat',sans-serif;font-weight:600;font-size:20px;color:#0E7FAB;letter-spacing:0.12em;">MONTSERRAT SEMIBOLD CAPS</div>
+    <div class="typo-meta">Montserrat 600 uppercase — Taglines, catégories, labels techniques</div>
+  </div>
+  <div class="typo-row">
+    <div class="typo-sample" style="font-family:'Inter',sans-serif;font-weight:400;font-size:16px;color:#1A1A2E;line-height:1.6;">Inter Regular — Corps de texte, descriptions, paragraphes courants.<br>Police de lecture principale pour tout le contenu éditorial du site.</div>
+    <div class="typo-meta">Inter 400 — Corps de texte, descriptions</div>
+  </div>
+  <div class="typo-row">
+    <div class="typo-sample" style="font-family:'Inter',sans-serif;font-weight:500;font-size:14px;color:#6B7A99;">Inter Medium — Labels, métadonnées, textes secondaires, dates, villes</div>
+    <div class="typo-meta">Inter 500 — Labels, infos secondaires</div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  5. MOCKUPS
+══════════════════════════════════════════════════ -->
+<section id="mockups">
+  <div class="section-title">Imagerie & Mockups</div>
+  <div class="section-sub">Le logo dans la vraie vie</div>
+  <div class="section-bar"></div>
+
+  <div class="mockup-row" style="justify-content:center;">
+
+    <div class="mockup-item">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-header">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <span class="phone-logo-text">NOUT</span>
+            <div class="phone-logo-dot"></div>
+          </div>
+          <div style="font-size:18px;color:rgba(255,255,255,0.6);">☰</div>
+        </div>
+        <div class="phone-body">
+          <div class="phone-card">
+            <div class="phone-img" style="background:linear-gradient(135deg,#C8A882,#E5C89A);"></div>
+            <div>
+              <div class="phone-card-title">Robe fleurie T36</div>
+              <div class="phone-card-price">18 €</div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div class="phone-img" style="background:linear-gradient(135deg,#7BA3C8,#9DC4E8);"></div>
+            <div>
+              <div class="phone-card-title">Veste jean vintage</div>
+              <div class="phone-card-price">34 €</div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div class="phone-img" style="background:linear-gradient(135deg,#C87B9A,#E8A0BE);"></div>
+            <div>
+              <div class="phone-card-title">Basket Air Max 42</div>
+              <div class="phone-card-price">65 €</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-nav">
+          <span class="phone-nav-item active">🏠</span>
+          <span class="phone-nav-item">🔍</span>
+          <span class="phone-nav-item">➕</span>
+          <span class="phone-nav-item">💬</span>
+          <span class="phone-nav-item">👤</span>
+        </div>
+      </div>
+      <div class="mockup-label">Application mobile</div>
+    </div>
+
+    <div class="mockup-item" style="margin-top:48px;">
+      <div class="tote">
+        <span class="tote-logo">NOUT</span>
+        <div class="tote-dots">
+          <div class="tote-dot"></div>
+          <span class="tote-sub">LA RÉUNION 974</span>
+          <div class="tote-dot"></div>
+        </div>
+      </div>
+      <div class="mockup-label">Tote bag / packaging</div>
+    </div>
+
+    <div class="mockup-item">
+      <div class="bcard">
+        <div class="bcard-top">
+          <span class="bcard-logo">NOUT</span>
+          <div class="bcard-dot"></div>
+        </div>
+        <div class="bcard-line"></div>
+        <div class="bcard-bot">
+          <div class="bcard-name">Amandine Megarisse</div>
+          <div class="bcard-mail">contact@nout974.re</div>
+          <div class="bcard-site">nout974.re · La Réunion</div>
+        </div>
+      </div>
+      <div class="mockup-label">Carte de visite</div>
+    </div>
+
+    <div class="mockup-item">
+      <div class="story">
+        <div class="story-label">Nouveautés du jour</div>
+        <span class="story-logo">NOUT</span>
+        <div class="story-acc">
+          <div class="story-dot"></div>
+          <span class="story-974">La Réunion 974</span>
+          <div class="story-dot"></div>
+        </div>
+        <div class="story-tag">Le marketplace 100% réunionnais</div>
+      </div>
+      <div class="mockup-label">Story Instagram</div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  6. SUPPORTS GRAPHIQUES
+══════════════════════════════════════════════════ -->
+<section id="supports">
+  <div class="section-title">Supports graphiques</div>
+  <div class="section-sub">Bannières, posts, visuels réseaux sociaux</div>
+  <div class="section-bar"></div>
+
+  <div class="banner" style="margin-bottom:28px;">
+    <div class="banner-logo">NOUT</div>
+    <div class="banner-right">
+      <div class="banner-tagline">Le marketplace 100 % réunionnais</div>
+      <div class="banner-sub">Entre particuliers et professionnels · La Réunion 974</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+    <div class="mockup-item">
+      <div class="post">
+        <span class="post-logo">NOUT</span>
+        <div class="post-acc">
+          <div class="post-dot"></div>
+          <span class="post-974">La Réunion 974</span>
+          <div class="post-dot"></div>
+        </div>
+        <div class="post-txt">Le marketplace seconde main 100% réunionnais</div>
+      </div>
+      <div class="mockup-label">Post carré (1:1)</div>
+    </div>
+
+    <div class="mockup-item">
+      <div style="width:240px;height:240px;background:var(--fond);border-radius:16px;display:flex;align-items:center;justify-content:center;border:2px solid #DDE3F0;">
+        <div style="text-align:center;">
+          <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:36px;letter-spacing:0.18em;color:var(--nuit);">NOUT</div>
+          <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-top:6px;">
+            <div style="width:5px;height:5px;border-radius:50%;background:var(--turquoise);"></div>
+            <span style="font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:0.28em;color:var(--turquoise);">La Réunion 974</span>
+            <div style="width:5px;height:5px;border-radius:50%;background:var(--turquoise);"></div>
+          </div>
+        </div>
+      </div>
+      <div class="mockup-label">Post fond clair</div>
+    </div>
+
+    <div class="mockup-item">
+      <div style="width:240px;height:240px;background:linear-gradient(135deg,var(--turquoise),var(--lagon));border-radius:16px;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:36px;letter-spacing:0.18em;color:#fff;">NOUT</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:9px;letter-spacing:0.28em;color:rgba(255,255,255,0.8);margin-top:6px;">LA RÉUNION 974</div>
+        </div>
+      </div>
+      <div class="mockup-label">Post dégradé turquoise</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  7. RÈGLES D'USAGE
+══════════════════════════════════════════════════ -->
+<section id="charte">
+  <div class="section-title">Règles d'usage — Charte</div>
+  <div class="section-sub">Ce qu'on fait, ce qu'on ne fait jamais</div>
+  <div class="section-bar"></div>
+  <div class="grid-2">
+
+    <div class="rule-card rule-ok">
+      <strong>✓ À FAIRE</strong>
+      Utiliser uniquement les 8 couleurs de la palette officielle.<br>
+      Respecter l'espacement minimum autour du logo (= hauteur de la lettre N).<br>
+      Utiliser Montserrat pour tous les titres, Inter pour le corps de texte.<br>
+      Ne jamais déformer ou écraser le logo proportionnellement.<br>
+      Toujours utiliser le logo sur un fond de la palette officielle.
+    </div>
+
+    <div class="rule-card rule-ko">
+      <strong>✗ INTERDIT</strong>
+      Changer la couleur du logo hors des 8 versions validées.<br>
+      Ajouter des effets (ombre, contour, bevel, flou) sur le logo.<br>
+      Utiliser une autre police que Montserrat / Inter dans les communications.<br>
+      Placer le logo sur une photo sans fond uni ou semi-transparent.<br>
+      Modifier le tracking (espacement) ou le poids des lettres.
+    </div>
+
+    <div class="rule-card rule-ok" style="margin-top:0">
+      <strong>✓ ESPACEMENT MINIMUM</strong>
+      Zone de protection = hauteur de la lettre N tout autour du logo.<br>
+      En pratique : garder au moins 16px d'espace autour en digital, 5mm en print.
+    </div>
+
+    <div class="rule-card rule-ko" style="margin-top:0">
+      <strong>✗ FONDS INTERDITS</strong>
+      Fond rouge, orange, rose ou vert (clash avec la palette).<br>
+      Fond à motifs ou photo sans overlay sombre (min 60% opacité).<br>
+      Fond gris moyen (trop proche du muted, mauvais contraste).
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════
+  8. STRATÉGIE DE MARQUE
+══════════════════════════════════════════════════ -->
+<section id="strategie">
+  <div class="section-title">Stratégie de marque</div>
+  <div class="section-sub">Positionnement, territoire, ton de voix</div>
+  <div class="section-bar"></div>
+  <div class="grid-3">
+
+    <div class="strat-card">
+      <div class="strat-title">Positionnement</div>
+      <div class="strat-body">
+        NOUT est <strong>le seul marketplace seconde main 100% ancré à La Réunion</strong>. Ni Vinted ni Leboncoin — une plateforme faite par et pour les Réunionnais.<br><br>
+        Territoire : proximité locale × modernité digitale × confiance communautaire.
+      </div>
+    </div>
+
+    <div class="strat-card">
+      <div class="strat-title">Valeurs de marque</div>
+      <div class="strat-body">
+        <ul>
+          <li><strong>Local</strong> — uniquement La Réunion 974</li>
+          <li><strong>Durable</strong> — seconde main = engagement</li>
+          <li><strong>Simple</strong> — pas de jargon, accessible à tous</li>
+          <li><strong>Confiance</strong> — entre particuliers et pros</li>
+          <li><strong>Fierté</strong> — NOUT = "notre" en créole</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="strat-card">
+      <div class="strat-title">Ton de voix</div>
+      <div class="strat-body">
+        <strong>Chaleureux mais pro.</strong><br><br>
+        On parle en français, simplement, sans sur-vente. Proche des gens, direct, positif. On évite les formules marketing froides.<br><br>
+        Exemple : "Trouve ta pépite" plutôt que "Découvrez nos offres".
+      </div>
+    </div>
+
+    <div class="strat-card">
+      <div class="strat-title">Identité visuelle — Résumé</div>
+      <div class="strat-body">
+        <ul>
+          <li>Bleu nuit + turquoise = modernité + lagon</li>
+          <li>Montserrat Black = impact + autorité</li>
+          <li>Minimalisme = confiance + durabilité</li>
+          <li>Le 974 toujours visible = ancrage local</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="strat-card">
+      <div class="strat-title">Cible principale</div>
+      <div class="strat-body">
+        Femmes et hommes 18–45 ans à La Réunion, habitués des smartphones, qui achètent/vendent déjà sur Leboncoin ou Facebook Marketplace mais veulent une expérience plus fiable et plus belle.
+      </div>
+    </div>
+
+    <div class="strat-card">
+      <div class="strat-title">Différenciation concurrents</div>
+      <div class="strat-body">
+        <ul>
+          <li><strong>vs Leboncoin</strong> : plus beau, seconde main uniquement</li>
+          <li><strong>vs Vinted</strong> : pas que les vêtements, local 974</li>
+          <li><strong>vs Facebook</strong> : sécurisé, Stripe, pas de spam</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<footer>
+  <span>NOUT 974</span> · contact@nout974.re · Saint-Denis · La Réunion<br>
+  Charte Graphique Officielle — Version juin 2026 · Palette #1A3A8F · #00C4B4 · #0A0F2C
+</footer>
+
+</body>
+</html>

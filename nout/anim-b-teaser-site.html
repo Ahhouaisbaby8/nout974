@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>NOUT — B</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; }
+.frame {
+  width:1080px; height:1920px;
+  background:linear-gradient(160deg,#0A0F2C 0%,#0E1A4A 55%,#0A2A3A 100%);
+  position:relative; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:64px;
+}
+canvas { position:absolute; top:0; left:0; width:1080px; height:1920px; }
+
+.logo-top {
+  display:flex; flex-direction:column; align-items:center; gap:14px; z-index:1;
+  opacity:0; animation:fadeUp 0.8s ease forwards; animation-delay:0.3s;
+}
+.logo-word { font-family:'Montserrat',sans-serif; font-weight:900; font-size:110px; letter-spacing:0.2em; color:white; line-height:1; }
+.logo-sub { display:flex; align-items:center; gap:12px; }
+.dot { width:9px; height:9px; border-radius:50%; background:#00C4B4; }
+.sub-txt { font-family:'Montserrat',sans-serif; font-weight:600; font-size:17px; letter-spacing:0.32em; color:#00C4B4; text-transform:uppercase; }
+
+.phone-wrap {
+  z-index:1;
+  opacity:0; transform:scale(0.88) translateY(30px);
+  animation:scaleIn 1s cubic-bezier(0.16,1,0.3,1) forwards; animation-delay:0.9s;
+}
+.phone {
+  width:680px; border-radius:28px; overflow:hidden;
+  box-shadow:0 60px 120px rgba(0,0,0,0.7), 0 0 0 1.5px rgba(255,255,255,0.1);
+}
+.browser-bar {
+  background:#1A2340; padding:18px 24px;
+  display:flex; align-items:center; gap:12px;
+}
+.b-dots { display:flex; gap:8px; }
+.b-dot { width:14px; height:14px; border-radius:50%; }
+.b-dot:nth-child(1){ background:#FF5F57; }
+.b-dot:nth-child(2){ background:#FFBD2E; }
+.b-dot:nth-child(3){ background:#28C840; }
+.b-url {
+  flex:1; background:#0D1630; border-radius:8px;
+  padding:8px 16px; font-family:'Inter',sans-serif;
+  font-size:15px; color:#00C4B4;
+}
+.site-preview { background:#0A0F2C; padding:32px 36px 42px; }
+.mini-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:36px; }
+.mini-logo { font-family:'Montserrat',sans-serif; font-weight:900; font-size:26px; color:white; letter-spacing:0.14em; }
+.mini-logo span { color:#00C4B4; font-size:11px; display:block; letter-spacing:0.3em; font-weight:600; margin-top:3px; }
+.mini-btns { display:flex; gap:10px; }
+.mini-btn { font-family:'Inter',sans-serif; font-size:13px; font-weight:500; padding:8px 18px; border-radius:22px; border:1.5px solid rgba(255,255,255,0.25); color:white; }
+.mini-btn.cta { background:#00C4B4; border-color:#00C4B4; color:#0A0F2C; font-weight:700; }
+.mini-hero { text-align:center; }
+.mini-title { font-family:'Montserrat',sans-serif; font-weight:900; font-size:44px; color:white; line-height:1.15; margin-bottom:10px; }
+.mini-title em { color:#00C4B4; font-style:normal; display:block; }
+.mini-sub { font-family:'Inter',sans-serif; font-size:16px; color:rgba(255,255,255,0.45); margin-bottom:28px; }
+.mini-search { display:flex; align-items:center; background:white; border-radius:40px; padding:14px 8px 14px 24px; gap:12px; }
+.mini-search span { flex:1; font-family:'Inter',sans-serif; font-size:15px; color:#aaa; }
+.mini-search .srch { background:#00C4B4; color:#0A0F2C; border:none; border-radius:30px; padding:12px 32px; font-family:'Montserrat',sans-serif; font-weight:700; font-size:14px; }
+
+.url-badge {
+  z-index:1; font-family:'Montserrat',sans-serif; font-weight:600;
+  font-size:22px; color:rgba(255,255,255,0.3); letter-spacing:0.12em;
+  opacity:0; animation:fadeIn 0.6s ease forwards; animation-delay:2.4s;
+}
+.url-badge span { color:#00C4B4; }
+
+@keyframes fadeUp  { to { opacity:1; } }
+@keyframes scaleIn { to { opacity:1; transform:scale(1) translateY(0); } }
+@keyframes fadeIn  { to { opacity:1; } }
+</style>
+</head>
+<body>
+<div class="frame">
+  <canvas id="c"></canvas>
+  <div class="logo-top">
+    <div class="logo-word">NOUT</div>
+    <div class="logo-sub"><div class="dot"></div><span class="sub-txt">La Réunion 974</span><div class="dot"></div></div>
+  </div>
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="browser-bar">
+        <div class="b-dots"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div></div>
+        <div class="b-url">nout.re</div>
+      </div>
+      <div class="site-preview">
+        <div class="mini-header">
+          <div class="mini-logo">NOUT<span>· LA RÉUNION 974 ·</span></div>
+          <div class="mini-btns"><div class="mini-btn">Connexion</div><div class="mini-btn cta">S'inscrire</div></div>
+        </div>
+        <div class="mini-hero">
+          <div class="mini-title">Le marketplace<em>de La Réunion</em></div>
+          <div class="mini-sub">Achète et vends entre réunionnais, en toute confiance</div>
+          <div class="mini-search"><span>Que recherches-tu ?</span><button class="srch">Rechercher</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="url-badge">Découvre <span>nout.re</span></div>
+</div>
+<script>
+const c=document.getElementById('c'); c.width=1080; c.height=1920;
+const ctx=c.getContext('2d');
+const stars=Array.from({length:100},()=>({x:Math.random()*1080,y:Math.random()*1920,r:Math.random()*1.6+0.3,o:Math.random(),s:Math.random()*0.006+0.002}));
+function draw(){ ctx.clearRect(0,0,1080,1920); stars.forEach(s=>{ s.o+=s.s; if(s.o>1||s.o<0)s.s*=-1; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle=`rgba(255,255,255,${s.o*0.5})`; ctx.fill(); }); requestAnimationFrame(draw); }
+draw();
+</script>
+</body>
+</html>
