@@ -87,10 +87,28 @@ Le flux Stripe utilise un redirect côté serveur — aucun `loadStripe()` ni St
 
 ---
 
+## Bannissement utilisateurs — enforcement complet
+
+| Fichier | Modification |
+|---------|-------------|
+| `src/context/AuthContext.jsx` | `fetchProfile` vérifie `is_banned` → `sessionStorage.setItem('nout_ban','1')` → `signOut()` → `window.location.replace('/connexion')` |
+| `src/context/AuthContext.jsx` | `getSession().then()` rendu `async` — `await fetchProfile` avant `setLoading(false)` (fix timing : page protégée ne peut plus flasher pendant le check) |
+| `src/App.jsx` | `PrivateRoute` — double garde : `!user` + `profile?.is_banned` → `<Navigate to="/connexion">` |
+| `src/pages/Login.jsx` | Bandeau orange au montage : lit `nout_ban` dans sessionStorage, affiche "🚫 Votre compte a été suspendu. Contactez-nous à contact@nout.re", supprime la clé |
+
+**Flow complet :**
+1. App charge → `getSession()` → `await fetchProfile()` → `is_banned = true` détecté
+2. `sessionStorage.setItem('nout_ban', '1')` → `signOut()` → `window.location.replace('/connexion')`
+3. Login.jsx monte → lit `nout_ban` → affiche bandeau orange → supprime la clé (pas de répétition)
+
+---
+
 ## Commits du jour
 
 | Hash | Message |
 |------|---------|
+| `c15cac5` | fix: bannissement — await fetchProfile avant setLoading + hard redirect |
+| `d22549e` | fix: ban enforcement — AuthContext + PrivateRoute + Login bandeau orange |
 | `d10d487` | legal: ajout SIRET 106 334 436 00016 + correction domaine nout.re |
 | `f0f4314` | chore: suppression @stripe/react-stripe-js et @stripe/stripe-js |
 | `942b718` | chore: suppression mentions UBN Speed — formulations génériques |
