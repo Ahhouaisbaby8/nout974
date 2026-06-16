@@ -93,7 +93,7 @@ export default function UsersList() {
                   </td>
                   <td className="px-4 py-3">
                     {(() => {
-                      const isProtected = u.role === 'admin' || u.email === 'amandine.megarisse@gmail.com'
+                      const isProtected = u.role === 'admin'
                       const isBanned    = u.is_banned === true
                       const isLoading   = !!banLoading[u.id]
                       return (

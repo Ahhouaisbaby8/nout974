@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getProfile } from '../services/profiles'
+import { getPublicProfile } from '../services/profiles'
 import { getUserListings } from '../services/listings'
 import { getSellerReviews } from '../services/reviews'
 import { getAvatarUrl } from '../utils/avatar'
@@ -31,7 +31,7 @@ export default function Profile() {
   useEffect(() => {
     const load = async () => {
       try {
-        const p = await getProfile(id)
+        const p = await getPublicProfile(id)
         if (!p) { setNotFound(true); return }
         setProfile(p)
         // Listings et avis non-bloquants : leur échec n'empêche pas d'afficher le profil

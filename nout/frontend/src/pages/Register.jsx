@@ -17,7 +17,7 @@ export default function Register() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 6) return setError('Le mot de passe doit faire au moins 6 caractères.')
+    if (password.length < 8) return setError('Le mot de passe doit faire au moins 8 caractères.')
     if (password !== confirm) return setError('Les mots de passe ne correspondent pas.')
 
     setLoading(true)
@@ -116,7 +116,7 @@ export default function Register() {
 
           <div>
             <label className="block text-sm font-medium text-nout-dark mb-1">
-              Mot de passe <span className="text-gray-400 font-normal">(6 caractères min.)</span>
+              Mot de passe <span className="text-gray-400 font-normal">(8 caractères min.)</span>
             </label>
             <input
               type="password"

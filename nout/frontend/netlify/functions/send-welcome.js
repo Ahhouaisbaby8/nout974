@@ -1,6 +1,21 @@
+const _rateLimits = new Map()
+function isRateLimited(ip) {
+  const max = 3, windowMs = 60_000, now = Date.now()
+  const entry = _rateLimits.get(ip) ?? { count: 0, resetAt: now + windowMs }
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs }
+  entry.count++
+  _rateLimits.set(ip, entry)
+  return entry.count > max
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' }
+  }
+
+  const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()
+  if (isRateLimited(ip)) {
+    return { statusCode: 429, body: 'Trop de tentatives.' }
   }
 
   let email, username

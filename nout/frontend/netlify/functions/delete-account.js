@@ -29,17 +29,32 @@ exports.handler = async (event) => {
   const userId = authUser.id
 
   try {
-    // 2. Supprimer les annonces de l'utilisateur
+    // 2. Bloquer la suppression si des commandes actives existent
+    const { data: activeOrders } = await supabase
+      .from('orders')
+      .select('id')
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      .in('status', ['paid', 'payout_pending'])
+
+    if (activeOrders?.length > 0) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Impossible de supprimer ton compte : tu as des transactions en cours. Attends leur finalisation.' }),
+      }
+    }
+
+    // 4. Supprimer les annonces de l'utilisateur
     await supabase.from('listings').delete().eq('user_id', userId)
 
-    // 3. Supprimer tous ses messages (envoyés et reçus)
+    // 5. Supprimer tous ses messages (envoyés et reçus)
     await supabase.from('messages').delete().eq('sender_id', userId)
     await supabase.from('messages').delete().eq('receiver_id', userId)
 
-    // 4. Supprimer le profil
+    // 6. Supprimer le profil
     await supabase.from('profiles').delete().eq('id', userId)
 
-    // 5. Supprimer le compte auth Supabase (nécessite SUPABASE_SERVICE_KEY)
+    // 7. Supprimer le compte auth Supabase (nécessite SUPABASE_SERVICE_KEY)
     const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId)
     if (deleteAuthError) {
       console.error('Erreur suppression auth user:', deleteAuthError.message)

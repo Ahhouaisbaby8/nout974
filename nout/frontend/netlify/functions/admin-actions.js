@@ -45,11 +45,11 @@ exports.handler = async (event) => {
     switch (action) {
 
       case 'ban_user':
-        await supabase.from('profiles').update({ is_banned: true }).eq('id', targetId)
+        await supabase.from('profiles').update({ is_banned: true, banned_at: new Date().toISOString() }).eq('id', targetId)
         break
 
       case 'unban_user':
-        await supabase.from('profiles').update({ is_banned: false }).eq('id', targetId)
+        await supabase.from('profiles').update({ is_banned: false, banned_at: null }).eq('id', targetId)
         break
 
       case 'suspend_user': {

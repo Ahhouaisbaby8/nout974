@@ -10,6 +10,17 @@ export const getProfile = async (userId) => {
   return data
 }
 
+// Profil public : champs affichables uniquement — sans IBAN, téléphone, stripe_account_id
+export const getPublicProfile = async (userId) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, bio, city, created_at, role')
+    .eq('id', userId)
+    .single()
+  if (error) throw error
+  return data
+}
+
 export const updateProfile = async (userId, updates) => {
   const { data, error } = await supabase
     .from('profiles')

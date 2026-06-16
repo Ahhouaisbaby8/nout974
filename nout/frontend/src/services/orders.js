@@ -15,23 +15,3 @@ export const getMyOrders = async (userId) => {
   return data
 }
 
-export const createOrder = async (order) => {
-  const { data, error } = await supabase
-    .from('orders')
-    .insert(order)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const updateOrderStatus = async (id, status) => {
-  const { data, error } = await supabase
-    .from('orders')
-    .update({ status })
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
