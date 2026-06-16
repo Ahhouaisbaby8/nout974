@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,10 +9,18 @@ export default function Login() {
   const rawRedirect = searchParams.get('redirect') || '/'
   const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/'
 
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [email, setEmail]           = useState('')
+  const [password, setPassword]     = useState('')
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
+  const [banMessage, setBanMessage] = useState('')
+
+  useEffect(() => {
+    if (sessionStorage.getItem('nout_ban')) {
+      setBanMessage('Votre compte a été suspendu. Contactez-nous à contact@nout.re si vous pensez qu\'il s\'agit d\'une erreur.')
+      sessionStorage.removeItem('nout_ban')
+    }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -46,6 +54,12 @@ export default function Login() {
           <Link to="/" className="text-3xl font-extrabold text-nout-primary">NOUT</Link>
           <p className="text-gray-500 text-sm mt-1">Connecte-toi à ton compte</p>
         </div>
+
+        {banMessage && (
+          <div className="bg-orange-50 border border-orange-200 text-orange-700 text-sm rounded-lg px-4 py-3 mb-5">
+            🚫 {banMessage}
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-5">

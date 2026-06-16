@@ -78,7 +78,13 @@ export function AuthProvider({ children }) {
         .select('*')
         .eq('id', userId)
         .single()
-      if (!error) setProfile(data)
+      if (error) return
+      if (data.is_banned) {
+        sessionStorage.setItem('nout_ban', '1')
+        await supabase.auth.signOut()
+        return
+      }
+      setProfile(data)
     } catch {
       // profil non chargé — l'utilisateur reste connecté mais sans profil
     }

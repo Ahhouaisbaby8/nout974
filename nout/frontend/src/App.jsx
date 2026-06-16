@@ -77,8 +77,10 @@ import CharteBonneConduite   from './pages/legal/CharteBonneConduite'
 import ReglementCatalogue    from './pages/legal/ReglementCatalogue'
 
 function PrivateRoute({ children }) {
-  const { user } = useAuth()
-  return user ? children : <Navigate to="/connexion" replace />
+  const { user, profile } = useAuth()
+  if (!user) return <Navigate to="/connexion" replace />
+  if (profile?.is_banned) return <Navigate to="/connexion" replace />
+  return children
 }
 
 function AdminRoute({ children }) {
