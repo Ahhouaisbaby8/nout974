@@ -222,7 +222,7 @@ function SellerShippingPanel({ order, onShipped }) {
           <span>📦</span>
           <h3 className="font-semibold text-nout-dark text-sm">Expédier cette commande</h3>
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">Via UBN Speed — livraison à La Réunion</p>
+        <p className="text-xs text-gray-500 mt-0.5">Via notre service de livraison</p>
       </div>
       <div className="px-4 py-4 bg-white flex flex-col gap-3">
         {error && (
@@ -232,11 +232,11 @@ function SellerShippingPanel({ order, onShipped }) {
         )}
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
-            Numéro de suivi UBN Speed
+            Numéro de suivi transporteur
           </label>
           <input
             type="text"
-            placeholder="Ex : UBN-974-XXXXXX"
+            placeholder="Ex : 974-XXXXXX"
             value={trackingNumber}
             onChange={(e) => { setTrackingNumber(e.target.value); setError('') }}
             maxLength={100}
@@ -264,8 +264,6 @@ function SellerShippingPanel({ order, onShipped }) {
 function BuyerTrackingPanel({ order }) {
   if (!order.tracking_number) return null
 
-  const trackingUrl = `https://ubn-speed.re/suivre-un-colis?tracking=${encodeURIComponent(order.tracking_number)}`
-
   return (
     <div className="mt-3 pt-3 border-t border-gray-100">
       <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
@@ -273,16 +271,8 @@ function BuyerTrackingPanel({ order }) {
           <span>📦</span>
           <p className="text-sm font-semibold text-nout-dark">Votre colis est en route</p>
         </div>
-        <p className="text-xs text-gray-500 mb-1">Numéro de suivi UBN Speed</p>
-        <p className="text-sm font-mono font-bold text-[#0E7FAB] mb-3 break-all">{order.tracking_number}</p>
-        <a
-          href={trackingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0E7FAB] hover:bg-[#0A6A8F] px-4 py-2 rounded-lg transition-colors"
-        >
-          Suivre mon colis sur UBN Speed →
-        </a>
+        <p className="text-xs text-gray-500 mb-1">Numéro de suivi</p>
+        <p className="text-sm font-mono font-bold text-[#0E7FAB] break-all">{order.tracking_number}</p>
       </div>
     </div>
   )
@@ -426,7 +416,7 @@ export default function Orders() {
                     onConfirmed={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
                   />
 
-                  {/* Expédition UBN — vendeur, statut paid (envoi par coursier) */}
+                  {/* Expédition — vendeur, statut paid (envoi par coursier) */}
                   <SellerShippingPanel
                     order={order}
                     onShipped={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
@@ -437,7 +427,7 @@ export default function Orders() {
                     <BuyerEscrowCode orderId={order.id} />
                   )}
 
-                  {/* Suivi UBN — acheteur, statut shipped */}
+                  {/* Suivi livraison — acheteur, statut shipped */}
                   {tab === 'achats' && order.status === 'shipped' && (
                     <BuyerTrackingPanel order={order} />
                   )}

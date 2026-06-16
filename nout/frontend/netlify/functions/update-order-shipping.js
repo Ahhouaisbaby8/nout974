@@ -103,7 +103,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({
           receiver_id: order.buyer_id,
           title:       '📦 Ton colis est en route — NOUT 974',
-          body:        `${order.listing?.title ?? 'Ton article'} a été expédié via UBN Speed.`,
+          body:        `${order.listing?.title ?? 'Ton article'} a été expédié par notre service de livraison.`,
           url:         '/commandes?tab=achats',
         }),
       }).catch(err => console.error('[update-order-shipping] send-push:', err.message))
