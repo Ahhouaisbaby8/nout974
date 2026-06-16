@@ -5,11 +5,12 @@ export default function MentionsLegales() {
     <LegalLayout title="Mentions légales" lastUpdate="juin 2026">
 
       <Section title="1. Éditeur du site">
-        <P>Le site NOUT (accessible à l'adresse nout974.re) est édité par :</P>
+        <P>Le site NOUT (accessible à l'adresse nout.re) est édité par :</P>
         <Ul items={[
           'Nom : Megarisse Amandine',
-          'Statut : Auto-entrepreneur',
-          'SIRET : [À compléter]',
+          'Statut : Auto-entrepreneur (micro-entreprise)',
+          'SIRET : 106 334 436 00016',
+          'SIREN : 106 334 436',
           'Adresse : Saint-Denis, La Réunion (974)',
           'Email : contact@nout.re',
         ]} />
