@@ -44,9 +44,9 @@ export function AuthProvider({ children }) {
   }, [user?.id])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) await fetchProfile(session.user.id)
       setLoading(false)
     })
 
@@ -82,6 +82,7 @@ export function AuthProvider({ children }) {
       if (data.is_banned) {
         sessionStorage.setItem('nout_ban', '1')
         await supabase.auth.signOut()
+        window.location.replace('/connexion')
         return
       }
       setProfile(data)
