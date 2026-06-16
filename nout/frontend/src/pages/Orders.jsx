@@ -172,6 +172,122 @@ function BuyerEscrowCode({ orderId }) {
   )
 }
 
+function SellerShippingPanel({ order, onShipped }) {
+  const { user } = useAuth()
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [loading, setLoading]               = useState(false)
+  const [error, setError]                   = useState('')
+  const [success, setSuccess]               = useState(false)
+
+  if (!user || order.seller_id !== user.id || order.status !== 'paid') return null
+
+  const handleSubmit = async () => {
+    if (!trackingNumber.trim()) { setError('Saisis le numéro de suivi.'); return }
+    setError('')
+    setLoading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/update-order-shipping', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${session?.access_token ?? ''}`,
+        },
+        body: JSON.stringify({ order_id: order.id, tracking_number: trackingNumber.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue')
+      setSuccess(true)
+      setTimeout(() => onShipped?.(), 1500)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
+        <span>✅</span>
+        <p className="text-sm font-semibold text-green-700">Commande marquée comme expédiée</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4 border border-blue-200 rounded-xl overflow-hidden">
+      <div className="bg-blue-50 px-4 pt-4 pb-3 border-b border-blue-100">
+        <div className="flex items-center gap-2">
+          <span>📦</span>
+          <h3 className="font-semibold text-nout-dark text-sm">Expédier cette commande</h3>
+        </div>
+        <p className="text-xs text-gray-500 mt-0.5">Via UBN Speed — livraison à La Réunion</p>
+      </div>
+      <div className="px-4 py-4 bg-white flex flex-col gap-3">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2">
+            {error}
+          </div>
+        )}
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+            Numéro de suivi UBN Speed
+          </label>
+          <input
+            type="text"
+            placeholder="Ex : UBN-974-XXXXXX"
+            value={trackingNumber}
+            onChange={(e) => { setTrackingNumber(e.target.value); setError('') }}
+            maxLength={100}
+            className="input-field text-sm"
+            disabled={loading}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={loading || !trackingNumber.trim()}
+          className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
+            loading || !trackingNumber.trim()
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
+          }`}
+        >
+          {loading ? 'Enregistrement…' : 'Marquer comme expédiée'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function BuyerTrackingPanel({ order }) {
+  if (!order.tracking_number) return null
+
+  const trackingUrl = `https://ubn-speed.re/suivre-un-colis?tracking=${encodeURIComponent(order.tracking_number)}`
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span>📦</span>
+          <p className="text-sm font-semibold text-nout-dark">Votre colis est en route</p>
+        </div>
+        <p className="text-xs text-gray-500 mb-1">Numéro de suivi UBN Speed</p>
+        <p className="text-sm font-mono font-bold text-[#0E7FAB] mb-3 break-all">{order.tracking_number}</p>
+        <a
+          href={trackingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0E7FAB] hover:bg-[#0A6A8F] px-4 py-2 rounded-lg transition-colors"
+        >
+          Suivre mon colis sur UBN Speed →
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default function Orders() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -304,15 +420,26 @@ export default function Orders() {
                     </div>
                   </div>
 
-                  {/* Confirmation escrow — visible uniquement pour le vendeur, statut paid */}
+                  {/* Confirmation escrow — vendeur, statut paid (remise en main propre) */}
                   <EscrowConfirm
                     order={order}
                     onConfirmed={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
                   />
 
-                  {/* Code de remise — visible pour l'acheteur, statut paid */}
+                  {/* Expédition UBN — vendeur, statut paid (envoi par coursier) */}
+                  <SellerShippingPanel
+                    order={order}
+                    onShipped={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
+                  />
+
+                  {/* Code de remise — acheteur, statut paid */}
                   {tab === 'achats' && order.status === 'paid' && (
                     <BuyerEscrowCode orderId={order.id} />
+                  )}
+
+                  {/* Suivi UBN — acheteur, statut shipped */}
+                  {tab === 'achats' && order.status === 'shipped' && (
+                    <BuyerTrackingPanel order={order} />
                   )}
 
                   {/* Remise confirmée + avis — visible pour l'acheteur, statut completed */}
