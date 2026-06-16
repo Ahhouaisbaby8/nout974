@@ -32,9 +32,7 @@ const sendEmail = async (to, subject, html) => {
     })
     if (!res.ok) {
       const errBody = await res.text()
-      console.error(`Resend error ${res.status} (destinataire: ${to}):`, errBody)
-    } else {
-      console.log(`Email envoyé OK à ${to}`)
+      console.error(`Resend error ${res.status}:`, errBody)
     }
   } catch (err) {
     console.error('Email error:', err.message)

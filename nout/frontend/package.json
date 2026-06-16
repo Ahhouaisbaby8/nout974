@@ -13,15 +13,12 @@
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.7.0",
     "@supabase/supabase-js": "^2.107.0",
-    "axios": "^1.16.1",
     "dompurify": "^3.4.8",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-easy-crop": "^5.5.7",
-    "react-router-dom": "^7.16.0",
-    "stripe": "^22.2.0",
-    "web-push": "^3.6.7"
+    "react-router-dom": "^7.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

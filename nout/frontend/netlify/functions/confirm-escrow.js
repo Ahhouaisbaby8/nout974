@@ -112,8 +112,11 @@ exports.handler = async (event) => {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
-    if (order.status === 'completed' || order.status === 'payout_pending') {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette remise a déjà été confirmée.' }) }
+    if (!['paid', 'shipped'].includes(order.status)) {
+      const msg = (order.status === 'completed' || order.status === 'payout_pending')
+        ? 'Cette remise a déjà été confirmée.'
+        : 'La commande n\'est pas encore payée.'
+      return { statusCode: 400, headers, body: JSON.stringify({ error: msg }) }
     }
 
     // Récupérer le code escrow avec les colonnes de rate limiting

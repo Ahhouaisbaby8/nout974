@@ -1,5 +1,6 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
+const { randomInt } = require('crypto')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -123,7 +124,7 @@ exports.handler = async (event) => {
 
     // Générer le code escrow à 6 chiffres et le stocker AVANT la session Stripe
     // (si Stripe échoue ensuite, la commande reste pending et le code expire naturellement)
-    const escrowCode = String(Math.floor(100000 + Math.random() * 900000))
+    const escrowCode = String(randomInt(100000, 1000000))
     const expiresAt  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
     const { error: escrowError } = await supabase.from('escrow_codes').insert({

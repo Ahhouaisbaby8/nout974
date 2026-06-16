@@ -23,10 +23,18 @@ export default function Settings() {
   const [error, setError]       = useState('')
 
   const fileInputRef = useRef(null)
-  const [iban, setIban]           = useState(profile?.iban ?? '')
-  const [ibanSaving, setIbanSaving] = useState(false)
+  const [iban, setIban]             = useState('')
+  const [ibanEditing, setIbanEditing] = useState(!profile?.iban)
+  const [ibanSaving, setIbanSaving]   = useState(false)
   const [ibanSuccess, setIbanSuccess] = useState(false)
-  const [ibanError, setIbanError]   = useState('')
+  const [ibanError, setIbanError]     = useState('')
+
+  const maskIban = (raw) => {
+    if (!raw) return ''
+    const clean = raw.replace(/\s/g, '')
+    const last4 = clean.slice(-4)
+    return '**** **** **** **** **** **** ' + last4
+  }
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -102,6 +110,8 @@ export default function Settings() {
     setIbanSaving(true)
     try {
       await updateProfile({ iban: cleaned })
+      setIban('')
+      setIbanEditing(false)
       setIbanSuccess(true)
       setTimeout(() => setIbanSuccess(false), 3000)
     } catch {
@@ -282,14 +292,44 @@ export default function Settings() {
 
           <div>
             <label className="block text-sm font-medium text-nout-dark mb-1">IBAN</label>
-            <input
-              type="text"
-              placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
-              value={iban}
-              onChange={(e) => { setIban(e.target.value.toUpperCase()); setIbanError('') }}
-              className="input-field"
-              maxLength={42}
-            />
+            {profile?.iban && !ibanEditing ? (
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  readOnly
+                  value={maskIban(profile.iban)}
+                  className="input-field flex-1 bg-gray-50 text-gray-500 font-mono tracking-wider cursor-default select-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setIbanEditing(true); setIban('') }}
+                  className="text-sm text-nout-primary hover:underline whitespace-nowrap"
+                >
+                  Modifier
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
+                  value={iban}
+                  onChange={(e) => { setIban(e.target.value.toUpperCase()); setIbanError('') }}
+                  className="input-field flex-1"
+                  maxLength={42}
+                  autoComplete="off"
+                />
+                {profile?.iban && (
+                  <button
+                    type="button"
+                    onClick={() => { setIbanEditing(false); setIban(''); setIbanError('') }}
+                    className="text-sm text-gray-400 hover:underline whitespace-nowrap"
+                  >
+                    Annuler
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Badge Paiements activés — sous le champ */}
@@ -311,14 +351,16 @@ export default function Settings() {
             Ton IBAN sera utilisé uniquement pour recevoir tes paiements.
           </p>
 
-          <button
-            type="button"
-            onClick={handleSaveIban}
-            disabled={ibanSaving}
-            className={`btn-primary px-6 py-3 text-sm ${ibanSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            {ibanSaving ? 'Enregistrement…' : (profile?.iban ? 'Modifier mon IBAN' : 'Enregistrer mon IBAN')}
-          </button>
+          {ibanEditing && (
+            <button
+              type="button"
+              onClick={handleSaveIban}
+              disabled={ibanSaving}
+              className={`btn-primary px-6 py-3 text-sm ${ibanSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              {ibanSaving ? 'Enregistrement…' : 'Enregistrer mon IBAN'}
+            </button>
+          )}
         </div>
       </div>
 
