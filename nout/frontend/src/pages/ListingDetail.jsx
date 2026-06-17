@@ -141,9 +141,8 @@ export default function ListingDetail() {
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
 
-  const fraisFixe      = 1.00
-  const fraisVariable  = listing.price * 0.05
-  const totalAcheteur  = listing.price + fraisFixe + fraisVariable
+  const fraisService   = Math.round((listing.price * 0.05 + 1) * 100) / 100
+  const totalAcheteur  = Math.round((listing.price + fraisService) * 100) / 100
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
   const isSellerActive = listing.created_at &&
@@ -445,12 +444,8 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Frais de service</span>
-                      <span>{formatPrice(fraisFixe)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-500">
-                      <span>Frais de traitement sécurisé</span>
-                      <span>{formatPrice(fraisVariable)}</span>
+                      <span>Frais de service (5% + 1€)</span>
+                      <span>{formatPrice(fraisService)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
                       <span>Total</span>
@@ -534,12 +529,8 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Frais de service</span>
-                      <span>{formatPrice(fraisFixe)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-500">
-                      <span>Frais de traitement sécurisé</span>
-                      <span>{formatPrice(fraisVariable)}</span>
+                      <span>Frais de service (5% + 1€)</span>
+                      <span>{formatPrice(fraisService)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
                       <span>Total</span>
