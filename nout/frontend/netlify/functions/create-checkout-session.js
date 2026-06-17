@@ -98,11 +98,10 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article est déjà en cours d\'achat.' }) }
     }
 
-    const prixArticle    = listing.price
-    const fraisFixe      = 1.00
-    const fraisVariable  = prixArticle * 0.05
-    const totalFraisNout = fraisFixe + fraisVariable
-    const totalAcheteur  = prixArticle + totalFraisNout
+    const prixArticle   = listing.price
+    // Gross-up pour que NOUT touche exactement 5%+1€ après frais Stripe (1.5% + 0.25€)
+    // T = (prix×1.05 + 1.25) / 0.985
+    const totalAcheteur = Math.round(((prixArticle * 1.05 + 1.25) / 0.985) * 100) / 100
 
     const amountCents = Math.round(totalAcheteur * 100)
     const siteUrl     = process.env.URL || 'http://localhost:8888'

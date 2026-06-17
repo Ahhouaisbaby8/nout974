@@ -21,7 +21,7 @@ export default function ListingCard({ listing, isFavorited = false }) {
   const category      = CATEGORIES.find(c => c.id === listing.category)
   const conditionLabel = CONDITIONS.find(c => c.id === listing.condition)?.label
   const views         = listing.views ?? 0
-  const totalAcheteur = Math.round((listing.price * 1.05 + 1) * 100) / 100
+  const totalAcheteur = Math.round(((listing.price * 1.05 + 1.25) / 0.985) * 100) / 100
 
   const handleFav = async (e) => {
     e.preventDefault()

@@ -141,8 +141,9 @@ export default function ListingDetail() {
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
 
-  const fraisService   = Math.round((listing.price * 0.05 + 1) * 100) / 100
-  const totalAcheteur  = Math.round((listing.price + fraisService) * 100) / 100
+  // Gross-up Stripe (1.5% + 0.25€) pour que NOUT touche 5%+1€ net
+  const totalAcheteur  = Math.round(((listing.price * 1.05 + 1.25) / 0.985) * 100) / 100
+  const fraisService   = Math.round((totalAcheteur - listing.price) * 100) / 100
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
   const isSellerActive = listing.created_at &&
