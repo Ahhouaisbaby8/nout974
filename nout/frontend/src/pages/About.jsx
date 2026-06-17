@@ -21,10 +21,7 @@ export default function About() {
         <h2 className="text-xl font-bold text-nout-dark mb-3">Notre mission</h2>
         <p className="text-gray-600 leading-relaxed">
           NOUT est née d'une idée simple : créer un espace de confiance, fait <strong>par les Réunionnais, pour les Réunionnais</strong>.
-          Ici, pas de frais excessifs, pas de vendeurs étrangers — juste des voisins qui échangent des objets qui ont encore de la valeur.
-        </p>
-        <p className="text-gray-600 leading-relaxed mt-3">
-          Le mot <em>nout</em> vient du créole réunionnais : il veut dire <strong>"le nôtre"</strong>. C'est exactement ce qu'on veut construire — une plateforme qui appartient à notre île.
+          Ici, pas de frais d'importation, pas de délais d'attente interminables — juste des voisins qui échangent des objets qui ont encore de la valeur, tous basés sur l'île.
         </p>
       </section>
 
