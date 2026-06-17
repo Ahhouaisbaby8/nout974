@@ -248,7 +248,7 @@ export default function ListingDetail() {
             )}
             {category && (
               <span className="bg-orange-50 text-nout-primary text-xs font-medium px-3 py-1 rounded-full">
-                {category.icon} {category.label}
+                {category.label}
               </span>
             )}
             {condition && (

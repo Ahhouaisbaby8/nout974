@@ -1,11 +1,11 @@
 export const CATEGORIES = [
-  { id: 'vetements-femme',   label: 'Vêtements femme',   icon: '👗' },
-  { id: 'vetements-homme',   label: 'Vêtements homme',   icon: '👔' },
-  { id: 'vetements-enfant',  label: 'Vêtements enfant',  icon: '🧒' },
-  { id: 'chaussures',        label: 'Chaussures',         icon: '👟' },
-  { id: 'accessoires',       label: 'Accessoires',        icon: '💍' },
-  { id: 'sacs',              label: 'Sacs',               icon: '👜' },
-  { id: 'beaute',            label: 'Beauté / Bien-être', icon: '💄' },
+  { id: 'vetements-femme',   label: 'Vêtements femme'   },
+  { id: 'vetements-homme',   label: 'Vêtements homme'   },
+  { id: 'vetements-enfant',  label: 'Vêtements enfant'  },
+  { id: 'chaussures',        label: 'Chaussures'         },
+  { id: 'accessoires',       label: 'Accessoires'        },
+  { id: 'sacs',              label: 'Sacs'               },
+  { id: 'beaute',            label: 'Beauté / Bien-être' },
 ]
 
 export const CONDITIONS = [

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Heart, Shield, Camera } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
-import { CATEGORIES } from '../../utils/categories'
+import { CATEGORIES, CONDITIONS } from '../../utils/categories'
+import CategoryIcon from './CategoryIcon'
 
 export default function ListingCard({ listing, isFavorited = false }) {
   const { user } = useAuth()
@@ -17,8 +18,10 @@ export default function ListingCard({ listing, isFavorited = false }) {
   const imageUrl  = rawImage?.includes('supabase.co/storage')
     ? `${rawImage}?width=400&height=400&resize=cover`
     : rawImage
-  const category  = CATEGORIES.find(c => c.id === listing.category)
-  const views     = listing.views ?? 0
+  const category      = CATEGORIES.find(c => c.id === listing.category)
+  const conditionLabel = CONDITIONS.find(c => c.id === listing.condition)?.label
+  const views         = listing.views ?? 0
+  const totalAcheteur = Math.round((listing.price * 1.05 + 1) * 100) / 100
 
   const handleFav = async (e) => {
     e.preventDefault()
@@ -55,15 +58,15 @@ export default function ListingCard({ listing, isFavorited = false }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl text-gray-200">
-            📷
+          <div className="w-full h-full flex items-center justify-center text-gray-200">
+            <Camera size={36} strokeWidth={1} />
           </div>
         )}
 
         {/* Badge catégorie — haut gauche */}
         {category && (
           <span className="absolute top-2 left-2 bg-nout-turquoise text-white text-[10px] font-bold px-2 py-0.5 rounded-full leading-tight flex items-center gap-1">
-            <span>{category.icon}</span>
+            <CategoryIcon id={listing.category} size={10} />
             <span className="hidden sm:inline">{category.label}</span>
           </span>
         )}
@@ -89,15 +92,32 @@ export default function ListingCard({ listing, isFavorited = false }) {
 
       {/* ── INFOS ── */}
       <div className="p-3">
-        <p className="text-[13px] font-medium text-nout-texte line-clamp-2 leading-snug mb-2">
-          {listing.title}
-        </p>
+        {listing.brand ? (
+          <p className="text-[12px] font-semibold text-nout-texte leading-tight truncate mb-0.5">
+            {listing.brand}
+          </p>
+        ) : (
+          <p className="text-[12px] font-medium text-nout-texte line-clamp-2 leading-snug mb-0.5">
+            {listing.title}
+          </p>
+        )}
 
-        <p className="font-title font-bold text-[20px] leading-none text-nout-roi">
+        {(listing.size || conditionLabel) && (
+          <p className="text-[10px] text-nout-muted truncate mb-1.5">
+            {[listing.size, conditionLabel].filter(Boolean).join(' · ')}
+          </p>
+        )}
+
+        <p className="font-title font-bold text-[15px] leading-tight text-nout-texte">
           {formatPrice(listing.price)}
         </p>
 
-        <p className="text-[11px] text-nout-muted mt-1.5">
+        <p className="flex items-center gap-0.5 text-[10px] text-nout-turquoise mt-0.5">
+          <Shield size={9} />
+          {formatPrice(totalAcheteur)} frais inclus
+        </p>
+
+        <p className="text-[10px] text-nout-muted mt-1.5">
           {views > 0 ? `${views} vu${views > 1 ? 's' : ''} · ` : ''}
           {formatRelativeDate(listing.created_at)}
         </p>

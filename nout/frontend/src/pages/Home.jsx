@@ -9,6 +9,7 @@ import ListingCard from '../components/ui/ListingCard'
 import PriceRangeSection from '../components/PriceRangeSection'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
+import CategoryIcon from '../components/ui/CategoryIcon'
 
 const HOW_IT_WORKS = [
   {
@@ -188,7 +189,7 @@ export default function Home() {
               onClick={() => handleCategory(cat.id)}
               className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border border-nout-border bg-white text-nout-texte text-[13px] font-medium hover:bg-nout-turquoise hover:text-white hover:border-nout-turquoise transition-all duration-150 cursor-pointer"
             >
-              <span className="text-base">{cat.icon}</span>
+              <CategoryIcon id={cat.id} size={14} />
               <span>{cat.label}</span>
             </button>
           ))}

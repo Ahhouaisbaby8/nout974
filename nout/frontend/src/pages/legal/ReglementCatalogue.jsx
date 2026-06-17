@@ -64,17 +64,12 @@ export default function ReglementCatalogue() {
       <Section title="3. Articles strictement interdits">
         <P>Les articles suivants sont formellement interdits sur NOUT, quelle que soit la catégorie :</P>
         <Ul items={[
-          'Contrefaçons de marques de luxe ou de toute autre marque',
+          'Contrefaçons ou articles non authentiques (toutes marques)',
           'Lingerie usagée : slips, culottes, soutiens-gorge, collants portés',
-          'Produits cosmétiques ouverts ou sans emballage d\'origine (hygiène, sécurité)',
-          'Produits alimentaires ou boissons',
+          'Produits cosmétiques ouverts ou sans emballage d\'origine',
           'Médicaments, produits pharmaceutiques ou parapharmaceutiques',
-          'Appareils électroniques (téléphones, ordinateurs, etc.)',
-          'Mobilier, décoration, vaisselle',
-          'Jouets, jeux, livres (hors accessoires mode enfants)',
-          'Articles de sport non vestimentaires (raquettes, vélos, etc.)',
-          'Animaux vivants ou produits issus d\'espèces protégées',
           'Armes, objets dangereux ou illicites',
+          'Animaux vivants ou produits issus d\'espèces protégées',
           'Tout article non relié à la mode ou à la beauté',
         ]} />
       </Section>
@@ -105,7 +100,7 @@ export default function ReglementCatalogue() {
           'Le prix doit être exprimé en euros (€)',
           'Le prix doit être cohérent avec l\'état et la valeur de l\'article',
           'Les prix manifestement excessifs ou abusifs pourront être signalés',
-          'NOUT prélève une commission sur chaque vente réussie (voir CGV)',
+          'NOUT prélève 5 % + 1 € par transaction réussie, à la charge de l\'acheteur (voir CGV)',
         ]} />
       </Section>
 

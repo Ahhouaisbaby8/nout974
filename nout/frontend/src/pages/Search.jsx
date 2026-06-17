@@ -142,7 +142,7 @@ export default function Search() {
             <label className="text-xs font-medium text-gray-500 mb-1 block">Catégorie</label>
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field text-sm py-2">
               <option value="">Toutes</option>
-              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
 
@@ -210,7 +210,7 @@ export default function Search() {
         </p>
         {category && (
           <span className="text-xs bg-orange-50 text-nout-primary font-medium px-3 py-1 rounded-full">
-            {CATEGORIES.find(c => c.id === category)?.icon} {CATEGORIES.find(c => c.id === category)?.label}
+            {CATEGORIES.find(c => c.id === category)?.label}
           </span>
         )}
       </div>

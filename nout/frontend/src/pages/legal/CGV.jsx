@@ -10,14 +10,14 @@ export default function CGV() {
       </Section>
 
       <Section title="2. Prix et commission">
-        <P>Les prix sont fixés librement par les vendeurs en euros (€), toutes charges comprises. NOUT prélève une commission de <strong>10 %</strong> sur le montant total de chaque transaction réalisée via le système de paiement intégré.</P>
+        <P>Les prix sont fixés librement par les vendeurs en euros (€), toutes charges comprises. NOUT prélève une commission de <strong>5 % + 1 €</strong> par transaction, à la charge de l'acheteur au moment du paiement. Aucun frais n'est prélevé sur le vendeur.</P>
         <P>Cette commission couvre les frais de traitement du paiement, la protection acheteur et le maintien de la plateforme.</P>
       </Section>
 
       <Section title="3. Paiement">
-        <P>Les paiements sont sécurisés et gérés par <strong>Stripe</strong>, prestataire de services de paiement agréé. NOUT ne stocke aucune donnée bancaire.</P>
+        <P>Les paiements sont sécurisés et gérés par un prestataire de paiement agréé, certifié PCI-DSS. NOUT ne stocke aucune donnée bancaire.</P>
         <P>Les moyens de paiement acceptés sont : carte bancaire (Visa, Mastercard, American Express).</P>
-        <P>Le vendeur reçoit le montant de la vente (déduction faite de la commission) directement sur son compte bancaire via son compte Stripe Express, dans les délais habituels de virement.</P>
+        <P>Le vendeur reçoit le montant de la vente (déduction faite de la commission) directement sur son compte bancaire, dans les délais habituels de virement.</P>
       </Section>
 
       <Section title="4. Remise de l'article">

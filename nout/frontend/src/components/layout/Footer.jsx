@@ -88,7 +88,7 @@ export default function Footer() {
             © {new Date().getFullYear()} NOUT — Marketplace 974. Tous droits réservés.
           </p>
           <p className="text-xs text-white/30">
-            Paiements sécurisés par <span className="text-white/50">Stripe</span>
+            Paiements certifiés <span className="text-white/50">PCI-DSS</span>
           </p>
         </div>
 

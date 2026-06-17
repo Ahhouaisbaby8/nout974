@@ -22,7 +22,7 @@ export default function Privacy() {
           'Données de navigation : adresse IP, type de navigateur, pages visitées',
           'Données de transaction : historique des achats et ventes, montants',
           'Données de communication : messages échangés entre utilisateurs',
-          'Données bancaires : gérées exclusivement par Stripe (NOUT n\'y accède pas)',
+          'Données bancaires : gérées exclusivement par notre prestataire de paiement certifié PCI-DSS (NOUT n\'y accède pas)',
         ]} />
       </Section>
 
@@ -59,7 +59,7 @@ export default function Privacy() {
       <Section title="6. Partage des données">
         <P>NOUT ne vend ni ne loue vos données personnelles à des tiers. Les données peuvent être partagées avec :</P>
         <Ul items={[
-          'Stripe — pour le traitement des paiements',
+          'Prestataire de paiement certifié PCI-DSS — pour le traitement sécurisé des paiements',
           'Supabase — pour le stockage sécurisé des données (serveurs en Europe)',
           'Netlify — pour l\'hébergement du site',
           'Autorités compétentes — sur demande légale',
@@ -85,7 +85,7 @@ export default function Privacy() {
       </Section>
 
       <Section title="9. Transferts hors UE">
-        <P>Certains prestataires (Netlify, Stripe) sont basés aux États-Unis. Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne ou le Privacy Shield.</P>
+        <P>Certains prestataires (dont notre hébergeur et notre prestataire de paiement) sont basés aux États-Unis. Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne ou le Privacy Shield.</P>
       </Section>
 
     </LegalLayout>

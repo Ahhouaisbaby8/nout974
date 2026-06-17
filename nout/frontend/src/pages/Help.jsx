@@ -16,7 +16,7 @@ const FAQ = [
   },
   {
     q: "Comment fonctionne le paiement ?",
-    a: "Le paiement en ligne est sécurisé via Stripe. L'argent est transféré directement au vendeur. De petits frais de service sont appliqués à l'acheteur pour couvrir les frais de traitement et de sécurisation de la transaction.",
+    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. L'argent est transféré directement au vendeur. De petits frais de service sont appliqués à l'acheteur pour couvrir les frais de traitement et de sécurisation de la transaction.",
   },
   {
     q: "Puis-je modifier ou supprimer mon annonce ?",

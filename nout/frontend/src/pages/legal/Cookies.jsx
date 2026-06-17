@@ -23,7 +23,7 @@ export default function Cookies() {
 
         <P className="mt-3"><strong>Cookies tiers</strong></P>
         <Ul items={[
-          'Stripe — lors d\'un paiement, Stripe dépose ses propres cookies pour sécuriser la transaction. Consultez la politique de Stripe sur stripe.com',
+          'Prestataire de paiement — lors d\'un paiement, notre prestataire certifié PCI-DSS dépose des cookies fonctionnels nécessaires à la sécurisation de la transaction.',
         ]} />
       </Section>
 

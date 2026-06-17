@@ -275,7 +275,7 @@ export default function CreateListing() {
               >
                 <option value="">Choisir...</option>
                 {CATEGORIES.map(c => (
-                  <option key={c.id} value={c.id}>{c.icon} {c.label}</option>
+                  <option key={c.id} value={c.id}>{c.label}</option>
                 ))}
               </select>
             </div>

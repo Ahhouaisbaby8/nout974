@@ -127,7 +127,7 @@ export default function HowItWorks() {
     },
     {
       q: 'C\'est sécurisé ?',
-      a: 'Oui. Les paiements sont gérés par Stripe, leader mondial du paiement en ligne. Tes données bancaires ne transitent jamais par NOUT.',
+      a: 'Oui. Les paiements sont gérés par un prestataire certifié PCI-DSS, la norme de sécurité internationale pour les paiements en ligne. Tes données bancaires ne transitent jamais par NOUT.',
     },
   ]
 

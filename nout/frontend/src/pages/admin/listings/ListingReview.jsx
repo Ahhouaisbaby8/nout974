@@ -37,7 +37,7 @@ export default function ListingReview() {
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div><p className="text-xs text-gray-400">Titre</p><p className="font-medium">{listing.title}</p></div>
           <div><p className="text-xs text-gray-400">Prix</p><p className="font-bold text-nout-primary">{formatPrice(listing.price)}</p></div>
-          <div><p className="text-xs text-gray-400">Catégorie</p><p>{category?.icon} {category?.label}</p></div>
+          <div><p className="text-xs text-gray-400">Catégorie</p><p>{category?.label}</p></div>
           <div><p className="text-xs text-gray-400">État</p><p>{condition?.label}</p></div>
           <div><p className="text-xs text-gray-400">Ville</p><p>{listing.city}</p></div>
           <div><p className="text-xs text-gray-400">Publié</p><p>{formatRelativeDate(listing.created_at)}</p></div>
