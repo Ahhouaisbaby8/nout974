@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  Search, CreditCard, Users, Key, CheckCircle,
+  Camera, MessageCircle, Wallet, Landmark, Clock, Lock, Shield,
+} from 'lucide-react'
 
 // ── Hook fade-in au scroll ──────────────────────────────────────────────
 function useFadeIn() {
@@ -36,7 +40,7 @@ function Step({ n, icon, title, desc, last, light }) {
       {/* Contenu */}
       <div className="pb-8">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-2xl leading-none">{icon}</span>
+          <span className={`flex-shrink-0 ${light ? 'text-[#1A3A8F]' : 'text-[#00C4B4]'}`}>{icon}</span>
           <p className={`font-title font-bold text-[16px] ${light ? 'text-[#1A1A2E]' : 'text-white'}`}>{title}</p>
         </div>
         <p className={`text-sm leading-relaxed ${light ? 'text-[#6B7A99]' : 'text-white/65'}`}>{desc}</p>
@@ -50,7 +54,7 @@ function GuaranteeCard({ icon, title, desc }) {
   const ref = useFadeIn()
   return (
     <div ref={ref} className="hiw-fade bg-white rounded-2xl p-6 shadow-sm border border-[#E8EFF5] hover:border-[#00C4B4] hover:shadow-md transition-all">
-      <div className="w-12 h-12 rounded-xl bg-[#F0FFFE] flex items-center justify-center text-2xl mb-4">{icon}</div>
+      <div className="w-12 h-12 rounded-xl bg-[#F0FFFE] flex items-center justify-center text-[#00C4B4] mb-4">{icon}</div>
       <h3 className="font-title font-bold text-[15px] text-[#1A1A2E] mb-2">{title}</h3>
       <p className="text-sm text-[#6B7A99] leading-relaxed">{desc}</p>
     </div>
@@ -86,26 +90,26 @@ export default function HowItWorks() {
   const navigate = useNavigate()
 
   const buyerSteps = [
-    { icon: '🔍', title: 'Tu trouves l\'article qui te plaît',  desc: 'Parcours les annonces et trouve la perle rare à La Réunion.' },
-    { icon: '💳', title: 'Tu paies en sécurité',                desc: 'Ton paiement est sécurisé et bloqué jusqu\'à la remise en main propre.' },
-    { icon: '🤝', title: 'Vous vous retrouvez',                 desc: 'Le vendeur te contacte pour organiser la remise en main propre.' },
-    { icon: '🔑', title: 'Tu donnes ton code',                  desc: 'Tu reçois un code unique par email. Donne-le au vendeur lors de la remise.' },
-    { icon: '✅', title: 'C\'est tout !',                       desc: 'L\'argent est libéré au vendeur. Transaction terminée !' },
+    { icon: <Search size={20} />,       title: 'Tu trouves l\'article qui te plaît',  desc: 'Parcours les annonces et trouve la perle rare à La Réunion.' },
+    { icon: <CreditCard size={20} />,   title: 'Tu paies en sécurité',                desc: 'Ton paiement est sécurisé et bloqué jusqu\'à la remise en main propre.' },
+    { icon: <Users size={20} />,        title: 'Vous vous retrouvez',                 desc: 'Le vendeur te contacte pour organiser la remise en main propre.' },
+    { icon: <Key size={20} />,          title: 'Tu donnes ton code',                  desc: 'Tu reçois un code unique par email. Donne-le au vendeur lors de la remise.' },
+    { icon: <CheckCircle size={20} />,  title: 'C\'est tout !',                       desc: 'L\'argent est libéré au vendeur. Transaction terminée !' },
   ]
 
   const sellerSteps = [
-    { icon: '📸', title: 'Tu publies ton annonce',   desc: 'Photos, description, prix — en quelques minutes c\'est en ligne.' },
-    { icon: '💬', title: 'Un acheteur te contacte',  desc: 'Tu reçois une notification dès qu\'on te fait une offre.' },
-    { icon: '💰', title: 'Tu es payé à l\'avance',   desc: 'L\'acheteur paie avant la remise. Ton argent est sécurisé chez NOUT.' },
-    { icon: '🤝', title: 'Vous vous retrouvez',      desc: 'Organisez la remise en main propre où vous voulez à La Réunion.' },
-    { icon: '🔑', title: 'Tu saisis le code',        desc: 'L\'acheteur te donne son code à 6 chiffres. Tu le saisis sur NOUT.' },
-    { icon: '🏦', title: 'Tu reçois ton argent',     desc: 'Le virement part automatiquement sur ton compte bancaire.' },
+    { icon: <Camera size={20} />,         title: 'Tu publies ton annonce',   desc: 'Photos, description, prix — en quelques minutes c\'est en ligne.' },
+    { icon: <MessageCircle size={20} />,  title: 'Un acheteur te contacte',  desc: 'Tu reçois une notification dès qu\'on te fait une offre.' },
+    { icon: <Wallet size={20} />,         title: 'Tu es payé à l\'avance',   desc: 'L\'acheteur paie avant la remise. Ton argent est sécurisé chez NOUT.' },
+    { icon: <Users size={20} />,          title: 'Vous vous retrouvez',      desc: 'Organisez la remise en main propre où vous voulez à La Réunion.' },
+    { icon: <Key size={20} />,            title: 'Tu saisis le code',        desc: 'L\'acheteur te donne son code à 6 chiffres. Tu le saisis sur NOUT.' },
+    { icon: <Landmark size={20} />,       title: 'Tu reçois ton argent',     desc: 'Le virement part automatiquement sur ton compte bancaire.' },
   ]
 
   const guarantees = [
-    { icon: '💳', title: 'Paiement sécurisé',           desc: 'Ton argent est protégé jusqu\'à la confirmation de remise.' },
-    { icon: '⏰', title: 'Remboursement automatique',    desc: 'Si la remise n\'est pas confirmée sous 7 jours, tu es remboursé automatiquement.' },
-    { icon: '🔒', title: 'Données protégées',            desc: 'Tes informations bancaires sont chiffrées et sécurisées.' },
+    { icon: <CreditCard size={24} />,  title: 'Paiement sécurisé',           desc: 'Ton argent est protégé jusqu\'à la confirmation de remise.' },
+    { icon: <Clock size={24} />,       title: 'Remboursement automatique',    desc: 'Si la remise n\'est pas confirmée sous 7 jours, tu es remboursé automatiquement.' },
+    { icon: <Lock size={24} />,        title: 'Données protégées',            desc: 'Tes informations bancaires sont chiffrées et sécurisées.' },
   ]
 
   const faq = [
@@ -153,7 +157,7 @@ export default function HowItWorks() {
             <span className="text-[#00C4B4] text-xs font-semibold tracking-wide uppercase">Marketplace 974</span>
           </div>
           <h1 className="font-title font-extrabold text-[28px] sm:text-[38px] text-white leading-[1.15] mb-4">
-            NOUT, c'est simple<br />et sécurisé 🛡️
+            NOUT, c'est simple<br />et sécurisé <Shield className="inline align-middle text-[#00C4B4]" size={30} />
           </h1>
           <p className="text-white/65 text-[15px] sm:text-base leading-relaxed max-w-lg mx-auto">
             La marketplace secondhand de La Réunion où ton argent est protégé à chaque transaction
@@ -220,7 +224,9 @@ export default function HowItWorks() {
       <section className="bg-[#F5F0E8] px-4 py-14">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="font-title font-extrabold text-[22px] text-[#0A0F2C]">Tes garanties NOUT 🛡️</h2>
+            <h2 className="font-title font-extrabold text-[22px] text-[#0A0F2C] flex items-center justify-center gap-2">
+              Tes garanties NOUT <Shield size={22} className="text-[#1A3A8F]" />
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {guarantees.map((g, i) => (
@@ -262,15 +268,15 @@ export default function HowItWorks() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => navigate('/recherche')}
-              className="px-8 py-3.5 bg-white text-[#1A3A8F] rounded-full font-semibold text-sm hover:bg-white/90 transition-opacity shadow-lg"
+              className="px-8 py-3.5 bg-white text-[#1A3A8F] rounded-full font-semibold text-sm hover:bg-white/90 transition-opacity shadow-lg flex items-center gap-2 justify-center"
             >
-              🔍 Voir les annonces
+              <Search size={16} /> Voir les annonces
             </button>
             <button
               onClick={() => navigate('/publier')}
-              className="px-8 py-3.5 bg-[#00C4B4] text-[#0A0F2C] rounded-full font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg"
+              className="px-8 py-3.5 bg-[#00C4B4] text-[#0A0F2C] rounded-full font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg flex items-center gap-2 justify-center"
             >
-              📸 Vendre maintenant
+              <Camera size={16} /> Vendre maintenant
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Lightbulb, ShoppingBag, Camera, MessageCircle, Mail } from 'lucide-react'
 
 const FAQ = [
   {
@@ -59,7 +60,9 @@ export default function Help() {
     <div className="max-w-2xl mx-auto px-4 py-10">
 
       <div className="text-center mb-10">
-        <p className="text-5xl mb-4">💡</p>
+        <div className="w-16 h-16 rounded-2xl bg-yellow-50 flex items-center justify-center mx-auto mb-4 text-yellow-400">
+          <Lightbulb size={32} />
+        </div>
         <h1 className="text-3xl font-extrabold text-nout-dark">Centre d'aide</h1>
         <p className="text-gray-500 mt-2">Toutes les réponses à tes questions sur NOUT.</p>
       </div>
@@ -67,16 +70,16 @@ export default function Help() {
       {/* Guides rapides */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
         {[
-          { icon: '🛍️', titre: 'Acheter', desc: 'Recherche, contact et paiement sécurisé', lien: '/recherche' },
-          { icon: '📸', titre: 'Vendre', desc: "Publie une annonce en moins de 2 minutes", lien: '/publier' },
-          { icon: '💬', titre: 'Messages', desc: 'Échange avec acheteurs et vendeurs', lien: '/messages' },
+          { icon: <ShoppingBag size={28} />, titre: 'Acheter', desc: 'Recherche, contact et paiement sécurisé', lien: '/recherche' },
+          { icon: <Camera size={28} />,      titre: 'Vendre', desc: "Publie une annonce en moins de 2 minutes", lien: '/publier' },
+          { icon: <MessageCircle size={28} />, titre: 'Messages', desc: 'Échange avec acheteurs et vendeurs', lien: '/messages' },
         ].map(({ icon, titre, desc, lien }) => (
           <Link
             key={titre}
             to={lien}
             className="bg-white rounded-2xl shadow-sm p-5 text-center hover:shadow-md transition-shadow"
           >
-            <p className="text-3xl mb-2">{icon}</p>
+            <div className="flex justify-center mb-2 text-nout-primary">{icon}</div>
             <p className="font-bold text-nout-dark text-sm">{titre}</p>
             <p className="text-xs text-gray-400 mt-1">{desc}</p>
           </Link>
@@ -93,7 +96,9 @@ export default function Help() {
 
       {/* Contact */}
       <section className="bg-orange-50 rounded-2xl p-6 text-center">
-        <p className="text-2xl mb-2">📧</p>
+        <div className="flex justify-center mb-2 text-nout-primary">
+          <Mail size={28} />
+        </div>
         <p className="font-bold text-nout-dark">Tu n'as pas trouvé ta réponse ?</p>
         <p className="text-sm text-gray-500 mt-1 mb-4">Écris-nous, on répond dans les 24 h.</p>
         <a

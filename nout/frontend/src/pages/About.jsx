@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Handshake, Leaf, MapPin, Mail } from 'lucide-react'
 
 export default function About() {
   return (
@@ -6,7 +7,9 @@ export default function About() {
 
       {/* Hero */}
       <div className="text-center mb-12">
-        <p className="text-5xl mb-4">🌺</p>
+        <div className="w-16 h-16 rounded-2xl bg-pink-50 flex items-center justify-center mx-auto mb-4 text-pink-400">
+          <Leaf size={32} />
+        </div>
         <h1 className="text-3xl font-extrabold text-nout-dark">À propos de NOUT</h1>
         <p className="text-gray-500 mt-3 text-base leading-relaxed">
           La marketplace 100 % réunionnaise pour acheter et vendre de seconde main entre particuliers.
@@ -30,12 +33,12 @@ export default function About() {
         <h2 className="text-xl font-bold text-nout-dark mb-4">Nos valeurs</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { icon: '🤝', titre: 'Confiance', texte: 'Paiement sécurisé, profils vérifiés et messagerie intégrée pour échanger en toute sécurité.' },
-            { icon: '🌿', titre: 'Économie circulaire', texte: "Donner une seconde vie aux objets, c'est bon pour le porte-monnaie et pour l'environnement." },
-            { icon: '🏝️', titre: 'Local', texte: '100 % Réunion. Toutes les annonces sont publiées par des habitants de notre île.' },
+            { icon: <Handshake size={28} />, titre: 'Confiance', texte: 'Paiement sécurisé, profils vérifiés et messagerie intégrée pour échanger en toute sécurité.' },
+            { icon: <Leaf size={28} />,      titre: 'Économie circulaire', texte: "Donner une seconde vie aux objets, c'est bon pour le porte-monnaie et pour l'environnement." },
+            { icon: <MapPin size={28} />,    titre: 'Local', texte: '100 % Réunion. Toutes les annonces sont publiées par des habitants de notre île.' },
           ].map(({ icon, titre, texte }) => (
             <div key={titre} className="text-center p-4 bg-orange-50 rounded-xl">
-              <p className="text-3xl mb-2">{icon}</p>
+              <div className="flex justify-center mb-2 text-nout-primary">{icon}</div>
               <p className="font-bold text-nout-dark text-sm">{titre}</p>
               <p className="text-xs text-gray-500 mt-2 leading-relaxed">{texte}</p>
             </div>
@@ -69,8 +72,14 @@ export default function About() {
       <section className="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <h2 className="text-xl font-bold text-nout-dark mb-3">Nous contacter</h2>
         <div className="flex flex-col gap-2 text-sm text-gray-600">
-          <p>📧 <a href="mailto:contact@nout.re" className="text-nout-primary hover:underline">contact@nout.re</a></p>
-          <p>📍 Saint-Denis, La Réunion (974)</p>
+          <p className="flex items-center gap-2">
+            <Mail size={16} className="text-nout-primary flex-shrink-0" />
+            <a href="mailto:contact@nout.re" className="text-nout-primary hover:underline">contact@nout.re</a>
+          </p>
+          <p className="flex items-center gap-2">
+            <MapPin size={16} className="text-nout-primary flex-shrink-0" />
+            Saint-Denis, La Réunion (974)
+          </p>
         </div>
       </section>
 
