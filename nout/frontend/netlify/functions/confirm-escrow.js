@@ -1,3 +1,4 @@
+const { checkAndAssignFounder } = require('./_founder-check')
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 
@@ -232,6 +233,14 @@ exports.handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la mise à jour du statut de la commande.' }) }
     }
     console.log(`Order ${order_id} status → ${orderStatus}`)
+
+    // ── VÉRIFICATION ÉLIGIBILITÉ FONDATEUR ──
+    // Appelé pour les deux parties après chaque transaction confirmée.
+    // Silencieux : une erreur ici ne doit jamais faire échouer la réponse.
+    await Promise.allSettled([
+      checkAndAssignFounder(order.buyer_id).catch(e => console.error('[founder] buyer:', e.message)),
+      checkAndAssignFounder(order.seller_id).catch(e => console.error('[founder] seller:', e.message)),
+    ])
 
     // ── EMAILS ──
     const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
