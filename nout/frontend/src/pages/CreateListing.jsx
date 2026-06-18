@@ -4,6 +4,7 @@ import { containsForbiddenWord } from '../utils/forbiddenWords'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
+import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
@@ -147,6 +148,16 @@ export default function CreateListing() {
         material:    isFashion ? (clean(material.trim()) || null) : null,
         brand:       isFashion ? (clean(brand.trim()) || null) : null,
         color:       isFashion ? (color || null) : null,
+      })
+
+      // Vérification éligibilité fondateur en arrière-plan (ne bloque pas la navigation)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.access_token) {
+          fetch('/.netlify/functions/check-founder-eligibility', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          }).catch(() => {})
+        }
       })
 
       navigate(`/annonce/${listing.id}`)
