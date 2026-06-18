@@ -14,7 +14,7 @@ export const getProfile = async (userId) => {
 export const getPublicProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, bio, city, created_at, role')
+    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge')
     .eq('id', userId)
     .single()
   if (error) throw error

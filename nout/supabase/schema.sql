@@ -18,10 +18,16 @@ CREATE TABLE IF NOT EXISTS profiles (
   phone         TEXT,
   city          TEXT,
   role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'moderator', 'admin')),
-  is_verified   BOOLEAN DEFAULT FALSE,
+  is_verified    BOOLEAN DEFAULT FALSE,
+  is_banned           BOOLEAN DEFAULT FALSE,
+  is_founder          BOOLEAN DEFAULT FALSE,
+  founder_number      INTEGER,
+  show_founder_badge  BOOLEAN DEFAULT TRUE,
   stripe_account_id TEXT,
-  created_at    TIMESTAMPTZ DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ DEFAULT NOW()
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT profiles_founder_number_unique UNIQUE (founder_number),
+  CONSTRAINT profiles_founder_number_range  CHECK (founder_number IS NULL OR (founder_number BETWEEN 1 AND 50))
 );
 
 -- ============================================================

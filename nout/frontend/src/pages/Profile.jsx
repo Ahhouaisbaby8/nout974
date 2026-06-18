@@ -13,6 +13,7 @@ import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
 import BackButton from '../components/ui/BackButton'
 import ReportModal from '../components/ui/ReportModal'
+import { resolveFounder, FounderRing } from '../components/ui/FounderBadge'
 
 export default function Profile() {
   const { id } = useParams()
@@ -76,6 +77,7 @@ export default function Profile() {
   )
 
   const avatarUrl = getAvatarUrl(profile.avatar_url)
+  const { isFounder, founderNumber, showBadge } = resolveFounder(profile)
 
   const avgRating  = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -97,62 +99,138 @@ export default function Profile() {
       <BackButton />
 
       {/* ── CARTE PROFIL ── */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 mt-4 flex flex-col sm:flex-row items-center sm:items-start gap-5">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={profile.username} className="w-24 h-24 rounded-full object-cover border-4 border-nout-primary" />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-nout-primary text-white flex items-center justify-center text-4xl font-bold border-4 border-nout-primary">
-              {profile.username?.[0]?.toUpperCase() ?? '?'}
+      <div className="rounded-2xl shadow-sm overflow-hidden mt-4">
+
+        {isFounder && showBadge ? (
+          /* ── Bannière hero sunset — fondateur avec badge actif ── */
+          <div className="hero-sunset relative overflow-hidden" style={{ height: 200 }}>
+            <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+                 style={{ background: 'linear-gradient(to top, rgba(255,120,60,0.20), transparent)' }} />
+            <div className="absolute inset-0 pointer-events-none">
+              {[
+                { top:'12%', left:'8%',  delay:'0s',   size:'w-1 h-1',     color:'bg-white' },
+                { top:'22%', left:'18%', delay:'1.1s', size:'w-1 h-1',     color:'bg-white' },
+                { top:'9%',  left:'32%', delay:'0.6s', size:'w-1.5 h-1.5', color:'bg-[#00C4B4]' },
+                { top:'18%', left:'55%', delay:'1.8s', size:'w-1 h-1',     color:'bg-white' },
+                { top:'8%',  right:'28%',delay:'0.3s', size:'w-1.5 h-1.5', color:'bg-white' },
+                { top:'20%', right:'18%',delay:'1.4s', size:'w-1 h-1',     color:'bg-[#00C4B4]' },
+              ].map((s, i) => (
+                <div key={i} className={`absolute rounded-full twinkle ${s.size} ${s.color}`}
+                     style={{ top: s.top, left: s.left, right: s.right, animationDelay: s.delay }} />
+              ))}
             </div>
-          )}
-        </div>
-
-        {/* Infos */}
-        <div className="flex-1 text-center sm:text-left">
-          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-            <h1 className="text-2xl font-extrabold text-nout-dark">{profile.username}</h1>
-            {isSellerActive && (
-              <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                Vendeur actif
-              </span>
-            )}
+            <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none">
+              <svg width="110" height="200" viewBox="0 0 170 300" fill="none">
+                <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22" stroke="rgba(4,2,0,0.52)" strokeWidth="13" strokeLinecap="round"/>
+                <path d="M93 22 Q52 38 12 26"   stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+                <path d="M93 22 Q70 2 42 -8"    stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+                <path d="M93 22 Q132 36 165 27" stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+                <path d="M93 22 Q118 4 148 -4"  stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+                <path d="M93 22 Q91 0 88 -18"   stroke="rgba(4,2,0,0.4)"  strokeWidth="5" strokeLinecap="round"/>
+                <path d="M93 22 Q62 48 34 58"   stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+                <path d="M93 22 Q124 48 152 56" stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+                <circle cx="93" cy="29" r="7" fill="rgba(4,2,0,0.42)"/>
+              </svg>
+            </div>
+            <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none">
+              <svg width="110" height="180" viewBox="0 0 170 275" fill="none">
+                <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16" stroke="rgba(4,2,0,0.52)" strokeWidth="12" strokeLinecap="round"/>
+                <path d="M78 16 Q118 30 158 20"  stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+                <path d="M78 16 Q104 -2 134 -10" stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+                <path d="M78 16 Q40 30 6 22"     stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
+                <path d="M78 16 Q54 -1 26 -8"    stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
+                <path d="M78 16 Q80 -4 83 -22"   stroke="rgba(4,2,0,0.4)"  strokeWidth="5" strokeLinecap="round"/>
+                <path d="M78 16 Q110 42 138 52"  stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+                <path d="M78 16 Q48 42 20 54"    stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
+                <circle cx="78" cy="23" r="7" fill="rgba(4,2,0,0.42)"/>
+              </svg>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 flex items-end gap-4 z-10">
+              <FounderRing size="md" founderNumber={founderNumber}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full bg-gradient-to-br from-nout-turquoise to-nout-lagon flex items-center justify-center text-2xl font-bold text-white">
+                      {profile.username?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                }
+              </FounderRing>
+              <div className="flex-1 pb-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl font-extrabold text-white leading-tight">{profile.username}</h1>
+                  {isSellerActive && (
+                    <span className="flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-400/30">
+                      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                      Vendeur actif
+                    </span>
+                  )}
+                </div>
+                {profile.city && (
+                  <p className="text-[11px] text-white/60 mt-0.5">📍 {profile.city}</p>
+                )}
+              </div>
+            </div>
           </div>
-          {profile.city && (
-            <p className="text-sm text-gray-400 mt-1">📍 {profile.city}</p>
-          )}
-          {profile.bio && (
-            <p className="text-sm text-gray-600 mt-3 leading-relaxed">{profile.bio}</p>
-          )}
-          <p className="text-xs text-gray-400 mt-3">
-            Membre depuis {formatRelativeDate(profile.created_at)}
-          </p>
-        </div>
+        ) : (
+          /* ── En-tête normale — non fondateur ou badge désactivé ── */
+          <div className="bg-white px-5 pt-5 pb-4 flex items-center gap-4 border-b border-gray-100">
+            <div className="w-[72px] h-[72px] rounded-full overflow-hidden flex-shrink-0"
+                 style={{ border: '3px solid #F97316' }}>
+              {avatarUrl
+                ? <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
+                : <div className="w-full h-full bg-gradient-to-br from-nout-turquoise to-nout-lagon flex items-center justify-center text-2xl font-bold text-white">
+                    {profile.username?.[0]?.toUpperCase() ?? '?'}
+                  </div>
+              }
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-extrabold text-nout-dark leading-tight">{profile.username}</h1>
+                {isSellerActive && (
+                  <span className="flex items-center gap-1 bg-emerald-500/20 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-300">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                    Vendeur actif
+                  </span>
+                )}
+              </div>
+              {profile.city && (
+                <p className="text-[11px] text-gray-500 mt-0.5">📍 {profile.city}</p>
+              )}
+            </div>
+          </div>
+        )}
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2 flex-shrink-0">
-          {isOwnProfile ? (
-            <Link to="/parametres" className="btn-secondary px-5 py-2 text-sm">
-              ✏️ Modifier mon profil
-            </Link>
-          ) : user ? (
-            <>
-              <button
-                onClick={() => navigate(`/messages/${id}`)}
-                className="btn-primary px-5 py-2 text-sm"
-              >
-                💬 Envoyer un message
-              </button>
-              <button
-                onClick={() => setShowReport(true)}
-                className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
-              >
-                🚩 Signaler
-              </button>
-            </>
-          ) : null}
+        {/* Partie blanche : bio, actions, date */}
+        <div className="bg-white px-5 py-4 flex flex-col sm:flex-row gap-4 items-start">
+          <div className="flex-1">
+            {profile.bio && (
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">{profile.bio}</p>
+            )}
+            <p className="text-xs text-gray-400">
+              Membre depuis {formatRelativeDate(profile.created_at)}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 flex-shrink-0">
+            {isOwnProfile ? (
+              <Link to="/parametres" className="btn-secondary px-5 py-2 text-sm">
+                ✏️ Modifier mon profil
+              </Link>
+            ) : user ? (
+              <>
+                <button
+                  onClick={() => navigate(`/messages/${id}`)}
+                  className="btn-primary px-5 py-2 text-sm"
+                >
+                  💬 Envoyer un message
+                </button>
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
+                >
+                  🚩 Signaler
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -217,7 +295,7 @@ export default function Profile() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {listings.map(l => <ListingCard key={l.id} listing={l} />)}
+            {listings.map(l => <ListingCard key={l.id} listing={l} isFounderSeller={isFounder && showBadge} founderNumber={founderNumber} />)}
           </div>
         )}
       </div>

@@ -36,6 +36,10 @@ export default function Settings() {
     return '**** **** **** **** **** **** ' + last4
   }
 
+  const [showFounderBadge, setShowFounderBadge]       = useState(profile?.show_founder_badge !== false)
+  const [badgeToggling, setBadgeToggling]             = useState(false)
+  const [badgeToggleSuccess, setBadgeToggleSuccess]   = useState(false)
+
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting]   = useState(false)
@@ -118,6 +122,22 @@ export default function Settings() {
       setIbanError('Erreur lors de l\'enregistrement. Réessaie.')
     } finally {
       setIbanSaving(false)
+    }
+  }
+
+  const handleToggleFounderBadge = async () => {
+    if (badgeToggling) return
+    const next = !showFounderBadge
+    setShowFounderBadge(next)
+    setBadgeToggling(true)
+    try {
+      await updateProfile({ show_founder_badge: next })
+      setBadgeToggleSuccess(true)
+      setTimeout(() => setBadgeToggleSuccess(false), 2500)
+    } catch {
+      setShowFounderBadge(!next)
+    } finally {
+      setBadgeToggling(false)
     }
   }
 
@@ -363,6 +383,41 @@ export default function Settings() {
           )}
         </div>
       </div>
+
+      {/* ── SECTION BADGE FONDATEUR (visible uniquement si is_founder) ── */}
+      {profile?.is_founder && (
+        <div className="mt-8 bg-white rounded-xl p-5 shadow-sm border border-amber-200">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="font-bold text-nout-dark mb-1">🌴 Badge Membre Fondateur</h2>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Affiche ta bannière coucher de soleil, ton anneau doré et ton badge
+                sur ton profil, dans les conversations et sur tes annonces.
+              </p>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                Désactiver n'affecte pas ta commission à vie (0%) ni ta place #{profile.founder_number}.
+                Le compteur de places sur l'accueil reste inchangé.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleFounderBadge}
+              disabled={badgeToggling}
+              className={`relative flex-shrink-0 mt-0.5 w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
+                showFounderBadge ? 'bg-nout-turquoise' : 'bg-gray-300'
+              } ${badgeToggling ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+              aria-label="Afficher mon badge Membre Fondateur"
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                showFounderBadge ? 'translate-x-6' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
+          {badgeToggleSuccess && (
+            <p className="text-xs text-green-600 mt-3 font-medium">✅ Préférence enregistrée</p>
+          )}
+        </div>
+      )}
 
       {/* ── SECTION CONFIDENTIALITÉ ── */}
       <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
