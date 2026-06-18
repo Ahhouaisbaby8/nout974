@@ -35,6 +35,7 @@ import InstallApp     from './pages/InstallApp'
 // Auth
 import Login          from './pages/Login'
 import Register       from './pages/Register'
+import CompteActive   from './pages/CompteActive'
 import PaymentSuccess from './pages/PaymentSuccess'
 
 // Pages privées
@@ -115,6 +116,7 @@ export default function App() {
           {/* Auth */}
           <Route path="/connexion"      element={<Login />} />
           <Route path="/inscription"    element={<Register />} />
+          <Route path="/compte-active"  element={<CompteActive />} />
           <Route path="/paiement-succes" element={<PaymentSuccess />} />
 
           {/* Privé */}

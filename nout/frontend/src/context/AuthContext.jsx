@@ -93,7 +93,11 @@ export function AuthProvider({ children }) {
 
   // Inscription email — le trigger Supabase crée le profil automatiquement
   const register = async ({ email, password }) => {
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/compte-active` },
+    })
     if (error) throw error
   }
 
