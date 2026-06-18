@@ -10,6 +10,7 @@ import { getAvatarUrl } from '../utils/avatar'
 import { formatRelativeDate } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
+import { resolveFounder } from '../components/ui/FounderBadge'
 
 export default function Conversation() {
   const { id: otherUserId } = useParams()
@@ -154,6 +155,8 @@ export default function Conversation() {
   }
 
   const avatarUrl = getAvatarUrl(otherUser?.avatar_url)
+  const { isFounder: otherIsFounder, founderNumber: otherFounderNumber, showBadge: otherShowBadge } = resolveFounder(otherUser)
+  const showFounderHeader = otherIsFounder && otherShowBadge
 
   if (loading) return <div className="flex justify-center py-24"><Spinner size="lg" /></div>
 
@@ -165,17 +168,52 @@ export default function Conversation() {
     >
 
       {/* ── EN-TÊTE ── */}
-      <div className="bg-white border-b border-nout-border px-4 py-3 flex items-center gap-3 flex-shrink-0">
+      <div className={`px-4 py-3 flex items-center gap-3 flex-shrink-0 relative overflow-hidden ${showFounderHeader ? 'hero-sunset' : 'bg-white border-b border-nout-border'}`}>
+        {/* Mini palmier déco quand fondateur */}
+        {showFounderHeader && (
+          <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none opacity-50">
+            <svg width="60" height="64" viewBox="0 0 170 275" fill="none">
+              <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16" stroke="rgba(4,2,0,0.6)" strokeWidth="12" strokeLinecap="round"/>
+              <path d="M78 16 Q118 30 158 20" stroke="rgba(4,2,0,0.55)" strokeWidth="8" strokeLinecap="round"/>
+              <path d="M78 16 Q40 30 6 22"    stroke="rgba(4,2,0,0.55)" strokeWidth="8" strokeLinecap="round"/>
+              <path d="M78 16 Q104 -2 134 -10" stroke="rgba(4,2,0,0.45)" strokeWidth="6" strokeLinecap="round"/>
+              <circle cx="78" cy="23" r="6" fill="rgba(4,2,0,0.45)"/>
+            </svg>
+          </div>
+        )}
         <BackButton />
-        <Link to={`/profil/${otherUserId}`} className="flex items-center gap-3 flex-1">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={otherUser?.username} className="w-10 h-10 rounded-full object-cover" />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-nout-primary text-white flex items-center justify-center font-bold">
-              {otherUser?.username?.[0]?.toUpperCase() ?? '?'}
+        <Link to={`/profil/${otherUserId}`} className="flex items-center gap-3 flex-1 z-10">
+          {/* Avatar */}
+          {showFounderHeader ? (
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 rounded-full overflow-hidden"
+                   style={{ boxShadow: '0 0 0 2px #D4A017, 0 0 10px 3px rgba(212,160,23,0.4)' }}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt={otherUser?.username} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full bg-gradient-to-br from-nout-turquoise to-nout-lagon flex items-center justify-center font-bold text-white">
+                      {otherUser?.username?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                }
+              </div>
             </div>
+          ) : (
+            avatarUrl
+              ? <img src={avatarUrl} alt={otherUser?.username} className="w-10 h-10 rounded-full object-cover" />
+              : <div className="w-10 h-10 rounded-full bg-nout-primary text-white flex items-center justify-center font-bold">
+                  {otherUser?.username?.[0]?.toUpperCase() ?? '?'}
+                </div>
           )}
-          <span className="font-semibold text-nout-dark">{otherUser?.username}</span>
+          {/* Nom + badge fondateur */}
+          <div>
+            <span className={`font-semibold text-sm ${showFounderHeader ? 'text-white' : 'text-nout-dark'}`}>
+              {otherUser?.username}
+            </span>
+            {showFounderHeader && (
+              <p className="text-[10px] font-bold" style={{ color: '#D4A017' }}>
+                🌴 Membre Fondateur #{otherFounderNumber}
+              </p>
+            )}
+          </div>
         </Link>
       </div>
 

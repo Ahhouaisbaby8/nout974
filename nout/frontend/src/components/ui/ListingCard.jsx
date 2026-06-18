@@ -6,8 +6,9 @@ import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
 import CategoryIcon from './CategoryIcon'
+import { FounderCardBadge } from './FounderBadge'
 
-export default function ListingCard({ listing, isFavorited = false }) {
+export default function ListingCard({ listing, isFavorited = false, isFounderSeller = false, founderNumber = null }) {
   const { user } = useAuth()
   const navigate  = useNavigate()
   const [fav, setFav]         = useState(isFavorited)
@@ -69,6 +70,10 @@ export default function ListingCard({ listing, isFavorited = false }) {
             <CategoryIcon id={listing.category} size={10} />
             <span className="hidden sm:inline">{category.label}</span>
           </span>
+        )}
+        {/* Badge Membre Fondateur — sous le badge catégorie */}
+        {isFounderSeller && founderNumber && (
+          <FounderCardBadge number={founderNumber} />
         )}
 
         {/* Badge VENDU */}

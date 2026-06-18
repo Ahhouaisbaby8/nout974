@@ -10,6 +10,7 @@ import PriceRangeSection from '../components/PriceRangeSection'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
 import CategoryIcon from '../components/ui/CategoryIcon'
+import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
 
 const HOW_IT_WORKS = [
   {
@@ -174,10 +175,21 @@ export default function Home() {
             </button>
           </form>
 
+          {/* Pill Membres Fondateurs — Position B, sous la recherche */}
+          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-default select-none"
+               style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+            <span>🌴</span>
+            <span className="text-white/85">Membres Fondateurs</span>
+            <span className="text-white/30">·</span>
+            <span className="font-bold" style={{ color: '#F5D45A' }}>
+              {FOUNDER_TOTAL - FOUNDER_TAKEN}/{FOUNDER_TOTAL} places restantes
+            </span>
+          </div>
+
         </div>
       </section>
 
-      {/* ── B) CATÉGORIES ────────────────────────────────────────── */}
+      {/* ── CATÉGORIES ───────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 pt-10 pb-4">
         <h2 className="font-title font-bold text-[20px] text-nout-texte mb-4">
           Catégories
