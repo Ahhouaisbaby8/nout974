@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { CATEGORIES } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
 import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
+import { supabase } from '../services/supabase'
+import { formatPrice } from '../utils/formatters'
+import EscrowConfirm from '../components/EscrowConfirm'
 import ListingCard from '../components/ui/ListingCard'
 import PriceRangeSection from '../components/PriceRangeSection'
 import Spinner from '../components/ui/Spinner'
@@ -30,12 +33,18 @@ const HOW_IT_WORKS = [
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const previewEscrow = import.meta.env.DEV && searchParams.get('preview') === 'escrow'
 
-  const [search,   setSearch]   = useState('')
-  const [city,     setCity]     = useState('Toute La Réunion')
-  const [listings, setListings] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [favIds,   setFavIds]   = useState(new Set())
+  const [search,       setSearch]       = useState('')
+  const [city,         setCity]         = useState('Toute La Réunion')
+  const [listings,     setListings]     = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [favIds,       setFavIds]       = useState(new Set())
+  const [activeOrders, setActiveOrders] = useState([])
+  const [escrowCodes,  setEscrowCodes]  = useState({})
+  const [ordersKey,    setOrdersKey]    = useState(0)
+  const refreshOrders = () => setOrdersKey(k => k + 1)
 
   useEffect(() => {
     getListings({ limit: 8 })
@@ -49,6 +58,33 @@ export default function Home() {
     getFavoriteIds(user.id).then(setFavIds).catch(() => {})
   }, [user?.id])
 
+  useEffect(() => {
+    if (!user) { setActiveOrders([]); setEscrowCodes({}); return }
+    supabase
+      .from('orders')
+      .select('id, status, buyer_id, seller_id, listing:listings!listing_id(id, title, price)')
+      .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+      .in('status', ['paid', 'payout_pending', 'completed'])
+      .order('created_at', { ascending: false })
+      .then(async ({ data }) => {
+        const orders = data ?? []
+        setActiveOrders(orders)
+        const paidBuyIds = orders
+          .filter(o => o.buyer_id === user.id && o.status === 'paid')
+          .map(o => o.id)
+        if (paidBuyIds.length > 0) {
+          const { data: codes } = await supabase
+            .from('escrow_codes')
+            .select('order_id, code')
+            .in('order_id', paidBuyIds)
+          const map = {}
+          ;(codes ?? []).forEach(c => { map[c.order_id] = c.code })
+          setEscrowCodes(map)
+        }
+      })
+      .catch(() => {})
+  }, [user?.id, ordersKey])
+
   const handleSearch = (e) => {
     e.preventDefault()
     const params = new URLSearchParams()
@@ -58,6 +94,19 @@ export default function Home() {
   }
 
   const handleCategory = (catId) => navigate(`/recherche?categorie=${catId}`)
+
+  const _MOCK_SALE     = { id: 'preview-sale',    status: 'paid', seller_id: '__me__', buyer_id: '__other__', listing: { title: "Robe fleurie L'Effet Péi", price: 38 } }
+  const _MOCK_PURCHASE = { id: 'preview-purchase', status: 'paid', buyer_id:  '__me__', seller_id: '__other__', listing: { title: 'Sneakers Nike Air Max 40',  price: 55 } }
+
+  const paidSales     = previewEscrow ? [_MOCK_SALE]     : user ? activeOrders.filter(o => o.seller_id === user.id && o.status === 'paid') : []
+  const paidPurchases = previewEscrow ? [_MOCK_PURCHASE] : user ? activeOrders.filter(o => o.buyer_id  === user.id && o.status === 'paid') : []
+  const gainsRecus    = previewEscrow ? 85 : activeOrders
+    .filter(o => user && o.seller_id === user.id && o.status === 'completed')
+    .reduce((sum, o) => sum + Number(o.listing?.price ?? 0), 0)
+  const enAttente     = previewEscrow ? 38 : activeOrders
+    .filter(o => user && o.seller_id === user.id && ['paid', 'payout_pending'].includes(o.status))
+    .reduce((sum, o) => sum + Number(o.listing?.price ?? 0), 0)
+  const showFinancial = gainsRecus > 0 || enAttente > 0
 
   return (
     <div>
@@ -188,6 +237,142 @@ export default function Home() {
 
         </div>
       </section>
+
+      {/* ── B) TRANSACTIONS ACTIVES + APERÇU FINANCIER ─────────── */}
+      {(previewEscrow || (user && (paidSales.length > 0 || paidPurchases.length > 0 || showFinancial))) && (
+        <section className="max-w-3xl mx-auto px-4 pt-6 pb-2 flex flex-col gap-4">
+
+          {/* -- VENDEUR : vente à confirmer -- */}
+          {paidSales.map(order => (
+            <div key={order.id} className="rounded-2xl overflow-hidden shadow-sm border border-amber-200"
+                 style={{ background: '#fffdf7' }}>
+              <div className="px-5 pt-5 pb-3"
+                   style={{ background: 'linear-gradient(135deg,#0A0F2C 0%,#1A3A8F 100%)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">💰</span>
+                    <h2 className="font-title font-bold text-white text-base">Une vente à confirmer</h2>
+                  </div>
+                  <Link to="/commandes?tab=ventes"
+                        className="text-xs font-semibold text-white/60 hover:text-white transition-colors">
+                    Mes ventes →
+                  </Link>
+                </div>
+                <p className="text-white/60 text-sm mt-1 truncate">
+                  {order.listing?.title ?? 'Article'} · {formatPrice(order.listing?.price ?? 0)}
+                </p>
+              </div>
+              <div className="px-5 py-3 border-b border-amber-100">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Demande le code à 6 chiffres à l'acheteur lors de la remise, saisis-le ci-dessous pour recevoir ton paiement.
+                </p>
+              </div>
+              <div className="px-4 pb-5">
+                {previewEscrow ? (
+                  <div className="mt-4 rounded-2xl overflow-hidden" style={{ background: '#0A0F2C' }}>
+                    <div className="px-5 pt-5 pb-4 border-b border-white/10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🤝</span>
+                        <h3 className="font-title font-bold text-white text-base">Confirmer la remise en main propre</h3>
+                      </div>
+                      <p className="text-white/50 text-sm">Demande le code à 6 chiffres à l'acheteur</p>
+                    </div>
+                    <div className="px-5 py-5">
+                      <div className="flex justify-center gap-2 mb-5">
+                        {['_','_','_','_','_','_'].map((_, i) => (
+                          <div key={i} className="w-11 h-14 rounded-xl bg-white/10 border-2 border-white/20" />
+                        ))}
+                      </div>
+                      <div className="w-full py-4 rounded-xl text-white text-sm font-semibold text-center opacity-30 bg-white/10">
+                        Confirmer et recevoir mon paiement
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <EscrowConfirm order={order} onConfirmed={refreshOrders} />
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* -- ACHETEUR : achat en cours, code à montrer -- */}
+          {paidPurchases.map(order => {
+            const codeToShow = previewEscrow ? '482951' : escrowCodes[order.id]
+            return (
+            <div key={order.id} className="rounded-2xl overflow-hidden shadow-sm border border-teal-200"
+                 style={{ background: '#f0fffe' }}>
+              <div className="px-5 pt-5 pb-3"
+                   style={{ background: 'linear-gradient(135deg,#0E7FAB 0%,#00C4B4 100%)' }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">📦</span>
+                    <h2 className="font-title font-bold text-white text-base">Un achat en cours</h2>
+                  </div>
+                  <Link to="/commandes?tab=achats"
+                        className="text-xs font-semibold text-white/70 hover:text-white transition-colors">
+                    Mes achats →
+                  </Link>
+                </div>
+                <p className="text-white/80 text-sm mt-1 truncate">
+                  {order.listing?.title ?? 'Article'}
+                </p>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                  Donne ce code au vendeur au moment de la remise pour valider la transaction.
+                </p>
+                {codeToShow ? (
+                  <>
+                    <p
+                      className="text-center font-extrabold font-mono py-2 mb-3 tracking-[0.2em]"
+                      style={{ fontSize: '40px', color: '#007A6E' }}
+                    >
+                      {codeToShow.split('').join(' ')}
+                    </p>
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
+                      <p className="text-xs text-orange-700 leading-relaxed">
+                        ⚠️ <strong>Ne donne ce code QU'APRÈS</strong> avoir vérifié et récupéré ton article. Il libère le paiement au vendeur.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-center text-sm text-gray-400 py-4">Code en cours de chargement…</p>
+                )}
+              </div>
+            </div>
+            )
+          })}
+
+          {/* -- APERÇU FINANCIER -- */}
+          {showFinancial && (
+            <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+              <div className="grid grid-cols-2 divide-x divide-gray-100">
+                <div className="px-5 py-4 bg-white">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Gains reçus</p>
+                  <p className="font-title font-extrabold text-2xl" style={{ color: '#00C4B4' }}>
+                    {formatPrice(gainsRecus)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Ventes confirmées</p>
+                </div>
+                <div className="px-5 py-4 bg-white">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">En attente</p>
+                  <p className="font-title font-extrabold text-2xl text-amber-500">
+                    {formatPrice(enAttente)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">Remise non confirmée</p>
+                </div>
+              </div>
+              <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <Link to="/commandes?tab=ventes"
+                      className="text-xs font-semibold text-[#0E7FAB] hover:underline">
+                  Voir mes ventes →
+                </Link>
+              </div>
+            </div>
+          )}
+
+        </section>
+      )}
 
       {/* ── CATÉGORIES ───────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 pt-10 pb-4">
