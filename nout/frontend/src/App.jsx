@@ -46,6 +46,7 @@ import Conversation  from './pages/Conversation'
 import Orders        from './pages/Orders'
 import Favorites     from './pages/Favorites'
 import Settings      from './pages/Settings'
+import SellerSpace   from './pages/SellerSpace'
 
 // Admin
 import AdminLayout          from './pages/admin/AdminLayout'
@@ -125,6 +126,7 @@ export default function App() {
           <Route path="/messages"   element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/messages/:id" element={<PrivateRoute><Conversation /></PrivateRoute>} />
           <Route path="/commandes"  element={<PrivateRoute><Orders /></PrivateRoute>} />
+          <Route path="/espace-vendeur" element={<PrivateRoute><SellerSpace /></PrivateRoute>} />
           <Route path="/favoris"    element={<PrivateRoute><Favorites /></PrivateRoute>} />
           <Route path="/parametres" element={<PrivateRoute><Settings /></PrivateRoute>} />
 

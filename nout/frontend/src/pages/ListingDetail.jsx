@@ -9,6 +9,56 @@ import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
 import { Share2, Heart } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
+import { getSellerRating } from '../services/reviews'
+import { SHIPPING_METHODS, SHIPPING_ORDER, computeProtectionFee, computeBuyerTotal, getShippingFee } from '../utils/shipping'
+import { Truck, Home as HomeIcon, MapPin, Store } from 'lucide-react'
+
+const SHIP_ICONS = { hand: Store, relay: MapPin, home: HomeIcon }
+
+function ShippingSelector({ value, onChange, price }) {
+  return (
+    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+      <p className="flex items-center gap-2 text-sm font-semibold text-nout-dark mb-2">
+        <Truck className="w-4 h-4 text-nout-primary" />
+        Mode de livraison
+      </p>
+      <div className="space-y-2">
+        {SHIPPING_ORDER.map(id => {
+          const m = SHIPPING_METHODS[id]
+          const Icon = SHIP_ICONS[id] ?? Truck
+          const fee = getShippingFee(id)
+          const active = value === id
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onChange(id)}
+              className={`w-full flex items-center gap-3 text-left rounded-lg border-2 px-3 py-2.5 transition-all ${active ? 'border-nout-primary bg-white' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+            >
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${active ? 'bg-nout-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-nout-dark flex items-center gap-1.5">
+                  {m.label}
+                  {m.recommended && (
+                    <span className="text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Conseillé</span>
+                  )}
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  {m.delay ? `${m.delay} · ` : ''}{m.sublabel}
+                </p>
+              </div>
+              <span className={`text-sm font-bold flex-shrink-0 ${fee === 0 ? 'text-emerald-600' : 'text-nout-dark'}`}>
+                {fee === 0 ? 'Gratuit' : formatPrice(fee)}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import ReportModal from '../components/ui/ReportModal'
@@ -41,6 +91,8 @@ export default function ListingDetail() {
   const [copyToast, setCopyToast]         = useState(false)
   const [detailFav, setDetailFav] = useState(false)
   const [favPulse, setFavPulse]   = useState(false)
+  const [sellerRating, setSellerRating] = useState(null)
+  const [shipMethod, setShipMethod] = useState('hand')
 
   useEffect(() => {
     getListingById(id)
@@ -53,6 +105,11 @@ export default function ListingDetail() {
             .then(setSimilar)
             .catch(() => {})
             .finally(() => setLoadingSimilar(false))
+        }
+        if (data.profiles?.id) {
+          getSellerRating(data.profiles.id)
+            .then(setSellerRating)
+            .catch(() => {})
         }
       })
       .catch(() => setNotFound(true))
@@ -141,9 +198,10 @@ export default function ListingDetail() {
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
 
-  // Gross-up Stripe (1.5% + 0.25€) pour que NOUT touche 5%+1€ net
-  const totalAcheteur  = Math.round(((listing.price * 1.05 + 1.25) / 0.985) * 100) / 100
-  const fraisService   = Math.round((totalAcheteur - listing.price) * 100) / 100
+  // Total et frais dépendent du mode de livraison choisi (cf. utils/shipping.js)
+  const fraisService   = computeProtectionFee(listing.price, shipMethod)
+  const portFee        = getShippingFee(shipMethod)
+  const totalAcheteur  = computeBuyerTotal(listing.price, shipMethod)
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
   const isSellerActive = listing.created_at &&
@@ -337,6 +395,17 @@ export default function ListingDetail() {
               )}
               <div>
                 <p className="font-semibold text-nout-dark">{seller.username}</p>
+                {sellerRating && sellerRating.count > 0 ? (
+                  <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500 mt-0.5">
+                    <span>★</span>
+                    <span className="text-nout-dark">{sellerRating.average.toFixed(1)}</span>
+                    <span className="text-gray-400 font-normal">
+                      ({sellerRating.count} avis)
+                    </span>
+                  </span>
+                ) : sellerRating && (
+                  <span className="text-[11px] text-gray-400 mt-0.5 block">Pas encore d'avis</span>
+                )}
                 {isSellerActive && (
                   <span className="flex items-center gap-1 text-emerald-600 text-[11px] font-semibold mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
@@ -438,6 +507,9 @@ export default function ListingDetail() {
               )}
               {user ? (
                 <>
+                  {/* Sélecteur de livraison */}
+                  <ShippingSelector value={shipMethod} onChange={setShipMethod} price={listing.price} />
+
                   {/* Récapitulatif des frais */}
                   <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-100 space-y-2">
                     <div className="flex justify-between text-gray-500">
@@ -445,9 +517,15 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Frais de service (5% + 1€)</span>
+                      <span>Frais de protection acheteur</span>
                       <span>{formatPrice(fraisService)}</span>
                     </div>
+                    {portFee > 0 && (
+                      <div className="flex justify-between text-gray-500">
+                        <span>Livraison ({SHIPPING_METHODS[shipMethod].label.replace('Chronopost — ', '')})</span>
+                        <span>{formatPrice(portFee)}</span>
+                      </div>
+                    )}
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
                       <span>Total</span>
                       <span>{formatPrice(totalAcheteur)}</span>
@@ -466,7 +544,7 @@ export default function ListingDetail() {
                               'Content-Type': 'application/json',
                               'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
                             },
-                            body: JSON.stringify({ listingId: id, buyerId: user.id }),
+                            body: JSON.stringify({ listingId: id, buyerId: user.id, shippingMethod: shipMethod }),
                           })
                           const data = await res.json()
                           if (data.error) { setPayError(data.error); return }
@@ -524,26 +602,32 @@ export default function ListingDetail() {
                 </>
               ) : (
                 <>
+                  {/* Visiteur non connecté : récap basé sur la main propre (gratuit).
+                      Le choix du mode de livraison se fait après connexion. */}
                   <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-100 space-y-2">
                     <div className="flex justify-between text-gray-500">
                       <span>Prix de l'article</span>
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Frais de service (5% + 1€)</span>
-                      <span>{formatPrice(fraisService)}</span>
+                      <span>Frais de protection acheteur</span>
+                      <span>{formatPrice(computeProtectionFee(listing.price, 'hand'))}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
-                      <span>Total</span>
-                      <span>{formatPrice(totalAcheteur)}</span>
+                      <span>Total en main propre</span>
+                      <span>{formatPrice(computeBuyerTotal(listing.price, 'hand'))}</span>
                     </div>
+                    <p className="flex items-center gap-1.5 text-[11px] text-gray-400 pt-1">
+                      <Truck className="w-3.5 h-3.5" />
+                      Livraison Chronopost disponible au paiement (dès {formatPrice(getShippingFee('relay'))})
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <Link
                       to={`/connexion?redirect=/annonce/${id}`}
                       className="btn-primary flex-1 py-4 text-base text-center block"
                     >
-                      💳 Acheter — {formatPrice(totalAcheteur)}
+                      💳 Acheter — {formatPrice(computeBuyerTotal(listing.price, 'hand'))}
                     </Link>
                     <div className="relative flex-shrink-0">
                       <button

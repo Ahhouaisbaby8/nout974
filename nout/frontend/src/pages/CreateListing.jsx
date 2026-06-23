@@ -10,6 +10,19 @@ import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
+import ChoiceChips from '../components/ui/ChoiceChips'
+import { Sparkles } from 'lucide-react'
+
+// Phrases-types pour aider à rédiger la description (un clic = ajout)
+const DESC_TEMPLATES = [
+  'Très bon état, porté quelques fois',
+  'Jamais porté, comme neuf',
+  'Petite trace d\'usure (voir photos)',
+  'Vendu pour cause de tri',
+  'Taille un peu petit / grand',
+  'Provient d\'un intérieur non-fumeur',
+  'Remise en main propre possible',
+]
 
 const traduireErreur = (error) => {
   if (!error) return 'Une erreur est survenue.'
@@ -59,6 +72,16 @@ export default function CreateListing() {
     : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
     : SIZES_VETEMENTS
   const sizePlaceholder = category === 'chaussures' ? 'Pointure' : 'Taille'
+
+  // Titre suggéré auto : Marque + Catégorie + Taille (ex : "Zara · Vêtements femme · T.M")
+  const finalBrandForTitle = brandSelect === '__autre__' ? brandCustom : brandSelect
+  const catLabel = CATEGORIES.find(c => c.id === category)?.label
+  const suggestedTitle = [
+    finalBrandForTitle || null,
+    catLabel || null,
+    size ? `T.${size}` : null,
+    color || null,
+  ].filter(Boolean).join(' · ').slice(0, 80)
 
   useEffect(() => {
     return () => photos.forEach(p => URL.revokeObjectURL(p.preview))
@@ -251,12 +274,23 @@ export default function CreateListing() {
           <h2 className="font-bold text-nout-dark">Informations</h2>
 
           <div>
-            <label className="block text-sm font-medium text-nout-dark mb-1">Titre de l'annonce</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-nout-dark">Titre de l'annonce</label>
+              {suggestedTitle && suggestedTitle !== title && (
+                <button
+                  type="button"
+                  onClick={() => setTitle(suggestedTitle)}
+                  className="text-xs font-semibold text-[#00C4B4] hover:underline flex items-center gap-1"
+                >
+                  <Sparkles className="w-3 h-3" /> Suggérer : {suggestedTitle}
+                </button>
+              )}
+            </div>
             <input
               type="text"
               required
               maxLength={80}
-              placeholder="Ex : iPhone 13 Pro Max 256 Go"
+              placeholder="Ex : Robe Zara fleurie, taille M"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="input-field"
@@ -266,6 +300,21 @@ export default function CreateListing() {
 
           <div>
             <label className="block text-sm font-medium text-nout-dark mb-1">Description</label>
+            {/* Phrases-types à ajouter en un clic (inspiré Vinted/Depop) */}
+            {DESC_TEMPLATES.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {DESC_TEMPLATES.map(t => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setDesc(d => d.includes(t) ? d : (d ? `${d}\n${t}` : t))}
+                    className="text-[11px] px-2.5 py-1 rounded-full border border-[#D6E0F5] text-nout-dark hover:border-[#00C4B4] hover:bg-[#00C4B4]/5 transition-colors"
+                  >
+                    + {t}
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               rows={4}
               maxLength={1000}
@@ -277,36 +326,24 @@ export default function CreateListing() {
             <p className="text-xs text-gray-400 mt-1 text-right">{description.length}/1000</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className={category === 'beaute' ? 'col-span-2' : ''}>
-              <label className="block text-sm font-medium text-nout-dark mb-1">Catégorie</label>
-              <select
-                required
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-2">Catégorie</label>
+              <ChoiceChips
+                options={CATEGORIES.map(c => ({ value: c.id, label: c.label }))}
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="input-field cursor-pointer"
-              >
-                <option value="">Choisir...</option>
-                {CATEGORIES.map(c => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
-                ))}
-              </select>
+                onChange={setCategory}
+              />
             </div>
 
             {category !== 'beaute' && (
               <div>
-                <label className="block text-sm font-medium text-nout-dark mb-1">État</label>
-                <select
-                  required
+                <label className="block text-sm font-medium text-nout-dark mb-2">État</label>
+                <ChoiceChips
+                  options={CONDITIONS.map(c => ({ value: c.id, label: c.label }))}
                   value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
-                  className="input-field cursor-pointer"
-                >
-                  <option value="">Choisir...</option>
-                  {CONDITIONS.map(c => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
-                  ))}
-                </select>
+                  onChange={setCondition}
+                />
               </div>
             )}
           </div>
@@ -316,9 +353,9 @@ export default function CreateListing() {
         {isFashion && (
           <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
             <h2 className="font-bold text-nout-dark">
-              {category === 'chaussures' ? '👟 Détails chaussure'
-               : (category === 'accessoires' || category === 'sacs') ? '👜 Détails article'
-               : '👗 Détails vêtement'}
+              {category === 'chaussures' ? 'Détails chaussure'
+               : (category === 'accessoires' || category === 'sacs') ? 'Détails article'
+               : 'Détails vêtement'}
             </h2>
 
             <div>

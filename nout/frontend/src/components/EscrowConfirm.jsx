@@ -123,14 +123,16 @@ export default function EscrowConfirm({ order, onConfirmed }) {
   const inputsDisabled = loading || isLocked || result?.type === 'success' || result?.type === 'expired'
   const showButton     = !isLocked && result?.type !== 'success' && result?.type !== 'expired'
 
+  const isLivraison = order.shipping_method === 'relay' || order.shipping_method === 'home'
+
   return (
     <div className="mt-4 rounded-2xl overflow-hidden" style={{ background: '#0A0F2C' }}>
       {/* En-tête */}
       <div className="px-5 pt-5 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">{isLocked ? '🔒' : '🤝'}</span>
+          <span className="text-lg">{isLocked ? '🔒' : isLivraison ? '📦' : '🤝'}</span>
           <h3 className="font-title font-bold text-white text-base">
-            Confirmer la remise en main propre
+            {isLivraison ? 'Confirmer la réception' : 'Confirmer la remise en main propre'}
           </h3>
         </div>
         <p className="text-white/50 text-sm">

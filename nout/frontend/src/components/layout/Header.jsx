@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Heart, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
 
@@ -35,11 +35,12 @@ export default function Header() {
   const avatarUrl = getAvatarUrl(profile?.avatar_url)
 
   const menuLinks = [
-    { to: `/profil/${user?.id}`,   icon: '👤', label: 'Mon profil' },
+    { to: `/profil/${user?.id}`,   icon: <User className="w-4 h-4 text-[#1A3A8F]" />, label: 'Mon profil' },
+    { to: '/espace-vendeur',       icon: <Wallet className="w-4 h-4 text-[#00C4B4]" />, label: 'Espace Vendeur' },
     { to: '/favoris', icon: <Heart className="w-4 h-4 text-red-500 fill-red-500" />, label: 'Mes favoris' },
-    { to: '/commandes?tab=achats', icon: '🛍️', label: 'Mes achats' },
-    { to: '/commandes?tab=ventes', icon: '📦', label: 'Mes ventes' },
-    { to: '/parametres',           icon: '⚙️', label: 'Paramètres' },
+    { to: '/commandes?tab=achats', icon: <ShoppingBag className="w-4 h-4 text-[#1A3A8F]" />, label: 'Mes achats' },
+    { to: '/commandes?tab=ventes', icon: <Package className="w-4 h-4 text-[#1A3A8F]" />, label: 'Mes ventes' },
+    { to: '/parametres',           icon: <SettingsIcon className="w-4 h-4 text-gray-400" />, label: 'Paramètres' },
   ]
 
   return (
@@ -178,7 +179,7 @@ export default function Header() {
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
                       >
-                        <span className="text-base w-5 text-center">🚪</span>
+                        <span className="w-5 flex justify-center"><LogOut className="w-4 h-4" /></span>
                         Déconnexion
                       </button>
                     </div>

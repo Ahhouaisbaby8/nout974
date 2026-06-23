@@ -12,6 +12,18 @@ import SkeletonCard from '../components/ui/SkeletonCard'
 import CategoryIcon from '../components/ui/CategoryIcon'
 import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
 
+// Exemples qui défilent lettre par lettre dans la barre de recherche
+const SEARCH_EXAMPLES = [
+  'Robe d\'été',
+  'Baskets Nike',
+  'Jean Levi\'s',
+  'Sac à main',
+  'Veste en jean',
+  'Chemise Zara',
+  'Pull en laine',
+  'Sandales',
+]
+
 const HOW_IT_WORKS = [
   {
     title: 'Publie ton annonce',
@@ -36,6 +48,40 @@ export default function Home() {
   const [listings, setListings] = useState([])
   const [loading,  setLoading]  = useState(true)
   const [favIds,   setFavIds]   = useState(new Set())
+  const [typedHint, setTypedHint] = useState('')
+
+  // Effet machine à écrire sur le placeholder (tant que le champ est vide)
+  useEffect(() => {
+    if (search) return            // l'utilisateur tape → on arrête l'animation
+    let exampleIdx = 0
+    let charIdx = 0
+    let deleting = false
+    let timer
+
+    const tick = () => {
+      const word = SEARCH_EXAMPLES[exampleIdx]
+      if (!deleting) {
+        charIdx++
+        setTypedHint(word.slice(0, charIdx))
+        if (charIdx === word.length) {
+          deleting = true
+          timer = setTimeout(tick, 1800)   // pause avant d'effacer
+          return
+        }
+      } else {
+        charIdx--
+        setTypedHint(word.slice(0, charIdx))
+        if (charIdx === 0) {
+          deleting = false
+          exampleIdx = (exampleIdx + 1) % SEARCH_EXAMPLES.length
+        }
+      }
+      timer = setTimeout(tick, deleting ? 45 : 90)
+    }
+
+    timer = setTimeout(tick, 400)
+    return () => clearTimeout(timer)
+  }, [search])
 
   useEffect(() => {
     getListings({ limit: 8 })
@@ -153,7 +199,7 @@ export default function Home() {
           >
             <input
               type="text"
-              placeholder="Que recherches-tu ?"
+              placeholder={typedHint ? `${typedHint}|` : 'Que recherches-tu ?'}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 min-w-0 px-4 py-2.5 outline-none text-nout-texte text-sm bg-transparent placeholder-gray-400"

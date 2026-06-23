@@ -79,6 +79,7 @@ exports.handler = async (event) => {
             total_price,
             buyer_id,
             seller_id,
+            shipping_method,
             buyer:profiles!buyer_id(email, username),
             seller:profiles!seller_id(email, username),
             listing:listings!listing_id(title, price)
@@ -96,6 +97,10 @@ exports.handler = async (event) => {
         const { buyer, seller, listing: annonce, total_price } = order
         const titreAnnonce = escHtml(annonce?.title ?? 'ton article')
         const prixVendeur  = Number(annonce?.price ?? 0).toFixed(2)
+        const isLivraison  = order.shipping_method === 'relay' || order.shipping_method === 'home'
+        const modeLabel    = order.shipping_method === 'relay' ? 'Point relais Chronopost'
+                           : order.shipping_method === 'home'  ? 'Livraison à domicile Chronopost'
+                           : 'Remise en main propre'
 
         // Email acheteur — code de remise
         if (buyer?.email && escrow?.code) {
@@ -127,9 +132,12 @@ exports.handler = async (event) => {
                   </div>
 
                   <div style="border-left:4px solid #00C4B4;padding:12px 16px;background:#F0FFFE;border-radius:0 8px 8px 0;margin:20px 0">
+                    <p style="margin:0 0 6px;color:#6B7A99;font-size:13px"><strong>Mode choisi :</strong> ${escHtml(modeLabel)}</p>
                     <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
                       <strong>Comment ça marche&nbsp;?</strong><br>
-                      Lors de la remise en main propre, donne ce code au vendeur. Il le saisira sur NOUT pour confirmer la transaction et débloquer son paiement.
+                      ${isLivraison
+                        ? `À la réception de ton colis, donne ce code au vendeur (par message NOUT) une fois l'article vérifié et conforme. Il le saisira pour débloquer son paiement.`
+                        : `Lors de la remise en main propre, donne ce code au vendeur. Il le saisira sur NOUT pour confirmer la transaction et débloquer son paiement.`}
                     </p>
                   </div>
 
@@ -175,10 +183,12 @@ exports.handler = async (event) => {
                   </div>
 
                   <div style="border-left:4px solid #1A3A8F;padding:12px 16px;background:#EEF4FF;border-radius:0 8px 8px 0;margin:20px 0">
+                    <p style="margin:0 0 6px;color:#6B7A99;font-size:13px"><strong>Mode choisi par l'acheteur :</strong> ${escHtml(modeLabel)}</p>
                     <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
                       <strong>Prochaine étape&nbsp;:</strong><br>
-                      L'acheteur te contactera via la messagerie NOUT pour organiser la remise en main propre.
-                      Il te donnera un code à 6 chiffres lors de la remise — saisis-le sur NOUT pour recevoir ton paiement.
+                      ${isLivraison
+                        ? `Prépare ton colis et expédie-le via ${escHtml(modeLabel)}. Indique le numéro de suivi sur NOUT depuis « Mes commandes ». À la réception, l'acheteur te donnera un code à 6 chiffres — saisis-le pour recevoir ton paiement.`
+                        : `L'acheteur te contactera via la messagerie NOUT pour organiser la remise en main propre. Il te donnera un code à 6 chiffres lors de la remise — saisis-le sur NOUT pour recevoir ton paiement.`}
                     </p>
                   </div>
 

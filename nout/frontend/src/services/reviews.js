@@ -20,6 +20,19 @@ export const createReview = async ({ buyerId, sellerId, orderId, rating, comment
   return data
 }
 
+export const getSellerRating = async (sellerId) => {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('seller_id', sellerId)
+  if (error) throw error
+  const count = data?.length ?? 0
+  const average = count > 0
+    ? Math.round((data.reduce((sum, r) => sum + r.rating, 0) / count) * 10) / 10
+    : 0
+  return { average, count }
+}
+
 export const hasReviewed = async (buyerId, orderId) => {
   const { data } = await supabase
     .from('reviews')

@@ -2,6 +2,23 @@ const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { randomInt } = require('crypto')
 
+// Tarifs livraison — DOIT rester synchronisé avec src/utils/shipping.js (source de vérité front).
+// NOUT n'a pas de trésorerie : la protection majorée en livraison couvre le coût Chronopost (zéro perte).
+const SHIPPING = {
+  hand:  { fee: 0,    protectionFixed: 1.00 },
+  relay: { fee: 6.49, protectionFixed: 3.49 },
+  home:  { fee: 8.90, protectionFixed: 3.49 },
+}
+const COMMISSION_RATE = 0.05
+
+// Recalcul SÉCURISÉ du total côté serveur (ne jamais faire confiance au client).
+function computeTotals(price, methodId) {
+  const m = SHIPPING[methodId] ?? SHIPPING.hand
+  const protectionFee = (price * (1 + COMMISSION_RATE) + m.protectionFixed + 0.25) / 0.985 - price
+  const total = price + protectionFee + m.fee
+  return Math.round(total * 100) / 100
+}
+
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
@@ -53,12 +70,15 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { listingId, buyerId } = JSON.parse(event.body)
+    const { listingId, buyerId, shippingMethod } = JSON.parse(event.body)
 
     // L'utilisateur authentifié doit être le buyer déclaré
     if (authUser.id !== buyerId) {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
+
+    // Valider le mode de livraison (défaut : main propre)
+    const method = SHIPPING[shippingMethod] ? shippingMethod : 'hand'
 
     // Récupérer l'annonce (plus besoin du stripe_account_id vendeur)
     const { data: listing, error } = await supabase
@@ -99,9 +119,9 @@ exports.handler = async (event) => {
     }
 
     const prixArticle   = listing.price
-    // Gross-up pour que NOUT touche exactement 5%+1€ après frais Stripe (1.5% + 0.25€)
-    // T = (prix×1.05 + 1.25) / 0.985
-    const totalAcheteur = Math.round(((prixArticle * 1.05 + 1.25) / 0.985) * 100) / 100
+    // Total recalculé côté serveur selon le mode de livraison choisi.
+    // La protection majorée en livraison couvre le coût Chronopost → NOUT ne perd jamais.
+    const totalAcheteur = computeTotals(prixArticle, method)
 
     const amountCents = Math.round(totalAcheteur * 100)
     const siteUrl     = process.env.URL || 'http://localhost:8888'
@@ -112,7 +132,7 @@ exports.handler = async (event) => {
       seller_id:       listing.user_id,
       listing_id:      listingId,
       total_price:     totalAcheteur,
-      shipping_method: 'hand',
+      shipping_method: method,
       status:          'pending',
     }).select().single()
 
