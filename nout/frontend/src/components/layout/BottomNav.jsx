@@ -12,10 +12,11 @@ export default function BottomNav() {
     <nav
       aria-label="Navigation principale"
       className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-nout-border z-50 grid grid-cols-5"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <Link
         to="/"
-        className={`flex flex-col items-center justify-center gap-0.5 text-xs min-h-[56px] py-2 ${active('/')}`}
+        className={`flex flex-col items-center justify-center gap-0.5 text-xs min-h-[56px] py-2 transition-colors ${active('/')}`}
       >
         <svg className="w-6 h-6" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10" />
@@ -35,15 +36,18 @@ export default function BottomNav() {
 
       <Link
         to={user ? '/publier' : '/connexion'}
-        className="flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2"
+        className="flex flex-col items-center justify-center gap-0.5 min-h-[56px] py-2 group"
         aria-label="Publier une annonce"
       >
-        <div className="w-12 h-12 bg-nout-turquoise rounded-full flex items-center justify-center shadow-lg -mt-5">
-          <svg className="w-6 h-6 text-white" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg -mt-6 ring-4 ring-white transition-transform group-active:scale-90"
+          style={{ background: 'linear-gradient(135deg, #1A3A8F, #00C4B4)' }}
+        >
+          <svg className="w-7 h-7 text-white" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
           </svg>
         </div>
-        <span className="text-xs text-nout-turquoise font-semibold">Publier</span>
+        <span className="text-xs text-nout-turquoise font-semibold">Vendre</span>
       </Link>
 
       <Link
