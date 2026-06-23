@@ -15,3 +15,21 @@ export const CONDITIONS = [
   { id: 'bon_etat',            label: 'Bon état' },
   { id: 'etat_correct',        label: 'État correct' },
 ]
+
+export const BRANDS = [
+  "L'Effet Péi",
+  "Superpolygone",
+  "Vally",
+  "Nike",
+  "Zara",
+  "H&M",
+  "Adidas",
+  "Shein",
+  "Jennyfer",
+  "Kiabi",
+  "Pull&Bear",
+  "Bershka",
+  "Puma",
+  "Levi's",
+  "Lacoste",
+]

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
-import { CATEGORIES, CONDITIONS } from '../utils/categories'
+import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
 import ListingCard from '../components/ui/ListingCard'
 import Spinner from '../components/ui/Spinner'
@@ -21,6 +21,7 @@ export default function Search() {
   const [category, setCategory] = useState(searchParams.get('categorie') ?? '')
   const [city,     setCity]     = useState(searchParams.get('ville')     ?? 'Toute La Réunion')
   const [condition,setCondition]= useState(searchParams.get('etat')      ?? '')
+  const [brand,    setBrand]    = useState(searchParams.get('marque')    ?? '')
   const [minPrice, setMinPrice] = useState(searchParams.get('min')       ?? '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max')       ?? '')
   const [sortBy,   setSortBy]   = useState(searchParams.get('tri')       ?? 'recent')
@@ -38,10 +39,11 @@ export default function Search() {
     category: category || undefined,
     city:     (city && city !== 'Toute La Réunion') ? city : undefined,
     condition:condition || undefined,
+    brand:    brand     || undefined,
     minPrice: minPrice  || undefined,
     maxPrice: maxPrice  || undefined,
     sortBy,
-  }), [query, category, city, condition, minPrice, maxPrice, sortBy])
+  }), [query, category, city, condition, brand, minPrice, maxPrice, sortBy])
 
   const runSearch = useCallback(async (reset = true) => {
     const p = reset ? 1 : page + 1
@@ -85,11 +87,12 @@ export default function Search() {
     if (category) p.categorie = category
     if (city && city !== 'Toute La Réunion') p.ville = city
     if (condition) p.etat     = condition
+    if (brand)    p.marque    = brand
     if (minPrice) p.min       = minPrice
     if (maxPrice) p.max       = maxPrice
     if (sortBy !== 'recent') p.tri = sortBy
     setSearchParams(p, { replace: true })
-  }, [query, category, city, condition, minPrice, maxPrice, sortBy])
+  }, [query, category, city, condition, brand, minPrice, maxPrice, sortBy])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -100,12 +103,13 @@ export default function Search() {
     setCategory('')
     setCity('Toute La Réunion')
     setCondition('')
+    setBrand('')
     setMinPrice('')
     setMaxPrice('')
     setSortBy('recent')
   }
 
-  const hasFilters = category || (city && city !== 'Toute La Réunion') || condition || minPrice || maxPrice
+  const hasFilters = category || (city && city !== 'Toute La Réunion') || condition || brand || minPrice || maxPrice
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -158,6 +162,14 @@ export default function Search() {
             <select value={condition} onChange={(e) => setCondition(e.target.value)} className="input-field text-sm py-2">
               <option value="">Tous</option>
               {CONDITIONS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Marque</label>
+            <select value={brand} onChange={(e) => setBrand(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
 

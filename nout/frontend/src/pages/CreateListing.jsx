@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
 import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
-import { CATEGORIES, CONDITIONS } from '../utils/categories'
+import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
@@ -46,7 +46,8 @@ export default function CreateListing() {
   const [city, setCity]           = useState('')
   const [size, setSize]           = useState('')
   const [material, setMaterial]   = useState('')
-  const [brand, setBrand]         = useState('')
+  const [brandSelect, setBrandSelect] = useState('')
+  const [brandCustom, setBrandCustom] = useState('')
   const [color, setColor]         = useState('')
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
@@ -116,7 +117,8 @@ export default function CreateListing() {
 
     setLoading(true)
     try {
-      const wordCheck = containsForbiddenWord([title, description, material, brand].join(' '))
+      const finalBrand = brandSelect === '__autre__' ? brandCustom.trim() : brandSelect
+      const wordCheck = containsForbiddenWord([title, description, material, finalBrand].join(' '))
       if (wordCheck.found) {
         setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
         return
@@ -146,7 +148,7 @@ export default function CreateListing() {
         images:      imageUrls,
         size:        isFashion ? (size || null) : null,
         material:    isFashion ? (clean(material.trim()) || null) : null,
-        brand:       isFashion ? (clean(brand.trim()) || null) : null,
+        brand:       isFashion ? (clean(finalBrand) || null) : null,
         color:       isFashion ? (color || null) : null,
       })
 
@@ -337,14 +339,25 @@ export default function CreateListing() {
               <label className="block text-sm font-medium text-nout-dark mb-1">
                 Marque <span className="text-gray-400 font-normal">(optionnel)</span>
               </label>
-              <input
-                type="text"
-                maxLength={50}
-                placeholder="Ex : Nike, Zara, H&M…"
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                className="input-field"
-              />
+              <select
+                value={brandSelect}
+                onChange={(e) => { setBrandSelect(e.target.value); if (e.target.value !== '__autre__') setBrandCustom('') }}
+                className="input-field cursor-pointer"
+              >
+                <option value="">Choisir une marque…</option>
+                {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+                <option value="__autre__">Autre</option>
+              </select>
+              {brandSelect === '__autre__' && (
+                <input
+                  type="text"
+                  maxLength={50}
+                  placeholder="Saisir la marque…"
+                  value={brandCustom}
+                  onChange={(e) => setBrandCustom(e.target.value)}
+                  className="input-field mt-2"
+                />
+              )}
             </div>
 
             <div>

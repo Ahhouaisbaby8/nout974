@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export const getListings = async ({ category, city, condition, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
+export const getListings = async ({ category, city, condition, brand, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
   let query = supabase
     .from('listings')
     .select(`*, profiles(id, username, avatar_url)`, { count: 'exact' })
@@ -11,6 +11,7 @@ export const getListings = async ({ category, city, condition, minPrice, maxPric
   if (category)  query = query.eq('category', category)
   if (city)      query = query.eq('city', city)
   if (condition) query = query.eq('condition', condition)
+  if (brand)     query = query.eq('brand', brand)
   if (minPrice)  query = query.gte('price', minPrice)
   if (maxPrice)  query = query.lte('price', maxPrice)
   if (search)    query = query.ilike('title', `%${search}%`)
