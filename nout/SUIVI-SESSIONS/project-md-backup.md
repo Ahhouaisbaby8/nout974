@@ -522,11 +522,20 @@ Fait et déployé :
 
 **RAPPEL IMPORTANT — équilibre MOBILE** : Amandine insiste, la majorité des users sont sur mobile. TOUJOURS tester le rendu mobile (390px) avec Playwright avant de pousser. Popups : OK mobile vérifié.
 
-### PROCHAINES ÉTAPES VISUELLES (reste à faire)
-1. **Nettoyer emojis pages internes** (toasts OrderToast, EscrowConfirm, Conversation, modales ReportModal, CropModal, CompteActive, admin) — gros chantier, ~25 fichiers
-2. Fiche produit 2 colonnes (galerie sticky / infos+CTA)
-3. Formulaire publication amélioré (photos réordonnables)
-4. Système de LOT (demandé, gros chantier)
+### 🆕 DEMANDE — COMPTES PROFESSIONNELS (24 juin 2026)
+Amandine veut accueillir des PROS (boutiques, créateurs, revendeurs) qui vendent sur NOUT avec des RÈGLES SPÉCIFIQUES, tout en gardant une image TRÈS PROFESSIONNELLE. À concevoir :
+- Statut "compte pro" / "boutique" distinct des particuliers (badge Pro visible)
+- Règles spécifiques pros : conditions, vérif SIRET, obligations légales (CGV pro, droit de rétractation 14j obligatoire pour vente pro→particulier, mentions vendeur pro DSA/UE)
+- Possible : page boutique dédiée, plus d'annonces, mise en avant, conditions tarifaires différentes
+- Image pro : design soigné, badge confiance, distinction claire pro/particulier
+- À cadrer avec Amandine (mini-plan) AVANT de coder. Gros sujet (juridique + technique + design).
+
+### PROCHAINES ÉTAPES (reste à faire)
+1. **Nettoyer emojis pages internes** (EN COURS — 163 emojis / 30 fichiers, ListingDetail commencé) — gros chantier
+2. **Comptes professionnels** (nouvelle demande, voir ci-dessus)
+3. Fiche produit 2 colonnes (galerie sticky / infos+CTA)
+4. Formulaire publication amélioré (photos réordonnables)
+5. Système de LOT (demandé, gros chantier)
 
 ## Analyse concurrentielle (23 juin 2026) — voir nout/ANALYSE-CONCURRENTIELLE-2026-06-23.md
 
