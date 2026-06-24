@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOUT — Aperçu design v2 (mélange)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nuit: #0A0F2C;
+    --lagon: #00C4B4;
+    --lagon-profond: #00897B;
+    --blanc-casse: #F7F8FA;
+    --corail: #FF6B4A;
+    --ardoise: #3A3F55;
+    --brume: #D9DCE4;
+    --ombre-douce: 0 2px 12px rgba(10,15,44,0.06);
+    --ombre: 0 8px 24px rgba(10,15,44,0.10);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--blanc-casse); color: var(--ardoise); line-height: 1.5; }
+  h1, h2, h3, .display { font-family: 'Poppins', sans-serif; color: var(--nuit); }
+
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--lagon-profond);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .eyebrow::before, .eyebrow::after { content: "•"; color: var(--lagon); }
+  .eyebrow.center { justify-content: center; }
+
+  /* dégradé turquoise réutilisable (boutons signature) */
+  .grad-turq { background: linear-gradient(135deg, #0E7FAB, #00C4B4); color:#fff; }
+
+  /* ---- HEADER ---- */
+  header {
+    background: #fff; border-bottom: 1px solid var(--brume);
+    padding: 14px 32px; display: flex; align-items: center; gap: 28px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo { font-family: 'Poppins'; font-weight: 700; font-size: 22px; color: var(--nuit); line-height:1; }
+  .logo span { color: var(--lagon); }
+  .logo small { display:block; font-size:8px; letter-spacing:0.18em; color:var(--lagon); font-weight:600; margin-top:2px; }
+  .search { flex:1; max-width:420px; background:var(--blanc-casse); border:1px solid var(--brume); border-radius:999px; padding:10px 18px; font-size:14px; color:var(--ardoise); }
+  nav { display:flex; gap:22px; margin-left:auto; align-items:center; font-size:14px; }
+  nav a { color:var(--ardoise); text-decoration:none; }
+  .btn { border:none; border-radius:12px; font-weight:600; cursor:pointer; font-family:'Inter'; font-size:14px; }
+  .btn-ghost { background:transparent; border:1.5px solid var(--nuit); color:var(--nuit); padding:9px 18px; }
+  .btn-grad { padding:10px 22px; }
+
+  /* ---- HERO ANIMÉ (gardé du site actuel) ---- */
+  .hero {
+    position:relative; overflow:hidden; padding:72px 32px 96px; text-align:center; color:#fff;
+    background: linear-gradient(120deg, #1B4DA8, #00C4B4, #C84B8C, #1B4DA8);
+    background-size: 300% 300%;
+    animation: heroMove 16s ease infinite;
+  }
+  @keyframes heroMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  /* "974" filigrane */
+  .hero::before {
+    content:"974"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-family:'Poppins'; font-weight:700; font-size:340px; color:rgba(255,255,255,0.06);
+    pointer-events:none; line-height:1;
+  }
+  /* palmiers en ombre */
+  .palm { position:absolute; bottom:0; width:130px; opacity:0.25; }
+  .palm.l { left:20px; } .palm.r { right:20px; transform:scaleX(-1); }
+  .hero-content { position:relative; z-index:2; }
+  .hero .brand { font-family:'Poppins'; font-weight:700; font-size:40px; letter-spacing:0.02em; }
+  .hero .brand .dot { color:var(--lagon); }
+  .hero h1 { font-size:30px; font-weight:700; color:rgba(255,255,255,0.92); margin:2px 0 10px; }
+  .hero p { font-size:16px; color:rgba(255,255,255,0.8); margin-bottom:28px; }
+  .hero-search {
+    background:#fff; border-radius:999px; padding:8px 8px 8px 24px;
+    display:flex; align-items:center; gap:12px; max-width:580px; margin:0 auto 18px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.22);
+  }
+  .hero-search input { flex:1; border:none; outline:none; font-size:15px; color:var(--nuit); font-family:'Inter'; }
+  .hero-search .sel { border-left:1px solid var(--brume); padding:0 14px; color:var(--ardoise); font-size:14px; }
+  .founder-pill {
+    display:inline-flex; align-items:center; gap:10px;
+    background:rgba(10,15,44,0.45); border:1px solid rgba(255,255,255,0.2);
+    color:#fff; padding:8px 18px; border-radius:999px; font-size:13px;
+  }
+  .founder-pill b { color:var(--corail); }
+
+  /* ---- SECTIONS ---- */
+  .section { max-width:1100px; margin:0 auto; padding:48px 32px; }
+  .section h2 { font-size:28px; font-weight:700; margin-bottom:4px; }
+  .row-head { display:flex; align-items:flex-end; justify-content:space-between; }
+  .voir { color:var(--lagon-profond); font-size:14px; font-weight:600; text-decoration:none; }
+  .cats { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .chip { background:#fff; border:1px solid var(--brume); border-radius:999px; padding:9px 18px; font-size:14px; color:var(--ardoise); cursor:pointer; }
+  .chip:hover { border-color:var(--lagon); color:var(--nuit); }
+
+  /* ---- GRILLE PRODUITS ---- */
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:22px; }
+  .card { background:#fff; border-radius:16px; overflow:hidden; box-shadow:var(--ombre-douce); transition:transform .2s, box-shadow .2s; cursor:pointer; }
+  .card:hover { transform:translateY(-4px); box-shadow:var(--ombre); }
+  .card .photo { aspect-ratio:4/5; background:var(--brume); position:relative; overflow:hidden; }
+  .card .photo img { width:100%; height:100%; object-fit:cover; }
+  .card .fav { position:absolute; top:10px; right:10px; width:32px; height:32px; background:rgba(10,15,44,0.35); border-radius:999px; display:flex; align-items:center; justify-content:center; color:#fff; }
+  .card .fav.active { background:#fff; color:var(--lagon); }
+  .badge-founder { position:absolute; top:10px; left:10px; background:var(--corail); color:#fff; font-size:10px; font-weight:600; padding:4px 10px; border-radius:999px; }
+  .card .info { padding:12px 14px 14px; }
+  .card .brand2 { font-size:12px; color:var(--ardoise); font-weight:600; }
+  .card .title { font-size:12px; color:#8A8F9E; margin:1px 0 6px; }
+  .card .price { font-family:'Poppins'; font-size:18px; font-weight:700; color:var(--nuit); }
+  .card .meta { font-size:11px; color:#9AA0AE; margin-top:4px; }
+
+  /* ---- PRICE TILES ---- */
+  .price-tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:22px; }
+  .ptile { background:#fff; border:1px solid var(--brume); border-radius:16px; padding:24px; text-align:center; cursor:pointer; transition:border-color .2s; }
+  .ptile:hover { border-color:var(--lagon); }
+  .ptile .label { font-size:13px; color:var(--ardoise); }
+  .ptile .amt { font-family:'Poppins'; font-size:26px; font-weight:700; color:var(--nuit); margin-top:4px; }
+
+  /* ---- HOW ---- */
+  .how { background:#fff; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; margin-top:30px; }
+  .step { text-align:center; }
+  .step .num { width:44px; height:44px; border-radius:999px; background:var(--nuit); color:#fff; font-family:'Poppins'; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; font-size:18px; }
+  .step h3 { font-size:17px; margin-bottom:6px; }
+  .step p { font-size:14px; color:var(--ardoise); }
+  .cta-band { text-align:center; padding:8px 32px 8px; }
+
+  /* ---- FOOTER (gardé du site actuel) ---- */
+  footer { background:var(--nuit); color:rgba(255,255,255,0.65); padding:48px 32px 28px; margin-top:40px; border-top:3px solid var(--lagon); }
+  .footer-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; }
+  footer .logo { color:#fff; }
+  footer .logo small { color:var(--lagon); }
+  footer .tag { font-style:italic; margin:14px 0 12px; color:rgba(255,255,255,0.8); font-size:14px; }
+  footer .addr { font-size:13px; color:rgba(255,255,255,0.5); }
+  footer h4 { color:rgba(255,255,255,0.5); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:14px; font-family:'Inter'; font-weight:600; }
+  footer a { display:block; color:rgba(255,255,255,0.75); font-size:14px; text-decoration:none; margin-bottom:10px; }
+  footer a:hover { color:var(--lagon); }
+  .footer-bottom { max-width:1100px; margin:32px auto 0; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; font-size:12px; color:rgba(255,255,255,0.4); }
+
+  @media (max-width:700px){
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .price-tiles{grid-template-columns:repeat(2,1fr);}
+    .steps{grid-template-columns:1fr; gap:24px;}
+    .footer-inner{grid-template-columns:1fr 1fr; gap:28px;}
+    nav .hide-m{display:none;}
+    .hero .brand{font-size:32px;} .hero h1{font-size:24px;}
+    .hero::before{font-size:200px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NOUT<span>•</span><small>LA RÉUNION 974</small></div>
+  <input class="search" placeholder="Rechercher sur NOUT…">
+  <nav>
+    <a class="hide-m" href="#">Comment ça marche</a>
+    <a class="hide-m" href="#">À propos</a>
+    <button class="btn btn-ghost">Connexion</button>
+    <button class="btn btn-grad grad-turq">S'inscrire</button>
+  </nav>
+</header>
+
+<!-- HERO ANIMÉ (gardé) -->
+<section class="hero">
+  <svg class="palm l" viewBox="0 0 100 200"><path d="M50 200 L48 60 Q40 40 10 35 Q40 45 47 60 Q30 30 5 50 Q35 38 47 58 Q50 25 75 45 Q52 40 49 60 Q70 30 95 50 Q60 42 50 60 Z" fill="#0A2A3A"/></svg>
+  <svg class="palm r" viewBox="0 0 100 200"><path d="M50 200 L48 60 Q40 40 10 35 Q40 45 47 60 Q30 30 5 50 Q35 38 47 58 Q50 25 75 45 Q52 40 49 60 Q70 30 95 50 Q60 42 50 60 Z" fill="#0A2A3A"/></svg>
+  <div class="hero-content">
+    <div class="brand">NOUT<span class="dot">•</span></div>
+    <h1>Marketplace de La Réunion</h1>
+    <p>La marketplace mode 100 % réunionnaise, entre particuliers</p>
+    <div class="hero-search">
+      <input placeholder="Robe d'été…">
+      <span class="sel">Toute La Réunion ▾</span>
+      <button class="btn btn-grad grad-turq" style="padding:11px 24px;">Rechercher</button>
+    </div>
+    <div class="founder-pill">Membres Fondateurs &nbsp;·&nbsp; <b>50/50 places restantes</b></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="eyebrow">Explore</div>
+  <h2>Catégories</h2>
+  <div class="cats">
+    <span class="chip">Vêtements femme</span>
+    <span class="chip">Vêtements homme</span>
+    <span class="chip">Vêtements enfant</span>
+    <span class="chip">Chaussures</span>
+    <span class="chip">Accessoires</span>
+    <span class="chip">Sacs</span>
+    <span class="chip">Beauté</span>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="row-head">
+    <div><div class="eyebrow">Fraîchement publié</div><h2>Nouveautés</h2></div>
+    <a class="voir" href="#">Voir tout →</a>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <div class="photo"><img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop"><span class="badge-founder">Fondateur</span><div class="fav active">♥</div></div>
+      <div class="info"><div class="brand2">Zara</div><div class="title">T-shirt coton blanc</div><div class="price">8,00 €</div><div class="meta">Saint-Denis · il y a 2h</div></div>
+    </div>
+    <div class="card">
+      <div class="photo"><img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=500&fit=crop"><div class="fav">♡</div></div>
+      <div class="info"><div class="brand2">Nike</div><div class="title">Baskets Air Max</div><div class="price">45,00 €</div><div class="meta">Saint-Pierre · il y a 5h</div></div>
+    </div>
+    <div class="card">
+      <div class="photo"><img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=500&fit=crop"><div class="fav">♡</div></div>
+      <div class="info"><div class="brand2">H&M</div><div class="title">Chemise rayée</div><div class="price">12,00 €</div><div class="meta">Le Tampon · hier</div></div>
+    </div>
+    <div class="card">
+      <div class="photo"><img src="https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?w=400&h=500&fit=crop"><div class="fav">♡</div></div>
+      <div class="info"><div class="brand2">Levi's</div><div class="title">Jean droit bleu</div><div class="price">25,00 €</div><div class="meta">Saint-Paul · hier</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="eyebrow">Petit budget</div>
+  <h2>Acheter par prix</h2>
+  <div class="price-tiles">
+    <div class="ptile"><div class="label">Moins de</div><div class="amt">10 €</div></div>
+    <div class="ptile"><div class="label">Moins de</div><div class="amt">25 €</div></div>
+    <div class="ptile"><div class="label">Moins de</div><div class="amt">50 €</div></div>
+    <div class="ptile"><div class="label">Moins de</div><div class="amt">100 €</div></div>
+  </div>
+</section>
+
+<section class="how">
+  <div class="section" style="text-align:center;">
+    <div class="eyebrow center">Simple comme bonjour</div>
+    <h2>Comment ça marche</h2>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h3>Publie ton article</h3><p>Prends une photo, fixe ton prix. En 2 minutes c'est en ligne.</p></div>
+      <div class="step"><div class="num">2</div><h3>Reçois des messages</h3><p>Les acheteurs te contactent via la messagerie sécurisée.</p></div>
+      <div class="step"><div class="num">3</div><h3>Vends en sécurité</h3><p>Paiement protégé, remise en main propre avec code. Zéro arnaque.</p></div>
+    </div>
+    <div class="cta-band" style="padding-top:32px;">
+      <button class="btn btn-grad grad-turq" style="padding:14px 32px; font-size:16px;">Rejoindre NOUT gratuitement</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER (gardé du site actuel) -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo">NOUT<span style="color:var(--lagon)">•</span><small>• LA RÉUNION 974 •</small></div>
+      <p class="tag">La marketplace du 974</p>
+      <p class="addr">contact@nout.re<br>Saint-Denis, La Réunion 974</p>
+    </div>
+    <div><h4>Navigation</h4><a href="#">Accueil</a><a href="#">Annonces</a><a href="#">À propos</a><a href="#">Aide & Contact</a><a href="#">Comment ça marche</a></div>
+    <div><h4>Légal</h4><a href="#">CGU</a><a href="#">CGV</a><a href="#">Confidentialité & RGPD</a><a href="#">Mentions légales</a><a href="#">Charte de conduite</a></div>
+    <div><h4>Mon compte</h4><a href="#">Connexion</a><a href="#">Inscription</a><a href="#">Mes favoris</a><a href="#">Mes commandes</a><a href="#">Installer l'app</a></div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 NOUT — Marketplace 974. Tous droits réservés.</span>
+    <span>Paiements certifiés PCI-DSS</span>
+  </div>
+</footer>
+
+</body>
+</html>

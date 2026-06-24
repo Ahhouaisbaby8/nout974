@@ -500,11 +500,27 @@ Script de scan : recréer `node -e` avec regex emoji Unicode (voir historique) o
 - Reste tout le nettoyage emoji
 - Dernier commit poussé en prod : 306e05c (fix stripe/web-push + bottom nav + skeleton). ⚠️ VÉRIFIER que ce déploiement Netlify est bien passé VERT (le précédent 638952a avait échoué sur stripe manquant).
 
-### PROCHAINES ÉTAPES VISUELLES (après emojis)
-1. Nettoyer emojis partout (priorité user-facing)
-2. Vérifier sobriété générale (typo pas trop grasse, 1 accent, whitespace)
-3. Puis étude UX : fiche produit 2 colonnes, formulaire publication amélioré
-4. Système de LOT (demandé, gros chantier, voir section dédiée)
+### ✅ REFONTE VISUELLE V1 DÉPLOYÉE (commit f9e3e96, 24 juin 2026, sur nout.re)
+Direction validée par Amandine : MÉLANGE site actuel + mockup. Garder hero animé + footer + boutons dégradé turquoise. Voir nout/MOCKUP-DESIGN/ (mockups HTML) + CE-QU-ON-GARDE.md.
+Fait et déployé :
+- Eyebrows signature "• EXPLORE / FRAÎCHEMENT PUBLIÉ / SIMPLE COMME BONJOUR •" (points turquoise = rappel logo)
+- Titres section 28px (plus de caractère)
+- Cartes produit allégées (marque/titre/prix/lieu, ratio 4:5) + grille dense 5 col
+- **Espace Vendeur refait SOBRE** (fond blanc, bordures grises fines, fini les dégradés bleu/jaune/vert criards) — c'était LE truc "affreux" qu'Amandine voulait corriger
+- Faux-beige `bg-orange-50` déco éliminé (About/Help/ListingDetail/Search/Login/Register) → turquoise pâle #EAF6F5. Alertes orange légitimes (Login/Orders) préservées.
+- Section "Comment ça marche" : crème → bleu-gris clair #EEF3F8
+- Catégories accueil SANS icônes (texte seul)
+- Palmiers hero non coupés (viewBox -30 vers le haut)
+- Emoji 🌴/🏝️ hero retirés → icônes lucide. Badge Fondateur en corail #FF6B4A.
+
+### MCP INSTALLÉS (24 juin) : playwright + context7 (claude mcp add). Chromium OK. Permet captures/voir le rendu.
+
+### PROCHAINES ÉTAPES VISUELLES (reste à faire)
+1. **Nettoyer emojis pages internes** (toasts OrderToast, EscrowConfirm, Conversation, modales ReportModal, CropModal, CompteActive, admin) — gros chantier, ~25 fichiers
+2. Fiche produit 2 colonnes (galerie sticky / infos+CTA)
+3. Formulaire publication amélioré (photos réordonnables)
+4. Système de LOT (demandé, gros chantier)
+5. ⚠️ Note : SellerSpace.jsx version sobre était non commitée → MAINTENANT déployée (f9e3e96)
 
 ## Analyse concurrentielle (23 juin 2026) — voir nout/ANALYSE-CONCURRENTIELLE-2026-06-23.md
 
