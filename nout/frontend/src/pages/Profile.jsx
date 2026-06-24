@@ -26,8 +26,21 @@ export default function Profile() {
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound]   = useState(false)
   const [showReport, setShowReport] = useState(false)
+  const [shareToast, setShareToast] = useState(false)
+  const [tab, setTab] = useState('articles')   // 'articles' | 'avis'
 
   const isOwnProfile = user?.id === id
+
+  const handleShareProfile = async () => {
+    const url = `${window.location.origin}/profil/${id}`
+    if (navigator.share) {
+      try { await navigator.share({ title: `Profil de ${profile?.username} sur NOUT`, url }) } catch {}
+    } else {
+      try { await navigator.clipboard.writeText(url) } catch {}
+      setShareToast(true)
+      setTimeout(() => setShareToast(false), 2500)
+    }
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -70,7 +83,6 @@ export default function Profile() {
 
   if (notFound) return (
     <div className="text-center py-24 text-gray-400">
-      <p className="text-5xl mb-4"></p>
       <p className="text-lg font-semibold text-nout-dark">Profil introuvable</p>
       <button onClick={() => navigate('/')} className="btn-primary mt-6 px-8">Retour à l'accueil</button>
     </div>
@@ -119,31 +131,9 @@ export default function Profile() {
                      style={{ top: s.top, left: s.left, right: s.right, animationDelay: s.delay }} />
               ))}
             </div>
-            <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none">
-              <svg width="110" height="200" viewBox="0 0 170 300" fill="none">
-                <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22" stroke="rgba(4,2,0,0.52)" strokeWidth="13" strokeLinecap="round"/>
-                <path d="M93 22 Q52 38 12 26"   stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
-                <path d="M93 22 Q70 2 42 -8"    stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
-                <path d="M93 22 Q132 36 165 27" stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
-                <path d="M93 22 Q118 4 148 -4"  stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
-                <path d="M93 22 Q91 0 88 -18"   stroke="rgba(4,2,0,0.4)"  strokeWidth="5" strokeLinecap="round"/>
-                <path d="M93 22 Q62 48 34 58"   stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
-                <path d="M93 22 Q124 48 152 56" stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
-                <circle cx="93" cy="29" r="7" fill="rgba(4,2,0,0.42)"/>
-              </svg>
-            </div>
-            <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none">
-              <svg width="110" height="180" viewBox="0 0 170 275" fill="none">
-                <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16" stroke="rgba(4,2,0,0.52)" strokeWidth="12" strokeLinecap="round"/>
-                <path d="M78 16 Q118 30 158 20"  stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
-                <path d="M78 16 Q104 -2 134 -10" stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
-                <path d="M78 16 Q40 30 6 22"     stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
-                <path d="M78 16 Q54 -1 26 -8"    stroke="rgba(4,2,0,0.43)" strokeWidth="6" strokeLinecap="round"/>
-                <path d="M78 16 Q80 -4 83 -22"   stroke="rgba(4,2,0,0.4)"  strokeWidth="5" strokeLinecap="round"/>
-                <path d="M78 16 Q110 42 138 52"  stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
-                <path d="M78 16 Q48 42 20 54"    stroke="rgba(4,2,0,0.38)" strokeWidth="5" strokeLinecap="round"/>
-                <circle cx="78" cy="23" r="7" fill="rgba(4,2,0,0.42)"/>
-              </svg>
+            {/* "974" filigrane */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+              <span className="font-title font-black text-white" style={{ fontSize: 150, opacity: 0.07, lineHeight: 1 }}>974</span>
             </div>
             <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 flex items-end gap-4 z-10">
               <FounderRing size="md" founderNumber={founderNumber}>
@@ -164,6 +154,13 @@ export default function Profile() {
                     </span>
                   )}
                 </div>
+                {avgRating && (
+                  <p className="flex items-center gap-1.5 text-[13px] text-white/90 mt-1">
+                    <span className="text-[#FFD84A]">★</span>
+                    <span className="font-semibold">{avgRating}</span>
+                    <span className="text-white/60">({reviews.length} avis)</span>
+                  </p>
+                )}
                 {profile.city && (
                   <p className="text-[11px] text-white/60 mt-0.5">{profile.city}</p>
                 )}
@@ -205,31 +202,48 @@ export default function Profile() {
             {profile.bio && (
               <p className="text-sm text-gray-600 leading-relaxed mb-2">{profile.bio}</p>
             )}
+            {/* Badge de confiance : email confirmé (tout compte NOUT a un email vérifié via Supabase Auth) */}
+            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#1A3A8F] bg-[#1A3A8F]/8 px-2.5 py-1 rounded-full mb-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+              Email confirmé
+            </span>
             <p className="text-xs text-gray-400">
               Membre depuis {formatRelativeDate(profile.created_at)}
             </p>
           </div>
-          <div className="flex flex-col gap-2 flex-shrink-0">
+          <div className="flex flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
             {isOwnProfile ? (
-              <Link to="/parametres" className="btn-secondary px-5 py-2 text-sm">
-                Modifier mon profil
-              </Link>
-            ) : user ? (
               <>
-                <button
-                  onClick={() => navigate(`/messages/${id}`)}
-                  className="btn-primary px-5 py-2 text-sm"
-                >
-                  Envoyer un message
-                </button>
-                <button
-                  onClick={() => setShowReport(true)}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
-                >
-                  Signaler
+                <Link to="/parametres" className="btn-secondary px-5 py-2 text-sm text-center">
+                  Modifier mon profil
+                </Link>
+                <button onClick={handleShareProfile} className="btn-secondary px-5 py-2 text-sm">
+                  Partager le profil
                 </button>
               </>
-            ) : null}
+            ) : (
+              <>
+                {user && (
+                  <button
+                    onClick={() => navigate(`/messages/${id}`)}
+                    className="btn-primary px-5 py-2 text-sm"
+                  >
+                    Envoyer un message
+                  </button>
+                )}
+                <button onClick={handleShareProfile} className="btn-secondary px-5 py-2 text-sm">
+                  Partager le profil
+                </button>
+                {user && (
+                  <button
+                    onClick={() => setShowReport(true)}
+                    className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
+                  >
+                    Signaler
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -254,57 +268,74 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── AVIS VENDEUR ── */}
-      {reviews.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-bold text-nout-dark mb-3 flex items-center gap-2">
-            Avis
-            <span className="flex items-center gap-1">
-              <Stars rating={Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length)} />
-              <span className="text-sm font-normal text-gray-400 ml-1">
-                {(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)} · {reviews.length} avis
-              </span>
-            </span>
-          </h2>
-          <div className="flex flex-col gap-3">
-            {reviews.slice(0, 5).map(r => <ReviewCard key={r.id} review={r} />)}
-          </div>
+      {/* ── ONGLETS Articles / Avis ── */}
+      <div className="flex border-b border-gray-200 mt-8">
+        <button
+          onClick={() => setTab('articles')}
+          className={`flex-1 sm:flex-none sm:px-8 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            tab === 'articles' ? 'text-nout-dark border-nout-turquoise' : 'text-gray-400 border-transparent hover:text-gray-600'
+          }`}
+        >
+          Articles{listings.length > 0 ? ` · ${listings.length}` : ''}
+        </button>
+        <button
+          onClick={() => setTab('avis')}
+          className={`flex-1 sm:flex-none sm:px-8 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+            tab === 'avis' ? 'text-nout-dark border-nout-turquoise' : 'text-gray-400 border-transparent hover:text-gray-600'
+          }`}
+        >
+          Avis{reviews.length > 0 ? ` · ${reviews.length}` : ''}
+        </button>
+      </div>
+
+      {/* ── CONTENU ONGLET ARTICLES ── */}
+      {tab === 'articles' && (
+        <div className="mt-5">
+          {listings.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-sm">
+                {isOwnProfile ? "Tu n'as pas encore publié d'annonce." : "Aucune annonce active pour le moment."}
+              </p>
+              {isOwnProfile && (
+                <button onClick={() => navigate('/publier')} className="btn-primary mt-5 px-8">
+                  Publier une annonce
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {listings.map(l => <ListingCard key={l.id} listing={l} isFounderSeller={isFounder && showBadge} founderNumber={founderNumber} />)}
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── ANNONCES ── */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold text-nout-dark mb-4">
-          Annonces de {profile.username}
-          {listings.length > 0 && (
-            <span className="ml-2 text-sm font-normal text-gray-400">({listings.length})</span>
+      {/* ── CONTENU ONGLET AVIS ── */}
+      {tab === 'avis' && (
+        <div className="mt-5">
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <p className="text-sm">Aucun avis pour le moment.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {reviews.map(r => <ReviewCard key={r.id} review={r} />)}
+            </div>
           )}
-        </h2>
-
-        {listings.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-4xl mb-3"></p>
-            <p className="text-sm">
-              {isOwnProfile ? "Tu n'as pas encore publié d'annonce." : "Aucune annonce active pour le moment."}
-            </p>
-            {isOwnProfile && (
-              <button onClick={() => navigate('/publier')} className="btn-primary mt-5 px-8">
-                Publier une annonce
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {listings.map(l => <ListingCard key={l.id} listing={l} isFounderSeller={isFounder && showBadge} founderNumber={founderNumber} />)}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {showReport && (
         <ReportModal
           targetUserId={id}
           onClose={() => setShowReport(false)}
         />
+      )}
+
+      {shareToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-nout-dark text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
+          Lien du profil copié
+        </div>
       )}
     </div>
   )
