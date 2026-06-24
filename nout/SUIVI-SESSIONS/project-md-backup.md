@@ -544,7 +544,26 @@ Amandine a validé la maquette `nout/MOCKUP-DESIGN/mon-profil-transforme.html` (
 - **⚠️ BANNIÈRE FACULTATIVE — DÉJÀ EN PLACE !** Le toggle existe DÉJÀ dans Settings.jsx (section "Badge Membre Fondateur", visible si `profile?.is_founder`, ligne ~388, champ `show_founder_badge`). Son texte mentionne DÉJÀ "Affiche ta bannière coucher de soleil, ton anneau doré et ton badge". Donc PAS besoin de nouveau champ : quand on intègre la nouvelle bannière profil, la lier au `show_founder_badge` existant. handleToggleFounderBadge() existe déjà.
 Mockups : profil-mobile.html, profil-mobile-v3.html, profil-banniere-fondateur.html, mon-profil-transforme.html (LE bon, sans palmier).
 
-### PROCHAINES ÉTAPES (reste à faire)
+### ✅ PROFIL AMÉLIORÉ DÉPLOYÉ (commit d286d73, 25 juin 2026, sur nout.re)
+Intégré sur le vrai Profile.jsx :
+- Bannière fondateur : **palmiers RETIRÉS**, "974" filigrane à la place, note ⭐ ajoutée dans la bannière
+- **Onglets Articles / Avis** (au lieu des sections séparées)
+- **Badge "Email confirmé"** (confiance — tout compte NOUT a email vérifié via Supabase Auth)
+- **Bouton "Partager le profil"** (mon profil + profil des autres) + toast "Lien copié"
+- Nettoyage balises vides
+- Testé desktop + mobile, 0 erreur
+La bannière reste réservée aux fondateurs (toggle show_founder_badge existant dans Settings).
+
+### ⏭️ REPRISE DEMAIN (26 juin 2026) — RESTE À FAIRE sur le profil
+- **Système ABONNÉS / ABONNEMENTS (follow)** = LE gros morceau restant pour finir la maquette profil. Nécessite : nouvelle table `follows` (follower_id, following_id) en Supabase + RLS + service follow.js (follow/unfollow/isFollowing/counts) + bouton "S'abonner" sur le profil des AUTRES + affichage compteurs Abonnés/Abonnements dans les stats. Maquette validée = mon-profil-transforme.html.
+- Optionnel plus tard : identité vérifiée (KYC).
+
+### AUTRES CHANTIERS EN ATTENTE
+- **Comptes professionnels** (demande Amandine — boutiques/créateurs avec règles spécifiques, badge Pro, vérif SIRET, CGV pro, rétractation 14j). Gros sujet juridique+technique+design, à cadrer.
+- Fiche produit 2 colonnes (galerie sticky)
+- Système de LOT (bundle multi-articles)
+
+### PROCHAINES ÉTAPES (historique)
 1. **Nettoyer emojis pages internes** (FAIT le 24 juin — 189 retirés, commit 9b428b4)
 2. **Comptes professionnels** (nouvelle demande, voir ci-dessus)
 3. Fiche produit 2 colonnes (galerie sticky / infos+CTA)
