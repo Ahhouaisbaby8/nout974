@@ -9,8 +9,8 @@ import ListingCard from '../components/ui/ListingCard'
 import PriceRangeSection from '../components/PriceRangeSection'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
-import CategoryIcon from '../components/ui/CategoryIcon'
 import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
+import { Sparkles, PackageOpen } from 'lucide-react'
 
 // Exemples qui défilent lettre par lettre dans la barre de recherche
 const SEARCH_EXAMPLES = [
@@ -146,7 +146,7 @@ export default function Home() {
 
         {/* Palmier gauche */}
         <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none hidden sm:block">
-          <svg width="170" height="300" viewBox="0 0 170 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="170" height="330" viewBox="0 -30 170 330" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22"
                   stroke="rgba(4,2,0,0.52)" strokeWidth="13" strokeLinecap="round"/>
             <path d="M93 22 Q52 38 12 26"   stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
@@ -164,7 +164,7 @@ export default function Home() {
 
         {/* Palmier droit */}
         <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none hidden sm:block">
-          <svg width="170" height="275" viewBox="0 0 170 275" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="170" height="305" viewBox="0 -30 170 305" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16"
                   stroke="rgba(4,2,0,0.52)" strokeWidth="12" strokeLinecap="round"/>
             <path d="M78 16 Q118 30 158 20"  stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
@@ -222,12 +222,12 @@ export default function Home() {
           </form>
 
           {/* Pill Membres Fondateurs — Position B, sous la recherche */}
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-default select-none"
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold cursor-default select-none"
                style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
-            <span>🌴</span>
+            <Sparkles className="w-3.5 h-3.5" style={{ color: '#FF6B4A' }} strokeWidth={2} />
             <span className="text-white/85">Membres Fondateurs</span>
             <span className="text-white/30">·</span>
-            <span className="font-bold" style={{ color: '#F5D45A' }}>
+            <span className="font-bold" style={{ color: '#FF6B4A' }}>
               {FOUNDER_TOTAL - FOUNDER_TAKEN}/{FOUNDER_TOTAL} places restantes
             </span>
           </div>
@@ -236,8 +236,11 @@ export default function Home() {
       </section>
 
       {/* ── CATÉGORIES ───────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pt-10 pb-4">
-        <h2 className="font-title font-bold text-[20px] text-nout-texte mb-4">
+      <section className="max-w-7xl mx-auto px-4 pt-12 pb-4">
+        <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#00897B] mb-2">
+          <span className="text-nout-turquoise">•</span> Explore <span className="text-nout-turquoise">•</span>
+        </p>
+        <h2 className="font-title font-bold text-[28px] text-nout-texte mb-5">
           Catégories
         </h2>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
@@ -245,10 +248,9 @@ export default function Home() {
             <button
               key={cat.id}
               onClick={() => handleCategory(cat.id)}
-              className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border border-nout-border bg-white text-nout-texte text-[13px] font-medium hover:bg-nout-turquoise hover:text-white hover:border-nout-turquoise transition-all duration-150 cursor-pointer"
+              className="flex-shrink-0 px-5 py-2 rounded-full border border-nout-border bg-white text-nout-texte text-[13px] font-medium hover:bg-nout-turquoise hover:text-white hover:border-nout-turquoise transition-all duration-150 cursor-pointer"
             >
-              <CategoryIcon id={cat.id} size={14} />
-              <span>{cat.label}</span>
+              {cat.label}
             </button>
           ))}
         </div>
@@ -256,10 +258,12 @@ export default function Home() {
 
       {/* ── C) NOUVEAUTÉS ────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 pt-8 pb-10">
-        <div className="flex justify-between items-center mb-5">
-          <div className="flex items-center gap-2">
-            <h2 className="font-title font-bold text-[22px] text-nout-texte">Nouveautés</h2>
-            <span className="bg-nout-turquoise text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">New</span>
+        <div className="flex justify-between items-end mb-5">
+          <div>
+            <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#00897B] mb-2">
+              <span className="text-nout-turquoise">•</span> Fraîchement publié <span className="text-nout-turquoise">•</span>
+            </p>
+            <h2 className="font-title font-bold text-[28px] text-nout-texte">Nouveautés</h2>
           </div>
           <button
             onClick={() => navigate('/recherche')}
@@ -270,12 +274,12 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
             {Array.from({ length: 8 }, (_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : listings.length === 0 ? (
           <div className="text-center py-16 text-nout-muted">
-            <p className="text-6xl mb-4">🏝️</p>
+            <PackageOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" strokeWidth={1.25} />
             <p className="text-lg font-title font-bold text-nout-texte">Aucune annonce pour le moment</p>
             <p className="text-sm mt-1">Sois le premier à publier !</p>
             <button
@@ -287,7 +291,7 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
             {listings.map(l => (
               <ListingCard key={l.id} listing={l} isFavorited={favIds.has(l.id)} />
             ))}
@@ -299,10 +303,13 @@ export default function Home() {
       <PriceRangeSection />
 
       {/* ── E) COMMENT ÇA MARCHE ─────────────────────────────────── */}
-      <section className="bg-nout-creme py-16 px-4">
+      <section className="bg-[#EEF3F8] py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="font-title font-bold text-[24px] text-nout-texte text-center mb-12">
-            Comment ça marche ?
+          <p className="flex items-center justify-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#00897B] mb-2">
+            <span className="text-nout-turquoise">•</span> Simple comme bonjour <span className="text-nout-turquoise">•</span>
+          </p>
+          <h2 className="font-title font-bold text-[28px] text-nout-texte text-center mb-12">
+            Comment ça marche
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">

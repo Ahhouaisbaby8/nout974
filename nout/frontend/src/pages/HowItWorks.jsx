@@ -219,9 +219,9 @@ export default function HowItWorks() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* SECTION 4 — GARANTIES (fond crème)                             */}
+      {/* SECTION 4 — GARANTIES (fond bleu-gris clair, cohérent NOUT)     */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#F5F0E8] px-4 py-14">
+      <section className="bg-[#EEF3F8] px-4 py-14">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="font-title font-extrabold text-[22px] text-[#0A0F2C] flex items-center justify-center gap-2">

@@ -95,7 +95,7 @@ export default function Help() {
       </section>
 
       {/* Contact */}
-      <section className="bg-orange-50 rounded-2xl p-6 text-center">
+      <section className="bg-[#EAF6F5] rounded-2xl p-6 text-center">
         <div className="flex justify-center mb-2 text-nout-primary">
           <Mail size={28} />
         </div>

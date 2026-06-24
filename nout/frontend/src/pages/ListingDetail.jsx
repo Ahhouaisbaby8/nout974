@@ -305,7 +305,7 @@ export default function ListingDetail() {
               <span className="bg-gray-200 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">VENDU</span>
             )}
             {category && (
-              <span className="bg-orange-50 text-nout-primary text-xs font-medium px-3 py-1 rounded-full">
+              <span className="bg-[#EAF6F5] text-nout-primary text-xs font-medium px-3 py-1 rounded-full">
                 {category.label}
               </span>
             )}

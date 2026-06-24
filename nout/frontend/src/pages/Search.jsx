@@ -131,7 +131,7 @@ export default function Search() {
           onClick={() => setShowFilters(f => !f)}
           className={`px-4 py-3 rounded-lg border-2 font-semibold text-sm transition-all ${
             hasFilters
-              ? 'border-nout-primary text-nout-primary bg-orange-50'
+              ? 'border-nout-primary text-nout-primary bg-[#EAF6F5]'
               : 'border-nout-border text-gray-500 bg-white hover:border-nout-primary'
           }`}
         >
@@ -221,7 +221,7 @@ export default function Search() {
           {query && <span className="font-semibold text-nout-dark"> pour « {query} »</span>}
         </p>
         {category && (
-          <span className="text-xs bg-orange-50 text-nout-primary font-medium px-3 py-1 rounded-full">
+          <span className="text-xs bg-[#EAF6F5] text-nout-primary font-medium px-3 py-1 rounded-full">
             {CATEGORIES.find(c => c.id === category)?.label}
           </span>
         )}

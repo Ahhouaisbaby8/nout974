@@ -34,7 +34,7 @@ export default function About() {
             { icon: <Leaf size={28} />,      titre: 'Économie circulaire', texte: "Donner une seconde vie aux objets, c'est bon pour le porte-monnaie et pour l'environnement." },
             { icon: <MapPin size={28} />,    titre: 'Local', texte: '100 % Réunion. Toutes les annonces sont publiées par des habitants de notre île.' },
           ].map(({ icon, titre, texte }) => (
-            <div key={titre} className="text-center p-4 bg-orange-50 rounded-xl">
+            <div key={titre} className="text-center p-4 bg-[#EAF6F5] rounded-xl">
               <div className="flex justify-center mb-2 text-nout-primary">{icon}</div>
               <p className="font-bold text-nout-dark text-sm">{titre}</p>
               <p className="text-xs text-gray-500 mt-2 leading-relaxed">{texte}</p>

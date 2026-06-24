@@ -86,7 +86,7 @@ export default function Register() {
         {/* Bouton Google */}
         <button
           onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-3 border-2 border-nout-border rounded-nout py-3 text-sm font-semibold text-nout-dark hover:border-nout-primary hover:bg-orange-50 transition-all mb-5"
+          className="w-full flex items-center justify-center gap-3 border-2 border-nout-border rounded-nout py-3 text-sm font-semibold text-nout-dark hover:border-nout-primary hover:bg-[#EAF6F5] transition-all mb-5"
         >
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
           Continuer avec Google

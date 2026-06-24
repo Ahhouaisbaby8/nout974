@@ -103,7 +103,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
         </button>
       </div>
 
-      {/* ── INFOS (hiérarchie mode : marque > titre > taille·état > prix) ── */}
+      {/* ── INFOS (épuré, façon mockup : marque > titre > prix > lieu·date) ── */}
       <div className="p-3">
         {/* Marque en gras si dispo, sinon le titre prend sa place */}
         {listing.brand ? (
@@ -111,39 +111,31 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
             <p className="text-[12px] font-semibold text-nout-texte leading-tight truncate">
               {listing.brand}
             </p>
-            <p className="text-[11px] text-nout-muted leading-snug truncate mb-0.5">
+            <p className="text-[11px] text-nout-muted leading-snug truncate">
               {listing.title}
             </p>
           </>
         ) : (
-          <p className="text-[12px] font-medium text-nout-texte line-clamp-2 leading-snug mb-0.5">
+          <p className="text-[12px] font-medium text-nout-texte truncate">
             {listing.title}
           </p>
         )}
 
-        {(listing.size || conditionLabel) && (
-          <p className="text-[10px] text-nout-muted truncate mb-1.5">
-            {[listing.size, conditionLabel].filter(Boolean).join(' · ')}
-          </p>
-        )}
-
-        <p className="font-title font-bold text-[16px] leading-tight text-nout-texte tracking-tight">
+        <p className="font-title font-bold text-[17px] leading-tight text-nout-texte tracking-tight mt-1.5">
           {formatPrice(listing.price)}
         </p>
 
         <button
           type="button"
           onClick={openModal('price')}
-          className="flex items-center gap-0.5 text-[10px] text-nout-turquoise mt-0.5 hover:underline"
+          className="flex items-center gap-0.5 text-[10px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
         >
-          <Shield size={9} />
           {formatPrice(totalAcheteur)} frais inclus
-          <Info size={10} className="ml-0.5" />
+          <Info size={9} className="ml-0.5" />
         </button>
 
         <p className="text-[10px] text-nout-muted mt-1.5">
-          {views > 0 ? `${views} vu${views > 1 ? 's' : ''} · ` : ''}
-          {formatRelativeDate(listing.created_at)}
+          {listing.city ? `${listing.city} · ` : ''}{formatRelativeDate(listing.created_at)}
         </p>
       </div>
 
