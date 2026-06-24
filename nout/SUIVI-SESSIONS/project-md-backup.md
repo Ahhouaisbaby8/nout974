@@ -539,8 +539,10 @@ Amandine a validé la maquette `nout/MOCKUP-DESIGN/mon-profil-transforme.html` (
 - Stats : note ⭐+avis (existe via getSellerRating), Ventes (calculable). **Abonnés/Abonnements = À CONSTRUIRE** (système follow, nouvelle table). **Identité vérifiée = À CONSTRUIRE.**
 - Badges : Vendeur actif (existe), Email confirmé, + badge Fondateur doré si fondateur.
 - Garde-robe : grille articles 4:5 du vendeur (existe).
-- Bouton "Modifier mon profil" mène vers la page Settings existante (NE PAS toucher, validée par Amandine).
-Mockups : profil-mobile.html, profil-mobile-v3.html, profil-banniere-fondateur.html, mon-profil-transforme.html (LE bon).
+- Bouton "Modifier mon profil" mène vers la page Settings existante (validée par Amandine — design OK).
+- **Palmiers RETIRÉS de la bannière** (Amandine 25 juin) — garder juste dégradé hero + "974" filigrane + particules.
+- **⚠️ BANNIÈRE FACULTATIVE — DÉJÀ EN PLACE !** Le toggle existe DÉJÀ dans Settings.jsx (section "Badge Membre Fondateur", visible si `profile?.is_founder`, ligne ~388, champ `show_founder_badge`). Son texte mentionne DÉJÀ "Affiche ta bannière coucher de soleil, ton anneau doré et ton badge". Donc PAS besoin de nouveau champ : quand on intègre la nouvelle bannière profil, la lier au `show_founder_badge` existant. handleToggleFounderBadge() existe déjà.
+Mockups : profil-mobile.html, profil-mobile-v3.html, profil-banniere-fondateur.html, mon-profil-transforme.html (LE bon, sans palmier).
 
 ### PROCHAINES ÉTAPES (reste à faire)
 1. **Nettoyer emojis pages internes** (FAIT le 24 juin — 189 retirés, commit 9b428b4)
