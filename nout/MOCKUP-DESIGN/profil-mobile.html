@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOUT — Profil mobile (exemple)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nuit:#0A0F2C; --lagon:#00C4B4; --lagon-profond:#00897B;
+    --fond:#F7F8FA; --corail:#FF6B4A; --ardoise:#3A3F55; --brume:#E3E7EE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:#fff;color:var(--ardoise);}
+  h1,h2,h3,.display{font-family:'Poppins',sans-serif;color:var(--nuit);}
+  .phone{max-width:420px;margin:0 auto;min-height:100vh;background:#fff;border-x:1px solid var(--brume);}
+
+  /* Barre haut */
+  .topbar{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--brume);}
+  .topbar .back{font-size:20px;color:var(--nuit);}
+  .topbar .title{font-family:'Poppins';font-weight:600;font-size:16px;color:var(--nuit);}
+  .topbar .menu{margin-left:auto;color:var(--ardoise);font-size:20px;}
+
+  /* En-tête profil */
+  .phead{padding:20px 16px 8px;}
+  .phead-top{display:flex;gap:16px;align-items:center;}
+  .avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--lagon);flex-shrink:0;}
+  .pname{font-family:'Poppins';font-weight:700;font-size:18px;color:var(--nuit);}
+  .stars{display:flex;align-items:center;gap:4px;margin-top:2px;font-size:13px;color:var(--ardoise);}
+  .stars .s{color:#F5B301;}
+  .ploc{font-size:13px;color:#8A8F9E;margin-top:3px;display:flex;align-items:center;gap:4px;}
+
+  /* Stats abonnés */
+  .stats{display:flex;gap:24px;margin:16px 0 12px;}
+  .stat{text-align:left;}
+  .stat .n{font-family:'Poppins';font-weight:700;font-size:16px;color:var(--nuit);}
+  .stat .l{font-size:12px;color:#8A8F9E;}
+
+  /* Badges confiance */
+  .trust{display:flex;flex-direction:column;gap:8px;margin:6px 0 14px;}
+  .trust .row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ardoise);}
+  .trust svg{flex-shrink:0;}
+  .check{color:var(--lagon);}
+
+  /* Bio */
+  .bio{font-size:14px;color:var(--ardoise);line-height:1.5;margin-bottom:14px;}
+
+  /* Boutons */
+  .actions{display:flex;gap:10px;margin-bottom:6px;}
+  .btn{flex:1;border:none;border-radius:10px;padding:11px;font-weight:600;font-size:14px;font-family:'Inter';cursor:pointer;}
+  .btn-follow{background:var(--lagon);color:var(--nuit);}
+  .btn-msg{background:#fff;border:1.5px solid var(--nuit);color:var(--nuit);}
+
+  /* Onglets */
+  .tabs{display:flex;border-bottom:1px solid var(--brume);margin-top:8px;}
+  .tab{flex:1;text-align:center;padding:13px;font-size:14px;font-weight:600;color:#8A8F9E;cursor:pointer;}
+  .tab.active{color:var(--nuit);border-bottom:2px solid var(--lagon);}
+
+  /* Grille articles */
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 16px 80px;}
+  .card{background:#fff;border:1px solid var(--brume);border-radius:14px;overflow:hidden;}
+  .card .ph{aspect-ratio:4/5;position:relative;background:var(--brume);}
+  .card .ph img{width:100%;height:100%;object-fit:cover;}
+  .card .fav{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(10,15,44,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;}
+  .card .info{padding:8px 10px 10px;}
+  .card .brand{font-size:11px;font-weight:600;color:var(--nuit);}
+  .card .title{font-size:11px;color:#8A8F9E;}
+  .card .price{font-family:'Poppins';font-weight:700;font-size:14px;color:var(--nuit);margin-top:3px;}
+  .card .incl{font-size:10px;color:var(--lagon-profond);}
+
+  /* Bottom nav */
+  .bnav{position:sticky;bottom:0;display:flex;background:#fff;border-top:1px solid var(--brume);}
+  .bnav a{flex:1;text-align:center;padding:8px 0 10px;font-size:10px;color:#9AA0AE;text-decoration:none;}
+  .bnav a.active{color:var(--lagon);}
+  .bnav .ic{display:block;font-size:18px;margin-bottom:2px;}
+  .sell{margin-top:-18px;}
+  .sell .round{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#0E7FAB,#00C4B4);display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 12px rgba(0,196,180,.4);}
+  .sell .round svg{color:#fff;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="topbar">
+    <span class="back">‹</span>
+    <span class="title">Profil</span>
+    <span class="menu">⋯</span>
+  </div>
+
+  <div class="phead">
+    <div class="phead-top">
+      <img class="avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" alt="">
+      <div>
+        <div class="pname">Marie • Saint-Denis</div>
+        <div class="stars"><span class="s">★★★★★</span> 4,9 <span style="color:#8A8F9E">(38 avis)</span></div>
+        <div class="ploc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          La Réunion 974
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">127</div><div class="l">Abonnés</div></div>
+      <div class="stat"><div class="n">84</div><div class="l">Abonnements</div></div>
+      <div class="stat"><div class="n">23</div><div class="l">Articles</div></div>
+    </div>
+
+    <div class="trust">
+      <div class="row">
+        <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+        Identité vérifiée
+      </div>
+      <div class="row">
+        <svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+        Email et téléphone confirmés
+      </div>
+      <div class="row" style="color:#8A8F9E;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Membre depuis juin 2026
+      </div>
+    </div>
+
+    <p class="bio">Tri dans mon dressing 🌸 Pièces en très bon état, marques variées. Remise en main propre sur Saint-Denis ou livraison Chronopost. N'hésite pas à faire une offre !</p>
+
+    <div class="actions">
+      <button class="btn btn-follow">S'abonner</button>
+      <button class="btn btn-msg">Message</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">Articles · 23</div>
+    <div class="tab">Avis · 38</div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=300&h=375&fit=crop"><span class="fav">♡</span></div>
+      <div class="info"><div class="brand">Zara</div><div class="title">Robe fleurie</div><div class="price">15,00 €</div><div class="incl">16,03 € frais inclus</div></div>
+    </div>
+    <div class="card">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=375&fit=crop"><span class="fav">♡</span></div>
+      <div class="info"><div class="brand">Levi's</div><div class="title">Jean mom taille 38</div><div class="price">22,00 €</div><div class="incl">23,36 € frais inclus</div></div>
+    </div>
+    <div class="card">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=300&h=375&fit=crop"><span class="fav">♡</span></div>
+      <div class="info"><div class="brand">H&M</div><div class="title">Pull beige oversize</div><div class="price">10,00 €</div><div class="incl">10,86 € frais inclus</div></div>
+    </div>
+    <div class="card">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=300&h=375&fit=crop"><span class="fav">♡</span></div>
+      <div class="info"><div class="brand">Nike</div><div class="title">Baskets blanches</div><div class="price">35,00 €</div><div class="incl">36,82 € frais inclus</div></div>
+    </div>
+    <div class="card">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&h=375&fit=crop"><span class="fav">♡</span></div>
+      <div class="info"><div class="brand">Sézane</div><div class="title">Chemisier soie</div><div class="price">28,00 €</div><div class="incl">29,55 € frais inclus</div></div>
+    </div>
+    <div class="card">
+      <div class="ph"><img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=375&fit=crop"><span class="fav">♡</span></div>
+      <div class="info"><div class="brand">Mango</div><div class="title">Sac à main camel</div><div class="price">18,00 €</div><div class="incl">19,03 € frais inclus</div></div>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <a href="#"><span class="ic">⌂</span>Accueil</a>
+    <a href="#"><span class="ic">⌕</span>Rechercher</a>
+    <a href="#" class="sell"><span class="round"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>Vendre</a>
+    <a href="#"><span class="ic">♡</span>Favoris</a>
+    <a href="#" class="active"><span class="ic">○</span>Profil</a>
+  </div>
+
+</div>
+</body>
+</html>

@@ -530,8 +530,20 @@ Amandine veut accueillir des PROS (boutiques, créateurs, revendeurs) qui venden
 - Image pro : design soigné, badge confiance, distinction claire pro/particulier
 - À cadrer avec Amandine (mini-plan) AVANT de coder. Gros sujet (juridique + technique + design).
 
+### 🎨 REFONTE PROFIL VALIDÉE (maquettes faites, à intégrer) — 24/25 juin 2026
+Amandine a validé la maquette `nout/MOCKUP-DESIGN/mon-profil-transforme.html` ("C'est exactement ça que je veux"). Direction profil :
+- **Grande bannière = le hero NOUT animé** (vrai dégradé hero-sunset de index.css, palmiers, "974" filigrane, particules) qui ENGLOBE tout le bloc profil (avatar + nom + note + localisation + stats Abonnés/Abonnements/Ventes), texte en blanc dessus. Coins arrondis en bas. Puis badges/bio/boutons sur fond blanc en dessous.
+- **⚠️ RÈGLE CLÉ : la bannière hero est RÉSERVÉE aux 50 Membres Fondateurs uniquement.** Débloquée par les conditions fondateur EXISTANTES (5 publications actives + 1 premier achat/transaction — cf `_founder-check.js` checkAndAssignFounder). Vendeur normal = profil SANS bannière (version sobre fond blanc).
+- Avatar : anneau doré pour les fondateurs.
+- Boutons : si MON profil → "Modifier mon profil" + "Partager le profil". Si profil d'un AUTRE → "S'abonner" + "Partager le profil" (et "Message").
+- Stats : note ⭐+avis (existe via getSellerRating), Ventes (calculable). **Abonnés/Abonnements = À CONSTRUIRE** (système follow, nouvelle table). **Identité vérifiée = À CONSTRUIRE.**
+- Badges : Vendeur actif (existe), Email confirmé, + badge Fondateur doré si fondateur.
+- Garde-robe : grille articles 4:5 du vendeur (existe).
+- Bouton "Modifier mon profil" mène vers la page Settings existante (NE PAS toucher, validée par Amandine).
+Mockups : profil-mobile.html, profil-mobile-v3.html, profil-banniere-fondateur.html, mon-profil-transforme.html (LE bon).
+
 ### PROCHAINES ÉTAPES (reste à faire)
-1. **Nettoyer emojis pages internes** (EN COURS — 163 emojis / 30 fichiers, ListingDetail commencé) — gros chantier
+1. **Nettoyer emojis pages internes** (FAIT le 24 juin — 189 retirés, commit 9b428b4)
 2. **Comptes professionnels** (nouvelle demande, voir ci-dessus)
 3. Fiche produit 2 colonnes (galerie sticky / infos+CTA)
 4. Formulaire publication amélioré (photos réordonnables)

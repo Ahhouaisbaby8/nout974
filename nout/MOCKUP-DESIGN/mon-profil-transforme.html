@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOUT — Mon profil transformé (desktop + mobile)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--nuit:#0A0F2C;--lagon:#00C4B4;--lagon-profond:#00897B;--fond:#F7F8FA;--corail:#FF6B4A;--ardoise:#3A3F55;--brume:#E3E7EE;--or:#F5D45A;--or-fonce:#C8860A;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--fond);color:var(--ardoise);padding:24px 0;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--nuit);}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px;}
+  .lbl{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8A8F9E;margin:0 0 10px 4px;}
+
+  .back{display:flex;align-items:center;gap:6px;color:var(--nuit);font-weight:600;margin-bottom:14px;font-size:15px;}
+
+  /* ===== CARTE PROFIL avec bannière hero ===== */
+  .pcard{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(10,15,44,.06);}
+  .banner{
+    position:relative;overflow:hidden;padding:16px 22px 16px;
+    background:linear-gradient(135deg,#FF8C42,#E8455A,#9B35B5,#1A3A8F,#0A0F2C,#0E7FAB,#00C4B4,#FF8C42);
+    background-size:500% 500%;animation:sunsetCycle 16s ease infinite;
+  }
+  @keyframes sunsetCycle{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  .b974{position:absolute;top:10px;right:30px;font-family:'Poppins';font-weight:800;font-size:120px;color:rgba(255,255,255,.07);line-height:1;pointer-events:none;}
+  .palm{position:absolute;top:8px;}
+  .palm.l{left:6px;} .palm.r{right:6px;transform:scaleX(-1);}
+  .star{position:absolute;border-radius:50%;background:#fff;opacity:.6;}
+
+  .phead{position:relative;z-index:2;display:flex;gap:18px;align-items:center;}
+  .avatar-wrap{position:relative;width:84px;height:84px;flex-shrink:0;}
+  .avatar{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Poppins';font-weight:700;font-size:32px;color:#fff;background:linear-gradient(135deg,#0E7FAB,#00C4B4);border:4px solid #fff;}
+  .pinfo .pname{font-family:'Poppins';font-weight:700;font-size:22px;color:#fff;}
+  .pinfo .stars{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:14px;color:rgba(255,255,255,.92);}
+  .pinfo .stars .s{color:#FFD84A;letter-spacing:1px;}
+  .pinfo .ploc{font-size:13px;color:rgba(255,255,255,.78);margin-top:4px;}
+
+  .pstats{position:relative;z-index:2;display:flex;gap:32px;margin-top:18px;}
+  .pstat .n{font-family:'Poppins';font-weight:700;font-size:18px;color:#fff;}
+  .pstat .l{font-size:12px;color:rgba(255,255,255,.7);}
+
+  /* corps sur blanc */
+  .pbody{padding:16px 22px 20px;}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;}
+  .badge.active{background:rgba(0,196,180,.12);color:var(--lagon-profond);}
+  .badge.verif{background:rgba(26,58,143,.10);color:#1A3A8F;}
+  .pmember{font-size:13px;color:#8A8F9E;margin-bottom:16px;}
+  .actions{display:flex;gap:12px;}
+  .btn{border:none;border-radius:10px;padding:12px 20px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter';}
+  .btn-follow{background:var(--lagon);color:var(--nuit);flex:1;}
+  .btn-share{background:#fff;border:1.5px solid var(--nuit);color:var(--nuit);flex:1;}
+  .btn-modif{background:#fff;border:1.5px solid var(--lagon);color:var(--lagon-profond);flex:1;}
+
+  .note{font-size:12px;color:#9AA0AE;margin-top:24px;text-align:center;}
+  .versions{display:grid;grid-template-columns:1fr;gap:32px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="back">‹ Retour</div>
+
+  <p class="lbl">Vu par un AUTRE visiteur (boutons S'abonner + Partager)</p>
+  <div class="pcard" style="margin-bottom:32px;">
+    <div class="banner">
+      <div class="b974">974</div>
+      <span class="star" style="width:4px;height:4px;top:18px;left:38%;"></span>
+      <span class="star" style="width:5px;height:5px;top:30px;left:58%;background:#00C4B4;"></span>
+      <span class="star" style="width:3px;height:3px;top:46px;left:74%;"></span>
+      <svg class="palm l" width="60" height="105" viewBox="0 -25 100 165"><path d="M50 140 L48 25 Q40 8 6 2 Q40 14 47 26 Q26 -4 0 18 Q34 6 47 24 Q50 -6 76 14 Q50 8 49 26 Q72 -2 98 18 Q60 10 50 26 Z" fill="rgba(8,12,30,.5)"/></svg>
+      <svg class="palm r" width="60" height="105" viewBox="0 -25 100 165"><path d="M50 140 L48 25 Q40 8 6 2 Q40 14 47 26 Q26 -4 0 18 Q34 6 47 24 Q50 -6 76 14 Q50 8 49 26 Q72 -2 98 18 Q60 10 50 26 Z" fill="rgba(8,12,30,.45)"/></svg>
+
+      <div class="phead">
+        <div class="avatar-wrap"><div class="avatar">D</div></div>
+        <div class="pinfo">
+          <div class="pname">dawson.rene.boyer</div>
+          <div class="stars"><span class="s">★★★★★</span> 5,0 <span style="color:rgba(255,255,255,.6)">(3 avis)</span></div>
+          <div class="ploc">Saint-Denis, La Réunion 974</div>
+        </div>
+      </div>
+      <div class="pstats">
+        <div class="pstat"><div class="n">12</div><div class="l">Abonnés</div></div>
+        <div class="pstat"><div class="n">5</div><div class="l">Abonnements</div></div>
+        <div class="pstat"><div class="n">8</div><div class="l">Ventes</div></div>
+      </div>
+    </div>
+    <div class="pbody">
+      <div class="badges">
+        <span class="badge active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg> Vendeur actif</span>
+        <span class="badge verif"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Email confirmé</span>
+      </div>
+      <p class="pmember">Membre depuis 06 juin 2026</p>
+      <div class="actions">
+        <button class="btn btn-follow">S'abonner</button>
+        <button class="btn btn-share">Partager le profil</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="lbl">Vu par TOI-MÊME (bouton Modifier mon profil)</p>
+  <div class="pcard">
+    <div class="banner">
+      <div class="b974">974</div>
+      <span class="star" style="width:4px;height:4px;top:18px;left:38%;"></span>
+      <span class="star" style="width:5px;height:5px;top:30px;left:58%;background:#00C4B4;"></span>
+      <svg class="palm l" width="60" height="105" viewBox="0 -25 100 165"><path d="M50 140 L48 25 Q40 8 6 2 Q40 14 47 26 Q26 -4 0 18 Q34 6 47 24 Q50 -6 76 14 Q50 8 49 26 Q72 -2 98 18 Q60 10 50 26 Z" fill="rgba(8,12,30,.5)"/></svg>
+      <svg class="palm r" width="60" height="105" viewBox="0 -25 100 165"><path d="M50 140 L48 25 Q40 8 6 2 Q40 14 47 26 Q26 -4 0 18 Q34 6 47 24 Q50 -6 76 14 Q50 8 49 26 Q72 -2 98 18 Q60 10 50 26 Z" fill="rgba(8,12,30,.45)"/></svg>
+
+      <div class="phead">
+        <div class="avatar-wrap"><div class="avatar">D</div></div>
+        <div class="pinfo">
+          <div class="pname">dawson.rene.boyer</div>
+          <div class="stars"><span class="s">★★★★★</span> 5,0 <span style="color:rgba(255,255,255,.6)">(3 avis)</span></div>
+          <div class="ploc">Saint-Denis, La Réunion 974</div>
+        </div>
+      </div>
+      <div class="pstats">
+        <div class="pstat"><div class="n">12</div><div class="l">Abonnés</div></div>
+        <div class="pstat"><div class="n">5</div><div class="l">Abonnements</div></div>
+        <div class="pstat"><div class="n">8</div><div class="l">Ventes</div></div>
+      </div>
+    </div>
+    <div class="pbody">
+      <div class="badges">
+        <span class="badge active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg> Vendeur actif</span>
+        <span class="badge verif"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Email confirmé</span>
+      </div>
+      <p class="pmember">Membre depuis 06 juin 2026</p>
+      <div class="actions">
+        <button class="btn btn-modif">Modifier mon profil</button>
+        <button class="btn btn-share">Partager le profil</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">Exemple non officiel — aucune modification sur le vrai site nout.re</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOUT — Profil Fondateur (vrai hero NOUT)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--nuit:#0A0F2C;--lagon:#00C4B4;--lagon-profond:#00897B;--fond:#F7F8FA;--corail:#FF6B4A;--ardoise:#3A3F55;--brume:#E3E7EE;--or:#F5D45A;--or-fonce:#C8860A;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:#fff;color:var(--ardoise);}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--nuit);}
+  .phone{max-width:420px;margin:0 auto;min-height:100vh;background:#fff;border-x:1px solid var(--brume);}
+
+  /* ===== GRANDE BANNIÈRE qui couvre TOUT le bloc profil (fond = hero animé) ===== */
+  .banner{
+    position:relative;overflow:hidden;padding-bottom:18px;
+    background:linear-gradient(135deg,#FF8C42,#E8455A,#9B35B5,#1A3A8F,#0A0F2C,#0E7FAB,#00C4B4,#FF8C42);
+    background-size:500% 500%;
+    animation:sunsetCycle 16s ease infinite;
+    border-radius:0 0 24px 24px;
+  }
+  @keyframes sunsetCycle{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  /* "974" filigrane */
+  .b974{position:absolute;top:60px;left:50%;transform:translateX(-50%);font-family:'Poppins';font-weight:800;font-size:150px;color:rgba(255,255,255,.07);line-height:1;pointer-events:none;}
+  .star{position:absolute;border-radius:50%;background:#fff;opacity:.6;}
+  .palm{position:absolute;top:30px;}
+  .palm.l{left:8px;} .palm.r{right:8px;transform:scaleX(-1);}
+  .ribbon{display:inline-flex;align-items:center;gap:7px;background:rgba(10,15,44,.42);backdrop-filter:blur(6px);border:1px solid rgba(245,212,90,.5);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;}
+  .ribbon .medal{color:var(--or);}
+  .topbar{display:flex;padding:14px 16px 0;position:relative;z-index:4;}
+  .topbar .back{font-size:22px;color:#fff;}
+  .topbar .menu{margin-left:auto;color:#fff;font-size:20px;}
+
+  /* En-tête DANS la bannière (texte blanc) */
+  .phead{padding:0 18px 4px;position:relative;z-index:3;}
+  .ribbon-wrap{padding:12px 18px 4px;position:relative;z-index:3;}
+  .avatar-wrap{position:relative;width:88px;height:88px;margin:14px 0 10px;}
+  .avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;border:4px solid #fff;}
+  .avatar-ring{position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 0 2px var(--or),0 0 14px 3px rgba(245,212,90,.55);pointer-events:none;}
+
+  .pname{font-family:'Poppins';font-weight:700;font-size:21px;color:#fff;}
+  .stars{display:flex;align-items:center;gap:5px;margin-top:3px;font-size:14px;color:rgba(255,255,255,.92);}
+  .stars .s{color:#FFD84A;letter-spacing:1px;}
+  .ploc{font-size:13px;color:rgba(255,255,255,.75);margin-top:4px;display:flex;align-items:center;gap:4px;}
+
+  .stats{display:flex;gap:26px;margin:16px 0 4px;}
+  .stat .n{font-family:'Poppins';font-weight:700;font-size:17px;color:#fff;}
+  .stat .l{font-size:12px;color:rgba(255,255,255,.7);}
+
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;}
+  .badge.found{background:linear-gradient(135deg,var(--or-fonce),var(--or));color:#3d1f00;}
+  .badge.active{background:rgba(0,196,180,.12);color:var(--lagon-profond);}
+
+  .trust{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+  .trust .row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ardoise);}
+  .check{color:var(--lagon);}
+
+  .bio{font-size:14px;color:var(--ardoise);line-height:1.5;margin-bottom:14px;}
+
+  .actions{display:flex;gap:10px;}
+  .btn{flex:1;border:none;border-radius:10px;padding:11px;font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter';}
+  .btn-follow{background:var(--lagon);color:var(--nuit);}
+  .btn-msg{background:#fff;border:1.5px solid var(--nuit);color:var(--nuit);}
+
+  .tabs{display:flex;border-bottom:1px solid var(--brume);margin-top:12px;}
+  .tab{flex:1;text-align:center;padding:13px;font-size:14px;font-weight:600;color:#8A8F9E;cursor:pointer;}
+  .tab.active{color:var(--nuit);border-bottom:2px solid var(--lagon);}
+
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 16px 60px;}
+  .card{background:#fff;border:1px solid var(--brume);border-radius:14px;overflow:hidden;}
+  .card .ph{aspect-ratio:4/5;position:relative;background:var(--brume);}
+  .card .ph img{width:100%;height:100%;object-fit:cover;}
+  .card .fav{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(10,15,44,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;}
+  .card .found{position:absolute;top:8px;left:8px;background:linear-gradient(135deg,var(--or-fonce),var(--or));color:#3d1f00;font-size:9px;font-weight:700;padding:3px 7px;border-radius:999px;}
+  .card .info{padding:8px 10px 10px;}
+  .card .brand{font-size:11px;font-weight:600;color:var(--nuit);}
+  .card .title{font-size:11px;color:#8A8F9E;}
+  .card .price{font-family:'Poppins';font-weight:700;font-size:14px;color:var(--nuit);margin-top:3px;}
+  .card .incl{font-size:10px;color:var(--lagon-profond);}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- GRANDE BANNIÈRE = hero animé, englobe avatar + nom + stats -->
+  <div class="banner">
+    <div class="b974">974</div>
+    <span class="star" style="width:4px;height:4px;top:48px;left:30%;"></span>
+    <span class="star" style="width:5px;height:5px;top:62px;left:62%;background:#00C4B4;"></span>
+    <span class="star" style="width:3px;height:3px;top:80px;left:82%;"></span>
+    <span class="star" style="width:4px;height:4px;top:56px;left:16%;"></span>
+    <svg class="palm l" width="74" height="130" viewBox="0 -25 100 165"><path d="M50 140 L48 25 Q40 8 6 2 Q40 14 47 26 Q26 -4 0 18 Q34 6 47 24 Q50 -6 76 14 Q50 8 49 26 Q72 -2 98 18 Q60 10 50 26 Z" fill="rgba(8,12,30,.5)"/></svg>
+    <svg class="palm r" width="74" height="130" viewBox="0 -25 100 165"><path d="M50 140 L48 25 Q40 8 6 2 Q40 14 47 26 Q26 -4 0 18 Q34 6 47 24 Q50 -6 76 14 Q50 8 49 26 Q72 -2 98 18 Q60 10 50 26 Z" fill="rgba(8,12,30,.45)"/></svg>
+
+    <div class="topbar"><span class="back">‹</span><span class="menu">⋯</span></div>
+
+    <div class="ribbon-wrap">
+      <span class="ribbon">
+        <svg class="medal" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.7 1.4 6.8L12 17.8 5.9 21.2l1.4-6.8L2.2 9.7l6.9-.7z"/></svg>
+        Membre Fondateur · #7 sur 50
+      </span>
+    </div>
+
+    <div class="phead">
+      <div class="avatar-wrap">
+        <img class="avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop" alt="">
+        <span class="avatar-ring"></span>
+      </div>
+      <div class="pname">Marie</div>
+      <div class="stars"><span class="s">★★★★★</span> 4,9 <span style="color:rgba(255,255,255,.6)">(38 avis)</span></div>
+      <div class="ploc">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Saint-Denis, La Réunion 974
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n">127</div><div class="l">Abonnés</div></div>
+        <div class="stat"><div class="n">84</div><div class="l">Abonnements</div></div>
+        <div class="stat"><div class="n">41</div><div class="l">Ventes</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sous la bannière, sur fond blanc : badges, confiance, bio, boutons -->
+  <div class="pbody" style="padding:16px 18px 0;">
+    <div class="badges">
+      <span class="badge found"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.7 1.4 6.8L12 17.8 5.9 21.2l1.4-6.8L2.2 9.7l6.9-.7z"/></svg> Fondateur #7</span>
+      <span class="badge active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg> Vendeur actif</span>
+    </div>
+
+    <div class="trust">
+      <div class="row"><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Identité vérifiée</div>
+      <div class="row"><svg class="check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Email et téléphone confirmés</div>
+    </div>
+
+    <p class="bio">Tri dans mon dressing. Pièces en très bon état, marques variées. Remise en main propre sur Saint-Denis ou livraison Chronopost.</p>
+
+    <div class="actions">
+      <button class="btn btn-follow">S'abonner</button>
+      <button class="btn btn-msg">Message</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">Articles · 23</div>
+    <div class="tab">Avis · 38</div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><div class="ph"><img src="https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=300&h=375&fit=crop"><span class="found">Fondateur</span><span class="fav">♡</span></div><div class="info"><div class="brand">Zara</div><div class="title">Robe fleurie</div><div class="price">15,00 €</div><div class="incl">16,03 € frais inclus</div></div></div>
+    <div class="card"><div class="ph"><img src="https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=375&fit=crop"><span class="fav">♡</span></div><div class="info"><div class="brand">Levi's</div><div class="title">Jean mom taille 38</div><div class="price">22,00 €</div><div class="incl">23,36 € frais inclus</div></div></div>
+    <div class="card"><div class="ph"><img src="https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=300&h=375&fit=crop"><span class="fav">♡</span></div><div class="info"><div class="brand">H&M</div><div class="title">Pull beige oversize</div><div class="price">10,00 €</div><div class="incl">10,86 € frais inclus</div></div></div>
+    <div class="card"><div class="ph"><img src="https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=300&h=375&fit=crop"><span class="fav">♡</span></div><div class="info"><div class="brand">Nike</div><div class="title">Baskets blanches</div><div class="price">35,00 €</div><div class="incl">36,82 € frais inclus</div></div></div>
+  </div>
+
+</div>
+</body>
+</html>
