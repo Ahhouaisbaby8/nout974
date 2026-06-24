@@ -43,14 +43,14 @@ export default function InstallApp() {
       {/* Bouton installation PWA natif */}
       {installed ? (
         <div className="bg-green-50 border border-green-200 rounded-xl px-5 py-4 text-center mb-8">
-          <p className="text-green-700 font-semibold text-sm">✅ NOUT est installé sur votre appareil !</p>
+          <p className="text-green-700 font-semibold text-sm">NOUT est installé sur votre appareil !</p>
         </div>
       ) : deferredPrompt ? (
         <button
           onClick={handleInstall}
           className="w-full py-4 rounded-xl bg-[#007A6E] text-white font-bold text-base hover:bg-[#006B61] transition-colors mb-8 shadow-md"
         >
-          📲 Installer l'application
+          Installer l'application
         </button>
       ) : (
         <div className="bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 text-center mb-8">
@@ -66,7 +66,7 @@ export default function InstallApp() {
         {/* iPhone / iPad */}
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl">🍎</span>
+            <span className="text-2xl"></span>
             <h2 className="font-bold text-nout-dark text-sm">iPhone / iPad</h2>
           </div>
           <ol className="space-y-2 text-sm text-gray-600 leading-relaxed">
@@ -92,7 +92,7 @@ export default function InstallApp() {
         {/* Android */}
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
           <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl">🤖</span>
+            <span className="text-2xl"></span>
             <h2 className="font-bold text-nout-dark text-sm">Android</h2>
           </div>
           <ol className="space-y-2 text-sm text-gray-600 leading-relaxed">
@@ -121,10 +121,10 @@ export default function InstallApp() {
       <div className="mt-8 bg-[#0A0F2C] rounded-xl p-5">
         <h3 className="text-white font-bold text-sm mb-3">Pourquoi installer l'app ?</h3>
         <ul className="space-y-2 text-sm text-white/70">
-          <li className="flex gap-2"><span className="text-[#00C4B4]">✓</span> Accès en un tap depuis l'écran d'accueil</li>
-          <li className="flex gap-2"><span className="text-[#00C4B4]">✓</span> Notifications pour vos messages et commandes</li>
-          <li className="flex gap-2"><span className="text-[#00C4B4]">✓</span> Interface plein écran sans barre du navigateur</li>
-          <li className="flex gap-2"><span className="text-[#00C4B4]">✓</span> Chargement plus rapide</li>
+          <li className="flex gap-2"><span className="text-[#00C4B4]"></span> Accès en un tap depuis l'écran d'accueil</li>
+          <li className="flex gap-2"><span className="text-[#00C4B4]"></span> Notifications pour vos messages et commandes</li>
+          <li className="flex gap-2"><span className="text-[#00C4B4]"></span> Interface plein écran sans barre du navigateur</li>
+          <li className="flex gap-2"><span className="text-[#00C4B4]"></span> Chargement plus rapide</li>
         </ul>
       </div>
 

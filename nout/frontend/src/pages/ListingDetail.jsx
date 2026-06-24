@@ -7,11 +7,11 @@ import { sendMessage } from '../services/messages'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
-import { Share2, Heart } from 'lucide-react'
+import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import { getSellerRating } from '../services/reviews'
 import { SHIPPING_METHODS, SHIPPING_ORDER, computeProtectionFee, computeBuyerTotal, getShippingFee } from '../utils/shipping'
-import { Truck, Home as HomeIcon, MapPin, Store } from 'lucide-react'
+import { Truck, Home as HomeIcon, Store } from 'lucide-react'
 
 const SHIP_ICONS = { hand: Store, relay: MapPin, home: HomeIcon }
 
@@ -188,7 +188,7 @@ export default function ListingDetail() {
 
   if (notFound) return (
     <div className="text-center py-24 text-gray-400">
-      <p className="text-5xl mb-4">🔍</p>
+      <p className="text-5xl mb-4"></p>
       <p className="text-lg font-semibold text-nout-dark">Annonce introuvable</p>
       <button onClick={() => navigate('/')} className="btn-primary mt-6 px-8">Retour à l'accueil</button>
     </div>
@@ -216,7 +216,7 @@ export default function ListingDetail() {
         senderId: user.id,
         receiverId: seller.id,
         listingId: id,
-        content: `💰 Offre : ${amount} €\nPour l'annonce : ${listing.title}`,
+        content: `Offre : ${amount} €\nPour l'annonce : ${listing.title}`,
         senderName: profile?.username,
       })
       setShowOffer(false)
@@ -230,7 +230,7 @@ export default function ListingDetail() {
   }
 
   const listingUrl       = `${window.location.origin}/annonce/${id}`
-  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Regarde cette annonce sur NOUT 974 🛍️\n${listing.title} — ${formatPrice(listing.price)}\n${listingUrl}`)}`
+  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Regarde cette annonce sur NOUT 974 \n${listing.title} — ${formatPrice(listing.price)}\n${listingUrl}`)}`
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -277,7 +277,7 @@ export default function ListingDetail() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-7xl text-gray-300">📷</div>
+              <div className="w-full h-full flex items-center justify-center text-7xl text-gray-300"></div>
             )}
           </div>
 
@@ -334,9 +334,9 @@ export default function ListingDetail() {
 
           {/* Lieu + date + vues */}
           <div className="flex flex-wrap gap-3 text-sm text-gray-400">
-            <span>📍 {listing.city}</span>
-            <span>🕒 {formatRelativeDate(listing.created_at)}</span>
-            <span>👁 {listing.views ?? 0} vue{listing.views !== 1 ? 's' : ''}</span>
+            <span>{listing.city}</span>
+            <span>{formatRelativeDate(listing.created_at)}</span>
+            <span>{listing.views ?? 0} vue{listing.views !== 1 ? 's' : ''}</span>
           </div>
 
           {/* Description */}
@@ -354,22 +354,22 @@ export default function ListingDetail() {
               <div className="flex flex-wrap gap-2">
                 {listing.size && (
                   <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    📏 Taille : <span className="font-semibold">{listing.size}</span>
+                    Taille : <span className="font-semibold">{listing.size}</span>
                   </span>
                 )}
                 {listing.color && (
                   <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    🎨 Couleur : <span className="font-semibold">{listing.color}</span>
+                    Couleur : <span className="font-semibold">{listing.color}</span>
                   </span>
                 )}
                 {listing.brand && (
                   <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    🏷️ Marque : <span className="font-semibold">{listing.brand}</span>
+                    Marque : <span className="font-semibold">{listing.brand}</span>
                   </span>
                 )}
                 {listing.material && (
                   <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    🧵 Matière : <span className="font-semibold">{listing.material}</span>
+                    Matière : <span className="font-semibold">{listing.material}</span>
                   </span>
                 )}
               </div>
@@ -397,7 +397,7 @@ export default function ListingDetail() {
                 <p className="font-semibold text-nout-dark">{seller.username}</p>
                 {sellerRating && sellerRating.count > 0 ? (
                   <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500 mt-0.5">
-                    <span>★</span>
+                    <span></span>
                     <span className="text-nout-dark">{sellerRating.average.toFixed(1)}</span>
                     <span className="text-gray-400 font-normal">
                       ({sellerRating.count} avis)
@@ -468,14 +468,14 @@ export default function ListingDetail() {
                   onClick={() => navigate(`/annonce/${id}/modifier`)}
                   className="btn-secondary flex-1"
                 >
-                  ✏️ Modifier
+                  Modifier
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
                   className="flex-1 px-6 py-3 bg-red-50 text-red-500 border-2 border-red-200 rounded-nout font-bold hover:bg-red-100 transition-all disabled:opacity-60"
                 >
-                  {deleting ? 'Suppression…' : '🗑 Supprimer'}
+                  {deleting ? 'Suppression…' : 'Supprimer'}
                 </button>
               </div>
               {!listing.is_sold && (
@@ -484,7 +484,7 @@ export default function ListingDetail() {
                   disabled={markingVendu}
                   className="w-full px-6 py-3 bg-green-50 text-green-600 border-2 border-green-200 rounded-nout font-bold hover:bg-green-100 transition-all disabled:opacity-60"
                 >
-                  {markingVendu ? 'Mise à jour…' : '✅ Marquer comme vendu'}
+                  {markingVendu ? 'Mise à jour…' : 'Marquer comme vendu'}
                 </button>
               )}
               {deleteError && <p className="text-sm text-red-500 text-center">{deleteError}</p>}
@@ -558,7 +558,7 @@ export default function ListingDetail() {
                       disabled={paying}
                       className={`btn-primary flex-1 py-4 text-base ${paying ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
-                      {paying ? 'Redirection…' : `💳 Acheter — ${formatPrice(totalAcheteur)}`}
+                      {paying ? 'Redirection…' : `Acheter — ${formatPrice(totalAcheteur)}`}
                     </button>
                     <div className="relative flex-shrink-0">
                       <button
@@ -574,13 +574,13 @@ export default function ListingDetail() {
                           <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
                           <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden w-52">
                             <a href={whatsappShareUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setShowShareMenu(false)}>
-                              📱 WhatsApp
+                              WhatsApp
                             </a>
                             <button type="button" onClick={handleCopyLink} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left">
-                              📋 Copier le lien
+                              Copier le lien
                             </button>
                             <button type="button" onClick={() => setShowShareMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-gray-50 transition-colors w-full text-left border-t border-gray-100">
-                              ✖️ Fermer
+                              Fermer
                             </button>
                           </div>
                         </>
@@ -591,13 +591,13 @@ export default function ListingDetail() {
                     onClick={() => setShowOffer(true)}
                     className="w-full py-3 rounded-nout border-2 border-[#00C4B4] text-[#00C4B4] font-bold text-sm hover:bg-[#00C4B4] hover:text-white transition-all"
                   >
-                    💰 Faire une offre
+                    Faire une offre
                   </button>
                   <button
                     onClick={() => navigate(`/messages/${seller?.id}?annonce=${id}`)}
                     className="btn-secondary w-full py-3 text-sm"
                   >
-                    💬 Contacter le vendeur
+                    Contacter le vendeur
                   </button>
                 </>
               ) : (
@@ -627,7 +627,7 @@ export default function ListingDetail() {
                       to={`/connexion?redirect=/annonce/${id}`}
                       className="btn-primary flex-1 py-4 text-base text-center block"
                     >
-                      💳 Acheter — {formatPrice(computeBuyerTotal(listing.price, 'hand'))}
+                      Acheter — {formatPrice(computeBuyerTotal(listing.price, 'hand'))}
                     </Link>
                     <div className="relative flex-shrink-0">
                       <button
@@ -643,13 +643,13 @@ export default function ListingDetail() {
                           <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
                           <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden w-52">
                             <a href={whatsappShareUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setShowShareMenu(false)}>
-                              📱 WhatsApp
+                              WhatsApp
                             </a>
                             <button type="button" onClick={handleCopyLink} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left">
-                              📋 Copier le lien
+                              Copier le lien
                             </button>
                             <button type="button" onClick={() => setShowShareMenu(false)} className="flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-gray-50 transition-colors w-full text-left border-t border-gray-100">
-                              ✖️ Fermer
+                              Fermer
                             </button>
                           </div>
                         </>
@@ -660,7 +660,7 @@ export default function ListingDetail() {
                     to={`/connexion?redirect=/annonce/${id}`}
                     className="btn-secondary w-full py-3 text-sm text-center block"
                   >
-                    💬 Contacter le vendeur
+                    Contacter le vendeur
                   </Link>
                 </>
               )}
@@ -673,7 +673,7 @@ export default function ListingDetail() {
               onClick={() => setShowReport(true)}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center mt-1"
             >
-              🚩 Signaler cette annonce
+              Signaler cette annonce
             </button>
           )}
 
@@ -703,14 +703,14 @@ export default function ListingDetail() {
 
       {copyToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-nout-dark text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
-          ✅ Lien copié !
+          Lien copié !
         </div>
       )}
 
       {showOffer && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl overflow-y-auto max-h-[90dvh]">
-            <h3 className="text-lg font-bold text-nout-dark mb-1">💰 Faire une offre</h3>
+            <h3 className="text-lg font-bold text-nout-dark mb-1">Faire une offre</h3>
             <p className="text-sm text-gray-400 mb-4 truncate">{listing.title}</p>
             <div className="relative mb-2">
               <input

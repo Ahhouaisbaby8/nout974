@@ -61,7 +61,7 @@ export default function Login() {
 
         {banMessage && (
           <div className="bg-orange-50 border border-orange-200 text-orange-700 text-sm rounded-lg px-4 py-3 mb-5">
-            🚫 {banMessage}
+            {banMessage}
           </div>
         )}
 

@@ -40,10 +40,10 @@ export default function AdminDashboard() {
       <h1 className="text-2xl font-extrabold text-nout-dark mb-6">Tableau de bord</h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon="👥" label="Utilisateurs"      value={stats.users}    to="/admin/utilisateurs" />
-        <StatCard icon="📦" label="Annonces actives"  value={stats.listings} to="/admin/annonces" />
-        <StatCard icon="✅" label="Ventes conclues"   value={stats.sold}     to="/admin/commandes" color="text-green-600" />
-        <StatCard icon="🚨" label="Signalements"      value={stats.reports}  to="/admin/signalements" color={stats.reports > 0 ? 'text-red-500' : 'text-nout-primary'} />
+        <StatCard icon="" label="Utilisateurs"      value={stats.users}    to="/admin/utilisateurs" />
+        <StatCard icon="" label="Annonces actives"  value={stats.listings} to="/admin/annonces" />
+        <StatCard icon="" label="Ventes conclues"   value={stats.sold}     to="/admin/commandes" color="text-green-600" />
+        <StatCard icon="" label="Signalements"      value={stats.reports}  to="/admin/signalements" color={stats.reports > 0 ? 'text-red-500' : 'text-nout-primary'} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

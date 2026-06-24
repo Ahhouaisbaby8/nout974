@@ -240,7 +240,7 @@ export default function CreateListing() {
                   className="absolute top-1 right-1 w-7 h-7 bg-black/60 text-white rounded-full text-sm flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                   aria-label="Supprimer cette photo"
                 >
-                  ✕
+                  
                 </button>
               </div>
             ))}
@@ -471,7 +471,7 @@ export default function CreateListing() {
           disabled={loading}
           className={`btn-primary w-full py-4 text-base ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
-          {loading ? 'Publication en cours…' : '🚀 Publier mon annonce'}
+          {loading ? 'Publication en cours…' : 'Publier mon annonce'}
         </button>
 
       </form>

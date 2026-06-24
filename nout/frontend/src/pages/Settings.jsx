@@ -185,7 +185,7 @@ export default function Settings() {
       )}
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-600 text-sm rounded-lg px-4 py-3 mb-5">
-          ✅ Profil mis à jour avec succès !
+          Profil mis à jour avec succès !
         </div>
       )}
 
@@ -206,7 +206,7 @@ export default function Settings() {
               </div>
             )}
             <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-white text-xl">📷</span>
+              <span className="text-white text-xl"></span>
             </div>
           </button>
           <div>
@@ -291,7 +291,7 @@ export default function Settings() {
 
       {/* ── SECTION PAIEMENTS VENDEUR ── */}
       <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
-        <h2 className="font-bold text-nout-dark mb-1">💳 Recevoir mes paiements</h2>
+        <h2 className="font-bold text-nout-dark mb-1">Recevoir mes paiements</h2>
         <p className="text-sm text-gray-500 mb-4 leading-relaxed">
           Renseigne ton IBAN pour recevoir l'argent de tes ventes directement sur ton compte bancaire.
         </p>
@@ -299,7 +299,7 @@ export default function Settings() {
         {/* Toast succès — flottant, auto-disparaît après 3s */}
         {ibanSuccess && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl flex items-center gap-2 pointer-events-none">
-            ✅ IBAN mis à jour
+            IBAN mis à jour
           </div>
         )}
 
@@ -355,7 +355,7 @@ export default function Settings() {
           {/* Badge Paiements activés — sous le champ */}
           {(profile?.stripe_account_id || profile?.iban) && (
             <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              <span className="text-green-500">✅</span>
+              <span className="text-green-500"></span>
               <p className="font-semibold text-green-700 text-sm">Paiements activés</p>
             </div>
           )}
@@ -389,7 +389,7 @@ export default function Settings() {
         <div className="mt-8 bg-white rounded-xl p-5 shadow-sm border border-amber-200">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h2 className="font-bold text-nout-dark mb-1">🌴 Badge Membre Fondateur</h2>
+              <h2 className="font-bold text-nout-dark mb-1">Badge Membre Fondateur</h2>
               <p className="text-sm text-gray-500 leading-relaxed">
                 Affiche ta bannière coucher de soleil, ton anneau doré et ton badge
                 sur ton profil, dans les conversations et sur tes annonces.
@@ -414,14 +414,14 @@ export default function Settings() {
             </button>
           </div>
           {badgeToggleSuccess && (
-            <p className="text-xs text-green-600 mt-3 font-medium">✅ Préférence enregistrée</p>
+            <p className="text-xs text-green-600 mt-3 font-medium">Préférence enregistrée</p>
           )}
         </div>
       )}
 
       {/* ── SECTION CONFIDENTIALITÉ ── */}
       <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
-        <h2 className="font-bold text-nout-dark mb-1">🔒 Confidentialité et compte</h2>
+        <h2 className="font-bold text-nout-dark mb-1">Confidentialité et compte</h2>
         <p className="text-sm text-gray-500 mb-4 leading-relaxed">
           La suppression de ton compte est définitive et irréversible.
         </p>
@@ -441,7 +441,7 @@ export default function Settings() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
           <div className="text-center mb-5">
-            <span className="text-4xl">⚠️</span>
+            <span className="text-4xl"></span>
             <h3 className="font-title font-extrabold text-[18px] text-nout-dark mt-3 mb-2">
               Supprimer ton compte ?
             </h3>

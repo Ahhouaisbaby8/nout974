@@ -11,7 +11,7 @@ const WELCOME_KEY = 'nout_welcome_seen'
 const WELCOME_MESSAGE = {
   id: '__welcome__',
   isWelcome: true,
-  content: `Bienvenue sur NOUT ! 🎉\n\nNOUT c'est la marketplace 100 % réunionnaise pour acheter et vendre tes articles de seconde main entre particuliers.\n\n👉 Pour faire ta première vente :\n1. 📸 Publie une annonce — prends une belle photo, décris ton article et fixe ton prix.\n2. 💬 Réponds aux messages — les acheteurs te contacteront ici.\n3. 🤝 Finalise la vente — échangez et concluez la transaction en toute sécurité.\n\nBonne vente ! 🛍️\nL'équipe NOUT`,
+  content: `Bienvenue sur NOUT ! \n\nNOUT c'est la marketplace 100 % réunionnaise pour acheter et vendre tes articles de seconde main entre particuliers.\n\nPour faire ta première vente :\n1. Publie une annonce — prends une belle photo, décris ton article et fixe ton prix.\n2. Réponds aux messages — les acheteurs te contacteront ici.\n3. Finalise la vente — échangez et concluez la transaction en toute sécurité.\n\nBonne vente ! \nL'équipe NOUT`,
 }
 
 export default function Messages() {
@@ -93,7 +93,7 @@ export default function Messages() {
                   onClick={() => navigate('/publier')}
                   className="btn-primary px-4 py-2 text-xs"
                 >
-                  📸 Publier une annonce
+                  Publier une annonce
                 </button>
                 <button
                   onClick={dismissWelcome}
@@ -114,7 +114,7 @@ export default function Messages() {
         </div>
       ) : conversations.length === 0 && !showWelcome ? (
         <div className="text-center py-16 text-gray-400">
-          <p className="text-5xl mb-4">💬</p>
+          <p className="text-5xl mb-4"></p>
           <p className="text-base font-semibold text-nout-dark">Aucun message pour le moment</p>
           <p className="text-sm mt-1">Quand quelqu'un te contactera, le message apparaîtra ici.</p>
         </div>

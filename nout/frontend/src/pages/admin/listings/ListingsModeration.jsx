@@ -64,7 +64,7 @@ export default function ListingsModeration() {
                     <div className="flex items-center gap-3">
                       {l.images?.[0]
                         ? <img src={l.images[0]} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="" />
-                        : <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg flex-shrink-0">📷</div>
+                        : <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg flex-shrink-0"></div>
                       }
                       <div>
                         <Link to={`/admin/annonces/${l.id}`} className="font-medium text-nout-dark hover:text-nout-primary truncate block max-w-[200px]">

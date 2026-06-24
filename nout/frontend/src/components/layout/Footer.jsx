@@ -76,7 +76,7 @@ export default function Footer() {
               <li><Link to="/inscription"  className="text-sm text-white/60 hover:text-white transition-colors">Inscription</Link></li>
               <li><Link to="/favoris"      className="text-sm text-white/60 hover:text-white transition-colors">Mes favoris</Link></li>
               <li><Link to="/commandes"    className="text-sm text-white/60 hover:text-white transition-colors">Mes commandes</Link></li>
-              <li><Link to="/installer-app" className="text-sm text-white/60 hover:text-white transition-colors">📲 Installer l'app</Link></li>
+              <li><Link to="/installer-app" className="text-sm text-white/60 hover:text-white transition-colors">Installer l'app</Link></li>
             </ul>
           </div>
 

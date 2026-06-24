@@ -24,10 +24,10 @@ export default function AdminFinances() {
       {!stats ? <p className="text-gray-400 text-sm">Chargement…</p> : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Volume total payé',     value: formatPrice(stats.paidTotal),      icon: '💳' },
-            { label: 'Commission NOUT (5%)',  value: formatPrice(stats.commission),      icon: '🏦', color: 'text-green-600' },
-            { label: 'Volume livré',           value: formatPrice(stats.deliveredTotal), icon: '✅' },
-            { label: 'Total commandes',        value: stats.totalOrders,                icon: '📦' },
+            { label: 'Volume total payé',     value: formatPrice(stats.paidTotal),      icon: '' },
+            { label: 'Commission NOUT (5%)',  value: formatPrice(stats.commission),      icon: '', color: 'text-green-600' },
+            { label: 'Volume livré',           value: formatPrice(stats.deliveredTotal), icon: '' },
+            { label: 'Total commandes',        value: stats.totalOrders,                icon: '' },
           ].map(({ label, value, icon, color }) => (
             <div key={label} className="bg-white rounded-xl p-5 shadow-sm">
               <p className="text-sm text-gray-400">{label}</p>

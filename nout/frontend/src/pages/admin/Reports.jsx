@@ -12,12 +12,12 @@ const STATUS_LABELS = {
 }
 
 const REASON_ICONS = {
-  'Contenu inapproprié':                               '🔞',
-  'Arnaque / fraude':                                  '💸',
-  'Contenu interdit (prostitution, drogues, armes...)': '🚫',
-  'Insultes / harcèlement':                            '😡',
-  'Spam ou doublon':                                   '🔁',
-  'Autre':                                             '❓',
+  'Contenu inapproprié':                               '',
+  'Arnaque / fraude':                                  '',
+  'Contenu interdit (prostitution, drogues, armes...)': '',
+  'Insultes / harcèlement':                            '',
+  'Spam ou doublon':                                   '',
+  'Autre':                                             '',
 }
 
 function BadgeType({ report }) {
@@ -36,11 +36,11 @@ function ListingActions({ report, onAction, loading }) {
     <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-100">
       <button disabled={loading} onClick={() => onAction(report, 'remove_listing')}
         className="text-sm text-red-600 font-semibold hover:underline disabled:opacity-40">
-        🗑️ Supprimer l'annonce
+        Supprimer l'annonce
       </button>
       <button disabled={loading} onClick={() => onAction(report, 'deactivate_listing')}
         className="text-sm text-orange-500 font-semibold hover:underline disabled:opacity-40">
-        🚫 Désactiver
+        Désactiver
       </button>
       <button disabled={loading} onClick={() => onAction(report, 'ignored')}
         className="text-sm text-gray-400 hover:text-gray-600 hover:underline disabled:opacity-40">
@@ -56,15 +56,15 @@ function UserActions({ report, onAction, loading }) {
     <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-100">
       <button disabled={loading} onClick={() => onAction(report, 'warn_user')}
         className="text-sm text-yellow-600 font-semibold hover:underline disabled:opacity-40">
-        ⚠️ Avertir
+        Avertir
       </button>
       <button disabled={loading} onClick={() => onAction(report, 'suspend_user')}
         className="text-sm text-orange-600 font-semibold hover:underline disabled:opacity-40">
-        ⏸️ Suspendre 7j
+        Suspendre 7j
       </button>
       <button disabled={loading} onClick={() => onAction(report, 'ban_user')}
         className="text-sm text-red-600 font-semibold hover:underline disabled:opacity-40">
-        🚫 Bannir
+        Bannir
       </button>
       <button disabled={loading} onClick={() => onAction(report, 'ignored')}
         className="text-sm text-gray-400 hover:text-gray-600 hover:underline disabled:opacity-40">
@@ -80,7 +80,7 @@ function MessageActions({ report, onAction, loading }) {
     <div className="flex flex-wrap gap-4 mt-3 pt-3 border-t border-gray-100">
       <button disabled={loading} onClick={() => onAction(report, 'resolved')}
         className="text-sm text-green-600 font-semibold hover:underline disabled:opacity-40">
-        ✅ Résoudre
+        Résoudre
       </button>
       <button disabled={loading} onClick={() => onAction(report, 'ignored')}
         className="text-sm text-gray-400 hover:text-gray-600 hover:underline disabled:opacity-40">
@@ -145,7 +145,7 @@ export default function AdminReports() {
         })
         if (!res.ok) throw new Error('Erreur envoi email')
         await updateReportStatus(report.id, 'resolved')
-        setActionFeedback(prev => ({ ...prev, [report.id]: '✅ Avertissement envoyé par email' }))
+        setActionFeedback(prev => ({ ...prev, [report.id]: 'Avertissement envoyé par email' }))
       } else if (action === 'suspend_user') {
         await adminAction('suspend_user', userId)
         await updateReportStatus(report.id, 'resolved')
@@ -216,7 +216,7 @@ export default function AdminReports() {
             const isUser    = !!r.user_id && !isListing
             const isMessage = !!r.message_id && !isListing && !r.user_id
             const statusInfo  = STATUS_LABELS[r.status] ?? STATUS_LABELS.pending
-            const reasonIcon  = REASON_ICONS[r.reason] ?? '🚩'
+            const reasonIcon  = REASON_ICONS[r.reason] ?? ''
             const actLoading  = !!actionLoading[r.id]
 
             return (

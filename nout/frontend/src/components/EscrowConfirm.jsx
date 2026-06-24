@@ -32,7 +32,7 @@ export default function EscrowConfirm({ order, onConfirmed }) {
           setIsLocked(true)
           setResult({
             type: 'locked',
-            msg: `🔒 Compte bloqué. Réessaie dans ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`,
+            msg: `Compte bloqué. Réessaie dans ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`,
           })
         }
       })
@@ -85,7 +85,7 @@ export default function EscrowConfirm({ order, onConfirmed }) {
       const data = await res.json()
 
       if (res.ok) {
-        setResult({ type: 'success', msg: '✅ Remise confirmée ! Ton virement est en route.' })
+        setResult({ type: 'success', msg: 'Remise confirmée ! Ton virement est en route.' })
         onConfirmed?.()
       } else {
         const errMsg = data.error || 'Une erreur est survenue. Réessaie.'
@@ -93,13 +93,13 @@ export default function EscrowConfirm({ order, onConfirmed }) {
         if (res.status === 429) {
           // Bloqué (3 tentatives épuisées ou déjà bloqué)
           setIsLocked(true)
-          setResult({ type: 'locked', msg: `🔒 ${errMsg}` })
+          setResult({ type: 'locked', msg: `${errMsg}` })
         } else if (errMsg.toLowerCase().includes('expiré')) {
-          setResult({ type: 'expired', msg: '⏰ Ce code a expiré. L\'acheteur a été remboursé automatiquement.' })
+          setResult({ type: 'expired', msg: 'Ce code a expiré. L\'acheteur a été remboursé automatiquement.' })
         } else if (errMsg.toLowerCase().includes('déjà')) {
-          setResult({ type: 'success', msg: '✅ Cette remise a déjà été confirmée.' })
+          setResult({ type: 'success', msg: 'Cette remise a déjà été confirmée.' })
         } else {
-          setResult({ type: 'error', msg: `❌ ${errMsg}` })
+          setResult({ type: 'error', msg: `${errMsg}` })
         }
 
         setDigits(['', '', '', '', '', ''])
@@ -108,7 +108,7 @@ export default function EscrowConfirm({ order, onConfirmed }) {
         }
       }
     } catch {
-      setResult({ type: 'error', msg: '❌ Erreur réseau. Vérifie ta connexion et réessaie.' })
+      setResult({ type: 'error', msg: 'Erreur réseau. Vérifie ta connexion et réessaie.' })
     } finally {
       setLoading(false)
     }
@@ -130,7 +130,7 @@ export default function EscrowConfirm({ order, onConfirmed }) {
       {/* En-tête */}
       <div className="px-5 pt-5 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-lg">{isLocked ? '🔒' : isLivraison ? '📦' : '🤝'}</span>
+          <span className="text-lg">{isLocked ? '' : isLivraison ? '' : ''}</span>
           <h3 className="font-title font-bold text-white text-base">
             {isLivraison ? 'Confirmer la réception' : 'Confirmer la remise en main propre'}
           </h3>
@@ -171,7 +171,7 @@ export default function EscrowConfirm({ order, onConfirmed }) {
         {/* Date d'expiration */}
         {expiresDate && !result && (
           <p className="text-center text-white/40 text-xs mb-4">
-            ⏱ Code valable jusqu'au {expiresDate}
+            Code valable jusqu'au {expiresDate}
           </p>
         )}
 

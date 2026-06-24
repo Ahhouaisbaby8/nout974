@@ -21,7 +21,7 @@ export default function AdminRGPD() {
       const blob = new Blob([JSON.stringify({ profil: profile, annonces: listings, commandes: orders, messages }, null, 2)], { type: 'application/json' })
       const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `nout-data-${email}.json` })
       a.click()
-      setResult('✅ Export téléchargé.')
+      setResult('Export téléchargé.')
     } catch { setResult("Erreur lors de l'export.") }
     finally { setLoading(false) }
   }
@@ -33,7 +33,7 @@ export default function AdminRGPD() {
       const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).single()
       if (!profile) { setResult('Aucun compte trouvé.'); return }
       await adminAction('delete_user_rgpd', profile.id)
-      setResult(`✅ Compte ${email} supprimé définitivement.`)
+      setResult(`Compte ${email} supprimé définitivement.`)
       setEmail('')
     } catch (err) { setResult(`Erreur : ${err.message}`) }
     finally { setLoading(false) }
@@ -52,12 +52,12 @@ export default function AdminRGPD() {
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <h3 className="font-bold text-nout-dark text-sm mb-2">📤 Export des données</h3>
+          <h3 className="font-bold text-nout-dark text-sm mb-2">Export des données</h3>
           <p className="text-xs text-gray-500 mb-3">Télécharger toutes les données de l'utilisateur au format JSON.</p>
           <button onClick={handleExport} disabled={loading || !email} className="btn-primary px-4 py-2 text-sm w-full disabled:opacity-50">Exporter</button>
         </div>
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <h3 className="font-bold text-red-600 text-sm mb-2">🗑 Suppression</h3>
+          <h3 className="font-bold text-red-600 text-sm mb-2">Suppression</h3>
           <p className="text-xs text-gray-500 mb-3">Supprime le compte et toutes ses données. Irréversible.</p>
           <button onClick={handleDelete} disabled={loading || !email} className="w-full px-4 py-2 bg-red-50 text-red-500 border-2 border-red-200 rounded-nout text-sm font-bold hover:bg-red-100 disabled:opacity-50">Supprimer</button>
         </div>

@@ -47,7 +47,7 @@ export default function Favorites() {
 
       {favorites.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-5xl mb-4">❤️</p>
+          <p className="text-5xl mb-4"></p>
           <p className="text-base font-semibold text-nout-dark">Tu n'as pas encore de favoris</p>
           <p className="text-sm mt-2 text-gray-400">Explore les annonces et sauvegarde celles qui t'intéressent !</p>
           <Link to="/" className="btn-primary mt-6 px-8 inline-block">
@@ -66,13 +66,13 @@ export default function Favorites() {
                     {image ? (
                       <img src={image} alt={listing.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-5xl text-gray-300">📷</div>
+                      <div className="w-full h-full flex items-center justify-center text-5xl text-gray-300"></div>
                     )}
                   </div>
                   <div className="p-3">
                     <p className="font-semibold text-nout-dark text-sm line-clamp-2">{listing.title}</p>
                     <p className="text-nout-primary font-extrabold mt-1">{formatPrice(listing.price)}</p>
-                    <p className="text-xs text-gray-400 mt-1">📍 {listing.city}</p>
+                    <p className="text-xs text-gray-400 mt-1">{listing.city}</p>
                   </div>
                 </Link>
                 <div className="px-3 pb-3 flex justify-between items-center">
@@ -81,7 +81,7 @@ export default function Favorites() {
                     onClick={() => handleRemove(user.id, listing_id)}
                     className="text-xs text-red-400 hover:text-red-600 transition-colors"
                   >
-                    ✕ Retirer
+                    Retirer
                   </button>
                 </div>
               </div>

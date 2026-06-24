@@ -33,9 +33,9 @@ export default function OrderToast() {
         const { data: listing } = await supabase
           .from('listings').select('title').eq('id', payload.new.listing_id).single()
         const titre = listing?.title ?? 'ton article'
-        if (status === 'paid')      addToast({ icon: '✅', message: `Achat confirmé — ${titre}`,         url: '/commandes' })
-        if (status === 'completed') addToast({ icon: '🤝', message: `Remise confirmée — ${titre}`,       url: '/commandes' })
-        if (status === 'refunded')  addToast({ icon: '💸', message: `Tu as été remboursé — ${titre}`,    url: '/commandes' })
+        if (status === 'paid')      addToast({ icon: '', message: `Achat confirmé — ${titre}`,         url: '/commandes' })
+        if (status === 'completed') addToast({ icon: '', message: `Remise confirmée — ${titre}`,       url: '/commandes' })
+        if (status === 'refunded')  addToast({ icon: '', message: `Tu as été remboursé — ${titre}`,    url: '/commandes' })
       })
       .subscribe()
 
@@ -52,10 +52,10 @@ export default function OrderToast() {
         const { data: listing } = await supabase
           .from('listings').select('title').eq('id', payload.new.listing_id).single()
         const titre = listing?.title ?? 'ton article'
-        if (status === 'paid')          addToast({ icon: '🎉', message: `Tu viens de vendre — ${titre}`,         url: '/messages' })
-        if (status === 'completed')     addToast({ icon: '💸', message: `Virement en route — ${titre}`,          url: '/commandes' })
-        if (status === 'payout_pending') addToast({ icon: '⚠️', message: `Active tes paiements — ${titre}`,      url: '/parametres' })
-        if (status === 'refunded')      addToast({ icon: '⏰', message: `Remise non confirmée — ${titre}`,       url: '/commandes' })
+        if (status === 'paid')          addToast({ icon: '', message: `Tu viens de vendre — ${titre}`,         url: '/messages' })
+        if (status === 'completed')     addToast({ icon: '', message: `Virement en route — ${titre}`,          url: '/commandes' })
+        if (status === 'payout_pending') addToast({ icon: '', message: `Active tes paiements — ${titre}`,      url: '/parametres' })
+        if (status === 'refunded')      addToast({ icon: '', message: `Remise non confirmée — ${titre}`,       url: '/commandes' })
       })
       .subscribe()
 

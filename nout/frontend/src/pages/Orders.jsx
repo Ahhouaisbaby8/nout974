@@ -153,7 +153,7 @@ function BuyerEscrowCode({ orderId }) {
   return (
     <div className="mt-3 pt-3 border-t border-gray-100">
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-        📦 Mon code de remise
+        Mon code de remise
       </p>
       <p
         className="text-center font-extrabold font-mono py-2 mb-2"
@@ -166,7 +166,7 @@ function BuyerEscrowCode({ orderId }) {
       </p>
       <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2.5">
         <p className="text-xs text-orange-700 leading-relaxed">
-          ⚠️ <strong>Ne donne ce code QU'APRÈS</strong> avoir vérifié et récupéré ton article. Ce code libère le paiement au vendeur.
+          <strong>Ne donne ce code QU'APRÈS</strong> avoir vérifié et récupéré ton article. Ce code libère le paiement au vendeur.
         </p>
       </div>
     </div>
@@ -212,7 +212,7 @@ function SellerShippingPanel({ order, onShipped }) {
   if (success) {
     return (
       <div className="mt-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
-        <span>✅</span>
+        <span></span>
         <p className="text-sm font-semibold text-green-700">Commande marquée comme expédiée</p>
       </div>
     )
@@ -222,7 +222,7 @@ function SellerShippingPanel({ order, onShipped }) {
     <div className="mt-4 border border-blue-200 rounded-xl overflow-hidden">
       <div className="bg-blue-50 px-4 pt-4 pb-3 border-b border-blue-100">
         <div className="flex items-center gap-2">
-          <span>📦</span>
+          <span></span>
           <h3 className="font-semibold text-nout-dark text-sm">Expédier cette commande</h3>
         </div>
         <p className="text-xs text-gray-500 mt-0.5">Via notre service de livraison</p>
@@ -271,7 +271,7 @@ function BuyerTrackingPanel({ order }) {
     <div className="mt-3 pt-3 border-t border-gray-100">
       <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
         <div className="flex items-center gap-2 mb-2">
-          <span>📦</span>
+          <span></span>
           <p className="text-sm font-semibold text-nout-dark">Votre colis est en route</p>
         </div>
         <p className="text-xs text-gray-500 mb-1">Numéro de suivi</p>
@@ -356,7 +356,7 @@ export default function Orders() {
 
         {liste.length === 0 ? (
           <div className="text-center py-20 text-gray-400">
-            <p className="text-5xl mb-4">{tab === 'achats' ? '🛍️' : '📦'}</p>
+            <p className="text-5xl mb-4">{tab === 'achats' ? '' : ''}</p>
             <p className="text-base font-semibold text-nout-dark">
               {tab === 'achats' ? "Tu n'as pas encore effectué d'achat." : "Tu n'as pas encore réalisé de vente."}
             </p>
@@ -386,7 +386,7 @@ export default function Orders() {
                         {image ? (
                           <img src={image} alt={order.listing?.title} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-3xl text-gray-300">📷</div>
+                          <div className="w-full h-full flex items-center justify-center text-3xl text-gray-300"></div>
                         )}
                       </div>
                     </Link>
@@ -412,7 +412,7 @@ export default function Orders() {
                       <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
                       {order.shipping_method && SHIPPING_METHODS[order.shipping_method] && (
                         <span className="inline-block mt-1 text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                          {order.shipping_method === 'hand' ? '🤝' : '📦'} {SHIPPING_METHODS[order.shipping_method].label}
+                          {order.shipping_method === 'hand' ? '' : ''} {SHIPPING_METHODS[order.shipping_method].label}
                         </span>
                       )}
                     </div>
@@ -444,16 +444,16 @@ export default function Orders() {
                   {tab === 'achats' && order.status === 'completed' && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-green-600">✅ Remise confirmée</p>
+                        <p className="text-sm font-semibold text-green-600">Remise confirmée</p>
                         {!reviewedOrderIds.has(order.id) ? (
                           <button
                             onClick={() => setReviewTarget(order)}
                             className="text-sm font-semibold text-[#0E7FAB] hover:text-[#1A3A8F] transition-colors"
                           >
-                            ⭐ Laisser un avis
+                            Laisser un avis
                           </button>
                         ) : (
-                          <p className="text-xs text-gray-400">✅ Avis publié</p>
+                          <p className="text-xs text-gray-400">Avis publié</p>
                         )}
                       </div>
                     </div>

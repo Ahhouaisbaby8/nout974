@@ -124,8 +124,7 @@ export default function Search() {
           className="flex-1 input-field"
         />
         <button type="submit" className="btn-primary px-5">
-          🔍
-        </button>
+                  </button>
         <button
           type="button"
           onClick={() => setShowFilters(f => !f)}
@@ -135,7 +134,7 @@ export default function Search() {
               : 'border-nout-border text-gray-500 bg-white hover:border-nout-primary'
           }`}
         >
-          ⚙️ Filtres {hasFilters && '•'}
+          Filtres {hasFilters && '•'}
         </button>
       </form>
 
@@ -233,7 +232,7 @@ export default function Search() {
         </div>
       ) : listings.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
-          <p className="text-5xl mb-4">🔍</p>
+          <p className="text-5xl mb-4"></p>
           <p className="text-lg font-semibold text-nout-dark">Aucune annonce trouvée</p>
           <p className="text-sm mt-1">Essaie avec d'autres mots-clés ou retire des filtres.</p>
           {hasFilters && (

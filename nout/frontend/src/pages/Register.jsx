@@ -54,7 +54,7 @@ export default function Register() {
     return (
       <div className="min-h-screen bg-nout-secondary flex items-center justify-center px-4 py-12">
         <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8 text-center">
-          <div className="text-5xl mb-4">📩</div>
+          <div className="text-5xl mb-4"></div>
           <h2 className="text-xl font-bold text-nout-dark mb-2">Vérifie ta boîte mail !</h2>
           <p className="text-gray-500 text-sm leading-relaxed">
             Un e-mail de confirmation a été envoyé à <strong>{email}</strong>.<br />

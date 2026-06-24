@@ -57,7 +57,7 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
 
         {done ? (
           <div className="text-center py-4">
-            <p className="text-4xl mb-3">✅</p>
+            <p className="text-4xl mb-3"></p>
             <p className="font-bold text-nout-dark text-lg mb-1">Signalement envoyé</p>
             <p className="text-sm text-gray-500 mb-5">Merci. Notre équipe va examiner ça rapidement.</p>
             <button onClick={onClose} className="btn-primary px-8">Fermer</button>
@@ -65,7 +65,7 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
 
         ) : alreadyReported ? (
           <div className="text-center py-4">
-            <p className="text-4xl mb-3">⚠️</p>
+            <p className="text-4xl mb-3"></p>
             <p className="font-bold text-nout-dark text-lg mb-1">Déjà signalé</p>
             <p className="text-sm text-gray-500 mb-5">Tu as déjà signalé ce contenu. Notre équipe va l'examiner.</p>
             <button onClick={onClose} className="btn-primary px-8">Fermer</button>
@@ -74,8 +74,8 @@ export default function ReportModal({ listingId = null, targetUserId = null, onC
         ) : (
           <>
             <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg font-bold text-nout-dark">🚩 {title}</h2>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">✕</button>
+              <h2 className="text-lg font-bold text-nout-dark">{title}</h2>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none"></button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">

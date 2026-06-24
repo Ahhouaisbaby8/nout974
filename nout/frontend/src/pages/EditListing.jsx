@@ -169,7 +169,7 @@ export default function EditListing() {
 
   if (notFound) return (
     <div className="text-center py-24 text-gray-400">
-      <p className="text-5xl mb-4">🔍</p>
+      <p className="text-5xl mb-4"></p>
       <p className="text-lg font-semibold text-nout-dark">Annonce introuvable</p>
       <button onClick={() => navigate('/')} className="btn-primary mt-6 px-8">Retour à l'accueil</button>
     </div>
@@ -215,7 +215,7 @@ export default function EditListing() {
                     className="absolute top-1 right-1 w-6 h-6 bg-black/60 text-white rounded-full text-xs flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                     aria-label="Supprimer cette photo"
                   >
-                    ✕
+                    
                   </button>
                 </div>
               )
@@ -311,9 +311,9 @@ export default function EditListing() {
         {isFashion && (
           <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
             <h2 className="font-bold text-nout-dark">
-              {category === 'chaussures' ? '👟 Détails chaussure'
-               : (category === 'accessoires' || category === 'sacs') ? '👜 Détails article'
-               : '👗 Détails vêtement'}
+              {category === 'chaussures' ? 'Détails chaussure'
+               : (category === 'accessoires' || category === 'sacs') ? 'Détails article'
+               : 'Détails vêtement'}
             </h2>
 
             <div>
@@ -427,7 +427,7 @@ export default function EditListing() {
           disabled={saving}
           className={`btn-primary w-full py-4 text-base ${saving ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
-          {saving ? 'Enregistrement…' : '✅ Enregistrer les modifications'}
+          {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
         </button>
 
       </form>

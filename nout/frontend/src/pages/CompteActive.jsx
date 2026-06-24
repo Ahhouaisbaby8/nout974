@@ -31,7 +31,7 @@ export default function CompteActive() {
     return (
       <div className="min-h-screen bg-nout-secondary flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8 text-center">
-          <div className="text-4xl mb-4 animate-pulse">⏳</div>
+          <div className="text-4xl mb-4 animate-pulse"></div>
           <p className="text-gray-500 text-sm">Activation en cours…</p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function CompteActive() {
     return (
       <div className="min-h-screen bg-nout-secondary flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8 text-center">
-          <div className="text-4xl mb-4">❌</div>
+          <div className="text-4xl mb-4"></div>
           <h2 className="text-xl font-bold text-nout-dark mb-2">Lien invalide ou expiré</h2>
           <p className="text-gray-500 text-sm leading-relaxed mb-6">
             Ce lien de confirmation a peut-être déjà été utilisé ou il a expiré.
@@ -59,7 +59,7 @@ export default function CompteActive() {
   return (
     <div className="min-h-screen bg-nout-secondary flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8 text-center">
-        <div className="text-5xl mb-4">✅</div>
+        <div className="text-5xl mb-4"></div>
         <h2 className="text-xl font-bold text-nout-dark mb-2">Ton compte est activé !</h2>
         <p className="text-gray-500 text-sm leading-relaxed mb-6">
           Bienvenue sur NOUT — la marketplace 100&nbsp;% réunionnaise.<br />

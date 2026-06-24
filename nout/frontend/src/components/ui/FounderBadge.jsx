@@ -44,12 +44,13 @@ export function FounderRing({ size = 'md', children }) {
   )
 }
 
-// ─── Mini badge 🌴 #N sur les ListingCards ────────────────────────
+// ─── Mini badge Fondateur #N sur les ListingCards ─────────────────
 export function FounderCardBadge({ number }) {
   return (
-    <span className="absolute top-8 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight z-10"
+    <span className="absolute top-8 left-2 inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-tight z-10"
           style={{ background: 'linear-gradient(135deg, #C8860A, #F5D45A)', color: '#3d1f00', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
-      🌴 #{number}
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.7-5.1 4.7 1.4 6.8L12 17.8 5.9 21.2l1.4-6.8L2.2 9.7l6.9-.7z"/></svg>
+      #{number}
     </span>
   )
 }

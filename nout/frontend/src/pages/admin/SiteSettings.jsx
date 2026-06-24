@@ -5,12 +5,12 @@ export default function AdminSiteSettings() {
 
       <div className="flex flex-col gap-4">
         {[
-          { icon: '🌐', title: 'Domaine',            value: 'nout.re',                            note: 'Configuré via Netlify' },
-          { icon: '📧', title: 'Email de contact',   value: 'contact@nout.re',                 note: 'Affiché dans le footer et les pages légales' },
-          { icon: '💳', title: 'Commission Stripe',  value: '10 %',                               note: 'Modifiable dans netlify/functions/create-checkout-session.js' },
-          { icon: '🏢', title: 'SIRET',              value: '106 334 436 00016',                  note: 'SIREN : 106 334 436' },
-          { icon: '🔒', title: 'Hébergement',        value: 'Netlify',                            note: 'Déploiement automatique depuis GitHub' },
-          { icon: '🗄️', title: 'Base de données',   value: 'Supabase PostgreSQL',                note: 'pvimybfqfhrvpnmkcepy.supabase.co' },
+          { icon: '', title: 'Domaine',            value: 'nout.re',                            note: 'Configuré via Netlify' },
+          { icon: '', title: 'Email de contact',   value: 'contact@nout.re',                 note: 'Affiché dans le footer et les pages légales' },
+          { icon: '', title: 'Commission Stripe',  value: '10 %',                               note: 'Modifiable dans netlify/functions/create-checkout-session.js' },
+          { icon: '', title: 'SIRET',              value: '106 334 436 00016',                  note: 'SIREN : 106 334 436' },
+          { icon: '', title: 'Hébergement',        value: 'Netlify',                            note: 'Déploiement automatique depuis GitHub' },
+          { icon: '', title: 'Base de données',   value: 'Supabase PostgreSQL',                note: 'pvimybfqfhrvpnmkcepy.supabase.co' },
         ].map(({ icon, title, value, note }) => (
           <div key={title} className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4">
             <span className="text-2xl flex-shrink-0">{icon}</span>

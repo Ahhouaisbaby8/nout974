@@ -109,7 +109,7 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
               className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-60 transition-opacity"
               style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}
             >
-              {loading ? 'Recadrage…' : 'Recadrer ✓'}
+              {loading ? 'Recadrage…' : 'Recadrer '}
             </button>
           </div>
         </div>

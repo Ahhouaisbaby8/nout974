@@ -3,14 +3,14 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
-  { path: '/admin',              label: 'Dashboard',      icon: '📊' },
-  { path: '/admin/annonces',     label: 'Annonces',       icon: '📦' },
-  { path: '/admin/utilisateurs', label: 'Utilisateurs',   icon: '👥' },
-  { path: '/admin/commandes',    label: 'Commandes',      icon: '🛒' },
-  { path: '/admin/signalements', label: 'Signalements',   icon: '🚨' },
-  { path: '/admin/finances',     label: 'Finances',       icon: '💰' },
-  { path: '/admin/rgpd',         label: 'RGPD',           icon: '🔒' },
-  { path: '/admin/parametres',   label: 'Paramètres',     icon: '⚙️' },
+  { path: '/admin',              label: 'Dashboard',      icon: '' },
+  { path: '/admin/annonces',     label: 'Annonces',       icon: '' },
+  { path: '/admin/utilisateurs', label: 'Utilisateurs',   icon: '' },
+  { path: '/admin/commandes',    label: 'Commandes',      icon: '' },
+  { path: '/admin/signalements', label: 'Signalements',   icon: '' },
+  { path: '/admin/finances',     label: 'Finances',       icon: '' },
+  { path: '/admin/rgpd',         label: 'RGPD',           icon: '' },
+  { path: '/admin/parametres',   label: 'Paramètres',     icon: '' },
 ]
 
 export default function AdminLayout() {

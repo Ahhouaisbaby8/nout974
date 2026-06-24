@@ -210,7 +210,7 @@ export default function Conversation() {
             </span>
             {showFounderHeader && (
               <p className="text-[10px] font-bold" style={{ color: '#D4A017' }}>
-                🌴 Membre Fondateur #{otherFounderNumber}
+                Membre Fondateur #{otherFounderNumber}
               </p>
             )}
           </div>
@@ -227,23 +227,23 @@ export default function Conversation() {
         >
           {messages.length === 0 && (
             <div className="text-center text-gray-400 text-sm py-8">
-              <p className="text-3xl mb-2">👋</p>
+              <p className="text-3xl mb-2"></p>
               Commence la conversation avec {otherUser?.username} !
             </div>
           )}
 
           {messages.map((msg) => {
             const isMine  = msg.sender_id === user.id
-            const isOffer = msg.content.startsWith('💰 Offre :')
+            const isOffer = msg.content.startsWith('Offre :')
 
             if (isOffer) {
               const lines  = msg.content.split('\n')
-              const amount = lines[0].replace('💰 Offre : ', '')
+              const amount = lines[0].replace('Offre : ', '')
               const title  = lines[1]?.replace("Pour l'annonce : ", '') ?? ''
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[75%] px-4 py-3 rounded-2xl border-2 border-amber-300 bg-amber-50 ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
-                    <p className="text-xs font-semibold text-amber-600 mb-1">💰 Proposition d'offre</p>
+                    <p className="text-xs font-semibold text-amber-600 mb-1">Proposition d'offre</p>
                     <p className="text-2xl font-extrabold text-amber-700">{amount}</p>
                     {title && <p className="text-xs text-gray-500 mt-1 truncate max-w-[180px]">{title}</p>}
                     <p className="text-[10px] mt-1.5 text-gray-400">{formatRelativeDate(msg.created_at)}</p>
@@ -285,7 +285,7 @@ export default function Conversation() {
       {/* ── SAISIE ── */}
       {msgError && (
         <div className="bg-red-50 border-t border-red-200 px-4 py-2 text-xs text-red-600 flex-shrink-0">
-          ⛔ {msgError}
+          {msgError}
         </div>
       )}
       <form
@@ -307,7 +307,7 @@ export default function Conversation() {
           disabled={!content.trim() || sending}
           className="btn-primary px-5 py-2.5 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          ➤
+          
         </button>
       </form>
 

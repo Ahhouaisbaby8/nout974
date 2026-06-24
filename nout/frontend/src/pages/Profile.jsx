@@ -70,7 +70,7 @@ export default function Profile() {
 
   if (notFound) return (
     <div className="text-center py-24 text-gray-400">
-      <p className="text-5xl mb-4">👤</p>
+      <p className="text-5xl mb-4"></p>
       <p className="text-lg font-semibold text-nout-dark">Profil introuvable</p>
       <button onClick={() => navigate('/')} className="btn-primary mt-6 px-8">Retour à l'accueil</button>
     </div>
@@ -165,7 +165,7 @@ export default function Profile() {
                   )}
                 </div>
                 {profile.city && (
-                  <p className="text-[11px] text-white/60 mt-0.5">📍 {profile.city}</p>
+                  <p className="text-[11px] text-white/60 mt-0.5">{profile.city}</p>
                 )}
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function Profile() {
                 )}
               </div>
               {profile.city && (
-                <p className="text-[11px] text-gray-500 mt-0.5">📍 {profile.city}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{profile.city}</p>
               )}
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function Profile() {
           <div className="flex flex-col gap-2 flex-shrink-0">
             {isOwnProfile ? (
               <Link to="/parametres" className="btn-secondary px-5 py-2 text-sm">
-                ✏️ Modifier mon profil
+                Modifier mon profil
               </Link>
             ) : user ? (
               <>
@@ -220,13 +220,13 @@ export default function Profile() {
                   onClick={() => navigate(`/messages/${id}`)}
                   className="btn-primary px-5 py-2 text-sm"
                 >
-                  💬 Envoyer un message
+                  Envoyer un message
                 </button>
                 <button
                   onClick={() => setShowReport(true)}
                   className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
                 >
-                  🚩 Signaler
+                  Signaler
                 </button>
               </>
             ) : null}
@@ -242,7 +242,7 @@ export default function Profile() {
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">
-            {avgRating ? `${avgRating} ⭐` : '—'}
+            {avgRating ? `${avgRating} ` : '—'}
           </p>
           <p className="text-[11px] text-nout-muted mt-1">
             {avgRating ? `${reviews.length} avis` : 'pas encore noté'}
@@ -283,7 +283,7 @@ export default function Profile() {
 
         {listings.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
-            <p className="text-4xl mb-3">📭</p>
+            <p className="text-4xl mb-3"></p>
             <p className="text-sm">
               {isOwnProfile ? "Tu n'as pas encore publié d'annonce." : "Aucune annonce active pour le moment."}
             </p>
