@@ -515,12 +515,18 @@ Fait et déployé :
 
 ### MCP INSTALLÉS (24 juin) : playwright + context7 (claude mcp add). Chromium OK. Permet captures/voir le rendu.
 
+### ✅ V2 DÉPLOYÉE (commit 544aaaf, 24 juin 2026)
+- **FIX BUG popups** : les popups "Détails du prix" / "Protection acheteurs" de ListingCard étaient COINCÉES dans la carte (piégées par le `<Link>`). Corrigé avec `createPortal` (rendu dans document.body) → centrées plein écran, équilibrées desktop + mobile (testé Playwright). Restylées façon Vinted (ligne article, frais protection cliquable, frais de port "dès X€", politique remboursement adaptée NOUT : code 6 chiffres / 7 jours / main propre).
+- **Menu profil sobre** : icônes toutes grises (text-gray-400), regroupées en 3 sections avec séparateurs, survol → turquoise. Déconnexion rouge. (Header.jsx)
+- **Espace Vendeur ENRICHI** (sellerStats.js + SellerSpace.jsx, garde le style sobre) : alerte "Active tes paiements" si pas Stripe/IBAN, raccourcis rapides (Publier/Mes ventes), graphique gains 6 mois (barres CSS pur, pas de lib), taux conversion, articles les plus vus (top 5), historique virements (versé/en attente). paiementsActifs calculé depuis profile.stripe_account_id||iban.
+
+**RAPPEL IMPORTANT — équilibre MOBILE** : Amandine insiste, la majorité des users sont sur mobile. TOUJOURS tester le rendu mobile (390px) avec Playwright avant de pousser. Popups : OK mobile vérifié.
+
 ### PROCHAINES ÉTAPES VISUELLES (reste à faire)
 1. **Nettoyer emojis pages internes** (toasts OrderToast, EscrowConfirm, Conversation, modales ReportModal, CropModal, CompteActive, admin) — gros chantier, ~25 fichiers
 2. Fiche produit 2 colonnes (galerie sticky / infos+CTA)
 3. Formulaire publication amélioré (photos réordonnables)
 4. Système de LOT (demandé, gros chantier)
-5. ⚠️ Note : SellerSpace.jsx version sobre était non commitée → MAINTENANT déployée (f9e3e96)
 
 ## Analyse concurrentielle (23 juin 2026) — voir nout/ANALYSE-CONCURRENTIELLE-2026-06-23.md
 
