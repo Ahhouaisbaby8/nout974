@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Shield, Camera, Info, X, Truck } from 'lucide-react'
+import { Heart, Shield, Camera, Info, X, Truck, RefreshCcw } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
-import { computeProtectionFee, computeBuyerTotal } from '../../utils/shipping'
+import { computeProtectionFee, computeBuyerTotal, getShippingFee } from '../../utils/shipping'
+
+const SHIPPING_RELAY_FEE = getShippingFee('relay')
 import { FounderCardBadge } from './FounderBadge'
 
 export default function ListingCard({ listing, isFavorited = false, isFounderSeller = false, founderNumber = null }) {
@@ -139,142 +142,150 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
         </p>
       </div>
 
-      {/* ── POPUP : Détails du prix ── */}
-      {modal === 'price' && (
+      {/* Popups rendues via portail (hors de la carte) → toujours centrées plein écran */}
+      {modal && createPortal(
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40"
           onClick={closeModal}
         >
-          <div
-            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden cursor-default"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h3 className="font-title font-bold text-nout-texte">Détails du prix</h3>
-              <button type="button" onClick={closeModal} aria-label="Fermer" className="text-nout-muted hover:text-nout-texte">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="px-5 py-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                  {imageUrl && <img src={imageUrl} alt="" className="w-full h-full object-cover" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-nout-texte truncate">{listing.title}</p>
-                </div>
-                <span className="text-sm font-semibold text-nout-texte">{formatPrice(listing.price)}</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={openModal('protection')}
-                className="w-full flex items-center gap-3 text-left rounded-lg hover:bg-gray-50 -mx-1 px-1 py-1 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-full bg-nout-turquoise/10 flex items-center justify-center flex-shrink-0">
-                  <Shield size={16} className="text-nout-turquoise" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-nout-texte flex items-center gap-1">
-                    Frais de service NOUT
-                    <Info size={12} className="text-nout-muted" />
-                  </p>
-                  <p className="text-[11px] text-nout-muted">Protection acheteur incluse</p>
-                </div>
-                <span className="text-sm font-semibold text-nout-texte">{formatPrice(fraisService)}</span>
-              </button>
-
-              <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-                <span className="font-semibold text-nout-texte">Total</span>
-                <span className="font-title font-bold text-nout-texte">{formatPrice(totalAcheteur)}</span>
-              </div>
-
-              <p className="text-[12px] text-nout-muted leading-relaxed pt-1">
-                Les frais de service couvrent la protection de ton achat. Le prix de l'article est
-                fixé par le vendeur et peut faire l'objet d'une négociation. La remise se fait
-                en main propre avec un code de confirmation sécurisé.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={closeModal}
-              className="w-full bg-nout-turquoise text-white font-semibold py-3.5 hover:opacity-90 transition-opacity"
+          {/* ── POPUP : Détails du prix (style Vinted) ── */}
+          {modal === 'price' && (
+            <div
+              className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden cursor-default"
+              onClick={(e) => e.stopPropagation()}
             >
-              OK, fermer
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── POPUP : Protection acheteurs ── */}
-      {modal === 'protection' && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50"
-          onClick={closeModal}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden cursor-default flex flex-col max-h-[85dvh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-end px-4 pt-4">
-              <button type="button" onClick={closeModal} aria-label="Fermer" className="text-nout-muted hover:text-nout-texte">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="px-6 overflow-y-auto">
-              <div className="flex justify-center mb-3">
-                <div className="w-16 h-16 rounded-full bg-nout-turquoise/10 flex items-center justify-center">
-                  <Shield size={28} className="text-nout-turquoise" />
-                </div>
+              <div className="flex items-center justify-between px-5 py-4">
+                <span className="w-6" />
+                <h3 className="font-title font-bold text-nout-texte text-center flex-1">Détails du prix</h3>
+                <button type="button" onClick={closeModal} aria-label="Fermer" className="text-nout-turquoise hover:opacity-70">
+                  <X size={22} />
+                </button>
               </div>
-              <h3 className="font-title font-bold text-xl text-nout-texte text-center mb-4">
-                Protection acheteurs
-              </h3>
 
-              <p className="text-sm text-nout-muted leading-relaxed mb-4 text-center">
-                Pour chaque achat sur NOUT, ton argent est protégé jusqu'à la remise de l'article.
-              </p>
+              <div className="px-5 pb-2">
+                {/* Ligne article */}
+                <div className="flex items-center gap-3 py-3 border-t border-gray-100">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                    {imageUrl && <img src={imageUrl} alt="" className="w-full h-full object-cover" />}
+                  </div>
+                  <p className="flex-1 min-w-0 text-[15px] text-nout-texte truncate">{listing.title}</p>
+                  <span className="text-[15px] text-nout-texte">{formatPrice(listing.price)}</span>
+                </div>
 
-              <div className="flex items-start gap-2 mb-3">
-                <Shield size={18} className="text-nout-turquoise flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-nout-texte mb-1">Paiement sécurisé (séquestre)</p>
-                  <p className="text-sm text-nout-muted leading-relaxed">
-                    Ton paiement est conservé en sécurité et n'est versé au vendeur qu'une fois que
-                    tu as récupéré ton article et confirmé la remise avec ton code à 6 chiffres.
+                {/* Ligne protection (cliquable → popup protection) */}
+                <button
+                  type="button"
+                  onClick={openModal('protection')}
+                  className="w-full flex items-center gap-3 py-3 border-t border-gray-100 text-left"
+                >
+                  <div className="w-10 h-10 rounded-full bg-nout-turquoise/15 flex items-center justify-center flex-shrink-0">
+                    <Shield size={18} className="text-nout-turquoise" />
+                  </div>
+                  <p className="flex-1 text-[15px] text-nout-texte flex items-center gap-1.5">
+                    Frais de Protection acheteurs
+                    <Info size={15} className="text-nout-turquoise" />
                   </p>
+                  <span className="text-[15px] text-nout-texte">{formatPrice(fraisService)}</span>
+                </button>
+
+                {/* Frais de port (info, sélectionné au paiement) */}
+                <div className="py-3 border-t border-gray-100">
+                  <p className="text-[13px] text-gray-400 mb-2">À sélectionner lors du paiement</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-nout-turquoise/15 flex items-center justify-center flex-shrink-0">
+                      <Truck size={18} className="text-nout-turquoise" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[15px] text-nout-texte">Frais de port</p>
+                      <p className="text-[13px] text-gray-400">En fonction du mode d'envoi choisi (ou main propre gratuite)</p>
+                    </div>
+                    <span className="text-[15px] text-nout-texte">dès {formatPrice(SHIPPING_RELAY_FEE)}</span>
+                  </div>
                 </div>
+
+                <p className="text-[13px] text-gray-400 leading-relaxed py-3 border-t border-gray-100">
+                  Les frais de Protection acheteurs sont ajoutés à chaque achat sur NOUT. Le prix de l'article
+                  est fixé par le vendeur et peut faire l'objet d'une négociation. La remise en main propre est gratuite.
+                </p>
               </div>
 
-              <div className="flex items-start gap-2 mb-3">
-                <Truck size={18} className="text-nout-turquoise flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-nout-texte mb-1">Remboursement automatique</p>
-                  <p className="text-sm text-nout-muted leading-relaxed">
-                    Si la remise n'a pas lieu sous 7 jours, tu es remboursé automatiquement.
-                    Tu ne perds jamais ton argent.
-                  </p>
-                </div>
+              <div className="p-4">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="w-full bg-nout-turquoise text-white font-semibold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  OK, fermer
+                </button>
               </div>
-
-              <p className="text-[12px] text-nout-muted leading-relaxed mb-4">
-                En cas de problème, notre équipe intervient pour t'aider. La remise se fait en
-                main propre à La Réunion — tu vérifies l'article avant de valider.
-              </p>
             </div>
+          )}
 
-            <button
-              type="button"
-              onClick={openModal('price')}
-              className="w-full bg-nout-turquoise text-white font-semibold py-3.5 hover:opacity-90 transition-opacity flex-shrink-0"
+          {/* ── POPUP : Protection acheteurs (style Vinted) ── */}
+          {modal === 'protection' && (
+            <div
+              className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden cursor-default flex flex-col max-h-[85dvh]"
+              onClick={(e) => e.stopPropagation()}
             >
-              D'accord
-            </button>
-          </div>
-        </div>
+              <div className="flex justify-end px-4 pt-4 flex-shrink-0">
+                <button type="button" onClick={closeModal} aria-label="Fermer" className="text-nout-turquoise hover:opacity-70">
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="px-6 overflow-y-auto">
+                <div className="flex justify-center mb-3">
+                  <div className="w-16 h-16 rounded-full bg-nout-turquoise/15 flex items-center justify-center">
+                    <Shield size={28} className="text-nout-turquoise" />
+                  </div>
+                </div>
+                <h3 className="font-title font-bold text-xl text-nout-texte text-center mb-5">
+                  Protection acheteurs
+                </h3>
+
+                <p className="text-[15px] text-gray-500 leading-relaxed mb-5">
+                  Pour chaque achat effectué sur NOUT, nous assurons ta protection.
+                </p>
+
+                <div className="flex items-start gap-3 mb-4">
+                  <RefreshCcw size={20} className="text-nout-turquoise flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[15px] font-semibold text-nout-texte mb-1">Politique de remboursement</p>
+                    <p className="text-[15px] text-gray-500 leading-relaxed mb-2">Tu peux obtenir un remboursement si ta commande&nbsp;:</p>
+                    <ul className="text-[15px] text-gray-500 leading-relaxed list-disc pl-5 space-y-0.5">
+                      <li>n'est pas remise dans les 7 jours</li>
+                      <li>n'est pas conforme à sa description</li>
+                      <li>présente un problème non signalé</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 mb-4">
+                  <Shield size={20} className="text-nout-turquoise flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[15px] font-semibold text-nout-texte mb-1">Paiement sécurisé (séquestre)</p>
+                    <p className="text-[15px] text-gray-500 leading-relaxed">
+                      Ton paiement est conservé en sécurité et versé au vendeur seulement après confirmation
+                      de la remise avec ton code à 6 chiffres. Tu disposes de 7 jours&nbsp;; si la remise n'a pas
+                      lieu, tu es remboursé automatiquement. En cas de problème, notre équipe intervient pour t'aider.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={openModal('price')}
+                  className="w-full bg-nout-turquoise text-white font-semibold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  D'accord
+                </button>
+              </div>
+            </div>
+          )}
+        </div>,
+        document.body
       )}
     </Link>
   )

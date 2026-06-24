@@ -34,13 +34,21 @@ export default function Header() {
 
   const avatarUrl = getAvatarUrl(profile?.avatar_url)
 
-  const menuLinks = [
-    { to: `/profil/${user?.id}`,   icon: <User className="w-4 h-4 text-[#1A3A8F]" />, label: 'Mon profil' },
-    { to: '/espace-vendeur',       icon: <Wallet className="w-4 h-4 text-[#00C4B4]" />, label: 'Espace Vendeur' },
-    { to: '/favoris', icon: <Heart className="w-4 h-4 text-red-500 fill-red-500" />, label: 'Mes favoris' },
-    { to: '/commandes?tab=achats', icon: <ShoppingBag className="w-4 h-4 text-[#1A3A8F]" />, label: 'Mes achats' },
-    { to: '/commandes?tab=ventes', icon: <Package className="w-4 h-4 text-[#1A3A8F]" />, label: 'Mes ventes' },
-    { to: '/parametres',           icon: <SettingsIcon className="w-4 h-4 text-gray-400" />, label: 'Paramètres' },
+  // Icônes toutes grises sobres (cohérence pro). Couleur d'accent appliquée au survol via le lien.
+  const ICON = "w-[18px] h-[18px] text-gray-400"
+  const menuGroups = [
+    [
+      { to: `/profil/${user?.id}`, icon: <User className={ICON} />, label: 'Mon profil' },
+      { to: '/espace-vendeur',     icon: <Wallet className={ICON} />, label: 'Espace Vendeur' },
+    ],
+    [
+      { to: '/favoris',              icon: <Heart className={ICON} />, label: 'Mes favoris' },
+      { to: '/commandes?tab=achats', icon: <ShoppingBag className={ICON} />, label: 'Mes achats' },
+      { to: '/commandes?tab=ventes', icon: <Package className={ICON} />, label: 'Mes ventes' },
+    ],
+    [
+      { to: '/parametres', icon: <SettingsIcon className={ICON} />, label: 'Paramètres' },
+    ],
   ]
 
   return (
@@ -150,36 +158,40 @@ export default function Header() {
 
                 {/* Dropdown */}
                 {menuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-lg border border-[#E8EFF5] py-2 z-50 animate-fade-in">
+                  <div className="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-lg border border-[#E8EFF5] py-1.5 z-50 animate-fade-in">
 
                     {/* En-tête profil */}
-                    <div className="px-4 py-2 mb-1 border-b border-[#F0F4F8]">
-                      <p className="text-xs font-semibold text-[#0A0F2C] truncate">
+                    <div className="px-4 py-3 mb-1 border-b border-[#F0F4F8]">
+                      <p className="text-sm font-semibold text-[#0A0F2C] truncate">
                         {profile?.username ?? 'Mon compte'}
                       </p>
-                      <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
+                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
                     </div>
 
-                    {/* Liens navigation */}
-                    {menuLinks.map(({ to, icon, label }) => (
-                      <Link
-                        key={to}
-                        to={to}
-                        onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A1A2E] hover:bg-[#F8FAFF] hover:text-[#1A3A8F] transition-colors"
-                      >
-                        <span className="text-base w-5 text-center">{icon}</span>
-                        {label}
-                      </Link>
+                    {/* Liens navigation groupés */}
+                    {menuGroups.map((group, gi) => (
+                      <div key={gi} className={gi > 0 ? 'border-t border-[#F0F4F8] my-1 pt-1' : ''}>
+                        {group.map(({ to, icon, label }) => (
+                          <Link
+                            key={to}
+                            to={to}
+                            onClick={() => setMenuOpen(false)}
+                            className="group flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A1A2E] hover:bg-[#F8FAFF] transition-colors"
+                          >
+                            <span className="flex-shrink-0 transition-colors group-hover:[&>svg]:text-[#00C4B4]">{icon}</span>
+                            {label}
+                          </Link>
+                        ))}
+                      </div>
                     ))}
 
                     {/* Séparateur + Déconnexion */}
-                    <div className="border-t border-[#F0F4F8] mt-1 pt-1">
+                    <div className="border-t border-[#F0F4F8] my-1 pt-1">
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
                       >
-                        <span className="w-5 flex justify-center"><LogOut className="w-4 h-4" /></span>
+                        <span className="flex-shrink-0"><LogOut className="w-[18px] h-[18px]" /></span>
                         Déconnexion
                       </button>
                     </div>

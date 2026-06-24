@@ -5,9 +5,8 @@ import { getSellerDashboard } from '../services/sellerStats'
 import { formatPrice, formatDate } from '../utils/formatters'
 import { SHIPPING_METHODS } from '../utils/shipping'
 import Spinner from '../components/ui/Spinner'
-import { Handshake, Truck, ChevronRight } from 'lucide-react'
+import { Handshake, Truck, ChevronRight, Plus, Tag, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
 
-// Libellés des statuts de commande — sobres, une teinte neutre, accent discret
 const STATUS = {
   paid:           'En attente de remise',
   payout_pending: 'Virement en attente',
@@ -20,18 +19,13 @@ const STATUS = {
 }
 
 const ShipIcon = ({ method, className }) =>
-  method === 'hand'
-    ? <Handshake className={className} />
-    : <Truck className={className} />
+  method === 'hand' ? <Handshake className={className} /> : <Truck className={className} />
 
-// Bloc de solde : sobre, fond blanc, bordure fine, chiffre net (pas de gradient ni couleur criarde)
 function SoldeBox({ label, amount, accent = false }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`font-title text-xl ${accent ? 'text-nout-primary' : 'text-nout-dark'}`}>
-        {formatPrice(amount)}
-      </p>
+      <p className={`font-title text-xl ${accent ? 'text-nout-primary' : 'text-nout-dark'}`}>{formatPrice(amount)}</p>
     </div>
   )
 }
@@ -41,6 +35,34 @@ function StatBox({ value, label }) {
     <div className="bg-white rounded-xl border border-gray-200 p-3 text-center">
       <p className="font-title text-lg text-nout-dark leading-none">{value}</p>
       <p className="text-[11px] text-gray-400 mt-1.5">{label}</p>
+    </div>
+  )
+}
+
+// Graphique en barres, pur CSS (pas de librairie externe)
+function GainsChart({ chart }) {
+  const max = Math.max(...chart.map(c => c.gains), 1)
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="flex items-end justify-between gap-2 h-32">
+        {chart.map((c, i) => {
+          const h = Math.round((c.gains / max) * 100)
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+              <span className="text-[10px] text-gray-400 mb-1">{c.gains > 0 ? formatPrice(c.gains) : ''}</span>
+              <div
+                className="w-full rounded-t-md transition-all"
+                style={{
+                  height: `${Math.max(h, c.gains > 0 ? 6 : 2)}%`,
+                  background: c.gains > 0 ? 'linear-gradient(180deg, #00C4B4, #0E7FAB)' : '#EEF3F8',
+                }}
+                title={`${c.label} : ${formatPrice(c.gains)} · ${c.ventes} vente(s)`}
+              />
+              <span className="text-[11px] text-gray-500 mt-1.5">{c.label}</span>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -68,17 +90,42 @@ export default function SellerSpace() {
     </div>
   )
 
-  const { solde, stats, sales, activeListings } = data
+  const { solde, stats, chart, topListings, virements, paiementsActifs, sales, activeListings } = data
   const ventes = sales.filter(o => ['paid', 'payout_pending', 'completed', 'shipped'].includes(o.status))
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* En-tête sobre */}
       <h1 className="font-title text-2xl text-nout-dark mb-1">Espace Vendeur</h1>
-      <p className="text-sm text-gray-400 mb-8">Suis tes gains et ton activité.</p>
+      <p className="text-sm text-gray-400 mb-6">Suis tes gains et ton activité.</p>
 
-      {/* ── SOLDE & GAINS ── */}
-      <section className="mb-10">
+      {/* ── ALERTE : activer les paiements (si pas configuré) ── */}
+      {!paiementsActifs && (
+        <Link
+          to="/parametres"
+          className="flex items-center gap-3 bg-[#FFF4F0] border border-[#FFD9CC] rounded-xl p-4 mb-6 hover:border-[#FF6B4A] transition-colors"
+        >
+          <AlertCircle className="w-5 h-5 text-[#FF6B4A] flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-nout-dark">Active tes paiements pour recevoir ton argent</p>
+            <p className="text-xs text-gray-500">Ajoute ton IBAN ou ton compte Stripe dans les paramètres.</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </Link>
+      )}
+
+      {/* ── RACCOURCIS RAPIDES ── */}
+      <div className="grid grid-cols-2 gap-3 mb-8">
+        <Link to="/publier" className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white"
+              style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}>
+          <Plus className="w-4 h-4" /> Publier un article
+        </Link>
+        <Link to="/commandes?tab=ventes" className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-nout-dark bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+          <Tag className="w-4 h-4" /> Mes ventes
+        </Link>
+      </div>
+
+      {/* ── SOLDE ── */}
+      <section className="mb-8">
         <div className="flex items-baseline justify-between mb-4 pb-3 border-b border-gray-100">
           <span className="text-sm text-gray-500">Total gagné</span>
           <span className="font-title text-3xl text-nout-dark tracking-tight">{formatPrice(solde.totalGagne)}</span>
@@ -89,33 +136,79 @@ export default function SellerSpace() {
           <SoldeBox label="Déjà versé" amount={solde.verse} accent />
         </div>
         <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-          Tu reçois le prix de ton article. Les frais de service et de livraison sont payés par l'acheteur.
-          Le virement est débloqué une fois la remise confirmée avec le code à 6 chiffres.
+          Tu reçois le prix de ton article. Le virement est débloqué une fois la remise confirmée avec le code à 6 chiffres.
         </p>
       </section>
 
+      {/* ── GRAPHIQUE GAINS ── */}
+      <section className="mb-8">
+        <h2 className="text-sm font-medium text-gray-500 mb-3">Évolution de tes gains (6 mois)</h2>
+        <GainsChart chart={chart} />
+      </section>
+
       {/* ── STATS ── */}
-      <section className="mb-10">
+      <section className="mb-8">
         <h2 className="text-sm font-medium text-gray-500 mb-3">Statistiques</h2>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
           <StatBox value={stats.annoncesActives} label="Annonces en ligne" />
           <StatBox value={stats.nbVentes} label="Ventes" />
           <StatBox value={stats.totalViews} label="Vues totales" />
+          <StatBox value={`${stats.tauxConversion}%`} label="Taux conversion" />
           <StatBox value={formatPrice(stats.panierMoyen)} label="Panier moyen" />
-          <StatBox
-            value={stats.noteCount > 0 ? `${stats.noteMoyenne}` : '—'}
-            label={stats.noteCount > 0 ? `${stats.noteCount} avis` : 'Pas d\'avis'}
-          />
         </div>
       </section>
 
+      {/* ── ARTICLES QUI PERFORMENT ── */}
+      {topListings.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-sm font-medium text-gray-500 mb-3">Tes articles les plus vus</h2>
+          <div className="space-y-2">
+            {topListings.map(l => (
+              <Link key={l.id} to={`/annonce/${l.id}`}
+                    className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition-colors">
+                <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                  {l.images?.[0] && <img src={l.images[0]} alt="" className="w-full h-full object-cover" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-nout-dark truncate">{l.title}</p>
+                  <p className="text-[11px] text-gray-400">{formatPrice(l.price)}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-title text-nout-dark">{l.views ?? 0}</p>
+                  <p className="text-[10px] text-gray-400">vue{(l.views ?? 0) !== 1 ? 's' : ''}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── HISTORIQUE VIREMENTS ── */}
+      {virements.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-sm font-medium text-gray-500 mb-3">Historique des virements</h2>
+          <div className="space-y-2">
+            {virements.slice(0, 8).map(v => (
+              <div key={v.id} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3">
+                {v.verse
+                  ? <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                  : <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-nout-dark truncate">{v.title}</p>
+                  <p className="text-[11px] text-gray-400">{v.verse ? 'Versé' : 'En attente'} · {formatDate(v.date)}</p>
+                </div>
+                <p className="font-title text-nout-dark flex-shrink-0">{formatPrice(v.montant)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── MES VENTES ── */}
-      <section className="mb-10">
+      <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-gray-500">Mes ventes</h2>
-          <Link to="/commandes?tab=ventes" className="text-xs text-nout-primary hover:underline">
-            Tout voir
-          </Link>
+          <h2 className="text-sm font-medium text-gray-500">Mes ventes récentes</h2>
+          <Link to="/commandes?tab=ventes" className="text-xs text-nout-primary hover:underline">Tout voir</Link>
         </div>
         {ventes.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-400">
@@ -123,14 +216,11 @@ export default function SellerSpace() {
           </div>
         ) : (
           <div className="space-y-2">
-            {ventes.slice(0, 8).map(o => {
+            {ventes.slice(0, 5).map(o => {
               const img = o.listing?.images?.[0]
               return (
-                <Link
-                  key={o.id}
-                  to="/commandes?tab=ventes"
-                  className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition-colors"
-                >
+                <Link key={o.id} to="/commandes?tab=ventes"
+                      className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition-colors">
                   <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                     {img && <img src={img} alt="" className="w-full h-full object-cover" />}
                   </div>
@@ -158,9 +248,7 @@ export default function SellerSpace() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-medium text-gray-500">Mes annonces en ligne</h2>
-          <Link to="/publier" className="text-xs text-nout-primary hover:underline">
-            Publier
-          </Link>
+          <Link to="/publier" className="text-xs text-nout-primary hover:underline">Publier</Link>
         </div>
         {activeListings.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-400">
@@ -169,11 +257,8 @@ export default function SellerSpace() {
         ) : (
           <div className="space-y-2">
             {activeListings.slice(0, 10).map(l => (
-              <Link
-                key={l.id}
-                to={`/annonce/${l.id}`}
-                className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition-colors"
-              >
+              <Link key={l.id} to={`/annonce/${l.id}`}
+                    className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3 hover:border-gray-300 transition-colors">
                 <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                   {l.images?.[0] && <img src={l.images[0]} alt="" className="w-full h-full object-cover" />}
                 </div>

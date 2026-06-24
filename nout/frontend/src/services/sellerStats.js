@@ -30,6 +30,13 @@ export const getSellerDashboard = async (sellerId) => {
     .select('rating')
     .eq('seller_id', sellerId)
 
+  // 4. Profil vendeur — pour savoir si les paiements (Stripe/IBAN) sont configurés
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('stripe_account_id, iban, is_verified')
+    .eq('id', sellerId)
+    .single()
+
   // Montant net vendeur = prix de l'article (pas le total payé par l'acheteur)
   const montant = (o) => Number(o.listing?.price ?? 0)
 
@@ -63,6 +70,47 @@ export const getSellerDashboard = async (sellerId) => {
     ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / noteCount) * 10) / 10
     : 0
 
+  // Taux de conversion (ventes finalisées / vues totales)
+  const tauxConversion = totalViews > 0
+    ? Math.round((nbVentes / totalViews) * 1000) / 10   // en %
+    : 0
+
+  // Graphique : gains par mois sur les 6 derniers mois
+  const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+  const now = new Date()
+  const chart = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const moisVentes = ventesFinalisees.filter(o => {
+      const od = new Date(o.created_at)
+      return od.getFullYear() === d.getFullYear() && od.getMonth() === d.getMonth()
+    })
+    chart.push({
+      label: moisLabels[d.getMonth()],
+      gains: Math.round(moisVentes.reduce((s, o) => s + montant(o), 0) * 100) / 100,
+      ventes: moisVentes.length,
+    })
+  }
+
+  // Articles qui performent : top 5 annonces actives par nombre de vues
+  const topListings = [...activeListings]
+    .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+    .slice(0, 5)
+
+  // Historique des virements (ventes versées ou en attente de virement)
+  const virements = (sales ?? [])
+    .filter(o => ['completed', 'payout_pending'].includes(o.status))
+    .map(o => ({
+      id: o.id,
+      title: o.listing?.title ?? 'Article',
+      montant: montant(o),
+      date: o.created_at,
+      verse: o.status === 'completed',
+    }))
+
+  // Paiements configurés ?
+  const paiementsActifs = !!(profile?.stripe_account_id || profile?.iban)
+
   return {
     solde: {
       enAttenteRemise: Math.round(enAttenteRemise * 100) / 100,
@@ -77,7 +125,12 @@ export const getSellerDashboard = async (sellerId) => {
       panierMoyen,
       noteMoyenne,
       noteCount,
+      tauxConversion,
     },
+    chart,
+    topListings,
+    virements,
+    paiementsActifs,
     sales: sales ?? [],
     activeListings,
   }
