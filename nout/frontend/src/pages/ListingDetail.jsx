@@ -319,7 +319,7 @@ export default function ListingDetail() {
           {/* Titre + Prix */}
           <div>
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl font-extrabold text-nout-dark leading-snug flex-1">{listing.title}</h1>
+              <h1 className="font-title text-[22px] font-medium text-nout-texte leading-snug tracking-tight flex-1">{listing.title}</h1>
               <button
                 type="button"
                 onClick={handleDetailFav}
@@ -329,7 +329,7 @@ export default function ListingDetail() {
                 <Heart className={`w-5 h-5 transition-all duration-200 ${detailFav ? 'fill-red-500 stroke-red-500' : 'fill-none stroke-gray-400'}`} />
               </button>
             </div>
-            <p className="text-3xl font-extrabold text-nout-primary mt-2">{formatPrice(listing.price)}</p>
+            <p className="font-title text-[24px] font-semibold text-nout-texte tracking-tight mt-2">{formatPrice(listing.price)}</p>
           </div>
 
           {/* Lieu + date + vues */}
@@ -342,7 +342,7 @@ export default function ListingDetail() {
           {/* Description */}
           {listing.description && (
             <div className="bg-white rounded-xl p-4 shadow-sm">
-              <h2 className="font-semibold text-nout-dark mb-2">Description</h2>
+              <h2 className="font-title text-[13px] font-semibold uppercase tracking-wide text-nout-muted mb-2">Description</h2>
               <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{listing.description}</p>
             </div>
           )}
@@ -684,7 +684,7 @@ export default function ListingDetail() {
       {/* ── ANNONCES SIMILAIRES ── */}
       {(loadingSimilar || similar.length > 0) && (
         <div className="mt-12">
-          <h2 className="text-xl font-extrabold text-nout-dark mb-4">Annonces similaires</h2>
+          <h2 className="font-title text-[15px] font-semibold uppercase tracking-wide text-nout-muted mb-4">Annonces similaires</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {loadingSimilar
               ? Array.from({ length: 4 }, (_, i) => <SkeletonCard key={i} />)

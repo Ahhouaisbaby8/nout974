@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import DOMPurify from 'dompurify'
 import { containsForbiddenWord } from '../utils/forbiddenWords'
+import { stripEmoji } from '../utils/stripEmoji'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
@@ -127,7 +128,7 @@ export default function CreateListing() {
     e.preventDefault()
     setError('')
 
-    const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+    const clean = (str) => stripEmoji(DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }))
 
     if (photos.length === 0)        return setError('Ajoute au moins une photo.')
     if (!title.trim())              return setError('Le titre est obligatoire.')
