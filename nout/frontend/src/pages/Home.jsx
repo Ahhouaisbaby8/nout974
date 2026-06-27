@@ -114,24 +114,40 @@ export default function Home() {
       {/* Plein écran immersif : la navbar fixe flotte par-dessus (padding-top réserve sa hauteur) */}
       <section
         ref={heroRef}
-        className="hero-sunset relative overflow-hidden flex items-center justify-center px-4 min-h-[100dvh] pt-[calc(64px+env(safe-area-inset-top))] pb-12"
+        className="hero-sunset relative overflow-hidden flex items-center justify-center px-4 min-h-[100dvh] pt-16 pb-20 sm:pt-[calc(64px+env(safe-area-inset-top))] sm:pb-12"
       >
 
         {/* Lueur basse coucher de soleil */}
-        <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"
-             style={{ background: 'linear-gradient(to top, rgba(255,120,60,0.18), transparent)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
+             style={{ background: 'linear-gradient(to top, rgba(255,120,60,0.20), transparent)' }} />
+
+        {/* Soleil lumineux animé — en haut à droite, comme un astre dans le ciel */}
+        <div
+          className="hero-sun absolute pointer-events-none select-none"
+          style={{
+            top: 'clamp(40px, 14vh, 130px)',
+            right: 'clamp(-40px, 4vw, 60px)',
+            width: 'clamp(200px, 42vw, 320px)',
+            height: 'clamp(200px, 42vw, 320px)',
+            borderRadius: '9999px',
+            background: 'radial-gradient(circle, rgba(255,200,110,0.55) 0%, rgba(255,140,70,0.25) 40%, transparent 72%)',
+            filter: 'blur(2px)',
+          }}
+        />
 
         {/* Étoiles / particules */}
         <div className="absolute inset-0 pointer-events-none select-none">
           {[
             { top:'12%', left:'8%',  delay:'0s',    size:'w-1 h-1',     color:'bg-white' },
-            { top:'22%', left:'18%', delay:'1.1s',  size:'w-1 h-1',     color:'bg-white' },
-            { top:'9%',  left:'32%', delay:'0.6s',  size:'w-1.5 h-1.5', color:'bg-[#00C4B4]' },
-            { top:'18%', left:'55%', delay:'1.8s',  size:'w-1 h-1',     color:'bg-white' },
-            { top:'8%',  right:'28%',delay:'0.3s',  size:'w-1.5 h-1.5', color:'bg-white' },
-            { top:'20%', right:'18%',delay:'1.4s',  size:'w-1 h-1',     color:'bg-[#00C4B4]' },
-            { top:'30%', right:'10%',delay:'2.1s',  size:'w-1 h-1',     color:'bg-white' },
-            { top:'6%',  left:'70%', delay:'0.9s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'20%', left:'20%', delay:'1.1s',  size:'w-1.5 h-1.5', color:'bg-white' },
+            { top:'14%', left:'34%', delay:'0.6s',  size:'w-1.5 h-1.5', color:'bg-[#00C4B4]' },
+            { top:'26%', left:'50%', delay:'1.8s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'10%', right:'30%',delay:'0.3s',  size:'w-1.5 h-1.5', color:'bg-white' },
+            { top:'22%', right:'16%',delay:'1.4s',  size:'w-1.5 h-1.5', color:'bg-[#00C4B4]' },
+            { top:'34%', right:'8%', delay:'2.1s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'8%',  left:'62%', delay:'0.9s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'40%', left:'14%', delay:'2.6s',  size:'w-1 h-1',     color:'bg-white' },
+            { top:'44%', right:'26%',delay:'1.7s',  size:'w-1.5 h-1.5', color:'bg-[#00C4B4]' },
           ].map((s, i) => (
             <div key={i}
               className={`absolute rounded-full twinkle ${s.size} ${s.color}`}
@@ -150,9 +166,9 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Palmier gauche */}
-        <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none hidden sm:block">
-          <svg width="170" height="330" viewBox="0 -30 170 330" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Palmier gauche (visible aussi sur mobile, plus grand) */}
+        <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none w-[140px] sm:w-[210px] lg:w-[240px]">
+          <svg width="100%" viewBox="0 -30 170 330" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22"
                   stroke="rgba(4,2,0,0.52)" strokeWidth="13" strokeLinecap="round"/>
             <path d="M93 22 Q52 38 12 26"   stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
@@ -168,9 +184,9 @@ export default function Home() {
           </svg>
         </div>
 
-        {/* Palmier droit */}
-        <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none hidden sm:block">
-          <svg width="170" height="305" viewBox="0 -30 170 305" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Palmier droit (visible aussi sur mobile, plus grand) */}
+        <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none w-[140px] sm:w-[210px] lg:w-[240px]">
+          <svg width="100%" viewBox="0 -30 170 305" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16"
                   stroke="rgba(4,2,0,0.52)" strokeWidth="12" strokeLinecap="round"/>
             <path d="M78 16 Q118 30 158 20"  stroke="rgba(4,2,0,0.48)" strokeWidth="8" strokeLinecap="round"/>
