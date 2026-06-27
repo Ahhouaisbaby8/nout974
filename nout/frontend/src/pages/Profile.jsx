@@ -14,6 +14,7 @@ import SkeletonCard from '../components/ui/SkeletonCard'
 import BackButton from '../components/ui/BackButton'
 import ReportModal from '../components/ui/ReportModal'
 import { resolveFounder, FounderRing } from '../components/ui/FounderBadge'
+import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCounts } from '../services/follow'
 
 export default function Profile() {
   const { id } = useParams()
@@ -28,8 +29,34 @@ export default function Profile() {
   const [showReport, setShowReport] = useState(false)
   const [shareToast, setShareToast] = useState(false)
   const [tab, setTab] = useState('articles')   // 'articles' | 'avis'
+  const [following, setFollowing]   = useState(false)   // suis-je abonné à ce profil ?
+  const [followBusy, setFollowBusy] = useState(false)   // requête en cours
+  const [counts, setCounts] = useState({ followers: 0, following: 0 })
 
   const isOwnProfile = user?.id === id
+
+  const handleToggleFollow = async () => {
+    if (!user) { navigate('/connexion'); return }
+    if (followBusy) return
+    setFollowBusy(true)
+    // Optimiste : on met à jour l'UI tout de suite
+    const wasFollowing = following
+    setFollowing(!wasFollowing)
+    setCounts(c => ({ ...c, followers: c.followers + (wasFollowing ? -1 : 1) }))
+    try {
+      if (wasFollowing) {
+        await unfollowUser(user.id, id)
+      } else {
+        await followUser(user.id, id, profile?.username)
+      }
+    } catch {
+      // Rollback en cas d'échec
+      setFollowing(wasFollowing)
+      setCounts(c => ({ ...c, followers: c.followers + (wasFollowing ? 1 : -1) }))
+    } finally {
+      setFollowBusy(false)
+    }
+  }
 
   const handleShareProfile = async () => {
     const url = `${window.location.origin}/profil/${id}`
@@ -55,6 +82,11 @@ export default function Profile() {
         ])
         setListings(l.filter(a => !a.is_sold && a.is_active))
         setReviews(r)
+        // Compteurs abonnés/abonnements + statut (non-bloquants)
+        getFollowCounts(id).then(setCounts).catch(() => {})
+        if (user && user.id !== id) {
+          checkFollowing(user.id, id).then(setFollowing).catch(() => {})
+        }
       } catch {
         setNotFound(true)
       } finally {
@@ -62,7 +94,7 @@ export default function Profile() {
       }
     }
     load()
-  }, [id])
+  }, [id, user])
 
   if (loading) return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -95,11 +127,6 @@ export default function Profile() {
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : null
 
-  const memberMonths = Math.floor((Date.now() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24 * 30))
-  const memberLabel  = memberMonths < 1  ? '< 1 mois'
-    : memberMonths < 12 ? `${memberMonths} mois`
-    : `${Math.floor(memberMonths / 12)} an${Math.floor(memberMonths / 12) > 1 ? 's' : ''}`
-
   const latestListing = listings.reduce((latest, l) =>
     !latest || new Date(l.created_at) > new Date(latest.created_at) ? l : latest
   , null)
@@ -131,9 +158,17 @@ export default function Profile() {
                      style={{ top: s.top, left: s.left, right: s.right, animationDelay: s.delay }} />
               ))}
             </div>
-            {/* "974" filigrane */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-              <span className="font-title font-black text-white" style={{ fontSize: 150, opacity: 0.07, lineHeight: 1 }}>974</span>
+            {/* Palmier déco — silhouette sombre bien cadrée, en bas à droite */}
+            <div className="absolute bottom-0 pointer-events-none select-none" style={{ right: 16, opacity: 0.4 }}>
+              <svg width="92" height="100" viewBox="0 0 100 110" fill="none">
+                <path d="M50 108 Q48 80 47 55 Q46 40 50 28" stroke="rgba(4,2,0,0.55)" strokeWidth="5" strokeLinecap="round"/>
+                <path d="M50 28 Q72 22 92 30" stroke="rgba(4,2,0,0.5)"  strokeWidth="4"   strokeLinecap="round"/>
+                <path d="M50 28 Q28 22 8 30"  stroke="rgba(4,2,0,0.5)"  strokeWidth="4"   strokeLinecap="round"/>
+                <path d="M50 28 Q66 12 84 8"  stroke="rgba(4,2,0,0.4)"  strokeWidth="3.5" strokeLinecap="round"/>
+                <path d="M50 28 Q34 12 16 8"  stroke="rgba(4,2,0,0.4)"  strokeWidth="3.5" strokeLinecap="round"/>
+                <path d="M50 28 Q50 8 50 2"   stroke="rgba(4,2,0,0.35)" strokeWidth="3"   strokeLinecap="round"/>
+                <circle cx="50" cy="27" r="4" fill="rgba(4,2,0,0.45)"/>
+              </svg>
             </div>
             <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 flex items-end gap-4 z-10">
               <FounderRing size="md" founderNumber={founderNumber}>
@@ -223,10 +258,21 @@ export default function Profile() {
               </>
             ) : (
               <>
+                <button
+                  onClick={handleToggleFollow}
+                  disabled={followBusy}
+                  className={`px-5 py-2 text-sm rounded-full font-bold transition-all disabled:opacity-60 ${
+                    following
+                      ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-[#2EC4B6] text-white hover:bg-[#24A99D]'
+                  }`}
+                >
+                  {following ? 'Abonné' : "S'abonner"}
+                </button>
                 {user && (
                   <button
                     onClick={() => navigate(`/messages/${id}`)}
-                    className="btn-primary px-5 py-2 text-sm"
+                    className="btn-secondary px-5 py-2 text-sm"
                   >
                     Envoyer un message
                   </button>
@@ -249,22 +295,26 @@ export default function Profile() {
       </div>
 
       {/* ── MINI-STATS ── */}
-      <div className="grid grid-cols-3 gap-3 mt-4">
+      <div className="grid grid-cols-4 gap-3 mt-4">
+        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.followers}</p>
+          <p className="text-[11px] text-nout-muted mt-1">abonné{counts.followers !== 1 ? 's' : ''}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.following}</p>
+          <p className="text-[11px] text-nout-muted mt-1">abonnement{counts.following !== 1 ? 's' : ''}</p>
+        </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{listings.length}</p>
-          <p className="text-[11px] text-nout-muted mt-1">annonce{listings.length !== 1 ? 's' : ''} active{listings.length !== 1 ? 's' : ''}</p>
+          <p className="text-[11px] text-nout-muted mt-1">annonce{listings.length !== 1 ? 's' : ''}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">
             {avgRating ? `${avgRating} ` : '—'}
           </p>
           <p className="text-[11px] text-nout-muted mt-1">
-            {avgRating ? `${reviews.length} avis` : 'pas encore noté'}
+            {avgRating ? `${reviews.length} avis` : 'pas noté'}
           </p>
-        </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{memberLabel}</p>
-          <p className="text-[11px] text-nout-muted mt-1">membre depuis</p>
         </div>
       </div>
 

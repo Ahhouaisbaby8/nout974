@@ -169,15 +169,17 @@ export default function Conversation() {
 
       {/* ── EN-TÊTE ── */}
       <div className={`px-4 py-3 flex items-center gap-3 flex-shrink-0 relative overflow-hidden ${showFounderHeader ? 'hero-sunset' : 'bg-white border-b border-nout-border'}`}>
-        {/* Mini palmier déco quand fondateur */}
+        {/* Mini palmier déco quand fondateur — silhouette sombre, bien cadrée dans l'en-tête */}
         {showFounderHeader && (
-          <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none opacity-50">
-            <svg width="60" height="64" viewBox="0 0 170 275" fill="none">
-              <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16" stroke="rgba(4,2,0,0.6)" strokeWidth="12" strokeLinecap="round"/>
-              <path d="M78 16 Q118 30 158 20" stroke="rgba(4,2,0,0.55)" strokeWidth="8" strokeLinecap="round"/>
-              <path d="M78 16 Q40 30 6 22"    stroke="rgba(4,2,0,0.55)" strokeWidth="8" strokeLinecap="round"/>
-              <path d="M78 16 Q104 -2 134 -10" stroke="rgba(4,2,0,0.45)" strokeWidth="6" strokeLinecap="round"/>
-              <circle cx="78" cy="23" r="6" fill="rgba(4,2,0,0.45)"/>
+          <div className="absolute bottom-0 pointer-events-none select-none" style={{ right: 12, opacity: 0.45 }}>
+            <svg width="52" height="56" viewBox="0 0 100 110" fill="none">
+              <path d="M50 108 Q48 80 47 55 Q46 40 50 28" stroke="rgba(4,2,0,0.55)" strokeWidth="5" strokeLinecap="round"/>
+              <path d="M50 28 Q72 22 92 30" stroke="rgba(4,2,0,0.5)"  strokeWidth="4"   strokeLinecap="round"/>
+              <path d="M50 28 Q28 22 8 30"  stroke="rgba(4,2,0,0.5)"  strokeWidth="4"   strokeLinecap="round"/>
+              <path d="M50 28 Q66 12 84 8"  stroke="rgba(4,2,0,0.4)"  strokeWidth="3.5" strokeLinecap="round"/>
+              <path d="M50 28 Q34 12 16 8"  stroke="rgba(4,2,0,0.4)"  strokeWidth="3.5" strokeLinecap="round"/>
+              <path d="M50 28 Q50 8 50 2"   stroke="rgba(4,2,0,0.35)" strokeWidth="3"   strokeLinecap="round"/>
+              <circle cx="50" cy="27" r="4" fill="rgba(4,2,0,0.45)"/>
             </svg>
           </div>
         )}
