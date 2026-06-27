@@ -146,14 +146,15 @@ export default function Home() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
           <span
             className="font-title font-black text-white float-974"
-            style={{ fontSize: 'clamp(140px, 32vw, 280px)', opacity: 0.055, letterSpacing: '0.1em', lineHeight: 1 }}
+            style={{ fontSize: 'clamp(160px, 34vw, 560px)', opacity: 0.055, letterSpacing: '0.1em', lineHeight: 1 }}
           >
             974
           </span>
         </div>
 
-        {/* Palmier gauche (visible aussi sur mobile, plus grand) */}
-        <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none w-[140px] sm:w-[210px] lg:w-[240px]">
+        {/* Palmier gauche (visible aussi sur mobile, grandit avec l'écran) */}
+        <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none"
+             style={{ width: 'clamp(150px, 24vw, 420px)' }}>
           <svg width="100%" viewBox="0 -30 170 330" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22"
                   stroke="rgba(4,2,0,0.52)" strokeWidth="13" strokeLinecap="round"/>
@@ -170,8 +171,9 @@ export default function Home() {
           </svg>
         </div>
 
-        {/* Palmier droit (visible aussi sur mobile, plus grand) */}
-        <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none w-[140px] sm:w-[210px] lg:w-[240px]">
+        {/* Palmier droit (visible aussi sur mobile, grandit avec l'écran) */}
+        <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none"
+             style={{ width: 'clamp(150px, 24vw, 420px)' }}>
           <svg width="100%" viewBox="0 -30 170 305" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16"
                   stroke="rgba(4,2,0,0.52)" strokeWidth="12" strokeLinecap="round"/>
