@@ -121,20 +121,6 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
              style={{ background: 'linear-gradient(to top, rgba(255,120,60,0.20), transparent)' }} />
 
-        {/* Soleil lumineux animé — en haut à droite, comme un astre dans le ciel */}
-        <div
-          className="hero-sun absolute pointer-events-none select-none"
-          style={{
-            top: 'clamp(40px, 14vh, 130px)',
-            right: 'clamp(-40px, 4vw, 60px)',
-            width: 'clamp(200px, 42vw, 320px)',
-            height: 'clamp(200px, 42vw, 320px)',
-            borderRadius: '9999px',
-            background: 'radial-gradient(circle, rgba(255,200,110,0.55) 0%, rgba(255,140,70,0.25) 40%, transparent 72%)',
-            filter: 'blur(2px)',
-          }}
-        />
-
         {/* Étoiles / particules */}
         <div className="absolute inset-0 pointer-events-none select-none">
           {[

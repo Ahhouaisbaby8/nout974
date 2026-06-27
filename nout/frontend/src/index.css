@@ -69,11 +69,6 @@
   50%       { opacity: 0.85; transform: scale(1.5); }
 }
 
-@keyframes sunPulse {
-  0%, 100% { opacity: 0.5;  transform: scale(1); }
-  50%       { opacity: 0.78; transform: scale(1.08); }
-}
-
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -98,7 +93,6 @@
   .palm-right { transform-origin: bottom center; animation: palmSwayR 3.8s ease-in-out infinite; }
   .float-974  { animation: float974 7s ease-in-out infinite; }
   .twinkle    { animation: twinkle 3s ease-in-out infinite; }
-  .hero-sun   { animation: sunPulse 6s ease-in-out infinite; }
 }
 
 @layer components {
