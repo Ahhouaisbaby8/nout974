@@ -4,6 +4,7 @@ import {
   Search, CreditCard, Users, Key, CheckCircle,
   Camera, MessageCircle, Wallet, Landmark, Clock, Lock, Shield,
 } from 'lucide-react'
+import { useHeroRef } from '../context/HeroContext'
 
 // ── Hook fade-in au scroll ──────────────────────────────────────────────
 function useFadeIn() {
@@ -88,6 +89,7 @@ function FaqItem({ q, a }) {
 // ── Page principale ─────────────────────────────────────────────────────
 export default function HowItWorks() {
   const navigate = useNavigate()
+  const heroRef = useHeroRef()   // navbar transparente tant que le hero sombre est visible
 
   const buyerSteps = [
     { icon: <Search size={20} />,       title: 'Tu trouves l\'article qui te plaît',  desc: 'Parcours les annonces et trouve la perle rare à La Réunion.' },
@@ -144,9 +146,12 @@ export default function HowItWorks() {
       `}</style>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* SECTION 1 — HERO                                               */}
+      {/* SECTION 1 — HERO (fusionné sous la navbar transparente)        */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <section className="bg-[#0A0F2C] px-4 py-16 text-center relative overflow-hidden">
+      <section
+        ref={heroRef}
+        className="bg-[#0A0F2C] px-4 pt-[calc(64px+env(safe-area-inset-top)+2rem)] pb-16 text-center relative overflow-hidden"
+      >
         {/* Halo décoratif */}
         <div className="absolute inset-0 pointer-events-none" style={{
           background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0,196,180,0.12) 0%, transparent 70%)',

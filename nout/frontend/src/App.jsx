@@ -45,6 +45,7 @@ import Messages      from './pages/Messages'
 import Conversation  from './pages/Conversation'
 import Orders        from './pages/Orders'
 import Favorites     from './pages/Favorites'
+import Notifications  from './pages/Notifications'
 import Settings      from './pages/Settings'
 import SellerSpace   from './pages/SellerSpace'
 
@@ -94,15 +95,20 @@ function AdminRoute({ children }) {
 
 const MAINTENANCE = import.meta.env.VITE_MAINTENANCE === 'true'
 
-export default function App() {
-  if (MAINTENANCE) return <Maintenance />
+// Routes qui ont leur PROPRE hero plein écran (le hero gère son padding-top sous la navbar fixe).
+// Les autres pages reçoivent un padding-top compensatoire (la navbar est fixed = hors flux).
+const HERO_ROUTES = ['/', '/comment-ca-marche']
+
+function AppShell() {
+  const { pathname } = useLocation()
+  const hasHero = HERO_ROUTES.includes(pathname)
 
   return (
     <div className="min-h-screen flex flex-col bg-nout-secondary">
       <ScrollToTop />
       <Header />
 
-      <main className="flex-1 pb-16 md:pb-0">
+      <main className={`flex-1 pb-16 md:pb-0 ${hasHero ? '' : 'pt-[calc(4rem+env(safe-area-inset-top))]'}`}>
         <Routes>
           {/* Public */}
           <Route path="/"             element={<Home />} />
@@ -128,6 +134,7 @@ export default function App() {
           <Route path="/commandes"  element={<PrivateRoute><Orders /></PrivateRoute>} />
           <Route path="/espace-vendeur" element={<PrivateRoute><SellerSpace /></PrivateRoute>} />
           <Route path="/favoris"    element={<PrivateRoute><Favorites /></PrivateRoute>} />
+          <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           <Route path="/parametres" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
           {/* Admin */}
@@ -169,4 +176,9 @@ export default function App() {
       <OrderToast />
     </div>
   )
+}
+
+export default function App() {
+  if (MAINTENANCE) return <Maintenance />
+  return <AppShell />
 }

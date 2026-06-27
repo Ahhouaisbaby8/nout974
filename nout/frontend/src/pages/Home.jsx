@@ -11,6 +11,7 @@ import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
 import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
 import { Sparkles, PackageOpen } from 'lucide-react'
+import { useHeroRef } from '../context/HeroContext'
 
 // Exemples qui défilent lettre par lettre dans la barre de recherche
 const SEARCH_EXAMPLES = [
@@ -42,6 +43,7 @@ const HOW_IT_WORKS = [
 export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const heroRef = useHeroRef()   // pilote la navbar : transparente tant que le hero est visible
 
   const [search,   setSearch]   = useState('')
   const [city,     setCity]     = useState('Toute La Réunion')
@@ -109,7 +111,11 @@ export default function Home() {
     <div>
 
       {/* ── A) HERO ──────────────────────────────────────────────── */}
-      <section className="hero-sunset relative overflow-hidden flex items-center px-4 py-12">
+      {/* Plein écran immersif : la navbar fixe flotte par-dessus (padding-top réserve sa hauteur) */}
+      <section
+        ref={heroRef}
+        className="hero-sunset relative overflow-hidden flex items-center justify-center px-4 min-h-[100dvh] pt-[calc(64px+env(safe-area-inset-top))] pb-12"
+      >
 
         {/* Lueur basse coucher de soleil */}
         <div className="absolute bottom-0 left-0 right-0 h-28 pointer-events-none"

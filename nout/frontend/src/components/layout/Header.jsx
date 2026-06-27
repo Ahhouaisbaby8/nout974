@@ -1,26 +1,37 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet } from 'lucide-react'
+import { Heart, Bell, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useHeroOverlay } from '../../context/HeroContext'
+import { getUnreadCount, subscribeToNotifications } from '../../services/notifications'
 import { getAvatarUrl } from '../../utils/avatar'
 
 export default function Header() {
   const { user, profile, logout, isAdmin, unreadCount: unread } = useAuth()
+  const { overHero } = useHeroOverlay()
   const navigate  = useNavigate()
-  const [query, setQuery]     = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notifCount, setNotifCount] = useState(0)
   const menuRef = useRef(null)
+
+  // Compteur de notifications non lues + temps réel
+  useEffect(() => {
+    if (!user?.id) { setNotifCount(0); return }
+    getUnreadCount(user.id).then(setNotifCount).catch(() => {})
+    const unsub = subscribeToNotifications(user.id, () => {
+      getUnreadCount(user.id).then(setNotifCount).catch(() => {})
+    })
+    return unsub
+  }, [user?.id])
+
+  // Navbar transparente (texte blanc) sur le hero ; verre dépoli (texte sombre) sinon.
+  // Le dropdown ouvert force l'état solide pour la lisibilité.
+  const light = overHero && !menuOpen   // true = texte blanc sur fond transparent
 
   const handleLogout = async () => {
     setMenuOpen(false)
     await logout()
     navigate('/')
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (query.trim()) navigate(`/recherche?q=${encodeURIComponent(query.trim())}`)
-    else navigate('/recherche')
   }
 
   // Ferme le dropdown si clic en dehors
@@ -52,19 +63,26 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-white border-b border-[#E8EFF5] sticky top-0 z-50 shadow-nout-sm">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-3">
+    <header
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        light
+          ? 'bg-transparent'
+          : 'bg-white/70 backdrop-blur-lg border-b border-white/40 shadow-nout-sm'
+      }`}
+    >
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-3">
 
         {/* ── LOGO ── */}
         <Link
           to="/"
+          aria-label="NOUT — accueil"
           className="flex-shrink-0 mr-2 flex flex-col leading-none"
           onClick={() => {
             if (document.scrollingElement) document.scrollingElement.scrollTop = 0
             window.scrollTo(0, 0)
           }}
         >
-          <span className="font-title font-black text-[20px] text-[#0A0F2C] tracking-[0.18em] leading-none">
+          <span className={`font-title font-black text-[20px] tracking-[0.18em] leading-none transition-colors ${light ? 'text-white' : 'text-[#0A0F2C]'}`}>
             NOUT
           </span>
           <div className="flex items-center gap-1.5 mt-0.5">
@@ -76,31 +94,14 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* ── BARRE DE RECHERCHE DESKTOP ── */}
-        <form
-          onSubmit={handleSearch}
-          className="hidden md:flex flex-1 max-w-sm items-center gap-2 bg-gray-50 border border-transparent rounded-full px-4 py-2 transition-all focus-within:border-nout-turquoise focus-within:bg-white focus-within:shadow-nout-sm"
-        >
-          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
-          </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Rechercher sur NOUT…"
-            className="flex-1 bg-transparent outline-none text-sm text-nout-texte placeholder-gray-400 min-w-0"
-          />
-        </form>
-
-        {/* ── NAV DESKTOP ── */}
-        <nav className="hidden lg:flex items-center gap-5 text-[14px] ml-2">
-          <Link to="/"                  className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Accueil</Link>
-          <Link to="/comment-ca-marche" className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Comment ça marche</Link>
-          <Link to="/a-propos"          className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
-          <Link to="/aide"              className="text-nout-muted hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
+        {/* ── NAV DESKTOP ── (recherche retirée : la grande barre du hero suffit) */}
+        <nav className={`hidden lg:flex items-center gap-5 text-[14px] ml-4 transition-colors ${light ? '[&_a]:text-white/90' : '[&_a]:text-nout-muted'}`}>
+          <Link to="/"                  className="hover:text-nout-turquoise transition-colors font-medium">Accueil</Link>
+          <Link to="/comment-ca-marche" className="hover:text-nout-turquoise transition-colors font-medium">Comment ça marche</Link>
+          <Link to="/a-propos"          className="hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
+          <Link to="/aide"              className="hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
           {isAdmin && (
-            <Link to="/admin" className="text-nout-roi font-semibold hover:text-nout-lagon transition-colors">
+            <Link to="/admin" className={`font-semibold hover:text-nout-lagon transition-colors ${light ? '!text-white' : 'text-nout-roi'}`}>
               Admin
             </Link>
           )}
@@ -119,11 +120,36 @@ export default function Header() {
                 <span className="text-base leading-none">+</span> Vendre
               </Link>
 
+              {/* Icône favoris (cœur) */}
+              <Link
+                to="/favoris"
+                title="Mes favoris"
+                aria-label="Mes favoris"
+                className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${light ? 'text-white hover:bg-white/15' : 'text-nout-muted hover:bg-gray-100 hover:text-nout-turquoise'}`}
+              >
+                <Heart className="w-5 h-5" />
+              </Link>
+
+              {/* Icône notifications (cloche) avec badge */}
+              <Link
+                to="/notifications"
+                title="Notifications"
+                aria-label="Notifications"
+                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all ${light ? 'text-white hover:bg-white/15' : 'text-nout-muted hover:bg-gray-100 hover:text-nout-turquoise'}`}
+              >
+                <Bell className="w-5 h-5" />
+                {notifCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {notifCount > 9 ? '9+' : notifCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Icône messages avec badge */}
               <Link
                 to="/messages"
                 title="Messages"
-                className="relative w-9 h-9 flex items-center justify-center rounded-full text-nout-muted hover:bg-gray-100 hover:text-nout-turquoise transition-all"
+                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all ${light ? 'text-white hover:bg-white/15' : 'text-nout-muted hover:bg-gray-100 hover:text-nout-turquoise'}`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
@@ -204,7 +230,11 @@ export default function Header() {
             <>
               <Link
                 to="/connexion"
-                className="px-4 py-2 border-2 border-nout-roi text-nout-roi rounded-full text-[13px] font-semibold hover:bg-nout-roi hover:text-white transition-all"
+                className={`px-4 py-2 border-2 rounded-full text-[13px] font-semibold transition-all ${
+                  light
+                    ? 'border-white text-white hover:bg-white hover:text-nout-roi'
+                    : 'border-nout-roi text-nout-roi hover:bg-nout-roi hover:text-white'
+                }`}
               >
                 Connexion
               </Link>

@@ -21,12 +21,12 @@ export default function PriceRangeSection() {
           <button
             key={max}
             onClick={() => navigate(`/recherche?max=${max}`)}
-            className="group flex flex-col items-center justify-center h-[110px] rounded-[16px] border border-[#D6E0F5] bg-gradient-to-br from-[#E8F0FF] via-[#EEF2FF] to-[#E0F4F8] transition-all duration-200 hover:-translate-y-1 hover:border-nout-turquoise hover:shadow-nout-hover cursor-pointer"
+            className="group flex flex-col items-center justify-center h-[96px] rounded-[14px] border border-[#ECEFF4] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-nout-turquoise hover:shadow-nout-hover cursor-pointer"
           >
-            <span className="text-[15px] text-nout-muted font-normal leading-tight">
+            <span className="text-[12px] text-nout-muted font-normal leading-tight">
               Moins de
             </span>
-            <span className="font-title font-bold text-[26px] text-nout-roi leading-tight mt-0.5">
+            <span className="font-title font-semibold text-[22px] text-nout-texte tracking-tight leading-tight mt-1">
               {label}
             </span>
           </button>
