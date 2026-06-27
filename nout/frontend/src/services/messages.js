@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { createNotification } from './notifications'
 
 export const getConversations = async (userId) => {
   const { data, error } = await supabase
@@ -38,6 +39,15 @@ export const sendMessage = async ({ senderId, receiverId, listingId = null, cont
     .select()
     .single()
   if (error) throw error
+
+  // Notification dans le centre de notifs du destinataire (best-effort)
+  createNotification({
+    userId: receiverId,
+    type:   'message',
+    title:  `Message de ${senderName}`,
+    body:   content.length > 80 ? content.slice(0, 80) + '…' : content,
+    link:   `/messages/${senderId}`,
+  })
 
   // Notification push best-effort (pas de blocage si échec)
   supabase.auth.getSession().then(({ data: { session } }) => {

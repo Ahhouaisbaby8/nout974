@@ -1,12 +1,22 @@
 import { supabase } from './supabase'
+import { createNotification } from './notifications'
 
-// S'abonner à un vendeur. Notifie le vendeur (push best-effort).
+// S'abonner à un vendeur. Notifie le vendeur (centre de notifs + push best-effort).
 // followerName = pseudo de celui qui s'abonne (pour la notif).
 export const followUser = async (followerId, followingId, followerName) => {
   const { error } = await supabase
     .from('follows')
     .insert({ follower_id: followerId, following_id: followingId })
   if (error) throw error
+
+  // Notification dans le centre de notifs du vendeur (best-effort)
+  createNotification({
+    userId: followingId,
+    type:   'follow',
+    title:  'Nouvel abonné',
+    body:   `${followerName ?? 'Quelqu’un'} s’est abonné à votre profil`,
+    link:   `/profil/${followerId}`,
+  })
 
   // Notification push best-effort (pas de blocage si échec)
   supabase.auth.getSession().then(({ data: { session } }) => {

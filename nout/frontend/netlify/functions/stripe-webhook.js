@@ -239,6 +239,25 @@ exports.handler = async (event) => {
             }),
           }).catch(err => console.error('send-push vendeur:', err.message))
         }
+
+        // Notifications in-app (centre de notifs) — best-effort, service_role
+        const notifs = []
+        if (order.seller_id) notifs.push({
+          user_id: order.seller_id, type: 'sale',
+          title: 'Vente réalisée',
+          body: `Tu as vendu "${annonce?.title ?? 'un article'}" pour ${prixVendeur} €`,
+          link: '/commandes?tab=ventes',
+        })
+        if (order.buyer_id) notifs.push({
+          user_id: order.buyer_id, type: 'escrow_code',
+          title: 'Paiement confirmé',
+          body: `Ton code de remise pour "${annonce?.title ?? 'ton article'}" t'a été envoyé par email`,
+          link: '/commandes?tab=achats',
+        })
+        if (notifs.length) {
+          const { error: notifErr } = await supabase.from('notifications').insert(notifs)
+          if (notifErr) console.error('webhook: insert notifications:', notifErr.message)
+        }
       }
     }
   }
