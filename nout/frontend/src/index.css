@@ -69,6 +69,26 @@
   50%       { opacity: 0.85; transform: scale(1.5); }
 }
 
+/* Paille-en-queue : battement d'ailes + vols qui traversent le hero (subtil) */
+@keyframes paillewing {
+  0%, 100% { transform: scaleY(1); }
+  50%       { transform: scaleY(0.6); }
+}
+@keyframes pailleFly1 {
+  0%   { transform: translate(-14vw, 20vh) rotate(7deg)  scale(0.8); opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { transform: translate(46vw, 9vh)  rotate(-4deg) scale(0.92); }
+  90%  { opacity: 1; }
+  100% { transform: translate(114vw, 24vh) rotate(6deg)  scale(0.82); opacity: 0; }
+}
+@keyframes pailleFly2 {
+  0%   { transform: translate(112vw, 13vh) rotate(-6deg) scale(0.55) scaleX(-1); opacity: 0; }
+  12%  { opacity: 1; }
+  50%  { transform: translate(48vw, 19vh)  rotate(3deg)  scale(0.6)  scaleX(-1); }
+  88%  { opacity: 1; }
+  100% { transform: translate(-14vw, 11vh) rotate(-5deg) scale(0.5)  scaleX(-1); opacity: 0; }
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -93,6 +113,9 @@
   .palm-right { transform-origin: bottom center; animation: palmSwayR 3.8s ease-in-out infinite; }
   .float-974  { animation: float974 7s ease-in-out infinite; }
   .twinkle    { animation: twinkle 3s ease-in-out infinite; }
+  .paille-wing { transform-origin: center; animation: paillewing 1s ease-in-out infinite; }
+  .paille-fly1 { animation: pailleFly1 21s linear infinite; }
+  .paille-fly2 { animation: pailleFly2 29s linear infinite; animation-delay: 7s; }
 }
 
 @layer components {
