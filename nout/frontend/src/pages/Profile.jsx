@@ -18,7 +18,7 @@ import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCount
 
 export default function Profile() {
   const { id } = useParams()
-  const { user } = useAuth()
+  const { user, profile: myProfile } = useAuth()   // myProfile = profil de l'utilisateur connecté (pour la notif d'abonnement)
   const navigate = useNavigate()
 
   const [profile, setProfile]   = useState(null)
@@ -47,7 +47,7 @@ export default function Profile() {
       if (wasFollowing) {
         await unfollowUser(user.id, id)
       } else {
-        await followUser(user.id, id, profile?.username)
+        await followUser(user.id, id, myProfile?.username)
       }
     } catch {
       // Rollback en cas d'échec
@@ -94,7 +94,7 @@ export default function Profile() {
       }
     }
     load()
-  }, [id, user])
+  }, [id, user?.id])
 
   if (loading) return (
     <div className="max-w-4xl mx-auto px-4 py-6">
