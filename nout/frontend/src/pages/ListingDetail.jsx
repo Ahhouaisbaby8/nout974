@@ -10,8 +10,9 @@ import { getAvatarUrl } from '../utils/avatar'
 import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import { getSellerRating } from '../services/reviews'
-import { SHIPPING_METHODS, SHIPPING_ORDER, computeProtectionFee, computeBuyerTotal, getShippingFee } from '../utils/shipping'
-import { Truck, Home as HomeIcon, Store } from 'lucide-react'
+import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, getShippingFee } from '../utils/shipping'
+import { Truck, Home as HomeIcon, Store, ShieldCheck } from 'lucide-react'
+import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 
 const SHIP_ICONS = { hand: Store, relay: MapPin, home: HomeIcon }
 
@@ -56,6 +57,34 @@ function ShippingSelector({ value, onChange, price }) {
           )
         })}
       </div>
+
+      {/* Safe zones : conseils + lieux publics sûrs quand main propre choisie */}
+      {value === 'hand' && (
+        <div className="mt-3 rounded-lg border border-[#B9E5E1] bg-[#EAF6F5] p-3">
+          <p className="flex items-center gap-1.5 text-[13px] font-semibold text-[#0E7FAB] mb-1.5">
+            <ShieldCheck className="w-4 h-4" />
+            Remise en lieu public conseillée
+          </p>
+          <ul className="text-[12px] text-gray-600 space-y-1 mb-2">
+            {SAFE_TIPS.map((t, i) => (
+              <li key={i} className="flex gap-1.5"><span className="text-[#0E7FAB]">•</span>{t}</li>
+            ))}
+          </ul>
+          <details className="text-[12px]">
+            <summary className="cursor-pointer text-[#0E7FAB] font-medium">Voir des lieux sûrs par zone</summary>
+            <div className="mt-2 space-y-2">
+              {SAFE_ZONES.map(z => (
+                <div key={z.zone}>
+                  <p className="font-semibold text-nout-texte text-[11px] uppercase tracking-wide">{z.zone}</p>
+                  <ul className="text-gray-500 text-[12px]">
+                    {z.lieux.map((l, i) => <li key={i}>· {l}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   )
 }
@@ -198,8 +227,7 @@ export default function ListingDetail() {
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
 
-  // Total et frais dépendent du mode de livraison choisi (cf. utils/shipping.js)
-  const fraisService   = computeProtectionFee(listing.price, shipMethod)
+  // Nouveau modèle : l'acheteur paie le prix affiché + le port (aucun frais de service ajouté).
   const portFee        = getShippingFee(shipMethod)
   const totalAcheteur  = computeBuyerTotal(listing.price, shipMethod)
   const images     = listing.images?.length > 0 ? listing.images : null
@@ -517,16 +545,21 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Frais de protection acheteur</span>
-                      <span>{formatPrice(fraisService)}</span>
+                      <span>Paiement protégé</span>
+                      <span className="text-emerald-600 font-medium">Inclus</span>
                     </div>
-                    {portFee > 0 && (
+                    {portFee > 0 ? (
                       <div className="flex justify-between text-gray-500">
                         <span>Livraison ({SHIPPING_METHODS[shipMethod].label.replace('Chronopost — ', '')})</span>
                         <span>{formatPrice(portFee)}</span>
                       </div>
+                    ) : (
+                      <div className="flex justify-between text-gray-500">
+                        <span>Remise en main propre</span>
+                        <span className="text-emerald-600 font-medium">Gratuit</span>
+                      </div>
                     )}
-                    <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
+                    <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
                       <span>Total</span>
                       <span>{formatPrice(totalAcheteur)}</span>
                     </div>
@@ -610,10 +643,10 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Frais de protection acheteur</span>
-                      <span>{formatPrice(computeProtectionFee(listing.price, 'hand'))}</span>
+                      <span>Paiement protégé</span>
+                      <span className="text-emerald-600 font-medium">Inclus</span>
                     </div>
-                    <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-dark">
+                    <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
                       <span>Total en main propre</span>
                       <span>{formatPrice(computeBuyerTotal(listing.price, 'hand'))}</span>
                     </div>

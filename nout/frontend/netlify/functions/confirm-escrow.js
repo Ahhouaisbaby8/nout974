@@ -95,6 +95,7 @@ exports.handler = async (event) => {
         seller_id,
         buyer_id,
         total_price,
+        seller_payout,
         listing:listings!listing_id(title, price),
         buyer:profiles!buyer_id(email, username),
         seller:profiles!seller_id(email, username, stripe_account_id)
@@ -199,9 +200,13 @@ exports.handler = async (event) => {
       return { statusCode: 409, headers, body: JSON.stringify({ error: 'Cette remise a déjà été confirmée.' }) }
     }
 
-    // Transfert Stripe vers le vendeur
+    // Transfert Stripe vers le vendeur — on verse le PAYOUT NET (prix − frais NOUT 10%+0,25€ − Stripe),
+    // PAS le prix entier. NOUT garde sa marge. Fallback : recalcul si seller_payout absent (anciennes commandes).
     const prixArticle    = Number(order.listing?.price ?? 0)
-    const transferCents  = Math.round(prixArticle * 100)
+    const payoutNet      = order.seller_payout != null
+      ? Number(order.seller_payout)
+      : Math.round((prixArticle - (prixArticle * 0.10 + 0.25) - (prixArticle * 0.015 + 0.25)) * 100) / 100
+    const transferCents  = Math.max(0, Math.round(payoutNet * 100))
     const vendorStripeId = order.seller?.stripe_account_id
 
     let transferOk = false

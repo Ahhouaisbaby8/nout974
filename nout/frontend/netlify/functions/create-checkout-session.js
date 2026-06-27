@@ -3,20 +3,28 @@ const { createClient } = require('@supabase/supabase-js')
 const { randomInt } = require('crypto')
 
 // Tarifs livraison — DOIT rester synchronisé avec src/utils/shipping.js (source de vérité front).
-// NOUT n'a pas de trésorerie : la protection majorée en livraison couvre le coût Chronopost (zéro perte).
-const SHIPPING = {
-  hand:  { fee: 0,    protectionFixed: 1.00 },
-  relay: { fee: 6.49, protectionFixed: 3.49 },
-  home:  { fee: 8.90, protectionFixed: 3.49 },
-}
-const COMMISSION_RATE = 0.05
+// MODÈLE (27 juin 2026) : frais NOUT (10% + 0,25€) prélevés SUR LE VENDEUR.
+// L'acheteur paie le PRIX AFFICHÉ + le port (aucun frais de service ajouté). Main propre gratuite.
+const SHIPPING_FEES = { hand: 0, relay: 6.51, home: 10.80 }
+const COMMISSION_RATE  = 0.10   // 10 % du prix (sur le vendeur)
+const COMMISSION_FIXED = 0.25   // + 0,25 € fixe (couvre le fixe Stripe)
+const STRIPE_PCT = 0.015
+const STRIPE_FIX = 0.25
 
-// Recalcul SÉCURISÉ du total côté serveur (ne jamais faire confiance au client).
+// Recalcul SÉCURISÉ du total ACHETEUR côté serveur (ne jamais faire confiance au client).
+// = prix + port (l'acheteur ne paie aucun frais de service).
 function computeTotals(price, methodId) {
-  const m = SHIPPING[methodId] ?? SHIPPING.hand
-  const protectionFee = (price * (1 + COMMISSION_RATE) + m.protectionFixed + 0.25) / 0.985 - price
-  const total = price + protectionFee + m.fee
-  return Math.round(total * 100) / 100
+  const port = SHIPPING_FEES[methodId] ?? 0
+  return Math.round((price + port) * 100) / 100
+}
+
+// Versement NET au vendeur = prix − frais NOUT (10%+0,25€) − frais Stripe sur l'encaissement total.
+// Calculé ici pour être stocké sur la commande (utilisé au transfert escrow). NOUT garde 10%+0,25€ net.
+function computeSellerPayout(price, methodId) {
+  const port   = SHIPPING_FEES[methodId] ?? 0
+  const stripe = (price + port) * STRIPE_PCT + STRIPE_FIX
+  const payout = price - (price * COMMISSION_RATE + COMMISSION_FIXED) - stripe
+  return Math.round(payout * 100) / 100
 }
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -119,9 +127,9 @@ exports.handler = async (event) => {
     }
 
     const prixArticle   = listing.price
-    // Total recalculé côté serveur selon le mode de livraison choisi.
-    // La protection majorée en livraison couvre le coût Chronopost → NOUT ne perd jamais.
+    // Total acheteur = prix + port (aucun frais de service ajouté). Versement vendeur = prix − frais NOUT − Stripe.
     const totalAcheteur = computeTotals(prixArticle, method)
+    const sellerPayout  = computeSellerPayout(prixArticle, method)
 
     const amountCents = Math.round(totalAcheteur * 100)
     const siteUrl     = process.env.URL || 'http://localhost:8888'
@@ -132,6 +140,7 @@ exports.handler = async (event) => {
       seller_id:       listing.user_id,
       listing_id:      listingId,
       total_price:     totalAcheteur,
+      seller_payout:   sellerPayout,
       shipping_method: method,
       status:          'pending',
     }).select().single()

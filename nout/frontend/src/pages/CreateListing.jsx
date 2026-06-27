@@ -9,6 +9,8 @@ import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
 import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
+import { computeSellerPayout, computeNoutFee } from '../utils/shipping'
+import { formatPrice } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
 import ChoiceChips from '../components/ui/ChoiceChips'
@@ -448,6 +450,24 @@ export default function CreateListing() {
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">€</span>
             </div>
             <p className="text-xs text-gray-400 mt-1">Mets 0 € si tu offres l'article.</p>
+
+            {/* Estimation de ce que touche le vendeur (transparence des frais NOUT) */}
+            {Number(price) > 0 && (
+              <div className="mt-3 rounded-xl border border-[#B9E5E1] bg-[#EAF6F5] p-3 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Frais NOUT (10 % + 0,25 €)</span>
+                  <span>− {formatPrice(computeNoutFee(Number(price)))}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-nout-texte mt-1 pt-1 border-t border-[#B9E5E1]">
+                  <span>Tu reçois (en main propre)</span>
+                  <span className="text-[#0E7FAB]">{formatPrice(computeSellerPayout(Number(price), 'hand'))}</span>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1.5">
+                  L'acheteur paie {formatPrice(Number(price))} (le port s'ajoute s'il choisit une livraison).
+                  Frais de paiement sécurisé inclus.
+                </p>
+              </div>
+            )}
           </div>
 
           <div>

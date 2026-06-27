@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
-import { computeProtectionFee, computeBuyerTotal, getShippingFee } from '../../utils/shipping'
+import { computeBuyerTotal, getShippingFee } from '../../utils/shipping'
 
 const SHIPPING_RELAY_FEE = getShippingFee('relay')
 import { FounderCardBadge } from './FounderBadge'
@@ -26,9 +26,8 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
   const category      = CATEGORIES.find(c => c.id === listing.category)
   const conditionLabel = CONDITIONS.find(c => c.id === listing.condition)?.label
   const views         = listing.views ?? 0
-  // Affichage vignette = prix en main propre (le moins cher, sans port)
-  const totalAcheteur = computeBuyerTotal(listing.price, 'hand')
-  const fraisService  = computeProtectionFee(listing.price, 'hand')
+  // Nouveau modèle : l'acheteur paie le PRIX AFFICHÉ (en main propre, 0 frais ajouté).
+  // Le port s'ajoute seulement si livraison choisie. Plus de "frais de protection" côté acheteur.
 
   const openModal = (which) => (e) => {
     e.preventDefault()
@@ -133,7 +132,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
           onClick={openModal('price')}
           className="flex items-center gap-0.5 text-[10px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
         >
-          {formatPrice(totalAcheteur)} frais inclus
+          Main propre gratuite · port dès {formatPrice(SHIPPING_RELAY_FEE)}
           <Info size={9} className="ml-0.5" />
         </button>
 
@@ -172,7 +171,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                   <span className="text-[15px] text-nout-texte">{formatPrice(listing.price)}</span>
                 </div>
 
-                {/* Ligne protection (cliquable → popup protection) */}
+                {/* Protection incluse (gratuite pour l'acheteur — paiement sécurisé) */}
                 <button
                   type="button"
                   onClick={openModal('protection')}
@@ -182,10 +181,10 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                     <Shield size={18} className="text-nout-turquoise" />
                   </div>
                   <p className="flex-1 text-[15px] text-nout-texte flex items-center gap-1.5">
-                    Frais de Protection acheteurs
+                    Paiement protégé inclus
                     <Info size={15} className="text-nout-turquoise" />
                   </p>
-                  <span className="text-[15px] text-nout-texte">{formatPrice(fraisService)}</span>
+                  <span className="text-[15px] font-medium text-emerald-600">Inclus</span>
                 </button>
 
                 {/* Frais de port (info, sélectionné au paiement) */}
@@ -197,15 +196,16 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                     </div>
                     <div className="flex-1">
                       <p className="text-[15px] text-nout-texte">Frais de port</p>
-                      <p className="text-[13px] text-gray-400">En fonction du mode d'envoi choisi (ou main propre gratuite)</p>
+                      <p className="text-[13px] text-gray-400">Main propre gratuite, ou livraison à partir de {formatPrice(SHIPPING_RELAY_FEE)}</p>
                     </div>
                     <span className="text-[15px] text-nout-texte">dès {formatPrice(SHIPPING_RELAY_FEE)}</span>
                   </div>
                 </div>
 
                 <p className="text-[13px] text-gray-400 leading-relaxed py-3 border-t border-gray-100">
-                  Les frais de Protection acheteurs sont ajoutés à chaque achat sur NOUT. Le prix de l'article
-                  est fixé par le vendeur et peut faire l'objet d'une négociation. La remise en main propre est gratuite.
+                  Sur NOUT, tu paies le prix affiché — aucun frais de service ajouté pour l'acheteur.
+                  En main propre, c'est gratuit. Sinon, seuls les frais de port s'ajoutent. Le paiement
+                  est sécurisé : le vendeur n'est payé qu'après confirmation de réception.
                 </p>
               </div>
 
