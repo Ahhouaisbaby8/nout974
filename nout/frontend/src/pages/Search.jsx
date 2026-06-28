@@ -5,6 +5,7 @@ import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
 import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
+import { Search as SearchIcon } from 'lucide-react'
 import ListingCard from '../components/ui/ListingCard'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
@@ -120,6 +121,20 @@ export default function Search() {
   }
 
   const subOptions = CATEGORIES.find(c => c.id === category)?.sub ?? []
+  const catLabel  = CATEGORIES.find(c => c.id === category)?.label
+  const subLabel  = subOptions.find(s => s.id === subcategory)?.label
+  const cityLabel = (city && city !== 'Toute La Réunion') ? city : 'La Réunion'
+  const heading = query
+    ? `« ${query} »`
+    : subLabel ? `${subLabel} à ${cityLabel} (974)`
+    : catLabel ? `${catLabel} à ${cityLabel} (974)`
+    : `Toutes les annonces à ${cityLabel} (974)`
+
+  // Titre d'onglet dynamique (SEO + UX)
+  useEffect(() => {
+    document.title = `${heading} — NOUT 974`
+    return () => { document.title = 'NOUT — Marketplace seconde main La Réunion 974' }
+  }, [heading])
 
   const hasFilters = category || subcategory || (city && city !== 'Toute La Réunion') || condition || brand || minPrice || maxPrice
 
@@ -135,8 +150,9 @@ export default function Search() {
           onChange={(e) => setQuery(e.target.value)}
           className="flex-1 input-field"
         />
-        <button type="submit" className="btn-primary px-5">
-                  </button>
+        <button type="submit" aria-label="Rechercher" className="btn-primary px-5 flex items-center justify-center">
+          <SearchIcon className="w-5 h-5" />
+        </button>
         <button
           type="button"
           onClick={() => setShowFilters(f => !f)}
@@ -232,6 +248,7 @@ export default function Search() {
       )}
 
       {/* ── RÉSULTATS ── */}
+      <h1 className="font-title font-bold text-xl sm:text-2xl text-nout-texte mb-2">{heading}</h1>
       <div className="flex justify-between items-center mb-4">
         <p className="text-sm text-gray-500">
           {loading ? '...' : (
