@@ -170,8 +170,8 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Palmier gauche (visible aussi sur mobile, grandit avec l'écran) */}
-        <div className="absolute bottom-0 left-0 palm-left pointer-events-none select-none"
+        {/* Palmier gauche (desktop uniquement, grandit avec l'écran) */}
+        <div className="hidden sm:block absolute bottom-0 left-0 palm-left pointer-events-none select-none"
              style={{ width: 'clamp(150px, 24vw, 420px)' }}>
           <svg width="100%" viewBox="0 -30 170 330" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M65 298 Q68 242 72 186 Q76 130 83 85 Q88 52 93 22"
@@ -189,8 +189,8 @@ export default function Home() {
           </svg>
         </div>
 
-        {/* Palmier droit (visible aussi sur mobile, grandit avec l'écran) */}
-        <div className="absolute bottom-0 right-0 palm-right pointer-events-none select-none"
+        {/* Palmier droit (desktop uniquement, grandit avec l'écran) */}
+        <div className="hidden sm:block absolute bottom-0 right-0 palm-right pointer-events-none select-none"
              style={{ width: 'clamp(150px, 24vw, 420px)' }}>
           <svg width="100%" viewBox="0 -30 170 305" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M105 273 Q102 218 98 163 Q94 108 88 68 Q84 42 78 16"
