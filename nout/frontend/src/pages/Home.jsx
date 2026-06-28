@@ -49,7 +49,7 @@ export default function Home() {
   const handleBirdClick = () => {
     if (birdFlying) return            // pas de spam : un seul vol à la fois
     setBirdFlying(true)
-    setTimeout(() => setBirdFlying(false), 7000)   // durée de l'animation pailleTour (tour complet)
+    setTimeout(() => setBirdFlying(false), 11000)   // durée de l'animation pailleTour (traversée lente)
   }
 
   const [search,   setSearch]   = useState('')
@@ -176,7 +176,7 @@ export default function Home() {
           style={{
             top: 'clamp(80px, 12vh, 150px)',
             left: 'clamp(16px, 6vw, 90px)',
-            animation: birdFlying ? 'pailleTour 7s ease-in-out forwards' : 'float974 6s ease-in-out infinite',
+            animation: birdFlying ? 'pailleTour 11s linear forwards' : 'float974 6s ease-in-out infinite',
           }}
         >
           <svg width="52" height="32" viewBox="0 0 120 70" fill="none">
