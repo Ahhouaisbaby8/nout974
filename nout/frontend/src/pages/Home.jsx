@@ -7,6 +7,7 @@ import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
 import ListingCard from '../components/ui/ListingCard'
 import PriceRangeSection from '../components/PriceRangeSection'
+import CategoryMenu from '../components/CategoryMenu'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
 import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
@@ -275,17 +276,7 @@ export default function Home() {
         <h2 className="font-title font-bold text-[28px] text-nout-texte mb-5">
           Catégories
         </h2>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => handleCategory(cat.id)}
-              className="flex-shrink-0 px-5 py-2 rounded-full border border-nout-border bg-white text-nout-texte text-[13px] font-medium hover:bg-nout-turquoise hover:text-white hover:border-nout-turquoise transition-all duration-150 cursor-pointer"
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
+        <CategoryMenu />
       </section>
 
       {/* ── C) NOUVEAUTÉS ────────────────────────────────────────── */}
