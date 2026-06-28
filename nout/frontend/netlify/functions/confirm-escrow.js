@@ -218,6 +218,10 @@ exports.handler = async (event) => {
           currency:    'eur',
           destination: vendorStripeId,
           metadata:    { order_id },
+        }, {
+          // Idempotence : Stripe garantit lui-même qu'un même transfert ne part
+          // qu'une seule fois, même si la fonction est rejouée (anti double-paiement vendeur).
+          idempotencyKey: `transfer_${order_id}`,
         })
         transferOk = true
         console.log(`Transfert Stripe OK : ${transferCents / 100} € → ${vendorStripeId}`)

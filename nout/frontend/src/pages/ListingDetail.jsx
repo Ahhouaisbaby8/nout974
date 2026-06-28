@@ -540,53 +540,7 @@ export default function ListingDetail() {
               )}
               {user ? (
                 <>
-                  {/* Sélecteur de livraison */}
-                  <ShippingSelector value={shipMethod} onChange={setShipMethod} price={listing.price} />
-
-                  {/* Coordonnées de livraison — obligatoires si livraison choisie */}
-                  {portFee > 0 && (
-                    <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-3">
-                      <p className="flex items-center gap-2 text-sm font-semibold text-nout-texte">
-                        <MapPin className="w-4 h-4 text-nout-primary" />
-                        Adresse de livraison
-                      </p>
-                      <input
-                        type="tel"
-                        value={shipPhone}
-                        onChange={(e) => setShipPhone(e.target.value)}
-                        placeholder="Téléphone (pour le transporteur) *"
-                        className="input-field"
-                      />
-                      <input
-                        type="text"
-                        value={shipAddress}
-                        onChange={(e) => setShipAddress(e.target.value)}
-                        placeholder="Adresse (rue, numéro, complément) *"
-                        className="input-field"
-                      />
-                      <div className="flex gap-3">
-                        <input
-                          type="text"
-                          value={shipPostcode}
-                          onChange={(e) => setShipPostcode(e.target.value)}
-                          placeholder="Code postal *"
-                          className="input-field w-32"
-                        />
-                        <input
-                          type="text"
-                          value={shipCity}
-                          onChange={(e) => setShipCity(e.target.value)}
-                          placeholder="Ville *"
-                          className="input-field flex-1"
-                        />
-                      </div>
-                      <p className="text-[11px] text-gray-400">
-                        Ton téléphone est transmis au transporteur uniquement pour la livraison.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Récapitulatif des frais */}
+                  {/* Récap court — le choix livraison/adresse/paiement se fait sur la page commande */}
                   <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-100 space-y-2">
                     <div className="flex justify-between text-gray-500">
                       <span>Prix de l'article</span>
@@ -596,61 +550,17 @@ export default function ListingDetail() {
                       <span>Paiement protégé</span>
                       <span className="text-emerald-600 font-medium">Inclus</span>
                     </div>
-                    {portFee > 0 ? (
-                      <div className="flex justify-between text-gray-500">
-                        <span>Livraison ({SHIPPING_METHODS[shipMethod].label.replace('Chronopost — ', '')})</span>
-                        <span>{formatPrice(portFee)}</span>
-                      </div>
-                    ) : (
-                      <div className="flex justify-between text-gray-500">
-                        <span>Remise en main propre</span>
-                        <span className="text-emerald-600 font-medium">Gratuit</span>
-                      </div>
-                    )}
-                    <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
-                      <span>Total</span>
-                      <span>{formatPrice(totalAcheteur)}</span>
-                    </div>
+                    <p className="flex items-center gap-1.5 text-[11px] text-gray-400 pt-1">
+                      <Truck className="w-3.5 h-3.5" />
+                      Main propre gratuite, ou livraison dès {formatPrice(getShippingFee('relay'))} (au choix à l'étape suivante)
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={async () => {
-                        // Si livraison : adresse + téléphone obligatoires
-                        if (portFee > 0 && (!shipPhone.trim() || !shipAddress.trim() || !shipCity.trim() || !shipPostcode.trim())) {
-                          setPayError('Renseigne ton téléphone et ton adresse complète pour la livraison.')
-                          return
-                        }
-                        setPaying(true)
-                        setPayError('')
-                        try {
-                          const { data: { session: authSession } } = await supabase.auth.getSession()
-                          const res = await fetch('/.netlify/functions/create-checkout-session', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
-                            },
-                            body: JSON.stringify({
-                              listingId: id, buyerId: user.id, shippingMethod: shipMethod,
-                              shippingPhone: shipPhone.trim(),
-                              shippingAddress: shipAddress.trim(),
-                              shippingCity: shipCity.trim(),
-                              shippingPostcode: shipPostcode.trim(),
-                            }),
-                          })
-                          const data = await res.json()
-                          if (data.error) { setPayError(data.error); return }
-                          window.location.href = data.url
-                        } catch {
-                          setPayError('Erreur de connexion. Réessaie.')
-                        } finally {
-                          setPaying(false)
-                        }
-                      }}
-                      disabled={paying}
-                      className={`btn-primary flex-1 py-4 text-base ${paying ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      onClick={() => navigate(`/commander/${id}`)}
+                      className="btn-primary flex-1 py-4 text-base"
                     >
-                      {paying ? 'Redirection…' : `Acheter — ${formatPrice(totalAcheteur)}`}
+                      Acheter
                     </button>
                     <div className="relative flex-shrink-0">
                       <button

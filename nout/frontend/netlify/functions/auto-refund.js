@@ -140,15 +140,24 @@ exports.handler = async (event) => {
 
       // Déclencher le remboursement Stripe
       try {
-        await stripe.refunds.create({ payment_intent: order.stripe_payment_id })
+      let refundOk = false
+      try {
+        await stripe.refunds.create(
+          { payment_intent: order.stripe_payment_id },
+          { idempotencyKey: `refund_${orderId}` },   // anti double-remboursement
+        )
+        refundOk = true
         console.log(`Remboursement Stripe OK — order ${orderId}`)
       } catch (stripeErr) {
-        // Si Stripe échoue, on log mais le verrou est posé — traitement manuel nécessaire
-        console.error(`STRIPE REFUND ÉCHOUÉ (order ${orderId}) :`, stripeErr.message)
+        // M5 — Stripe a échoué : NE PAS marquer "refunded" ni envoyer d'email "remboursé"
+        // (l'acheteur croirait être remboursé alors qu'il ne l'est pas). Traitement manuel requis.
+        console.error(`STRIPE REFUND ÉCHOUÉ (order ${orderId}) — traitement manuel requis :`, stripeErr.message)
         errors++
-        // On continue quand même pour mettre à jour la base et envoyer les emails
-        // Le remboursement Stripe devra être fait manuellement depuis le Dashboard
       }
+
+      // Si le remboursement Stripe a échoué, on s'arrête là pour cette commande :
+      // la commande reste "paid", l'article reste vendu, pas d'email trompeur.
+      if (!refundOk) continue
 
       // Mettre à jour la commande + remettre l'annonce en vente
       const [{ error: orderRefundErr }, { error: listingRelistErr }] = await Promise.all([

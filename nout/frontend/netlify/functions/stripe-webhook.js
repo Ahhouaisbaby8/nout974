@@ -55,13 +55,34 @@ exports.handler = async (event) => {
     const session = stripeEvent.data.object
     const { orderId, listingId } = session.metadata ?? {}
 
-    // 1. Mettre la commande en statut "paid"
+    // C1 — Ne traiter QUE si le paiement a réellement réussi (paiements asynchrones,
+    // sessions expirées… peuvent arriver en "completed" mais "unpaid" → on ignore).
+    if (session.payment_status !== 'paid') {
+      console.warn(`webhook: session ${session.id} payment_status=${session.payment_status} → ignorée`)
+      return { statusCode: 200, body: 'Paiement non confirmé, ignoré' }
+    }
+
+    // C2 — Idempotence : on ne passe la commande paid QUE si elle était encore "pending".
+    // Si Stripe re-livre l'événement, l'update n'affecte 0 ligne → on n'envoie pas
+    // une 2e fois emails/notifs/codes.
+    let firstTime = false
     if (orderId) {
-      const { error: orderUpdateErr } = await supabase.from('orders').update({
+      const { data: updated, error: orderUpdateErr } = await supabase.from('orders').update({
         status:            'paid',
         stripe_payment_id: session.payment_intent,
-      }).eq('id', orderId)
-      if (orderUpdateErr) console.error(`webhook: update order ${orderId} paid:`, orderUpdateErr.message)
+      }).eq('id', orderId).eq('status', 'pending').select('id')
+      if (orderUpdateErr) {
+        // C7 — erreur DB récupérable : renvoyer 5xx pour que Stripe REJOUE l'événement
+        // (sinon la commande reste coincée en pending et serait annulée à tort).
+        console.error(`webhook: update order ${orderId} paid:`, orderUpdateErr.message)
+        return { statusCode: 500, body: 'Erreur DB, à rejouer' }
+      }
+      firstTime = !!(updated && updated.length > 0)
+    }
+
+    // Événement déjà traité (re-livraison Stripe) → on s'arrête, pas de doublon.
+    if (!firstTime) {
+      return { statusCode: 200, body: 'Déjà traité' }
     }
 
     // 2. Marquer l'annonce comme vendue (la retire du catalogue)

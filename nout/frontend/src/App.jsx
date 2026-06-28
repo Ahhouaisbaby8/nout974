@@ -40,6 +40,7 @@ import PaymentSuccess from './pages/PaymentSuccess'
 
 // Pages privées
 import CreateListing from './pages/CreateListing'
+import Checkout      from './pages/Checkout'
 import EditListing   from './pages/EditListing'
 import Messages      from './pages/Messages'
 import Conversation  from './pages/Conversation'
@@ -115,6 +116,7 @@ function AppShell() {
           {/* Public */}
           <Route path="/"             element={<Home />} />
           <Route path="/annonce/:id"  element={<ListingDetail />} />
+          <Route path="/commander/:id" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/recherche"    element={<Search />} />
           <Route path="/profil/:id"   element={<Profile />} />
           <Route path="/a-propos"          element={<About />} />
