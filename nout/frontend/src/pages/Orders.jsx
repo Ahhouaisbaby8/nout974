@@ -228,6 +228,16 @@ function SellerShippingPanel({ order, onShipped }) {
         <p className="text-xs text-gray-500 mt-0.5">Via notre service de livraison</p>
       </div>
       <div className="px-4 py-4 bg-white flex flex-col gap-3">
+        {/* Adresse de livraison fournie par l'acheteur (pour préparer le colis) */}
+        {order.shipping_address && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Adresse de livraison</p>
+            <p className="text-nout-texte">{order.buyer?.username}</p>
+            <p className="text-nout-texte">{order.shipping_address}</p>
+            <p className="text-nout-texte">{order.shipping_postcode} {order.shipping_city}</p>
+            {order.shipping_phone && <p className="text-nout-texte mt-0.5">📞 {order.shipping_phone}</p>}
+          </div>
+        )}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2">
             {error}

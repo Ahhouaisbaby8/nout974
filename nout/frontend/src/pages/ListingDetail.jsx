@@ -122,6 +122,11 @@ export default function ListingDetail() {
   const [favPulse, setFavPulse]   = useState(false)
   const [sellerRating, setSellerRating] = useState(null)
   const [shipMethod, setShipMethod] = useState('hand')
+  // Coordonnées de livraison (obligatoires si livraison). Pré-remplies depuis le profil.
+  const [shipPhone, setShipPhone]       = useState(profile?.phone ?? '')
+  const [shipAddress, setShipAddress]   = useState('')
+  const [shipCity, setShipCity]         = useState(profile?.city ?? '')
+  const [shipPostcode, setShipPostcode] = useState('')
 
   useEffect(() => {
     getListingById(id)
@@ -538,6 +543,49 @@ export default function ListingDetail() {
                   {/* Sélecteur de livraison */}
                   <ShippingSelector value={shipMethod} onChange={setShipMethod} price={listing.price} />
 
+                  {/* Coordonnées de livraison — obligatoires si livraison choisie */}
+                  {portFee > 0 && (
+                    <div className="bg-white rounded-xl p-4 border border-gray-100 space-y-3">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-nout-texte">
+                        <MapPin className="w-4 h-4 text-nout-primary" />
+                        Adresse de livraison
+                      </p>
+                      <input
+                        type="tel"
+                        value={shipPhone}
+                        onChange={(e) => setShipPhone(e.target.value)}
+                        placeholder="Téléphone (pour le transporteur) *"
+                        className="input-field"
+                      />
+                      <input
+                        type="text"
+                        value={shipAddress}
+                        onChange={(e) => setShipAddress(e.target.value)}
+                        placeholder="Adresse (rue, numéro, complément) *"
+                        className="input-field"
+                      />
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={shipPostcode}
+                          onChange={(e) => setShipPostcode(e.target.value)}
+                          placeholder="Code postal *"
+                          className="input-field w-32"
+                        />
+                        <input
+                          type="text"
+                          value={shipCity}
+                          onChange={(e) => setShipCity(e.target.value)}
+                          placeholder="Ville *"
+                          className="input-field flex-1"
+                        />
+                      </div>
+                      <p className="text-[11px] text-gray-400">
+                        Ton téléphone est transmis au transporteur uniquement pour la livraison.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Récapitulatif des frais */}
                   <div className="bg-gray-50 rounded-xl p-4 text-sm border border-gray-100 space-y-2">
                     <div className="flex justify-between text-gray-500">
@@ -567,6 +615,11 @@ export default function ListingDetail() {
                   <div className="flex gap-2">
                     <button
                       onClick={async () => {
+                        // Si livraison : adresse + téléphone obligatoires
+                        if (portFee > 0 && (!shipPhone.trim() || !shipAddress.trim() || !shipCity.trim() || !shipPostcode.trim())) {
+                          setPayError('Renseigne ton téléphone et ton adresse complète pour la livraison.')
+                          return
+                        }
                         setPaying(true)
                         setPayError('')
                         try {
@@ -577,7 +630,13 @@ export default function ListingDetail() {
                               'Content-Type': 'application/json',
                               'Authorization': `Bearer ${authSession?.access_token ?? ''}`,
                             },
-                            body: JSON.stringify({ listingId: id, buyerId: user.id, shippingMethod: shipMethod }),
+                            body: JSON.stringify({
+                              listingId: id, buyerId: user.id, shippingMethod: shipMethod,
+                              shippingPhone: shipPhone.trim(),
+                              shippingAddress: shipAddress.trim(),
+                              shippingCity: shipCity.trim(),
+                              shippingPostcode: shipPostcode.trim(),
+                            }),
                           })
                           const data = await res.json()
                           if (data.error) { setPayError(data.error); return }

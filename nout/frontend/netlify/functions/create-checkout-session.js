@@ -78,7 +78,10 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { listingId, buyerId, shippingMethod } = JSON.parse(event.body)
+    const {
+      listingId, buyerId, shippingMethod,
+      shippingPhone, shippingAddress, shippingCity, shippingPostcode,
+    } = JSON.parse(event.body)
 
     // L'utilisateur authentifié doit être le buyer déclaré
     if (authUser.id !== buyerId) {
@@ -86,7 +89,16 @@ exports.handler = async (event) => {
     }
 
     // Valider le mode de livraison (défaut : main propre)
-    const method = SHIPPING[shippingMethod] ? shippingMethod : 'hand'
+    const method = SHIPPING_FEES[shippingMethod] !== undefined ? shippingMethod : 'hand'
+
+    // Si livraison : adresse + téléphone obligatoires (recalcul de sécurité côté serveur)
+    const isDelivery = method === 'relay' || method === 'home'
+    const clean = (s) => (typeof s === 'string' ? s.trim().slice(0, 200) : '')
+    const phone = clean(shippingPhone), addr = clean(shippingAddress)
+    const cityShip = clean(shippingCity), postcode = clean(shippingPostcode)
+    if (isDelivery && (!phone || !addr || !cityShip || !postcode)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Adresse et téléphone obligatoires pour une livraison.' }) }
+    }
 
     // Récupérer l'annonce (plus besoin du stripe_account_id vendeur)
     const { data: listing, error } = await supabase
@@ -136,13 +148,17 @@ exports.handler = async (event) => {
 
     // Créer la commande en base
     const { data: order, error: orderError } = await supabase.from('orders').insert({
-      buyer_id:        buyerId,
-      seller_id:       listing.user_id,
-      listing_id:      listingId,
-      total_price:     totalAcheteur,
-      seller_payout:   sellerPayout,
-      shipping_method: method,
-      status:          'pending',
+      buyer_id:          buyerId,
+      seller_id:         listing.user_id,
+      listing_id:        listingId,
+      total_price:       totalAcheteur,
+      seller_payout:     sellerPayout,
+      shipping_method:   method,
+      shipping_phone:    isDelivery ? phone : null,
+      shipping_address:  isDelivery ? addr : null,
+      shipping_city:     isDelivery ? cityShip : null,
+      shipping_postcode: isDelivery ? postcode : null,
+      status:            'pending',
     }).select().single()
 
     if (orderError || !order) {
