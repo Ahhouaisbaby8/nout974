@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export const getListings = async ({ category, city, condition, brand, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
+export const getListings = async ({ category, subcategory, city, condition, brand, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
   let query = supabase
     .from('listings')
     .select(`*, profiles(id, username, avatar_url)`, { count: 'exact' })
@@ -9,6 +9,9 @@ export const getListings = async ({ category, city, condition, brand, minPrice, 
     .range((page - 1) * limit, page * limit - 1)
 
   if (category)  query = query.eq('category', category)
+  // Filtre "souple" : dans une sous-catégorie, on montre les annonces de cette
+  // sous-catégorie ET celles sans sous-catégorie (annonces anciennes) → rien ne disparaît.
+  if (subcategory) query = query.or(`subcategory.eq.${subcategory},subcategory.is.null`)
   if (city)      query = query.eq('city', city)
   if (condition) query = query.eq('condition', condition)
   if (brand)     query = query.eq('brand', brand)

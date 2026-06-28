@@ -19,6 +19,7 @@ export default function Search() {
   // Lire les filtres depuis l'URL
   const [query,    setQuery]    = useState(searchParams.get('q')         ?? '')
   const [category, setCategory] = useState(searchParams.get('categorie') ?? '')
+  const [subcategory, setSubcategory] = useState(searchParams.get('sous') ?? '')
   const [city,     setCity]     = useState(searchParams.get('ville')     ?? 'Toute La Réunion')
   const [condition,setCondition]= useState(searchParams.get('etat')      ?? '')
   const [brand,    setBrand]    = useState(searchParams.get('marque')    ?? '')
@@ -37,13 +38,14 @@ export default function Search() {
   const buildParams = useCallback(() => ({
     search:   query    || undefined,
     category: category || undefined,
+    subcategory: subcategory || undefined,
     city:     (city && city !== 'Toute La Réunion') ? city : undefined,
     condition:condition || undefined,
     brand:    brand     || undefined,
     minPrice: minPrice  || undefined,
     maxPrice: maxPrice  || undefined,
     sortBy,
-  }), [query, category, city, condition, brand, minPrice, maxPrice, sortBy])
+  }), [query, category, subcategory, city, condition, brand, minPrice, maxPrice, sortBy])
 
   const runSearch = useCallback(async (reset = true) => {
     const p = reset ? 1 : page + 1
@@ -85,6 +87,7 @@ export default function Search() {
     const p = {}
     if (query)    p.q         = query
     if (category) p.categorie = category
+    if (subcategory) p.sous   = subcategory
     if (city && city !== 'Toute La Réunion') p.ville = city
     if (condition) p.etat     = condition
     if (brand)    p.marque    = brand
@@ -92,7 +95,7 @@ export default function Search() {
     if (maxPrice) p.max       = maxPrice
     if (sortBy !== 'recent') p.tri = sortBy
     setSearchParams(p, { replace: true })
-  }, [query, category, city, condition, brand, minPrice, maxPrice, sortBy])
+  }, [query, category, subcategory, city, condition, brand, minPrice, maxPrice, sortBy])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -101,6 +104,7 @@ export default function Search() {
 
   const resetFilters = () => {
     setCategory('')
+    setSubcategory('')
     setCity('Toute La Réunion')
     setCondition('')
     setBrand('')
@@ -109,7 +113,15 @@ export default function Search() {
     setSortBy('recent')
   }
 
-  const hasFilters = category || (city && city !== 'Toute La Réunion') || condition || brand || minPrice || maxPrice
+  // Changer de catégorie remet la sous-catégorie à zéro (elle n'a plus de sens)
+  const changeCategory = (value) => {
+    setCategory(value)
+    setSubcategory('')
+  }
+
+  const subOptions = CATEGORIES.find(c => c.id === category)?.sub ?? []
+
+  const hasFilters = category || subcategory || (city && city !== 'Toute La Réunion') || condition || brand || minPrice || maxPrice
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -143,11 +155,21 @@ export default function Search() {
         <div className="bg-white rounded-xl shadow-sm p-4 mb-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Catégorie</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field text-sm py-2">
+            <select value={category} onChange={(e) => changeCategory(e.target.value)} className="input-field text-sm py-2">
               <option value="">Toutes</option>
               {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
           </div>
+
+          {subOptions.length > 0 && (
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Sous-catégorie</label>
+              <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="input-field text-sm py-2">
+                <option value="">Toutes</option>
+                {subOptions.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Ville</label>
@@ -222,6 +244,7 @@ export default function Search() {
         {category && (
           <span className="text-xs bg-[#EAF6F5] text-nout-primary font-medium px-3 py-1 rounded-full">
             {CATEGORIES.find(c => c.id === category)?.label}
+            {subcategory && ` · ${subOptions.find(s => s.id === subcategory)?.label ?? ''}`}
           </span>
         )}
       </div>

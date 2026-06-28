@@ -45,6 +45,7 @@ WPS Cloud Files/
 .vscode/
 .vscode-shared/
 .gitconfig
+.playwright-mcp/
 
 # ============================================================
 # Fichiers de secrets (sécurité)

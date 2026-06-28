@@ -81,6 +81,23 @@ export const CONDITIONS = [
   { id: 'etat_correct',        label: 'État correct' },
 ]
 
+export const MATERIALS = [
+  'Coton',
+  'Lin',
+  'Jean / Denim',
+  'Laine',
+  'Cuir',
+  'Simili cuir',
+  'Soie',
+  'Polyester',
+  'Viscose',
+  'Nylon',
+  'Velours',
+  'Dentelle',
+  'Maille',
+  'Synthétique',
+]
+
 export const BRANDS = [
   "L'Effet Péi",
   "Superpolygone",

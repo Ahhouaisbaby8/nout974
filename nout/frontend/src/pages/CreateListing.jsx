@@ -7,9 +7,10 @@ import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
 import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
-import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
+import { CATEGORIES, CONDITIONS, BRANDS, MATERIALS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import { computeSellerPayout, computeNoutFee } from '../utils/shipping'
+import { describeListing } from '../utils/describeListing'
 import { formatPrice } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
@@ -57,11 +58,13 @@ export default function CreateListing() {
   const [title, setTitle]         = useState('')
   const [description, setDesc]    = useState('')
   const [category, setCategory]   = useState('')
+  const [subcategory, setSubcategory] = useState('')
   const [condition, setCondition] = useState('')
   const [price, setPrice]         = useState('')
   const [city, setCity]           = useState('')
   const [size, setSize]           = useState('')
-  const [material, setMaterial]   = useState('')
+  const [materialSelect, setMaterialSelect] = useState('')
+  const [materialCustom, setMaterialCustom] = useState('')
   const [brandSelect, setBrandSelect] = useState('')
   const [brandCustom, setBrandCustom] = useState('')
   const [color, setColor]         = useState('')
@@ -70,21 +73,29 @@ export default function CreateListing() {
 
   const isClothing = CLOTHING_CATS.includes(category)
   const isFashion  = FASHION_CATS.includes(category)
+  const subOptions = CATEGORIES.find(c => c.id === category)?.sub ?? []
   const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
     : category === 'vetements-enfant' ? SIZES_ENFANT
     : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
     : SIZES_VETEMENTS
   const sizePlaceholder = category === 'chaussures' ? 'Pointure' : 'Taille'
 
-  // Titre suggéré auto : Marque + Catégorie + Taille (ex : "Zara · Vêtements femme · T.M")
-  const finalBrandForTitle = brandSelect === '__autre__' ? brandCustom : brandSelect
-  const catLabel = CATEGORIES.find(c => c.id === category)?.label
-  const suggestedTitle = [
-    finalBrandForTitle || null,
-    catLabel || null,
-    size ? `T.${size}` : null,
-    color || null,
-  ].filter(Boolean).join(' · ').slice(0, 80)
+  // Valeurs finales (gèrent le cas "Autre")
+  const finalBrand    = brandSelect    === '__autre__' ? brandCustom    : brandSelect
+  const finalMaterial = materialSelect === '__autre__' ? materialCustom : materialSelect
+
+  // Assez d'infos pour proposer une rédaction automatique ?
+  const canGenerate = Boolean(category && (finalBrand || color || size || finalMaterial))
+
+  // Génère titre + description à partir des attributs saisis (sans IA, instantané)
+  const handleGenerate = () => {
+    const { title: t, description: d } = describeListing({
+      brand: finalBrand, category, subcategory, size, color,
+      material: finalMaterial, condition, city,
+    })
+    if (t) setTitle(t)
+    if (d) setDesc(d)
+  }
 
   useEffect(() => {
     return () => photos.forEach(p => URL.revokeObjectURL(p.preview))
@@ -92,6 +103,7 @@ export default function CreateListing() {
 
   useEffect(() => {
     setSize('')
+    setSubcategory('')
     if (category === 'beaute') setCondition('')
   }, [category])
 
@@ -143,8 +155,7 @@ export default function CreateListing() {
 
     setLoading(true)
     try {
-      const finalBrand = brandSelect === '__autre__' ? brandCustom.trim() : brandSelect
-      const wordCheck = containsForbiddenWord([title, description, material, finalBrand].join(' '))
+      const wordCheck = containsForbiddenWord([title, description, finalMaterial, finalBrand].join(' '))
       if (wordCheck.found) {
         setError(`Contenu non autorisé sur NOUT. Retire le terme "${wordCheck.word}" pour publier.`)
         return
@@ -168,13 +179,14 @@ export default function CreateListing() {
         title:       clean(title.trim()),
         description: clean(description.trim()),
         category,
+        subcategory: subcategory || null,
         condition:   condition || null,
         price:       Number(price),
         city,
         images:      imageUrls,
         size:        isFashion ? (size || null) : null,
-        material:    isFashion ? (clean(material.trim()) || null) : null,
-        brand:       isFashion ? (clean(finalBrand) || null) : null,
+        material:    isFashion ? (clean(finalMaterial.trim()) || null) : null,
+        brand:       isFashion ? (clean(finalBrand.trim()) || null) : null,
         color:       isFashion ? (color || null) : null,
       })
 
@@ -274,20 +286,32 @@ export default function CreateListing() {
 
         {/* ── INFOS ── */}
         <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
-          <h2 className="font-bold text-nout-dark">Informations</h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="font-bold text-nout-dark">Informations</h2>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={!canGenerate}
+              title={canGenerate ? '' : "Renseigne d'abord la catégorie et au moins la marque, la taille ou la couleur"}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full border transition-all ${
+                canGenerate
+                  ? 'text-white bg-[#00C4B4] border-[#00C4B4] hover:bg-[#00b0a2]'
+                  : 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Rédiger pour moi
+            </button>
+          </div>
+          {!canGenerate && (
+            <p className="text-[11px] text-gray-400 -mt-2">
+              Astuce : remplis la catégorie et les détails de l'article (marque, taille, couleur…) plus bas,
+              puis clique sur « Rédiger pour moi » pour générer le titre et la description automatiquement.
+            </p>
+          )}
 
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-sm font-medium text-nout-dark">Titre de l'annonce</label>
-              {suggestedTitle && suggestedTitle !== title && (
-                <button
-                  type="button"
-                  onClick={() => setTitle(suggestedTitle)}
-                  className="text-xs font-semibold text-[#00C4B4] hover:underline flex items-center gap-1"
-                >
-                  <Sparkles className="w-3 h-3" /> Suggérer : {suggestedTitle}
-                </button>
-              )}
             </div>
             <input
               type="text"
@@ -338,6 +362,19 @@ export default function CreateListing() {
                 onChange={setCategory}
               />
             </div>
+
+            {subOptions.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-nout-dark mb-2">
+                  Sous-catégorie <span className="text-gray-400 font-normal">(optionnel)</span>
+                </label>
+                <ChoiceChips
+                  options={subOptions.map(s => ({ value: s.id, label: s.label }))}
+                  value={subcategory}
+                  onChange={setSubcategory}
+                />
+              </div>
+            )}
 
             {category !== 'beaute' && (
               <div>
@@ -404,14 +441,25 @@ export default function CreateListing() {
               <label className="block text-sm font-medium text-nout-dark mb-1">
                 Matière <span className="text-gray-400 font-normal">(optionnel)</span>
               </label>
-              <input
-                type="text"
-                maxLength={80}
-                placeholder="Ex : 100% coton, polyester…"
-                value={material}
-                onChange={(e) => setMaterial(e.target.value)}
-                className="input-field"
-              />
+              <select
+                value={materialSelect}
+                onChange={(e) => { setMaterialSelect(e.target.value); if (e.target.value !== '__autre__') setMaterialCustom('') }}
+                className="input-field cursor-pointer"
+              >
+                <option value="">Choisir une matière…</option>
+                {MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
+                <option value="__autre__">Autre</option>
+              </select>
+              {materialSelect === '__autre__' && (
+                <input
+                  type="text"
+                  maxLength={80}
+                  placeholder="Ex : 100% coton, mélange…"
+                  value={materialCustom}
+                  onChange={(e) => setMaterialCustom(e.target.value)}
+                  className="input-field mt-2"
+                />
+              )}
             </div>
 
             <div>
