@@ -240,7 +240,8 @@ export default function Home() {
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="hidden sm:block px-3 py-2.5 text-sm text-nout-muted bg-transparent outline-none border-l border-gray-200 cursor-pointer max-w-[160px]"
+              aria-label="Filtrer par ville"
+              className="hidden sm:block px-3 py-2.5 text-sm text-nout-texte bg-transparent outline-none border-l border-gray-200 cursor-pointer max-w-[160px]"
             >
               {REUNION_CITIES_WITH_ALL.map(c => (
                 <option key={c} value={c}>{c}</option>
@@ -248,7 +249,7 @@ export default function Home() {
             </select>
             <button
               type="submit"
-              className="flex-shrink-0 bg-nout-turquoise hover:bg-nout-dark-pri text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
+              className="flex-shrink-0 bg-[#007A6E] hover:bg-[#006B61] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
             >
               Rechercher
             </button>
