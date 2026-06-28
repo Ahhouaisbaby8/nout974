@@ -93,6 +93,7 @@ import Spinner from '../components/ui/Spinner'
 import ReportModal from '../components/ui/ReportModal'
 import ListingCard from '../components/ui/ListingCard'
 import SkeletonCard from '../components/ui/SkeletonCard'
+import ListingAttributes from '../components/ui/ListingAttributes'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -380,34 +381,8 @@ export default function ListingDetail() {
             </div>
           )}
 
-          {/* Détails vêtement / chaussure */}
-          {(listing.size || listing.brand || listing.material || listing.color) && (
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <h2 className="font-semibold text-nout-dark mb-3">Détails</h2>
-              <div className="flex flex-wrap gap-2">
-                {listing.size && (
-                  <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    Taille : <span className="font-semibold">{listing.size}</span>
-                  </span>
-                )}
-                {listing.color && (
-                  <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    Couleur : <span className="font-semibold">{listing.color}</span>
-                  </span>
-                )}
-                {listing.brand && (
-                  <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    Marque : <span className="font-semibold">{listing.brand}</span>
-                  </span>
-                )}
-                {listing.material && (
-                  <span className="bg-gray-50 border border-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded-lg">
-                    Matière : <span className="font-semibold">{listing.material}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Tableau d'attributs façon Vinted (catégorie, marque, taille, état, couleur, matière…) */}
+          <ListingAttributes listing={listing} />
 
           {/* Vendeur */}
           {seller && (
