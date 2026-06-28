@@ -11,7 +11,7 @@
 # positifs qui font echouer le build). Les vrais secrets serveur
 # (service_role, sk_live, RESEND, etc.) restent scannes normalement.
 [build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,VITE_VAPID_PUBLIC_KEY"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,SUPABASE_URL,VITE_SUPABASE_ANON_KEY,SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,STRIPE_PUBLIC_KEY,VITE_VAPID_PUBLIC_KEY,VAPID_PUBLIC_KEY"
 
 [functions]
   directory = "netlify/functions"
