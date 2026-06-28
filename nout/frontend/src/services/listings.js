@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export const getListings = async ({ category, subcategory, city, condition, brand, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
+export const getListings = async ({ category, subcategory, city, condition, brand, size, color, material, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
   let query = supabase
     .from('listings')
     .select(`*, profiles(id, username, avatar_url)`, { count: 'exact' })
@@ -15,9 +15,17 @@ export const getListings = async ({ category, subcategory, city, condition, bran
   if (city)      query = query.eq('city', city)
   if (condition) query = query.eq('condition', condition)
   if (brand)     query = query.eq('brand', brand)
+  if (size)      query = query.eq('size', size)
+  if (color)     query = query.eq('color', color)
+  if (material)  query = query.eq('material', material)
   if (minPrice)  query = query.gte('price', minPrice)
   if (maxPrice)  query = query.lte('price', maxPrice)
-  if (search)    query = query.ilike('title', `%${search}%`)
+  // Recherche multi-champs : titre + marque + description (avant : titre seul).
+  // On nettoie les caractères qui casseraient le filtre .or() de PostgREST (virgules / parenthèses).
+  if (search) {
+    const s = String(search).replace(/[,()]/g, ' ').trim()
+    if (s) query = query.or(`title.ilike.%${s}%,brand.ilike.%${s}%,description.ilike.%${s}%`)
+  }
 
   if (sortBy === 'price_asc')  query = query.order('price', { ascending: true })
   else if (sortBy === 'price_desc') query = query.order('price', { ascending: false })

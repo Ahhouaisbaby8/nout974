@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
-import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
+import { CATEGORIES, CONDITIONS, BRANDS, MATERIALS, COLORS, SIZES_VETEMENTS, SIZES_CHAUSSURES, SIZES_ENFANT } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
 import { Search as SearchIcon } from 'lucide-react'
 import ListingCard from '../components/ui/ListingCard'
@@ -27,6 +27,9 @@ export default function Search() {
   const [minPrice, setMinPrice] = useState(searchParams.get('min')       ?? '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max')       ?? '')
   const [sortBy,   setSortBy]   = useState(searchParams.get('tri')       ?? 'recent')
+  const [size,     setSize]     = useState(searchParams.get('taille')    ?? '')
+  const [color,    setColor]    = useState(searchParams.get('couleur')   ?? '')
+  const [material, setMaterial] = useState(searchParams.get('matiere')   ?? '')
   const [showFilters, setShowFilters] = useState(false)
 
   const [listings,  setListings]  = useState([])
@@ -43,10 +46,13 @@ export default function Search() {
     city:     (city && city !== 'Toute La Réunion') ? city : undefined,
     condition:condition || undefined,
     brand:    brand     || undefined,
+    size:     size      || undefined,
+    color:    color     || undefined,
+    material: material  || undefined,
     minPrice: minPrice  || undefined,
     maxPrice: maxPrice  || undefined,
     sortBy,
-  }), [query, category, subcategory, city, condition, brand, minPrice, maxPrice, sortBy])
+  }), [query, category, subcategory, city, condition, brand, size, color, material, minPrice, maxPrice, sortBy])
 
   const runSearch = useCallback(async (reset = true) => {
     const p = reset ? 1 : page + 1
@@ -92,11 +98,14 @@ export default function Search() {
     if (city && city !== 'Toute La Réunion') p.ville = city
     if (condition) p.etat     = condition
     if (brand)    p.marque    = brand
+    if (size)     p.taille    = size
+    if (color)    p.couleur   = color
+    if (material) p.matiere   = material
     if (minPrice) p.min       = minPrice
     if (maxPrice) p.max       = maxPrice
     if (sortBy !== 'recent') p.tri = sortBy
     setSearchParams(p, { replace: true })
-  }, [query, category, subcategory, city, condition, brand, minPrice, maxPrice, sortBy])
+  }, [query, category, subcategory, city, condition, brand, size, color, material, minPrice, maxPrice, sortBy])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -109,6 +118,9 @@ export default function Search() {
     setCity('Toute La Réunion')
     setCondition('')
     setBrand('')
+    setSize('')
+    setColor('')
+    setMaterial('')
     setMinPrice('')
     setMaxPrice('')
     setSortBy('recent')
@@ -121,6 +133,10 @@ export default function Search() {
   }
 
   const subOptions = CATEGORIES.find(c => c.id === category)?.sub ?? []
+  const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
+    : category === 'vetements-enfant' ? SIZES_ENFANT
+    : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
+    : SIZES_VETEMENTS
   const catLabel  = CATEGORIES.find(c => c.id === category)?.label
   const subLabel  = subOptions.find(s => s.id === subcategory)?.label
   const cityLabel = (city && city !== 'Toute La Réunion') ? city : 'La Réunion'
@@ -136,7 +152,7 @@ export default function Search() {
     return () => { document.title = 'NOUT — Marketplace seconde main La Réunion 974' }
   }, [heading])
 
-  const hasFilters = category || subcategory || (city && city !== 'Toute La Réunion') || condition || brand || minPrice || maxPrice
+  const hasFilters = category || subcategory || (city && city !== 'Toute La Réunion') || condition || brand || size || color || material || minPrice || maxPrice
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -207,6 +223,30 @@ export default function Search() {
             <select value={brand} onChange={(e) => setBrand(e.target.value)} className="input-field text-sm py-2">
               <option value="">Toutes</option>
               {BRANDS.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Taille</label>
+            <select value={size} onChange={(e) => setSize(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Couleur</label>
+            <select value={color} onChange={(e) => setColor(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Matière</label>
+            <select value={material} onChange={(e) => setMaterial(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
 
