@@ -1,3 +1,20 @@
 User-agent: *
 Allow: /
+
+# Pages privées / transactionnelles : pas de crawl ni d'indexation
+Disallow: /admin
+Disallow: /compte
+Disallow: /commander
+Disallow: /paiement-succes
+Disallow: /commandes
+Disallow: /messages
+Disallow: /favoris
+Disallow: /notifications
+Disallow: /espace-vendeur
+Disallow: /publier
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /compte-active
+Disallow: /parametres
+
 Sitemap: https://nout.re/sitemap.xml

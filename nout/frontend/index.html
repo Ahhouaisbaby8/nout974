@@ -28,14 +28,17 @@
     <meta name="description" content="Achetez et vendez vos articles de seconde main à La Réunion. La marketplace 100 % réunionnaise entre particuliers." />
     <meta name="keywords" content="vente, achat, seconde main, La Réunion, 974, occasion, marketplace, NOUT" />
     <meta name="author" content="NOUT 974" />
+    <link rel="canonical" href="https://nout.re/" />
 
     <!-- Open Graph (WhatsApp, Facebook, LinkedIn, etc.) -->
     <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://nout.re/" />
     <meta property="og:title"       content="NOUT — Marketplace seconde main La Réunion 974" />
     <meta property="og:description" content="Achetez et vendez vos articles de seconde main à La Réunion. La marketplace 100 % réunionnaise." />
     <meta property="og:image"       content="https://nout.re/og-image.png" />
     <meta property="og:image:width"  content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"    content="NOUT 974 — Marketplace de seconde main à La Réunion" />
     <meta property="og:locale"      content="fr_FR" />
     <meta property="og:site_name"   content="NOUT 974" />
 
@@ -44,6 +47,37 @@
     <meta name="twitter:title"       content="NOUT — Marketplace seconde main La Réunion 974" />
     <meta name="twitter:description" content="Achetez et vendez vos articles de seconde main à La Réunion." />
     <meta name="twitter:image"       content="https://nout.re/og-image.png" />
+
+    <!-- Données structurées : Organisation + site (SEO / Knowledge Panel) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://nout.re/#organization",
+          "name": "NOUT 974",
+          "url": "https://nout.re/",
+          "logo": "https://nout.re/nout-icon-512.png",
+          "description": "La marketplace 100 % réunionnaise de seconde main entre particuliers.",
+          "areaServed": { "@type": "Place", "name": "La Réunion (974)" }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://nout.re/#website",
+          "url": "https://nout.re/",
+          "name": "NOUT 974",
+          "inLanguage": "fr-FR",
+          "publisher": { "@id": "https://nout.re/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": { "@type": "EntryPoint", "urlTemplate": "https://nout.re/recherche?q={search_term_string}" },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
