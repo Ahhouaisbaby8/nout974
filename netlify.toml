@@ -4,6 +4,15 @@
   publish = "dist"
   edge_functions = "netlify/edge-functions"
 
+# Cles PUBLIQUES exposees volontairement dans le bundle client (Vite n'expose
+# que les variables prefixees VITE_). Ce ne sont pas des secrets : cle anon
+# Supabase (protegee par RLS), cle publishable Stripe, URL projet Supabase,
+# cle VAPID publique. On les exclut du scanner de secrets Netlify (faux
+# positifs qui font echouer le build). Les vrais secrets serveur
+# (service_role, sk_live, RESEND, etc.) restent scannes normalement.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,VITE_VAPID_PUBLIC_KEY"
+
 [functions]
   directory = "netlify/functions"
 
