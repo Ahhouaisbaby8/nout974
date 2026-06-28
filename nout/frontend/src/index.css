@@ -89,6 +89,13 @@
   100% { transform: translate(-14vw, 11vh) rotate(-5deg) scale(0.5)  scaleX(-1); opacity: 0; }
 }
 
+/* Vol déclenché au clic sur l'oiseau (easter egg) : s'envole en diagonale vers le haut-droite */
+@keyframes pailleTakeoff {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  15%  { transform: translate(4vw, 4vh) rotate(10deg) scale(1.05); }   /* petit plongeon */
+  100% { transform: translate(120vw, -40vh) rotate(-18deg) scale(0.6); opacity: 0; }
+}
+
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
