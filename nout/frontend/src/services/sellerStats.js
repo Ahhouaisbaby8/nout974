@@ -1,5 +1,17 @@
 import { supabase } from './supabase'
 
+// Stats PUBLIQUES d'un vendeur (affichées sur son profil) : nombre de ventes finalisées.
+// Léger et sans données sensibles — juste le compteur de ventes pour la preuve sociale.
+export const getPublicSellerStats = async (sellerId) => {
+  if (!sellerId) return { nbVentes: 0 }
+  const { count } = await supabase
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('seller_id', sellerId)
+    .in('status', ['completed', 'payout_pending'])
+  return { nbVentes: count ?? 0 }
+}
+
 // Agrège toutes les données business d'un vendeur pour l'Espace Vendeur.
 // Le vendeur reçoit le PRIX DE SON ARTICLE (listing.price), pas le total payé par l'acheteur
 // (qui inclut frais de protection + port). C'est ce montant net qui compte pour ses gains.

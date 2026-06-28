@@ -3,7 +3,7 @@ import { supabase } from './supabase'
 export const getSellerReviews = async (sellerId) => {
   const { data, error } = await supabase
     .from('reviews')
-    .select(`*, buyer:profiles!reviews_reviewer_id_fkey(id, username, avatar_url)`)
+    .select(`*, buyer:profiles!reviewer_id(id, username, avatar_url)`)
     .eq('seller_id', sellerId)
     .order('created_at', { ascending: false })
   if (error) throw error

@@ -15,6 +15,7 @@ import BackButton from '../components/ui/BackButton'
 import ReportModal from '../components/ui/ReportModal'
 import { resolveFounder, FounderRing } from '../components/ui/FounderBadge'
 import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCounts } from '../services/follow'
+import { getPublicSellerStats } from '../services/sellerStats'
 
 export default function Profile() {
   const { id } = useParams()
@@ -32,6 +33,7 @@ export default function Profile() {
   const [following, setFollowing]   = useState(false)   // suis-je abonné à ce profil ?
   const [followBusy, setFollowBusy] = useState(false)   // requête en cours
   const [counts, setCounts] = useState({ followers: 0, following: 0 })
+  const [nbVentes, setNbVentes] = useState(0)
 
   const isOwnProfile = user?.id === id
 
@@ -82,8 +84,9 @@ export default function Profile() {
         ])
         setListings(l.filter(a => !a.is_sold && a.is_active))
         setReviews(r)
-        // Compteurs abonnés/abonnements + statut (non-bloquants)
+        // Compteurs abonnés/abonnements + ventes + statut (non-bloquants)
         getFollowCounts(id).then(setCounts).catch(() => {})
+        getPublicSellerStats(id).then(s => setNbVentes(s.nbVentes)).catch(() => {})
         if (user && user.id !== id) {
           checkFollowing(user.id, id).then(setFollowing).catch(() => {})
         }
@@ -237,11 +240,21 @@ export default function Profile() {
             {profile.bio && (
               <p className="text-sm text-gray-600 leading-relaxed mb-2">{profile.bio}</p>
             )}
-            {/* Badge de confiance : email confirmé (tout compte NOUT a un email vérifié via Supabase Auth) */}
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#1A3A8F] bg-[#1A3A8F]/8 px-2.5 py-1 rounded-full mb-2">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
-              Email confirmé
-            </span>
+            {/* Badges de confiance (wrappent sur mobile) */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {/* Email confirmé : tout compte NOUT a un email vérifié via Supabase Auth */}
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#1A3A8F] bg-[#1A3A8F]/8 px-2.5 py-1 rounded-full">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                Email confirmé
+              </span>
+              {/* Téléphone vérifié : affiché si l'utilisateur a renseigné un numéro */}
+              {profile.has_phone && (
+                <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-700 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>
+                  Téléphone vérifié
+                </span>
+              )}
+            </div>
             <p className="text-xs text-gray-400">
               Membre depuis {formatRelativeDate(profile.created_at)}
             </p>
@@ -249,7 +262,7 @@ export default function Profile() {
           <div className="flex flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
             {isOwnProfile ? (
               <>
-                <Link to="/parametres" className="btn-secondary px-5 py-2 text-sm text-center">
+                <Link to="/compte/profil" className="btn-secondary px-5 py-2 text-sm text-center">
                   Modifier mon profil
                 </Link>
                 <button onClick={handleShareProfile} className="btn-secondary px-5 py-2 text-sm">
@@ -297,12 +310,12 @@ export default function Profile() {
       {/* ── MINI-STATS ── */}
       <div className="grid grid-cols-4 gap-3 mt-4">
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.followers}</p>
-          <p className="text-[11px] text-nout-muted mt-1">abonné{counts.followers !== 1 ? 's' : ''}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{nbVentes}</p>
+          <p className="text-[11px] text-nout-muted mt-1">vente{nbVentes !== 1 ? 's' : ''}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.following}</p>
-          <p className="text-[11px] text-nout-muted mt-1">abonnement{counts.following !== 1 ? 's' : ''}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.followers}</p>
+          <p className="text-[11px] text-nout-muted mt-1">abonné{counts.followers !== 1 ? 's' : ''}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{listings.length}</p>

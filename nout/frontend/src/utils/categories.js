@@ -6,6 +6,7 @@ export const CATEGORIES = [
   { id: 'accessoires',       label: 'Accessoires'        },
   { id: 'sacs',              label: 'Sacs'               },
   { id: 'beaute',            label: 'Beauté / Bien-être' },
+  { id: 'electronique',      label: 'Électronique'       },
 ]
 
 export const CONDITIONS = [

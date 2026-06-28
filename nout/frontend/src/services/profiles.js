@@ -10,15 +10,17 @@ export const getProfile = async (userId) => {
   return data
 }
 
-// Profil public : champs affichables uniquement — sans IBAN, téléphone, stripe_account_id
+// Profil public : champs affichables uniquement — sans IBAN, téléphone, stripe_account_id.
+// On expose un booléen has_phone (badge "Téléphone vérifié") SANS jamais renvoyer le numéro.
 export const getPublicProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge')
+    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge, phone')
     .eq('id', userId)
     .single()
   if (error) throw error
-  return data
+  const { phone, ...pub } = data
+  return { ...pub, has_phone: !!(phone && phone.trim()) }
 }
 
 export const updateProfile = async (userId, updates) => {
