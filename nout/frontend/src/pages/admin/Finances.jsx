@@ -6,14 +6,23 @@ export default function AdminFinances() {
   const [stats, setStats] = useState(null)
 
   useEffect(() => {
+    // Port par mode (synchro avec shipping.js) pour isoler la commission réelle NOUT
+    const PORT = { hand: 0, relay: 6.51, home: 10.80 }
     Promise.all([
-      supabase.from('orders').select('total_price').eq('status', 'paid'),
+      supabase.from('orders').select('total_price, seller_payout, shipping_method').eq('status', 'paid'),
       supabase.from('orders').select('total_price').eq('status', 'delivered'),
       supabase.from('orders').select('*', { count: 'exact', head: true }),
     ]).then(([paid, delivered, total]) => {
-      const paidTotal      = (paid.data ?? []).reduce((s, o) => s + Number(o.total_price), 0)
+      const paidRows       = paid.data ?? []
+      const paidTotal      = paidRows.reduce((s, o) => s + Number(o.total_price), 0)
       const deliveredTotal = (delivered.data ?? []).reduce((s, o) => s + Number(o.total_price), 0)
-      setStats({ paidTotal, commission: paidTotal * 0.05, deliveredTotal, totalOrders: total.count ?? 0 })
+      // Commission NOUT = total encaissé − reversé au vendeur − port (reversé au transporteur)
+      const commission = paidRows.reduce((s, o) => {
+        const port = PORT[o.shipping_method] ?? 0
+        const payout = o.seller_payout != null ? Number(o.seller_payout) : Number(o.total_price) * 0.10
+        return s + (Number(o.total_price) - payout - port)
+      }, 0)
+      setStats({ paidTotal, commission, deliveredTotal, totalOrders: total.count ?? 0 })
     })
   }, [])
 
@@ -25,7 +34,7 @@ export default function AdminFinances() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Volume total payé',     value: formatPrice(stats.paidTotal),      icon: '' },
-            { label: 'Commission NOUT (5%)',  value: formatPrice(stats.commission),      icon: '', color: 'text-green-600' },
+            { label: 'Commission NOUT (10% + 0,25€)',  value: formatPrice(stats.commission),      icon: '', color: 'text-green-600' },
             { label: 'Volume livré',           value: formatPrice(stats.deliveredTotal), icon: '' },
             { label: 'Total commandes',        value: stats.totalOrders,                icon: '' },
           ].map(({ label, value, icon, color }) => (
@@ -41,7 +50,7 @@ export default function AdminFinances() {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <h2 className="font-bold text-nout-dark mb-2">Configuration Stripe</h2>
         <p className="text-sm text-gray-500 leading-relaxed">
-          Les paiements sont gérés via <strong>Stripe Connect</strong>. NOUT prélève automatiquement <strong>1 € fixe + 5 %</strong> de commission. Les vendeurs reçoivent le solde sur leur compte bancaire via Stripe Express.
+          Les paiements sont gérés via <strong>Stripe Connect</strong>. NOUT prélève automatiquement <strong>10 % + 0,25 €</strong> de commission sur le vendeur. Les vendeurs reçoivent le solde sur leur compte bancaire via Stripe Express.
         </p>
         <p className="text-xs text-gray-400 mt-2">Dashboard complet sur <strong>dashboard.stripe.com</strong></p>
       </div>

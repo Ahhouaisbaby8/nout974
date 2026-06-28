@@ -100,7 +100,7 @@ export default function ReglementCatalogue() {
           'Le prix doit être exprimé en euros (€)',
           'Le prix doit être cohérent avec l\'état et la valeur de l\'article',
           'Les prix manifestement excessifs ou abusifs pourront être signalés',
-          'NOUT prélève 5 % + 1 € par transaction réussie, à la charge de l\'acheteur (voir CGV)',
+          'NOUT prélève 10 % + 0,25 € par transaction réussie, à la charge du vendeur (voir CGV)',
         ]} />
       </Section>
 

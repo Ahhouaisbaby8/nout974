@@ -10,8 +10,8 @@ export default function CGV() {
       </Section>
 
       <Section title="2. Prix et commission">
-        <P>Les prix sont fixés librement par les vendeurs en euros (€), toutes charges comprises. NOUT prélève une commission de <strong>5 % + 1 €</strong> par transaction, à la charge de l'acheteur au moment du paiement. Aucun frais n'est prélevé sur le vendeur.</P>
-        <P>Cette commission couvre les frais de traitement du paiement, la protection acheteur et le maintien de la plateforme.</P>
+        <P>Les prix sont fixés librement par les vendeurs en euros (€), toutes charges comprises. NOUT prélève une commission de <strong>10 % + 0,25 €</strong> par transaction, à la charge du vendeur, déduite du montant qui lui est reversé. L'acheteur paie le prix affiché par le vendeur, augmenté le cas échéant des frais de port s'il opte pour une livraison.</P>
+        <P>Cette commission couvre les frais de traitement du paiement, la protection des transactions et le maintien de la plateforme.</P>
       </Section>
 
       <Section title="3. Paiement">
