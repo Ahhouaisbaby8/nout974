@@ -3,16 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { CATEGORIES } from '../utils/categories'
 import { ChevronDown } from 'lucide-react'
 
-// Parcourir par catégorie — GRILLE de tuiles qui passe à la ligne (zéro scroll, plus de flèche).
-// Desktop : SURVOL d'une tuile → ouvre ses sous-catégories (façon Vinted, sans clic).
-// Mobile : clic → ouvre les sous-catégories. (Sans icônes.)
+// Parcourir par catégorie — GRILLE de tuiles (zéro scroll, plus de flèche).
+// Ouverture des sous-catégories au SURVOL avec "hover-intent" : il faut RESTER ~160 ms
+// sur une tuile pour l'ouvrir. Du coup, en descendant la souris vers le panneau on
+// traverse les autres tuiles SANS les déclencher (fini le changement de catégorie accidentel).
+// Clic = ouverture immédiate (et mobile).
 export default function CategoryMenu() {
   const navigate = useNavigate()
   const [openId, setOpenId] = useState(null)
+  const openTimer  = useRef(null)
   const closeTimer = useRef(null)
   const wrapRef = useRef(null)
 
-  useEffect(() => () => clearTimeout(closeTimer.current), [])
+  useEffect(() => () => { clearTimeout(openTimer.current); clearTimeout(closeTimer.current) }, [])
 
   // Ferme le panneau au clic en dehors (utile mobile)
   useEffect(() => {
@@ -26,13 +29,28 @@ export default function CategoryMenu() {
   const goCategory = (catId) => { setOpenId(null); navigate(`/recherche?categorie=${catId}`) }
   const goSub      = (catId, subId) => { setOpenId(null); navigate(`/recherche?categorie=${catId}&sous=${subId}`) }
 
-  const handleEnter = (id) => { clearTimeout(closeTimer.current); setOpenId(id) }
-  const handleLeave = () => { closeTimer.current = setTimeout(() => setOpenId(null), 150) }
+  // Survol d'une tuile : on programme l'ouverture après un court délai (intent).
+  const handleTileEnter = (id) => {
+    clearTimeout(closeTimer.current)
+    clearTimeout(openTimer.current)
+    openTimer.current = setTimeout(() => setOpenId(id), 160)
+  }
+  // On quitte une tuile sans s'être arrêté → on annule l'ouverture en attente
+  // (c'est ce qui permet de traverser les tuiles vers le panneau sans rien déclencher).
+  const handleTileLeave = () => clearTimeout(openTimer.current)
+
+  // On quitte toute la zone → fermeture douce
+  const handleWrapLeave = () => {
+    clearTimeout(openTimer.current)
+    closeTimer.current = setTimeout(() => setOpenId(null), 220)
+  }
+  // Sur le panneau : on annule toute fermeture/ouverture en attente
+  const cancelTimers = () => { clearTimeout(closeTimer.current); clearTimeout(openTimer.current) }
 
   const openCat = CATEGORIES.find(c => c.id === openId)
 
   return (
-    <div ref={wrapRef} className="relative" onMouseLeave={handleLeave}>
+    <div ref={wrapRef} className="relative" onMouseLeave={handleWrapLeave}>
 
       {/* Grille de tuiles : passe à la ligne proprement, aucune barre scrollable ni flèche. */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
@@ -42,11 +60,9 @@ export default function CategoryMenu() {
           return (
             <button
               key={cat.id}
-              onMouseEnter={() => hasSub && handleEnter(cat.id)}
-              onClick={() => {
-                if (hasSub && openId !== cat.id) setOpenId(cat.id)
-                else goCategory(cat.id)
-              }}
+              onMouseEnter={() => hasSub && handleTileEnter(cat.id)}
+              onMouseLeave={handleTileLeave}
+              onClick={() => { cancelTimers(); hasSub ? setOpenId(isOpen ? null : cat.id) : goCategory(cat.id) }}
               aria-expanded={hasSub ? isOpen : undefined}
               className={`flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl border text-[13px] font-medium text-left transition-all duration-150 cursor-pointer ${
                 isOpen
@@ -64,7 +80,7 @@ export default function CategoryMenu() {
       {/* Panneau sous-catégories — superposé sous la grille, pleine largeur. */}
       {openCat?.sub?.length > 0 && (
         <div
-          onMouseEnter={() => clearTimeout(closeTimer.current)}
+          onMouseEnter={cancelTimers}
           className="absolute left-0 right-0 top-full mt-2 z-40 bg-white rounded-2xl shadow-xl border border-[#ECEFF4] p-4 animate-fade-in max-h-[60vh] overflow-y-auto"
         >
           <button
