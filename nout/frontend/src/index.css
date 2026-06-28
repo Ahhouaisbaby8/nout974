@@ -89,18 +89,14 @@
   100% { transform: translate(-14vw, 11vh) rotate(-5deg) scale(0.5)  scaleX(-1); opacity: 0; }
 }
 
-/* Vol déclenché au clic (easter egg) : l'oiseau traverse le hero en planant doucement
-   (léger mouvement vertical = vol naturel), sort à droite, réapparaît à gauche et revient
-   se poser. Même esprit fluide que le vol automatique pailleFly1. */
+/* Vol déclenché au clic (easter egg) : l'oiseau traverse le hero en LIGNE DROITE
+   (même hauteur, aucun mouvement vertical), sort à droite, réapparaît à gauche et
+   revient se poser exactement à sa place. Lent et régulier. */
 @keyframes pailleTour {
-  0%    { transform: translate(0, 0)        scale(1);    opacity: 1; }
-  20%   { transform: translate(28vw, -6vh)  scale(0.96); opacity: 1; }   /* plane, monte un peu */
-  40%   { transform: translate(60vw, 3vh)   scale(0.9);  opacity: 1; }   /* redescend doucement */
-  49%   { transform: translate(108vw, -2vh) scale(0.88); opacity: 1; }   /* sort par la droite */
-  50%   { transform: translate(-108vw, -2vh) scale(0.88); opacity: 1; }  /* réapparaît à gauche (saut invisible) */
-  72%   { transform: translate(-50vw, 4vh)  scale(0.92); opacity: 1; }   /* plane en revenant */
-  90%   { transform: translate(-12vw, -3vh) scale(0.98); opacity: 1; }   /* approche finale */
-  100%  { transform: translate(0, 0)        scale(1);    opacity: 1; }   /* se repose au départ */
+  0%    { transform: translateX(0); }
+  49%   { transform: translateX(110vw); }    /* traverse et sort par la droite */
+  50%   { transform: translateX(-110vw); }   /* réapparaît à gauche (saut invisible hors champ) */
+  100%  { transform: translateX(0); }        /* revient se poser au départ */
 }
 
 @layer utilities {
