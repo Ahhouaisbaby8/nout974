@@ -47,6 +47,8 @@ import Orders        from './pages/Orders'
 import Favorites     from './pages/Favorites'
 import Notifications  from './pages/Notifications'
 import Settings      from './pages/Settings'
+import AccountLayout   from './pages/account/AccountLayout'
+import AccountSecurity from './pages/account/AccountSecurity'
 import SellerSpace   from './pages/SellerSpace'
 
 // Admin
@@ -135,7 +137,20 @@ function AppShell() {
           <Route path="/espace-vendeur" element={<PrivateRoute><SellerSpace /></PrivateRoute>} />
           <Route path="/favoris"    element={<PrivateRoute><Favorites /></PrivateRoute>} />
           <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-          <Route path="/parametres" element={<PrivateRoute><Settings /></PrivateRoute>} />
+
+          {/* Espace compte — structure menu latéral */}
+          <Route path="/compte" element={<PrivateRoute><AccountLayout /></PrivateRoute>}>
+            <Route index element={<Navigate to="/compte/profil" replace />} />
+            <Route path="profil"        element={<Settings />} />
+            <Route path="securite"      element={<AccountSecurity />} />
+            <Route path="paiements"     element={<Settings />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="fondateur"     element={<Settings />} />
+            <Route path="supprimer"     element={<Settings />} />
+          </Route>
+
+          {/* Ancienne route paramètres → redirige vers le nouvel espace compte */}
+          <Route path="/parametres" element={<Navigate to="/compte/profil" replace />} />
 
           {/* Admin */}
           <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>

@@ -5,7 +5,6 @@ import { supabase } from '../services/supabase'
 import { uploadAvatar } from '../services/profiles'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
-import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
 
 export default function Settings() {
@@ -174,9 +173,8 @@ export default function Settings() {
         onCancel={handleAvatarCropCancel}
       />
     )}
-    <div className="max-w-lg mx-auto px-4 py-6">
-      <BackButton />
-      <h1 className="text-2xl font-extrabold text-nout-dark mt-4 mb-6">Mon profil</h1>
+    <div>
+      <h1 className="font-title text-[22px] font-bold text-nout-texte mb-6">Mon profil</h1>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-5">

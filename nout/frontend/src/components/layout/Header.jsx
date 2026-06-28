@@ -58,7 +58,7 @@ export default function Header() {
       { to: '/commandes?tab=ventes', icon: <Package className={ICON} />, label: 'Mes ventes' },
     ],
     [
-      { to: '/parametres', icon: <SettingsIcon className={ICON} />, label: 'Paramètres' },
+      { to: '/compte', icon: <SettingsIcon className={ICON} />, label: 'Mon compte' },
     ],
   ]
 
