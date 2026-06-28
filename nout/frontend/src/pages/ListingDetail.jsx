@@ -13,6 +13,7 @@ import { getSellerRating } from '../services/reviews'
 import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, getShippingFee } from '../utils/shipping'
 import { Truck, Home as HomeIcon, Store, ShieldCheck } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
+import { detailUrl, thumbUrl } from '../utils/image'
 
 const SHIP_ICONS = { hand: Store, relay: MapPin, home: HomeIcon }
 
@@ -312,8 +313,11 @@ export default function ListingDetail() {
           <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
             {images ? (
               <img
-                src={images[photoIdx]}
+                src={detailUrl(images[photoIdx])}
                 alt={listing.title}
+                width="900"
+                height="900"
+                fetchPriority="high"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -329,7 +333,7 @@ export default function ListingDetail() {
                   onClick={() => setPhotoIdx(i)}
                   className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${i === photoIdx ? 'border-nout-primary' : 'border-transparent'}`}
                 >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <img src={thumbUrl(url)} alt="" loading="lazy" width="64" height="64" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

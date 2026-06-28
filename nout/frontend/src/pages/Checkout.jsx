@@ -9,6 +9,7 @@ import {
 } from '../utils/shipping'
 import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
+import { thumbUrl } from '../utils/image'
 import Spinner from '../components/ui/Spinner'
 
 const SHIP_ICONS = { hand: Store, relay: MapPin, home: HomeIcon }
@@ -54,7 +55,7 @@ export default function Checkout() {
   const portFee       = getShippingFee(shipMethod)
   const totalAcheteur = computeBuyerTotal(listing.price, shipMethod)
   const isDelivery    = portFee > 0
-  const imageUrl      = listing.images?.[0] ?? null
+  const imageUrl      = thumbUrl(listing.images?.[0] ?? null)
 
   const handlePay = async () => {
     if (isDelivery && (!shipPhone.trim() || !shipAddress.trim() || !shipCity.trim() || !shipPostcode.trim())) {

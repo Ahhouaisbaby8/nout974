@@ -7,6 +7,7 @@ import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
 import { computeBuyerTotal, getShippingFee } from '../../utils/shipping'
+import { thumbUrl } from '../../utils/image'
 
 const SHIPPING_RELAY_FEE = getShippingFee('relay')
 import { FounderCardBadge } from './FounderBadge'
@@ -19,10 +20,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
   const [pulse, setPulse]     = useState(false)
   const [modal, setModal]     = useState(null)   // 'price' | 'protection' | null
 
-  const rawImage  = listing.images?.[0] ?? null
-  const imageUrl  = rawImage?.includes('supabase.co/storage')
-    ? `${rawImage}?width=400&height=400&resize=cover`
-    : rawImage
+  const imageUrl  = thumbUrl(listing.images?.[0] ?? null)
   const category      = CATEGORIES.find(c => c.id === listing.category)
   const conditionLabel = CONDITIONS.find(c => c.id === listing.condition)?.label
   const views         = listing.views ?? 0
