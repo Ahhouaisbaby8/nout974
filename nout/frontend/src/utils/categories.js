@@ -71,6 +71,17 @@ export const CATEGORIES = [
       { id: 'elec-jeuxvideo',  label: 'Jeux vidéo' },
     ],
   },
+  {
+    id: 'createurs', label: 'Fait main · Créateurs 974',
+    sub: [
+      { id: 'crea-bijoux',     label: 'Bijoux & accessoires' },
+      { id: 'crea-vetements',  label: 'Vêtements & textile' },
+      { id: 'crea-deco',       label: 'Déco & maison' },
+      { id: 'crea-beaute',     label: 'Savons & cosmétiques' },
+      { id: 'crea-art',        label: 'Art & illustrations' },
+      { id: 'crea-autres',     label: 'Autres créations' },
+    ],
+  },
 ]
 
 export const CONDITIONS = [

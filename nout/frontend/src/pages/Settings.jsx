@@ -6,6 +6,7 @@ import { uploadAvatar } from '../services/profiles'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
 import CropModal from '../components/ui/CropModal'
+import { Palette } from 'lucide-react'
 
 export default function Settings() {
   const { user, profile, updateProfile, logout } = useAuth()
@@ -14,6 +15,8 @@ export default function Settings() {
   const [bio, setBio]           = useState(profile?.bio ?? '')
   const [phone, setPhone]       = useState(profile?.phone ?? '')
   const [city, setCity]         = useState(profile?.city ?? '')
+  const [isCreator, setIsCreator]     = useState(profile?.is_creator ?? false)
+  const [creatorCraft, setCreatorCraft] = useState(profile?.creator_craft ?? '')
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [avatarFile, setAvatarFile]       = useState(null)
   const [cropSrc, setCropSrc]             = useState(null)
@@ -85,6 +88,8 @@ export default function Settings() {
         bio:      clean(bio.trim()),
         phone:    clean(phone.trim()),
         city,
+        is_creator:    isCreator,
+        creator_craft: isCreator ? clean(creatorCraft.trim()) : null,
       })
       setSuccess(true)
       setAvatarFile(null)
@@ -274,6 +279,43 @@ export default function Settings() {
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
+          </div>
+
+          {/* Créateur péi : déclaration auto (Phase 1). Affiche un badge + place dans la vitrine. */}
+          <div className="rounded-xl border border-[#B9E5E1] bg-[#EAF6F5] p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isCreator}
+                onChange={(e) => setIsCreator(e.target.checked)}
+                className="mt-0.5 w-5 h-5 accent-[#0E7FAB] cursor-pointer flex-shrink-0"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-[#0E7FAB] flex items-center gap-1.5">
+                  <Palette className="w-4 h-4" /> Je suis créateur péi
+                </span>
+                <span className="block text-[12px] text-gray-600 mt-0.5">
+                  Tu fabriques toi-même tes articles à La Réunion (bijoux, vêtements, déco…).
+                  Tu obtiens un badge « Créateur péi » et tu apparais dans la vitrine des créateurs.
+                </span>
+              </span>
+            </label>
+
+            {isCreator && (
+              <div className="mt-3">
+                <label className="block text-[12px] font-medium text-nout-dark mb-1">
+                  Ton activité <span className="text-gray-400 font-normal">(optionnel)</span>
+                </label>
+                <input
+                  type="text"
+                  maxLength={80}
+                  placeholder="Ex : Bijoux en graines péi, couture créole…"
+                  value={creatorCraft}
+                  onChange={(e) => setCreatorCraft(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+            )}
           </div>
         </div>
 

@@ -29,7 +29,7 @@ export const getListings = async ({ category, subcategory, city, condition, bran
 export const getListingById = async (id) => {
   const { data, error } = await supabase
     .from('listings')
-    .select(`*, profiles(id, username, avatar_url, created_at)`)
+    .select(`*, profiles(id, username, avatar_url, created_at, is_creator)`)
     .eq('id', id)
     .single()
 
@@ -68,7 +68,25 @@ export const updateListing = async (id, updates) => {
   return data
 }
 
+// Statuts de commande qui représentent une VENTE ACTIVE : on interdit alors de
+// supprimer l'annonce (sinon on perdrait la trace d'une transaction en cours).
+const ACTIVE_ORDER_STATUSES = ['paid', 'shipped', 'delivered', 'disputed', 'payout_pending']
+
 export const deleteListing = async (id) => {
+  // Garde-fou : refuser la suppression si une vente est en cours sur cette annonce.
+  const { data: activeOrders, error: checkError } = await supabase
+    .from('orders')
+    .select('id, status')
+    .eq('listing_id', id)
+    .in('status', ACTIVE_ORDER_STATUSES)
+    .limit(1)
+  if (checkError) throw checkError
+  if (activeOrders && activeOrders.length > 0) {
+    const err = new Error('Cette annonce a une vente en cours et ne peut pas être supprimée. Tu peux la marquer comme vendue.')
+    err.code = 'ACTIVE_ORDER'
+    throw err
+  }
+
   const { error } = await supabase.from('listings').delete().eq('id', id)
   if (error) throw error
 }

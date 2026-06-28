@@ -15,12 +15,25 @@ export const getProfile = async (userId) => {
 export const getPublicProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge, phone')
+    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge, is_creator, creator_craft, phone')
     .eq('id', userId)
     .single()
   if (error) throw error
   const { phone, ...pub } = data
   return { ...pub, has_phone: !!(phone && phone.trim()) }
+}
+
+// Liste les créateurs péi (pour la page vitrine « Nos créateurs »).
+// Champs publics uniquement, triés du plus récent au plus ancien.
+export const getCreators = async (limit = 60) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, city, creator_craft, created_at')
+    .eq('is_creator', true)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data ?? []
 }
 
 export const updateProfile = async (userId, updates) => {

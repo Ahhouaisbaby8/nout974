@@ -94,6 +94,7 @@ import ReportModal from '../components/ui/ReportModal'
 import ListingCard from '../components/ui/ListingCard'
 import SkeletonCard from '../components/ui/SkeletonCard'
 import ListingAttributes from '../components/ui/ListingAttributes'
+import CreatorBadge from '../components/ui/CreatorBadge'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -162,11 +163,13 @@ export default function ListingDetail() {
   const handleDelete = async () => {
     if (!confirm('Supprimer cette annonce définitivement ?')) return
     setDeleting(true)
+    setDeleteError('')
     try {
       await deleteListing(id)
       navigate('/')
-    } catch {
-      setDeleteError('Erreur lors de la suppression.')
+    } catch (err) {
+      // Affiche le vrai motif (vente en cours, etc.) plutôt qu'un message générique
+      setDeleteError(err?.message || 'Erreur lors de la suppression.')
       setDeleting(false)
     }
   }
@@ -402,7 +405,10 @@ export default function ListingDetail() {
                 </div>
               )}
               <div>
-                <p className="font-semibold text-nout-dark">{seller.username}</p>
+                <p className="font-semibold text-nout-dark flex items-center gap-2 flex-wrap">
+                  {seller.username}
+                  {seller.is_creator && <CreatorBadge size="sm" />}
+                </p>
                 {sellerRating && sellerRating.count > 0 ? (
                   <span className="flex items-center gap-1 text-[12px] font-semibold text-amber-500 mt-0.5">
                     <span></span>
