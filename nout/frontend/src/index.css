@@ -114,8 +114,10 @@
   .float-974  { animation: float974 7s ease-in-out infinite; }
   .twinkle    { animation: twinkle 3s ease-in-out infinite; }
   .paille-wing { transform-origin: center; animation: paillewing 1s ease-in-out infinite; }
+  /* Pas de delay : les 2 oiseaux démarrent leur traversée tout de suite (durées différentes
+     21s/29s = ils ne se synchronisent jamais). Évite l'oiseau figé près du logo pendant un delay. */
   .paille-fly1 { animation: pailleFly1 21s linear infinite; }
-  .paille-fly2 { animation: pailleFly2 29s linear infinite; animation-delay: 7s; }
+  .paille-fly2 { animation: pailleFly2 29s linear infinite; }
 }
 
 @layer components {
