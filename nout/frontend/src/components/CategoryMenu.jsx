@@ -35,8 +35,10 @@ export default function CategoryMenu() {
     // Conteneur SANS overflow : le panneau peut déborder sans être coupé.
     <div ref={wrapRef} className="relative" onMouseLeave={handleLeave}>
 
-      {/* Barre de boutons scrollable horizontalement */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+      {/* Barre de boutons : mobile = défilement horizontal au doigt ; desktop = passage
+          à la ligne (wrap) pour que TOUTES les catégories soient visibles et atteignables
+          (la scrollbar est masquée, donc sans wrap les dernières seraient inatteignables à la souris). */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 md:flex-wrap md:overflow-x-visible">
         {CATEGORIES.map(cat => {
           const isOpen = openId === cat.id
           const hasSub = cat.sub?.length > 0
