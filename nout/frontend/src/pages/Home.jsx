@@ -44,13 +44,6 @@ export default function Home() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const heroRef = useHeroRef()   // pilote la navbar : transparente tant que le hero est visible
-  const [birdFlying, setBirdFlying] = useState(false)   // easter egg : oiseau qui s'envole au clic (1 à la fois)
-
-  const handleBirdClick = () => {
-    if (birdFlying) return            // pas de spam : un seul vol à la fois
-    setBirdFlying(true)
-    setTimeout(() => setBirdFlying(false), 14000)   // durée de l'animation pailleTour (traversée lente)
-  }
 
   const [search,   setSearch]   = useState('')
   const [city,     setCity]     = useState('Toute La Réunion')
@@ -166,31 +159,6 @@ export default function Home() {
             </svg>
           </div>
         ))}
-
-        {/* Oiseau cliquable (easter egg) en haut à gauche — au clic, un seul s'envole */}
-        <button
-          type="button"
-          onClick={handleBirdClick}
-          aria-label="Faire s'envoler le paille-en-queue"
-          className="absolute z-20 cursor-pointer bg-transparent border-0 p-2"
-          style={{
-            top: 'clamp(80px, 12vh, 150px)',
-            left: 'clamp(16px, 6vw, 90px)',
-            animation: birdFlying ? 'pailleTour 14s linear forwards' : 'float974 6s ease-in-out infinite',
-          }}
-        >
-          <svg width="52" height="32" viewBox="0 0 120 70" fill="none">
-            <ellipse cx="44" cy="34" rx="15" ry="6.5" fill="rgba(255,255,255,0.5)" />
-            <circle cx="59" cy="32" r="5.2" fill="rgba(255,255,255,0.5)" />
-            <path d="M64 31 L72 30 L64 33 Z" fill="rgba(255,190,100,0.55)" />
-            <g className="paille-wing">
-              <path d="M40 32 Q30 12 12 16 Q26 26 34 34 Z" fill="rgba(255,255,255,0.46)" />
-              <path d="M44 36 Q34 52 16 50 Q30 40 38 34 Z" fill="rgba(255,255,255,0.38)" />
-            </g>
-            <path d="M30 34 Q14 35 0 38" stroke="rgba(255,255,255,0.44)" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-            <path d="M30 35 Q15 39 2 44" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-          </svg>
-        </button>
 
         {/* 974 flottant en arrière-plan */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">

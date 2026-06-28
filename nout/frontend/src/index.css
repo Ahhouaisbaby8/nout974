@@ -89,16 +89,6 @@
   100% { transform: translate(-14vw, 11vh) rotate(-5deg) scale(0.5)  scaleX(-1); opacity: 0; }
 }
 
-/* Vol déclenché au clic (easter egg) : l'oiseau traverse le hero en LIGNE DROITE
-   (même hauteur, aucun mouvement vertical), sort à droite, réapparaît à gauche et
-   revient se poser exactement à sa place. Lent et régulier. */
-@keyframes pailleTour {
-  0%    { transform: translateX(0); }
-  49%   { transform: translateX(110vw); }    /* traverse et sort par la droite */
-  50%   { transform: translateX(-110vw); }   /* réapparaît à gauche (saut invisible hors champ) */
-  100%  { transform: translateX(0); }        /* revient se poser au départ */
-}
-
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;
