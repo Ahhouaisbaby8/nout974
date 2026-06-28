@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, avatar_url, bio, city, role, is_verified, is_banned, is_founder, founder_number, show_founder_badge, is_creator, creator_craft, created_at, updated_at')
         .eq('id', userId)
         .single()
       if (error) return
@@ -85,7 +85,15 @@ export function AuthProvider({ children }) {
         window.location.replace('/connexion')
         return
       }
-      setProfile(data)
+      // Champs sensibles du propriétaire (email/phone/iban/stripe) via fonction sécurisée :
+      // ils ne sont jamais lisibles publiquement sur la table. Échec silencieux si la
+      // migration SQL n'est pas encore passée (le profil reste utilisable).
+      let priv = {}
+      try {
+        const { data: acc } = await supabase.rpc('get_my_account')
+        if (Array.isArray(acc) && acc[0]) priv = acc[0]
+      } catch { /* RPC absente → champs sensibles indisponibles, pas de blocage */ }
+      setProfile({ ...data, ...priv })
     } catch {
       // profil non chargé — l'utilisateur reste connecté mais sans profil
     }

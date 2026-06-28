@@ -43,9 +43,10 @@ export const getSellerDashboard = async (sellerId) => {
     .eq('seller_id', sellerId)
 
   // 4. Profil vendeur — pour savoir si les paiements (Stripe/IBAN) sont configurés
+  // On ne lit QUE is_verified (public) — jamais l'IBAN/Stripe d'un vendeur tiers (fuite RGPD).
   const { data: profile } = await supabase
     .from('profiles')
-    .select('stripe_account_id, iban, is_verified')
+    .select('is_verified')
     .eq('id', sellerId)
     .single()
 
@@ -121,7 +122,7 @@ export const getSellerDashboard = async (sellerId) => {
     }))
 
   // Paiements configurés ?
-  const paiementsActifs = !!(profile?.stripe_account_id || profile?.iban)
+  const paiementsActifs = !!profile?.is_verified
 
   return {
     solde: {

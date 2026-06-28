@@ -11,7 +11,8 @@ export default function AdminRGPD() {
     if (!email.trim()) return
     setLoading(true); setResult('')
     try {
-      const { data: profile } = await supabase.from('profiles').select('*').eq('email', email).single()
+      const { data: accts } = await supabase.rpc('admin_accounts')
+      const profile = (accts ?? []).find(p => p.email?.toLowerCase() === email.trim().toLowerCase())
       if (!profile) { setResult('Aucun compte trouvé.'); return }
       const [{ data: listings }, { data: orders }, { data: messages }] = await Promise.all([
         supabase.from('listings').select('*').eq('user_id', profile.id),
@@ -30,7 +31,8 @@ export default function AdminRGPD() {
     if (!email.trim() || !confirm(`Supprimer définitivement le compte ${email} ?`)) return
     setLoading(true)
     try {
-      const { data: profile } = await supabase.from('profiles').select('id').eq('email', email).single()
+      const { data: accts } = await supabase.rpc('admin_accounts')
+      const profile = (accts ?? []).find(p => p.email?.toLowerCase() === email.trim().toLowerCase())
       if (!profile) { setResult('Aucun compte trouvé.'); return }
       await adminAction('delete_user_rgpd', profile.id)
       setResult(`Compte ${email} supprimé définitivement.`)

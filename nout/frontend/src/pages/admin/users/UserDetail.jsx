@@ -12,9 +12,12 @@ export default function UserDetail() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('profiles').select('*').eq('id', id).single(),
+      supabase.rpc('admin_accounts'),
       supabase.from('listings').select('*').eq('user_id', id).order('created_at', { ascending: false }),
-    ]).then(([{ data: p }, { data: l }]) => { setProfile(p); setListings(l ?? []) })
+    ]).then(([{ data: accts }, { data: l }]) => {
+      setProfile((accts ?? []).find(a => a.id === id) ?? null)
+      setListings(l ?? [])
+    })
   }, [id])
 
   if (!profile) return <p className="text-gray-400 text-sm">Chargement…</p>

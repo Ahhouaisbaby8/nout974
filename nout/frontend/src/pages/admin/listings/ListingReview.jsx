@@ -10,7 +10,7 @@ export default function ListingReview() {
   const [listing, setListing] = useState(null)
 
   useEffect(() => {
-    supabase.from('listings').select('*, profiles(username, email, city)').eq('id', id).single()
+    supabase.from('listings').select('*, profiles(username, city)').eq('id', id).single()
       .then(({ data }) => setListing(data))
   }, [id])
 
@@ -42,7 +42,6 @@ export default function ListingReview() {
           <div><p className="text-xs text-gray-400">Ville</p><p>{listing.city}</p></div>
           <div><p className="text-xs text-gray-400">Publié</p><p>{formatRelativeDate(listing.created_at)}</p></div>
           <div><p className="text-xs text-gray-400">Vendeur</p><p>{listing.profiles?.username}</p></div>
-          <div><p className="text-xs text-gray-400">Email</p><p className="truncate">{listing.profiles?.email}</p></div>
         </div>
 
         {listing.description && (
