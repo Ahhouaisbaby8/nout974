@@ -89,11 +89,17 @@
   100% { transform: translate(-14vw, 11vh) rotate(-5deg) scale(0.5)  scaleX(-1); opacity: 0; }
 }
 
-/* Vol déclenché au clic sur l'oiseau (easter egg) : s'envole en diagonale vers le haut-droite */
-@keyframes pailleTakeoff {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-  15%  { transform: translate(4vw, 4vh) rotate(10deg) scale(1.05); }   /* petit plongeon */
-  100% { transform: translate(120vw, -40vh) rotate(-18deg) scale(0.6); opacity: 0; }
+/* Vol déclenché au clic (easter egg) : l'oiseau fait un tour naturel du hero et revient se poser.
+   Trajectoire douce (plane, monte, traverse, redescend, revient) avec inclinaisons réalistes. */
+@keyframes pailleTour {
+  0%   { transform: translate(0, 0)        rotate(0deg)  scale(1); }
+  8%   { transform: translate(3vw, 5vh)     rotate(12deg) scale(1.04); }   /* léger plongeon au décollage */
+  25%  { transform: translate(26vw, -12vh)  rotate(-8deg) scale(0.95); }   /* monte en virant à droite */
+  45%  { transform: translate(60vw, -22vh)  rotate(-4deg) scale(0.85); }   /* plane en haut */
+  62%  { transform: translate(78vw, -6vh)   rotate(8deg)  scale(0.9); }    /* amorce la descente à droite */
+  80%  { transform: translate(48vw, 8vh)    rotate(4deg)  scale(0.96); }   /* revient en planant */
+  92%  { transform: translate(12vw, 2vh)    rotate(-6deg) scale(1.02); }   /* approche finale */
+  100% { transform: translate(0, 0)         rotate(0deg)  scale(1); }      /* se repose au départ */
 }
 
 @layer utilities {
