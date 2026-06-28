@@ -95,6 +95,7 @@ import ListingCard from '../components/ui/ListingCard'
 import SkeletonCard from '../components/ui/SkeletonCard'
 import ListingAttributes from '../components/ui/ListingAttributes'
 import CreatorBadge from '../components/ui/CreatorBadge'
+import ConfirmModal from '../components/ui/ConfirmModal'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -114,6 +115,8 @@ export default function ListingDetail() {
   const [offerError, setOfferError]   = useState('')
   const [showReport, setShowReport] = useState(false)
   const [showOffer, setShowOffer]   = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showVenduConfirm, setShowVenduConfirm]   = useState(false)
   const [similar, setSimilar]             = useState([])
   const [loadingSimilar, setLoadingSimilar] = useState(false)
   const [offerAmount, setOfferAmount] = useState('')
@@ -161,7 +164,6 @@ export default function ListingDetail() {
   }, [user?.id, id])
 
   const handleDelete = async () => {
-    if (!confirm('Supprimer cette annonce définitivement ?')) return
     setDeleting(true)
     setDeleteError('')
     try {
@@ -171,15 +173,16 @@ export default function ListingDetail() {
       // Affiche le vrai motif (vente en cours, etc.) plutôt qu'un message générique
       setDeleteError(err?.message || 'Erreur lors de la suppression.')
       setDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
   const handleMarkVendu = async () => {
-    if (!confirm('Marquer cet article comme vendu ? Il ne sera plus visible dans les recherches.')) return
     setMarkingVendu(true)
     try {
       const updated = await updateListing(id, { is_sold: true })
       setListing(prev => ({ ...prev, ...updated }))
+      setShowVenduConfirm(false)
     } catch {
       setMarkError('Erreur. Réessaie.')
     } finally {
@@ -485,7 +488,7 @@ export default function ListingDetail() {
                   Modifier
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteConfirm(true)}
                   disabled={deleting}
                   className="flex-1 px-6 py-3 bg-red-50 text-red-500 border-2 border-red-200 rounded-nout font-bold hover:bg-red-100 transition-all disabled:opacity-60"
                 >
@@ -494,7 +497,7 @@ export default function ListingDetail() {
               </div>
               {!listing.is_sold && (
                 <button
-                  onClick={handleMarkVendu}
+                  onClick={() => setShowVenduConfirm(true)}
                   disabled={markingVendu}
                   className="w-full px-6 py-3 bg-green-50 text-green-600 border-2 border-green-200 rounded-nout font-bold hover:bg-green-100 transition-all disabled:opacity-60"
                 >
@@ -676,6 +679,29 @@ export default function ListingDetail() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title="Supprimer cette annonce ?"
+        message="Cette action est définitive. L'annonce sera retirée du site et ne pourra pas être récupérée."
+        confirmLabel="Supprimer"
+        loadingLabel="Suppression…"
+        danger
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+
+      <ConfirmModal
+        open={showVenduConfirm}
+        title="Marquer comme vendu ?"
+        message="L'article ne sera plus visible dans les recherches. Tu pourras toujours le retrouver dans tes annonces."
+        confirmLabel="Marquer comme vendu"
+        loadingLabel="Mise à jour…"
+        loading={markingVendu}
+        onConfirm={handleMarkVendu}
+        onCancel={() => setShowVenduConfirm(false)}
+      />
 
       {showReport && (
         <ReportModal
