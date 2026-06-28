@@ -72,6 +72,17 @@ export const CATEGORIES = [
     ],
   },
   {
+    id: 'animaux', label: 'Animaux',
+    sub: [
+      { id: 'animaux-accessoires', label: 'Accessoires & laisses' },
+      { id: 'animaux-couchage',    label: 'Couchage & niches' },
+      { id: 'animaux-gamelles',    label: 'Gamelles & distributeurs' },
+      { id: 'animaux-cages',       label: 'Cages & aquariums' },
+      { id: 'animaux-jouets',      label: 'Jouets' },
+      { id: 'animaux-autres',      label: 'Autres' },
+    ],
+  },
+  {
     id: 'createurs', label: 'Fait main · Créateurs 974',
     sub: [
       { id: 'crea-bijoux',     label: 'Bijoux & accessoires' },
