@@ -17,6 +17,8 @@ import { resolveFounder, FounderRing } from '../components/ui/FounderBadge'
 import CreatorBadge from '../components/ui/CreatorBadge'
 import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCounts } from '../services/follow'
 import { getPublicSellerStats } from '../services/sellerStats'
+import { blockUser, unblockUser, isBlocked } from '../services/blocks'
+import ConfirmModal from '../components/ui/ConfirmModal'
 
 export default function Profile() {
   const { id } = useParams()
@@ -35,6 +37,10 @@ export default function Profile() {
   const [followBusy, setFollowBusy] = useState(false)   // requête en cours
   const [counts, setCounts] = useState({ followers: 0, following: 0 })
   const [nbVentes, setNbVentes] = useState(0)
+  const [blocked, setBlocked]           = useState(false)   // j'ai bloqué ce membre ?
+  const [blockBusy, setBlockBusy]       = useState(false)
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false)
+  const [blockErr, setBlockErr]         = useState(false)   // toast d'échec block/unblock
 
   const isOwnProfile = user?.id === id
 
@@ -58,6 +64,37 @@ export default function Profile() {
       setCounts(c => ({ ...c, followers: c.followers + (wasFollowing ? 1 : -1) }))
     } finally {
       setFollowBusy(false)
+    }
+  }
+
+  const handleConfirmBlock = async () => {
+    if (blockBusy) return
+    setBlockBusy(true)
+    try {
+      await blockUser(user.id, id)
+      setBlocked(true)
+      setFollowing(false)          // on masque l'abonnement côté UI (plus d'interaction)
+      setShowBlockConfirm(false)
+    } catch {
+      setShowBlockConfirm(false)
+      setBlockErr(true)
+      setTimeout(() => setBlockErr(false), 3000)
+    } finally {
+      setBlockBusy(false)
+    }
+  }
+
+  const handleUnblock = async () => {
+    if (blockBusy) return
+    setBlockBusy(true)
+    try {
+      await unblockUser(user.id, id)
+      setBlocked(false)
+    } catch {
+      setBlockErr(true)
+      setTimeout(() => setBlockErr(false), 3000)
+    } finally {
+      setBlockBusy(false)
     }
   }
 
@@ -90,6 +127,7 @@ export default function Profile() {
         getPublicSellerStats(id).then(s => setNbVentes(s.nbVentes)).catch(() => {})
         if (user && user.id !== id) {
           checkFollowing(user.id, id).then(setFollowing).catch(() => {})
+          isBlocked(user.id, id).then(setBlocked).catch(() => {})
         }
       } catch {
         setNotFound(true)
@@ -276,6 +314,22 @@ export default function Profile() {
                   Partager la vitrine
                 </button>
               </>
+            ) : blocked ? (
+              <>
+                <p className="text-xs text-gray-500 leading-relaxed sm:max-w-[190px] sm:text-right">
+                  Tu as bloqué ce membre. Vous ne pouvez plus vous contacter.
+                </p>
+                <button
+                  onClick={handleUnblock}
+                  disabled={blockBusy}
+                  className="btn-secondary px-5 py-2 text-sm disabled:opacity-60"
+                >
+                  {blockBusy ? 'Patiente…' : 'Débloquer'}
+                </button>
+                <button onClick={handleShareProfile} className="btn-secondary px-5 py-2 text-sm">
+                  Partager la vitrine
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -301,12 +355,15 @@ export default function Profile() {
                   Partager la vitrine
                 </button>
                 {user && (
-                  <button
-                    onClick={() => setShowReport(true)}
-                    className="text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
-                  >
-                    Signaler
-                  </button>
+                  <div className="flex items-center justify-center gap-3 text-xs text-gray-400 pt-0.5">
+                    <button onClick={() => setShowReport(true)} className="hover:text-red-500 transition-colors">
+                      Signaler
+                    </button>
+                    <span className="text-gray-300">·</span>
+                    <button onClick={() => setShowBlockConfirm(true)} className="hover:text-red-500 transition-colors">
+                      Bloquer
+                    </button>
+                  </div>
                 )}
               </>
             )}
@@ -402,9 +459,27 @@ export default function Profile() {
         />
       )}
 
+      <ConfirmModal
+        open={showBlockConfirm}
+        title="Bloquer ce membre ?"
+        message="Vous ne pourrez plus vous envoyer de messages ni d'offres. Tu pourras le débloquer à tout moment."
+        confirmLabel="Bloquer"
+        loadingLabel="Blocage…"
+        danger
+        loading={blockBusy}
+        onConfirm={handleConfirmBlock}
+        onCancel={() => setShowBlockConfirm(false)}
+      />
+
       {shareToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-nout-dark text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
           Lien de la vitrine copié
+        </div>
+      )}
+
+      {blockErr && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-red-500 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
+          Action impossible pour le moment. Réessaie.
         </div>
       )}
     </div>

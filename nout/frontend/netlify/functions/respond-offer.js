@@ -63,6 +63,18 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article est déjà vendu.' }) }
     }
 
+    // Garde blocage : on est en service key (RLS bypassée) → vérif EXPLICITE.
+    // Si un blocage existe dans un sens ou l'autre entre l'acheteur et le vendeur,
+    // aucune action sur l'offre n'est permise (accept/refuse/counter).
+    const { data: blk } = await supabase
+      .from('blocks')
+      .select('id')
+      .or(`and(blocker_id.eq.${offer.buyer_id},blocked_id.eq.${offer.seller_id}),and(blocker_id.eq.${offer.seller_id},blocked_id.eq.${offer.buyer_id})`)
+      .limit(1)
+    if (blk && blk.length > 0) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Un blocage empêche cette action.' }) }
+    }
+
     const titre = offer.listing?.title ?? 'ton article'
 
     if (action === 'refuse') {

@@ -68,6 +68,7 @@ const Notifications  = lazy(() => import('./pages/Notifications'))
 const Settings       = lazy(() => import('./pages/Settings'))
 const AccountLayout   = lazy(() => import('./pages/account/AccountLayout'))
 const AccountSecurity = lazy(() => import('./pages/account/AccountSecurity'))
+const BlockedUsers    = lazy(() => import('./pages/account/BlockedUsers'))
 const SellerSpace    = lazy(() => import('./pages/SellerSpace'))
 
 // Admin
@@ -167,6 +168,7 @@ function AppShell() {
             <Route path="securite"      element={<AccountSecurity />} />
             <Route path="paiements"     element={<Settings />} />
             <Route path="notifications" element={<Notifications />} />
+            <Route path="bloques"       element={<BlockedUsers />} />
             <Route path="fondateur"     element={<Settings />} />
             <Route path="supprimer"     element={<Settings />} />
           </Route>

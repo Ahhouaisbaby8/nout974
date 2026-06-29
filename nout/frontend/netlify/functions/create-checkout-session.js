@@ -116,6 +116,17 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Tu ne peux pas acheter ta propre annonce.' }) }
     }
 
+    // Garde blocage : pas d'achat si un blocage existe entre l'acheteur et le vendeur
+    // (un sens ou l'autre). Service key → RLS bypassée, d'où cette vérif explicite.
+    const { data: blockRows } = await supabase
+      .from('blocks')
+      .select('id')
+      .or(`and(blocker_id.eq.${buyerId},blocked_id.eq.${listing.user_id}),and(blocker_id.eq.${listing.user_id},blocked_id.eq.${buyerId})`)
+      .limit(1)
+    if (blockRows && blockRows.length > 0) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Vous ne pouvez pas acheter auprès de ce vendeur (blocage).' }) }
+    }
+
     if (listing.is_sold) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article a déjà été vendu.' }) }
     }

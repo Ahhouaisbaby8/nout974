@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
 import {
-  User, ShieldCheck, Wallet, Bell, Users, CreditCard, Star, Trash2, Menu, X,
+  User, ShieldCheck, Wallet, Bell, Users, CreditCard, Star, Trash2, Menu, X, Ban,
 } from 'lucide-react'
 
 // Sections de l'espace compte. "soon" = fonction à venir (badge Bientôt, non cliquable).
@@ -22,12 +22,13 @@ const NAV = [
     items: [
       { to: '/compte/parrainage',    label: 'Parrainage',    icon: Users,      soon: true },
       { to: '/compte/porte-monnaie', label: 'Porte-monnaie', icon: CreditCard, soon: true },
+      { to: '/compte/bloques',       label: 'Membres bloqués', icon: Ban },
     ],
   },
   {
     group: 'Préférences',
     items: [
-      { to: '/compte/fondateur',  label: 'Membre Fondateur',    icon: Star },
+      // « Membre Fondateur » masqué pour le moment (projet mis de côté).
       { to: '/compte/supprimer',  label: 'Supprimer mon compte', icon: Trash2, danger: true },
     ],
   },
