@@ -97,6 +97,7 @@ exports.handler = async (event) => {
           buyer_id,
           seller_id,
           total_price,
+          shipping_method,
           listing:listings!listing_id(id, title),
           buyer:profiles!buyer_id(email, username),
           seller:profiles!seller_id(email, username)
@@ -139,7 +140,6 @@ exports.handler = async (event) => {
       }
 
       // Déclencher le remboursement Stripe
-      try {
       let refundOk = false
       try {
         await stripe.refunds.create(
@@ -171,6 +171,19 @@ exports.handler = async (event) => {
       const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
       const montant      = Number(order.total_price).toFixed(2)
 
+      // auto-refund ne touche QUE les commandes 'paid' (non expédiées) : soit une remise en main propre
+      // non confirmée, soit une LIVRAISON jamais expédiée par le vendeur. On adapte le wording au mode.
+      const isDelivery   = order.shipping_method === 'relay' || order.shipping_method === 'home'
+      const raisonAcheteur = isDelivery
+        ? 'Le vendeur n\'a pas expédié l\'article dans les 7 jours.'
+        : 'La remise en main propre n\'a pas été confirmée dans les 7 jours.'
+      const raisonVendeur = isDelivery
+        ? 'Tu n\'as pas expédié l\'article dans les 7 jours.'
+        : 'La remise en main propre n\'a pas été confirmée dans les 7 jours.'
+      const recoursVendeur = isDelivery
+        ? 'Si tu as bien expédié l\'article mais que la commande n\'a pas été marquée comme expédiée à temps, contacte-nous à'
+        : 'Si la remise a bien eu lieu mais que tu n\'as pas pu saisir le code à temps, contacte-nous à'
+
       // Email acheteur — remboursement
       if (order.buyer?.email) {
         await sendEmail(
@@ -193,7 +206,7 @@ exports.handler = async (event) => {
 
                 <div style="border-left:4px solid #F59E0B;padding:12px 16px;background:#FFFBEB;border-radius:0 8px 8px 0;margin:20px 0">
                   <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
-                    La remise en main propre n'a pas été confirmée dans les 7 jours. Ton paiement de <strong>${montant} €</strong> a été intégralement remboursé sur ton moyen de paiement d'origine.
+                    ${raisonAcheteur} Ton paiement de <strong>${montant} €</strong> a été intégralement remboursé sur ton moyen de paiement d'origine.
                   </p>
                 </div>
 
@@ -239,12 +252,12 @@ exports.handler = async (event) => {
 
                 <div style="border-left:4px solid #EF4444;padding:12px 16px;background:#FFF5F5;border-radius:0 8px 8px 0;margin:20px 0">
                   <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
-                    La remise en main propre n'a pas été confirmée dans les 7 jours. L'acheteur a été remboursé et ton annonce a été <strong>remise en ligne automatiquement</strong>.
+                    ${raisonVendeur} L'acheteur a été remboursé et ton annonce a été <strong>remise en ligne automatiquement</strong>.
                   </p>
                 </div>
 
                 <p style="color:#6B7A99;font-size:13px;line-height:1.6">
-                  Si la remise a bien eu lieu mais que tu n'as pas pu saisir le code à temps, contacte-nous à
+                  ${recoursVendeur}
                   <a href="mailto:contact@nout.re" style="color:#1A3A8F">contact@nout.re</a> avec le numéro de commande <strong>${orderId}</strong>.
                 </p>
 

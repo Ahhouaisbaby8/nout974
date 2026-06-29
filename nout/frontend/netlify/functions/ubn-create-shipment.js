@@ -218,6 +218,20 @@ exports.handler = async (event) => {
       console.error(`ubn-create-shipment : update orders échoué (order ${order_id}):`, updErr.message)
     }
 
+    // Prolonge le code escrow à expédition + 10 jours (même logique que update-order-shipping.js) :
+    // sans ça, une livraison lente ferait expirer le code avant réception → argent bloqué.
+    // On ne touche jamais un code déjà confirmé ou remboursé.
+    const escrowExpiry = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+    const { error: escrowExtendErr } = await supabase
+      .from('escrow_codes')
+      .update({ expires_at: escrowExpiry })
+      .eq('order_id', order_id)
+      .is('confirmed_at', null)
+      .is('refunded_at', null)
+    if (escrowExtendErr) {
+      console.error(`ubn-create-shipment : escrow extend échoué (order ${order_id}):`, escrowExtendErr.message)
+    }
+
     // Notifier l'acheteur que son colis part (best-effort, comme le flux Chronopost)
     if (order.buyer_id) {
       fetch(`${process.env.URL || 'https://nout.re'}/.netlify/functions/send-push`, {
