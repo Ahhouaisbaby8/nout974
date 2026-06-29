@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { getListingById, deleteListing, updateListing, getSimilarListings } from '../services/listings'
 import { supabase } from '../services/supabase'
 import { sendMessage } from '../services/messages'
+import { createOffer } from '../services/offers'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
@@ -255,12 +256,14 @@ export default function ListingDetail() {
     if (!amount || amount <= 0) return
     setOfferSending(true)
     try {
-      await sendMessage({
-        senderId: user.id,
-        receiverId: seller.id,
-        listingId: id,
-        content: `Offre : ${amount} €\nPour l'annonce : ${listing.title}`,
-        senderName: profile?.username,
+      // Offre STRUCTURÉE (montant + statut) — le vendeur pourra accepter/refuser/contre-proposer
+      // dans la conversation. L'acheteur propose, donc proposed_by = lui.
+      await createOffer({
+        listingId:  id,
+        buyerId:    user.id,
+        sellerId:   seller.id,
+        amount,
+        proposedBy: user.id,
       })
       setShowOffer(false)
       setOfferAmount('')

@@ -1,16 +1,76 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import DOMPurify from 'dompurify'
 import { containsForbiddenWord } from '../utils/forbiddenWords'
-import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMessages, sendMessage, markAsRead, subscribeToMessages } from '../services/messages'
+import { getOffers, respondOffer } from '../services/offers'
 import { getProfile } from '../services/profiles'
 import { supabase } from '../services/supabase'
 import { getAvatarUrl } from '../utils/avatar'
-import { formatRelativeDate } from '../utils/formatters'
+import { formatRelativeDate, formatPrice } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import { resolveFounder } from '../components/ui/FounderBadge'
+
+// Carte d'offre — sombre & minimaliste (le turquoise n'est qu'une touche sur « acceptée »).
+function OfferBubble({ offer, userId, busy, onRespond, onPay }) {
+  const isMine      = offer.proposed_by === userId
+  const isRecipient = offer.proposed_by !== userId
+  const isBuyer     = offer.buyer_id === userId
+  const amount      = formatPrice(offer.amount)
+  const working     = busy === offer.id
+
+  return (
+    <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+      <div className="max-w-[78%] rounded-2xl bg-[#0A0F2C] text-white px-4 py-3 shadow-sm">
+        <p className="text-[11px] uppercase tracking-wide text-white/40">Offre</p>
+        <p className="text-2xl font-extrabold leading-tight">{amount}</p>
+
+        {offer.status === 'pending' && isRecipient && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button disabled={working} onClick={() => onRespond(offer, 'accept')}
+              className="text-[13px] font-semibold px-3 py-1.5 rounded-lg bg-white text-[#0A0F2C] hover:bg-white/90 disabled:opacity-50">
+              {working ? '…' : 'Accepter'}
+            </button>
+            <button disabled={working} onClick={() => onRespond(offer, 'counter')}
+              className="text-[13px] font-medium px-3 py-1.5 rounded-lg border border-white/25 text-white/80 hover:bg-white/10 disabled:opacity-50">
+              Contre-offre
+            </button>
+            <button disabled={working} onClick={() => onRespond(offer, 'refuse')}
+              className="text-[13px] font-medium px-3 py-1.5 rounded-lg text-white/45 hover:text-white/70 disabled:opacity-50">
+              Refuser
+            </button>
+          </div>
+        )}
+
+        {offer.status === 'pending' && isMine && (
+          <p className="mt-2 text-[12px] text-white/45">En attente de réponse…</p>
+        )}
+
+        {offer.status === 'accepted' && (
+          <>
+            <p className="mt-1 text-[12px] font-medium text-[#2EC4B6]">Offre acceptée</p>
+            {isBuyer ? (
+              <button disabled={working} onClick={() => onPay(offer)}
+                className="mt-2 w-full text-[14px] font-semibold px-3 py-2 rounded-lg bg-white text-[#0A0F2C] hover:bg-white/90">
+                Payer {amount}
+              </button>
+            ) : (
+              <p className="mt-1 text-[12px] text-white/45">En attente du paiement de l'acheteur.</p>
+            )}
+          </>
+        )}
+
+        {offer.status === 'refused'   && <p className="mt-1 text-[12px] text-white/40">Offre refusée.</p>}
+        {offer.status === 'countered' && <p className="mt-1 text-[12px] text-white/40">Contre-offre faite ci-dessous.</p>}
+        {offer.status === 'cancelled' && <p className="mt-1 text-[12px] text-white/40">Offre annulée.</p>}
+
+        <p className="text-[10px] mt-2 text-white/30">{formatRelativeDate(offer.created_at)}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function Conversation() {
   const { id: otherUserId } = useParams()
@@ -18,6 +78,7 @@ export default function Conversation() {
   const listingId = searchParams.get('annonce') ?? null
 
   const { user, profile, refreshUnreadCount } = useAuth()
+  const navigate = useNavigate()
   const scrollContainerRef = useRef(null)
   const isInitialLoad = useRef(true)
 
@@ -30,6 +91,8 @@ export default function Conversation() {
   const [contentVisible, setContentVisible] = useState(false)
   const [containerHeight, setContainerHeight] = useState(null)
   const [msgError, setMsgError] = useState('')
+  const [offers, setOffers]       = useState([])
+  const [offerBusy, setOfferBusy] = useState(null)   // id de l'offre en cours de traitement
 
   // ── Bug 1 fix : scroll limité au conteneur, jamais sur le body ──
   const scrollToBottom = useCallback((behavior = 'instant') => {
@@ -60,9 +123,11 @@ export default function Conversation() {
     Promise.all([
       getProfile(otherUserId),
       getMessages(user.id, otherUserId, listingId),
-    ]).then(([prof, msgs]) => {
+      listingId ? getOffers(listingId, user.id, otherUserId).catch(() => []) : Promise.resolve([]),
+    ]).then(([prof, msgs, offs]) => {
       setOtherUser(prof)
       setMessages(msgs)
+      setOffers(offs)
       const unread = msgs.filter(m => !m.is_read && m.sender_id === otherUserId).map(m => m.id)
       if (unread.length) markAsRead(unread).then(() => refreshUnreadCount())
     }).finally(() => setLoading(false))
@@ -154,6 +219,40 @@ export default function Conversation() {
     }
   }
 
+  const reloadOffers = useCallback(() => {
+    if (!listingId) return
+    getOffers(listingId, user.id, otherUserId).then(setOffers).catch(() => {})
+  }, [listingId, user.id, otherUserId])
+
+  const handleRespond = async (offer, action) => {
+    if (offerBusy) return
+    let counterAmount
+    if (action === 'counter') {
+      const v = window.prompt('Ta contre-offre (en €) :')
+      if (v == null) return
+      counterAmount = parseFloat(String(v).replace(',', '.'))
+      if (!(counterAmount > 0)) { setMsgError('Montant de contre-offre invalide.'); return }
+    }
+    setMsgError('')
+    setOfferBusy(offer.id)
+    try {
+      await respondOffer({ offerId: offer.id, action, counterAmount })
+      reloadOffers()
+    } catch (err) {
+      setMsgError(err.message)
+    } finally {
+      setOfferBusy(null)
+    }
+  }
+
+  const handlePayOffer = (offer) => navigate(`/commander/${offer.listing_id}?offre=${offer.id}`)
+
+  // Fil unifié : messages + offres, dans l'ordre chronologique.
+  const timeline = [
+    ...messages.map(m => ({ kind: 'msg',   at: m.created_at, data: m })),
+    ...offers.map(o   => ({ kind: 'offer', at: o.created_at, data: o })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at))
+
   const avatarUrl = getAvatarUrl(otherUser?.avatar_url)
   const { isFounder: otherIsFounder, founderNumber: otherFounderNumber, showBadge: otherShowBadge } = resolveFounder(otherUser)
   const showFounderHeader = otherIsFounder && otherShowBadge
@@ -227,35 +326,30 @@ export default function Conversation() {
           className="h-full overflow-y-auto overscroll-y-contain px-4 py-4 flex flex-col gap-3"
           style={{ opacity: contentVisible ? 1 : 0, transition: 'opacity 150ms ease' }}
         >
-          {messages.length === 0 && (
+          {timeline.length === 0 && (
             <div className="text-center text-gray-400 text-sm py-8">
               <p className="text-3xl mb-2"></p>
               Commence la conversation avec {otherUser?.username} !
             </div>
           )}
 
-          {messages.map((msg) => {
-            const isMine  = msg.sender_id === user.id
-            const isOffer = msg.content.startsWith('Offre :')
-
-            if (isOffer) {
-              const lines  = msg.content.split('\n')
-              const amount = lines[0].replace('Offre : ', '')
-              const title  = lines[1]?.replace("Pour l'annonce : ", '') ?? ''
+          {timeline.map((item) => {
+            if (item.kind === 'offer') {
               return (
-                <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] px-4 py-3 rounded-2xl border-2 border-amber-300 bg-amber-50 ${isMine ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
-                    <p className="text-xs font-semibold text-amber-600 mb-1">Proposition d'offre</p>
-                    <p className="text-2xl font-extrabold text-amber-700">{amount}</p>
-                    {title && <p className="text-xs text-gray-500 mt-1 truncate max-w-[180px]">{title}</p>}
-                    <p className="text-[10px] mt-1.5 text-gray-400">{formatRelativeDate(msg.created_at)}</p>
-                  </div>
-                </div>
+                <OfferBubble
+                  key={`o-${item.data.id}`}
+                  offer={item.data}
+                  userId={user.id}
+                  busy={offerBusy}
+                  onRespond={handleRespond}
+                  onPay={handlePayOffer}
+                />
               )
             }
-
+            const msg    = item.data
+            const isMine = msg.sender_id === user.id
             return (
-              <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+              <div key={`m-${msg.id}`} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                   isMine
                     ? 'bg-nout-primary text-white rounded-br-sm'

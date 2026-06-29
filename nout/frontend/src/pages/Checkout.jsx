@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById } from '../services/listings'
+import { getOfferById } from '../services/offers'
 import { supabase } from '../services/supabase'
 import { formatPrice } from '../utils/formatters'
 import {
@@ -16,10 +17,13 @@ const SHIP_ICONS = { hand: Store, relay: MapPin, home: HomeIcon }
 
 export default function Checkout() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const offerId = searchParams.get('offre')
   const navigate = useNavigate()
   const { user, profile } = useAuth()
 
   const [listing, setListing] = useState(null)
+  const [offer, setOffer]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -42,7 +46,8 @@ export default function Checkout() {
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
-  }, [id, user, navigate])
+    if (offerId) getOfferById(offerId).then(setOffer).catch(() => {})
+  }, [id, user, navigate, offerId])
 
   if (loading) return <div className="py-24 flex justify-center"><Spinner /></div>
   if (notFound) return (
@@ -66,9 +71,13 @@ export default function Checkout() {
     </div>
   )
 
+  // Prix effectif : si une offre ACCEPTÉE pour cet acheteur & cette annonce est passée en ?offre=,
+  // on paie le prix convenu (le serveur revalide de toute façon dans create-checkout-session).
+  const offerValid    = offer && offer.status === 'accepted' && offer.listing_id === id && offer.buyer_id === user.id
+  const prix          = offerValid ? Number(offer.amount) : Number(listing.price)
   const portFee       = getShippingFee(shipMethod)
-  const protectionFee = computeProtectionFee(listing.price)
-  const totalAcheteur = computeBuyerTotal(listing.price, shipMethod)
+  const protectionFee = computeProtectionFee(prix)
+  const totalAcheteur = computeBuyerTotal(prix, shipMethod)
   const isDelivery    = portFee > 0
   const imageUrl      = thumbUrl(listing.images?.[0] ?? null)
 
@@ -86,6 +95,7 @@ export default function Checkout() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authSession?.access_token ?? ''}` },
         body: JSON.stringify({
           listingId: id, buyerId: user.id, shippingMethod: shipMethod,
+          offerId: offerValid ? offer.id : null,
           shippingPhone: shipPhone.trim(), shippingAddress: shipAddress.trim(),
           shippingCity: shipCity.trim(), shippingPostcode: shipPostcode.trim(),
         }),
@@ -121,7 +131,10 @@ export default function Checkout() {
               <p className="font-semibold text-nout-texte truncate">{listing.title}</p>
               {listing.brand && <p className="text-sm text-gray-500">{listing.brand}</p>}
               {listing.size && <p className="text-sm text-gray-500">{listing.size}</p>}
-              <p className="font-title font-semibold text-nout-texte mt-1">{formatPrice(listing.price)}</p>
+              <p className="font-title font-semibold text-nout-texte mt-1">
+                {formatPrice(prix)}
+                {offerValid && <span className="ml-2 text-[11px] font-semibold text-[#0E7FAB]">offre acceptée</span>}
+              </p>
             </div>
           </div>
 
@@ -209,7 +222,7 @@ export default function Checkout() {
           <h2 className="font-title text-lg font-bold text-nout-texte mb-4">Récapitulatif</h2>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between text-gray-500">
-              <span>Article</span><span>{formatPrice(listing.price)}</span>
+              <span>Article</span><span>{formatPrice(prix)}</span>
             </div>
             <div className="flex justify-between text-gray-500">
               <span className="flex items-center gap-1">Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>

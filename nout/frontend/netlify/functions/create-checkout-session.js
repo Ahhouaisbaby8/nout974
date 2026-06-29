@@ -79,7 +79,7 @@ exports.handler = async (event) => {
 
   try {
     const {
-      listingId, buyerId, shippingMethod,
+      listingId, buyerId, shippingMethod, offerId,
       shippingPhone, shippingAddress, shippingCity, shippingPostcode,
     } = JSON.parse(event.body)
 
@@ -138,7 +138,26 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article est déjà en cours d\'achat.' }) }
     }
 
-    const prixArticle    = listing.price
+    let prixArticle      = Number(listing.price)
+
+    // OFFRE ACCEPTÉE : on paie au PRIX CONVENU. Validé SERVEUR (offre 'accepted' + bon acheteur + bonne
+    // annonce) — le client ne peut JAMAIS imposer un prix arbitraire, seulement le montant d'une offre acceptée.
+    if (offerId) {
+      const { data: offer } = await supabase
+        .from('offers')
+        .select('id, amount, status, buyer_id, listing_id')
+        .eq('id', offerId)
+        .single()
+      // Sécurité anti-offre-forgée : l'offre doit être acceptée, appartenir à CET acheteur, pour CETTE
+      // annonce, ET son vendeur doit être le VRAI propriétaire (sinon auto-acceptation buyer=seller=self).
+      if (!offer || offer.status !== 'accepted'
+          || offer.buyer_id !== buyerId || offer.listing_id !== listingId
+          || offer.seller_id !== listing.user_id || offer.buyer_id === listing.user_id) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Offre invalide ou non acceptée.' }) }
+      }
+      prixArticle = Number(offer.amount)
+    }
+
     // Garde-fou : pas de paiement en ligne sous 1 €. Un article à 0 € (« offert ») se récupère en
     // contactant le vendeur ; et un total < 0,50 € serait de toute façon refusé par Stripe. On bloque
     // AVANT de créer la commande/le code escrow pour ne pas laisser de commande orpheline.
