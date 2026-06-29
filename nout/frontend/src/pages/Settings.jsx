@@ -204,7 +204,7 @@ export default function Settings() {
             {displayAvatar ? (
               <img src={displayAvatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover ring-1 ring-[#E8EDF3] shadow-sm" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-nout-turquoise to-nout-lagon text-white flex items-center justify-center text-3xl font-bold ring-1 ring-[#E8EDF3] shadow-sm">
+              <div className="w-20 h-20 rounded-full bg-[#EAF5F3] text-[#0E8C82] flex items-center justify-center text-3xl font-bold ring-1 ring-[#E8EDF3] shadow-sm">
                 {username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}

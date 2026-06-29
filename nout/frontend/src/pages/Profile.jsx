@@ -218,7 +218,7 @@ export default function Profile() {
             <div className="w-[72px] h-[72px] rounded-full overflow-hidden flex-shrink-0 ring-1 ring-[#E8EDF3] shadow-sm">
               {avatarUrl
                 ? <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
-                : <div className="w-full h-full bg-gradient-to-br from-nout-turquoise to-nout-lagon flex items-center justify-center text-2xl font-bold text-white">
+                : <div className="w-full h-full bg-[#EAF5F3] flex items-center justify-center text-2xl font-bold text-[#0E8C82]">
                     {profile.username?.[0]?.toUpperCase() ?? '?'}
                   </div>
               }

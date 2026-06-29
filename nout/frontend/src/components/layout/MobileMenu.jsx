@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { X, ChevronDown, Plus } from 'lucide-react'
 import { CATEGORIES } from '../../utils/categories'
-import CategoryIcon from '../ui/CategoryIcon'
 
 // Liens utilitaires (étaient en hidden lg:flex dans le header = inaccessibles sur mobile).
 const NAV_LINKS = [
@@ -91,9 +90,8 @@ export default function MobileMenu({ open, onClose, isAdmin, isLoggedIn }) {
                     <Link
                       to={`/c/${cat.id}`}
                       onClick={onClose}
-                      className="flex-1 flex items-center gap-2.5 px-4 py-3 text-[15px] font-medium text-nout-texte"
+                      className="flex-1 px-4 py-3 text-[15px] font-medium text-nout-texte"
                     >
-                      <CategoryIcon id={cat.id} size={18} className="text-nout-muted flex-shrink-0" />
                       {cat.navLabel ?? cat.label}
                     </Link>
                     {cat.sub?.length > 0 && (

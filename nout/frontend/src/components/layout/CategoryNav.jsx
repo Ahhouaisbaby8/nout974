@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CATEGORIES } from '../../utils/categories'
-import CategoryIcon from '../ui/CategoryIcon'
 
 // Barre catégories desktop (2e rangée du header) + mega-menu façon Vinted/KazaKaz.
 // Ouverture au SURVOL avec hover-intent (120 ms) pour ne pas déclencher en traversant,
@@ -48,13 +47,12 @@ export default function CategoryNav({ light }) {
               onClick={() => setOpenId(null)}
               aria-haspopup="true"
               aria-expanded={isOpen}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
                 isOpen
-                  ? (light ? 'text-white bg-white/10' : 'text-nout-turquoise bg-[#F1F7FA]')
-                  : 'hover:text-nout-turquoise'
+                  ? (light ? 'text-white bg-white/10' : 'text-[#0E8C82] bg-[#F1F7FA]')
+                  : 'hover:text-[#0E8C82]'
               }`}
             >
-              <CategoryIcon id={cat.id} size={15} className="opacity-60 flex-shrink-0" />
               {cat.navLabel ?? cat.label}
             </Link>
           )
@@ -72,9 +70,8 @@ export default function CategoryNav({ light }) {
             <Link
               to={`/c/${openCat.id}`}
               onClick={() => setOpenId(null)}
-              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-nout-turquoise hover:underline mb-3"
+              className="inline-flex items-center text-[13px] font-semibold text-[#0E8C82] hover:underline mb-3"
             >
-              <CategoryIcon id={openCat.id} size={15} />
               Tout voir en {openCat.label}
             </Link>
             <div className="grid grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-0.5">

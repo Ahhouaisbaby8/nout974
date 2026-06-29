@@ -269,8 +269,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CATÉGORIES ───────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pt-12 pb-4">
+      {/* ── CATÉGORIES (mobile uniquement : sur desktop la barre du header suffit, pas de doublon) ── */}
+      <section className="lg:hidden max-w-7xl mx-auto px-4 pt-12 pb-4">
         <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#00897B] mb-2">
           <span className="text-nout-turquoise">•</span> Explore <span className="text-nout-turquoise">•</span>
         </p>
