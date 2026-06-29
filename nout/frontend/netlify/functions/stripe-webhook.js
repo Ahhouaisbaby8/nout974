@@ -1,5 +1,6 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
+const { releaseSellerPayout } = require('./_payout')
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -289,6 +290,25 @@ exports.handler = async (event) => {
       await supabase.from('profiles')
         .update({ is_verified: true })
         .eq('stripe_account_id', account.id)
+
+      // Le vendeur vient d'activer ses paiements : on DRAINE ses commandes 'payout_pending' (confirmées
+      // mais jamais versées faute de compte Stripe au moment de la confirmation). Le transfert est
+      // idempotent (transfer_${order_id}) → aucun double-paiement même si l'évènement est rejoué.
+      const { data: seller } = await supabase.from('profiles')
+        .select('id').eq('stripe_account_id', account.id).single()
+      if (seller?.id) {
+        const { data: pending } = await supabase.from('orders')
+          .select(`id, status, seller_payout, seller_id,
+                   listing:listings!listing_id(title, price),
+                   seller:profiles!seller_id(stripe_account_id)`)
+          .eq('seller_id', seller.id)
+          .eq('status', 'payout_pending')
+        for (const order of (pending ?? [])) {
+          try { await releaseSellerPayout({ stripe, supabase, order }) }
+          catch (e) { console.error(`[webhook] drain payout_pending ${order.id} :`, e.message) }
+        }
+        if (pending?.length) console.log(`[webhook] ${pending.length} payout_pending drainé(s) pour vendeur ${seller.id}`)
+      }
     }
   }
 

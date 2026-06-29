@@ -32,6 +32,14 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
   const transferCents  = Math.max(0, Math.round(payoutNet * 100))
   const vendorStripeId = order.seller?.stripe_account_id
 
+  // 0) GARDE TOCTOU : on relit le statut JUSTE avant de transférer. Les appelants par snapshot (cron
+  //    auto-release) peuvent être périmés ; un litige acheteur ('disputed') ou un remboursement a pu
+  //    survenir entre-temps. Si la commande n'est plus payable, on ne transfère RIEN (rien n'est figé).
+  const { data: fresh } = await supabase.from('orders').select('status').eq('id', order_id).single()
+  if (!fresh || !['paid', 'shipped', 'payout_pending'].includes(fresh.status)) {
+    return { outcome: 'already', transferOk: false, payoutNet, vendorStripeId, orderStatus: null }
+  }
+
   // 1) TRANSFERT d'abord (idempotent). Aucune écriture terminale tant que ce n'est pas acquis.
   let transferOk = false
   if (vendorStripeId && transferCents > 0) {
@@ -57,7 +65,7 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
     .from('orders')
     .update({ status: orderStatus })
     .eq('id', order_id)
-    .in('status', ['paid', 'shipped']) // ne bouge que depuis paid/shipped (jamais écraser completed/refunded/disputed)
+    .in('status', ['paid', 'shipped', 'payout_pending']) // jamais écraser completed/refunded/disputed/cancelled
     .select('id')
   if (updErr) {
     // Transfert déjà fait (idempotent) mais statut pas écrit : on laisse la commande telle quelle ;

@@ -94,7 +94,7 @@ exports.handler = async (event) => {
       sendEmail(
         'contact@nout.re',
         `Litige acheteur — commande ${order_id}`,
-        `<p>L'acheteur a signalé un problème sur la commande <strong>${order_id}</strong> (« ${escHtml(order.listing?.title ?? '')} »). Statut passé en <strong>disputed</strong> : le versement automatique au vendeur est suspendu. À traiter manuellement (remboursement ou libération).</p>`,
+        `<p>L'acheteur a signalé un problème sur la commande <strong>${order_id}</strong> (« ${escHtml(order.listing?.title ?? '')} »). Statut passé en <strong>disputed</strong> : l'auto-versement est suspendu. À traiter manuellement (remboursement ou libération) — <strong>vérifier d'abord sur Stripe qu'aucun virement n'est déjà parti pour cette commande</strong> avant tout remboursement.</p>`,
       ).catch(() => {})
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, status: 'disputed' }) }
     }

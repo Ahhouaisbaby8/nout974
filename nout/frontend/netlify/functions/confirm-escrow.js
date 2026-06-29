@@ -114,10 +114,15 @@ exports.handler = async (event) => {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
-    if (!['paid', 'shipped'].includes(order.status)) {
+    // Le code escrow ne sert qu'au FACE-À-FACE (remise en main propre, statut 'paid'). Une LIVRAISON
+    // ('shipped') se confirme côté ACHETEUR (« J'ai bien reçu ») ou par l'auto-versement — jamais ici :
+    // ça évite qu'un code partagé écrase un litige acheteur ou double les notifications de versement.
+    if (order.status !== 'paid') {
       const msg = (order.status === 'completed' || order.status === 'payout_pending')
         ? 'Cette remise a déjà été confirmée.'
-        : 'La commande n\'est pas encore payée.'
+        : order.status === 'shipped'
+          ? 'Cette commande est en cours de livraison : l\'acheteur confirme la réception de son côté.'
+          : 'Cette commande n\'est pas en attente de remise.'
       return { statusCode: 400, headers, body: JSON.stringify({ error: msg }) }
     }
 
@@ -242,6 +247,7 @@ exports.handler = async (event) => {
       .from('orders')
       .update({ status: orderStatus })
       .eq('id', order_id)
+      .in('status', ['paid', 'shipped']) // garde de statut : ne jamais écraser disputed/refunded/completed
     if (updateError) {
       console.error(`ERREUR UPDATE orders status → ${orderStatus} (order ${order_id}):`, updateError.message)
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la mise à jour du statut de la commande.' }) }
