@@ -202,3 +202,19 @@ export const COLORS = ['Blanc', 'Noir', 'Gris', 'Beige', 'Marron', 'Rouge', 'Ros
 export const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 export const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
 export const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
+
+// Résout un slug d'URL (= id de catégorie) vers { root, sub } pour les pages /c/:slug.
+// sub vaut null pour une racine ; renvoie null si le slug est inconnu.
+export const findCategoryBySlug = (slug) => {
+  if (!slug) return null
+  const root = CATEGORIES.find(c => c.id === slug)
+  if (root) return { root, sub: null }
+  for (const c of CATEGORIES) {
+    const sub = c.sub?.find(s => s.id === slug)
+    if (sub) return { root: c, sub }
+  }
+  return null
+}
+
+// Tous les slugs racines (pour le sitemap / liens internes).
+export const ROOT_CATEGORY_SLUGS = CATEGORIES.map(c => c.id)

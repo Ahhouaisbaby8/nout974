@@ -26,6 +26,7 @@ import OrderToast   from './components/OrderToast'
 import Home           from './pages/Home'
 import ListingDetail  from './pages/ListingDetail'
 import Search         from './pages/Search'
+import CategoryPage   from './pages/CategoryPage'
 import Profile        from './pages/Profile'
 import About          from './pages/About'
 import Help           from './pages/Help'
@@ -119,6 +120,7 @@ function AppShell() {
           <Route path="/annonce/:id"  element={<ListingDetail />} />
           <Route path="/commander/:id" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="/recherche"    element={<Search />} />
+          <Route path="/c/:slug"      element={<CategoryPage />} />
           <Route path="/profil/:id"   element={<Profile />} />
           <Route path="/a-propos"          element={<About />} />
           <Route path="/aide"              element={<Help />} />
