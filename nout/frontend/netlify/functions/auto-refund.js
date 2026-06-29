@@ -1,5 +1,6 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
+const { releaseSellerPayout } = require('./_payout')
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -313,7 +314,74 @@ exports.handler = async (event) => {
     }
   }
 
-  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${errors} erreur(s).`
+  // ── AUTO-RELEASE LIVRAISON (modèle Vinted, sans webhook de livraison) ──
+  // On libère le paiement au vendeur pour les commandes EXPÉDIÉES depuis assez longtemps et jamais
+  // confirmées : sinon l'argent d'une livraison resterait bloqué (personne ne pense à confirmer une fois
+  // l'objet reçu). On NE rembourse PAS — le vendeur a bien expédié (il a un suivi). Un litige éventuel
+  // passe par le support ; les commandes 'disputed' sont exclues d'office (leur statut n'est pas 'shipped').
+  let autoReleased = 0
+  const SHIP_RELEASE_DAYS = 12
+  const releaseCutoff = new Date(Date.now() - SHIP_RELEASE_DAYS * 24 * 60 * 60 * 1000).toISOString()
+  const { data: staleShipped, error: shippedErr } = await supabase
+    .from('orders')
+    .select(`
+      id, status, seller_payout, shipped_at, listing_id, seller_id, buyer_id,
+      listing:listings!listing_id(title, price),
+      seller:profiles!seller_id(email, username, stripe_account_id)
+    `)
+    .eq('status', 'shipped')
+    .lt('shipped_at', releaseCutoff)
+
+  if (shippedErr) {
+    console.error('Erreur lecture commandes shipped (auto-release) :', shippedErr.message)
+  } else if (staleShipped?.length) {
+    console.log(`${staleShipped.length} commande(s) expédiée(s) à auto-libérer (>${SHIP_RELEASE_DAYS}j).`)
+    for (const order of staleShipped) {
+      try {
+        // Pas de verrou pré-transfert : _payout TRANSFÈRE d'abord (idempotent) puis FINALISE le statut de
+        // façon atomique. 'settled' = cet appel a finalisé ; 'already' = déjà fait ailleurs ; 'retry' = échec
+        // transitoire → commande laissée 'shipped', reprise au prochain passage (sans jamais re-payer).
+        const res = await releaseSellerPayout({ stripe, supabase, order })
+        if (res.outcome !== 'settled') continue
+        autoReleased++
+        console.log(`Order ${order.id} auto-libérée (${SHIP_RELEASE_DAYS}j post-expédition) → ${res.orderStatus}`)
+
+        if (order.seller?.email) {
+          const montant = res.payoutNet.toFixed(2)
+          const corps = (res.vendorStripeId && res.transferOk)
+            ? `<strong>${montant} €</strong> vont être virés sur ton compte bancaire dans les prochains jours ouvrés.`
+            : `Pour recevoir tes <strong>${montant} €</strong>, active tes paiements dans Paramètres.`
+          await sendEmail(
+            order.seller.email,
+            `Paiement libéré — ${order.listing?.title ?? 'NOUT 974'}`,
+            `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px 24px;background:#F8FAFF">
+               <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+                 <h1 style="color:#1A3A8F;font-size:20px;margin:0 0 8px">Paiement de ta vente libéré</h1>
+                 <p style="color:#6B7A99;font-size:14px;line-height:1.6">Bonjour ${escHtml(order.seller.username ?? '')}, le délai de confirmation de ta livraison « ${escHtml(order.listing?.title ?? 'ton article')} » est écoulé. ${corps}</p>
+               </div>
+             </div>`
+          )
+        }
+        if (order.seller_id) {
+          fetch(`${SITE_URL}/.netlify/functions/send-push`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
+            body: JSON.stringify({
+              receiver_id: order.seller_id,
+              title: '💸 Paiement libéré — NOUT 974',
+              body: `Le paiement de « ${order.listing?.title ?? 'ta vente'} » a été libéré sur ton compte.`,
+              url: '/commandes?tab=ventes',
+            }),
+          }).catch(err => console.error('send-push vendeur auto-release :', err.message))
+        }
+      } catch (e) {
+        console.error(`Auto-release order ${order.id} :`, e.message)
+        errors++
+      }
+    }
+  }
+
+  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${autoReleased} auto-versement(s), ${errors} erreur(s).`
   console.log(summary)
   return { statusCode: 200, body: summary }
 }

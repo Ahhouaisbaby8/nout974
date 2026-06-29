@@ -193,6 +193,7 @@ exports.handler = async (event) => {
       })
       .eq('order_id', order_id)
       .is('confirmed_at', null)
+      .is('refunded_at', null)
       .select()
       .single()
 

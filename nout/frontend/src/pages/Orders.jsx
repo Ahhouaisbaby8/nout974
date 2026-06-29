@@ -274,19 +274,64 @@ function SellerShippingPanel({ order, onShipped }) {
   )
 }
 
-function BuyerTrackingPanel({ order }) {
-  if (!order.tracking_number) return null
+function BuyerTrackingPanel({ order, onConfirmed }) {
+  const [loading, setLoading] = useState(false)   // 'received' | 'problem' | false
+  const [error, setError]     = useState('')
+
+  const callAction = async (action) => {
+    setError('')
+    setLoading(action)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/confirm-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ order_id: order.id, action }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue')
+      onConfirmed?.()
+    } catch (err) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="mt-3 pt-3 border-t border-gray-100">
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
-        <div className="flex items-center gap-2 mb-2">
-          <span></span>
-          <p className="text-sm font-semibold text-nout-dark">Votre colis est en route</p>
+    <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+      {order.tracking_number && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-nout-dark mb-2">Ton colis est en route</p>
+          <p className="text-xs text-gray-500 mb-1">Numéro de suivi</p>
+          <p className="text-sm font-mono font-bold text-[#0E7FAB] break-all">{order.tracking_number}</p>
         </div>
-        <p className="text-xs text-gray-500 mb-1">Numéro de suivi</p>
-        <p className="text-sm font-mono font-bold text-[#0E7FAB] break-all">{order.tracking_number}</p>
-      </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2">{error}</div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => callAction('received')}
+        disabled={!!loading}
+        className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
+          loading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
+        }`}
+      >
+        {loading === 'received' ? 'Confirmation…' : "J'ai bien reçu mon colis"}
+      </button>
+      <p className="text-[11px] text-gray-400 text-center leading-relaxed">
+        Confirme la réception pour libérer le paiement au vendeur.
+      </p>
+      <button
+        type="button"
+        onClick={() => callAction('problem')}
+        disabled={!!loading}
+        className="w-full text-[12px] text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+      >
+        {loading === 'problem' ? 'Envoi…' : 'Signaler un problème avec ma commande'}
+      </button>
     </div>
   )
 }
@@ -451,9 +496,12 @@ export default function Orders() {
                     <BuyerEscrowCode orderId={order.id} />
                   )}
 
-                  {/* Suivi livraison — acheteur, statut shipped */}
+                  {/* Suivi livraison + confirmation de réception — acheteur, statut shipped */}
                   {tab === 'achats' && order.status === 'shipped' && (
-                    <BuyerTrackingPanel order={order} />
+                    <BuyerTrackingPanel
+                      order={order}
+                      onConfirmed={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
+                    />
                   )}
 
                   {/* Remise confirmée + avis — visible pour l'acheteur, statut completed */}

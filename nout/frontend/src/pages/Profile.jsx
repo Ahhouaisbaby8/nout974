@@ -139,6 +139,11 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* SEO — la boutique publique du vendeur (hoisting natif React 19) */}
+      <title>{`${profile.username} — Boutique seconde main NOUT 974`}</title>
+      <meta name="description" content={`Découvre la boutique de ${profile.username} sur NOUT, le marketplace seconde main de La Réunion (974) : articles d'occasion, remise en main propre ou livraison, paiement sécurisé.`} />
+      <link rel="canonical" href={`https://nout.re/profil/${id}`} />
+
       <BackButton />
 
       {/* ── CARTE PROFIL ── */}
