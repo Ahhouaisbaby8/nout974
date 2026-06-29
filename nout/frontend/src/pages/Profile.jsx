@@ -64,7 +64,7 @@ export default function Profile() {
   const handleShareProfile = async () => {
     const url = `${window.location.origin}/profil/${id}`
     if (navigator.share) {
-      try { await navigator.share({ title: `Profil de ${profile?.username} sur NOUT`, url }) } catch {}
+      try { await navigator.share({ title: `Vitrine de ${profile?.username} sur NOUT`, url }) } catch {}
     } else {
       try { await navigator.clipboard.writeText(url) } catch {}
       setShareToast(true)
@@ -274,7 +274,7 @@ export default function Profile() {
                   Modifier mon profil
                 </Link>
                 <button onClick={handleShareProfile} className="btn-secondary px-5 py-2 text-sm">
-                  Partager le profil
+                  Partager la vitrine
                 </button>
               </>
             ) : (
@@ -299,7 +299,7 @@ export default function Profile() {
                   </button>
                 )}
                 <button onClick={handleShareProfile} className="btn-secondary px-5 py-2 text-sm">
-                  Partager le profil
+                  Partager la vitrine
                 </button>
                 {user && (
                   <button
@@ -405,7 +405,7 @@ export default function Profile() {
 
       {shareToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-nout-dark text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
-          Lien du profil copié
+          Lien de la vitrine copié
         </div>
       )}
     </div>

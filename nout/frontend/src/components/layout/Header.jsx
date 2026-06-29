@@ -49,7 +49,7 @@ export default function Header() {
   const ICON = "w-[18px] h-[18px] text-gray-400"
   const menuGroups = [
     [
-      { to: `/profil/${user?.id}`, icon: <User className={ICON} />, label: 'Mon profil' },
+      { to: `/profil/${user?.id}`, icon: <User className={ICON} />, label: 'Ma vitrine' },
       { to: '/espace-vendeur',     icon: <Wallet className={ICON} />, label: 'Espace Vendeur' },
     ],
     [
