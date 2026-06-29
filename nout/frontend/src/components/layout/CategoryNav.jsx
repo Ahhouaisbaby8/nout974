@@ -31,7 +31,7 @@ export default function CategoryNav({ light }) {
     <div className="hidden lg:block relative border-t border-white/10" onMouseLeave={scheduleClose}>
       <nav
         aria-label="Catégories"
-        className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-11 flex items-center gap-0.5 text-[13.5px] font-medium transition-colors ${
+        className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-center gap-1 text-[13.5px] font-medium transition-colors ${
           light ? 'text-white/90' : 'text-nout-muted'
         }`}
       >
