@@ -1,6 +1,16 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+
+// Spinner de transition pendant le chargement d'une route splittée (lazy).
+// min-height pour éviter tout saut de mise en page (CLS reste à 0).
+function PageLoader() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-nout-turquoise border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -22,67 +32,71 @@ import CookieBanner from './components/legal/CookieBanner'
 import MessageToast from './components/MessageToast'
 import OrderToast   from './components/OrderToast'
 
+// Accueil (page LCP) + Maintenance : chargés d'emblée (eager).
+// TOUT le reste est code-splitté par route (lazy) → bundle initial bien plus léger
+// (le gros du JS n'est téléchargé qu'à la navigation vers la page concernée).
+import Home        from './pages/Home'
+import Maintenance from './pages/Maintenance'
+
 // Pages publiques
-import Home           from './pages/Home'
-import ListingDetail  from './pages/ListingDetail'
-import Search         from './pages/Search'
-import CategoryPage   from './pages/CategoryPage'
-import Profile        from './pages/Profile'
-import About          from './pages/About'
-import Help           from './pages/Help'
-import HowItWorks     from './pages/HowItWorks'
-import Creators       from './pages/Creators'
-import InstallApp     from './pages/InstallApp'
+const ListingDetail = lazy(() => import('./pages/ListingDetail'))
+const Search        = lazy(() => import('./pages/Search'))
+const CategoryPage  = lazy(() => import('./pages/CategoryPage'))
+const Profile       = lazy(() => import('./pages/Profile'))
+const About         = lazy(() => import('./pages/About'))
+const Help          = lazy(() => import('./pages/Help'))
+const HowItWorks    = lazy(() => import('./pages/HowItWorks'))
+const Creators      = lazy(() => import('./pages/Creators'))
+const InstallApp    = lazy(() => import('./pages/InstallApp'))
 
 // Auth
-import Login          from './pages/Login'
-import Register       from './pages/Register'
-import CompteActive   from './pages/CompteActive'
-import PaymentSuccess from './pages/PaymentSuccess'
+const Login          = lazy(() => import('./pages/Login'))
+const Register       = lazy(() => import('./pages/Register'))
+const CompteActive   = lazy(() => import('./pages/CompteActive'))
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'))
 
 // Pages privées
-import CreateListing from './pages/CreateListing'
-import Checkout      from './pages/Checkout'
-import EditListing   from './pages/EditListing'
-import Messages      from './pages/Messages'
-import Conversation  from './pages/Conversation'
-import Orders        from './pages/Orders'
-import Favorites     from './pages/Favorites'
-import Notifications  from './pages/Notifications'
-import Settings      from './pages/Settings'
-import AccountLayout   from './pages/account/AccountLayout'
-import AccountSecurity from './pages/account/AccountSecurity'
-import SellerSpace   from './pages/SellerSpace'
+const CreateListing  = lazy(() => import('./pages/CreateListing'))
+const Checkout       = lazy(() => import('./pages/Checkout'))
+const EditListing    = lazy(() => import('./pages/EditListing'))
+const Messages       = lazy(() => import('./pages/Messages'))
+const Conversation   = lazy(() => import('./pages/Conversation'))
+const Orders         = lazy(() => import('./pages/Orders'))
+const Favorites      = lazy(() => import('./pages/Favorites'))
+const Notifications  = lazy(() => import('./pages/Notifications'))
+const Settings       = lazy(() => import('./pages/Settings'))
+const AccountLayout   = lazy(() => import('./pages/account/AccountLayout'))
+const AccountSecurity = lazy(() => import('./pages/account/AccountSecurity'))
+const SellerSpace    = lazy(() => import('./pages/SellerSpace'))
 
 // Admin
-import AdminLayout          from './pages/admin/AdminLayout'
-import AdminDashboard       from './pages/admin/Dashboard'
-import AdminListings        from './pages/admin/listings/ListingsModeration'
-import AdminListingReview   from './pages/admin/listings/ListingReview'
-import AdminUsers           from './pages/admin/users/UsersList'
-import AdminUserDetail      from './pages/admin/users/UserDetail'
-import AdminOrders          from './pages/admin/orders/OrdersList'
-import AdminReports         from './pages/admin/Reports'
-import AdminFinances        from './pages/admin/Finances'
-import AdminRGPD            from './pages/admin/RGPD'
-import AdminSettings        from './pages/admin/SiteSettings'
+const AdminLayout        = lazy(() => import('./pages/admin/AdminLayout'))
+const AdminDashboard     = lazy(() => import('./pages/admin/Dashboard'))
+const AdminListings      = lazy(() => import('./pages/admin/listings/ListingsModeration'))
+const AdminListingReview = lazy(() => import('./pages/admin/listings/ListingReview'))
+const AdminUsers         = lazy(() => import('./pages/admin/users/UsersList'))
+const AdminUserDetail    = lazy(() => import('./pages/admin/users/UserDetail'))
+const AdminOrders        = lazy(() => import('./pages/admin/orders/OrdersList'))
+const AdminReports       = lazy(() => import('./pages/admin/Reports'))
+const AdminFinances      = lazy(() => import('./pages/admin/Finances'))
+const AdminRGPD          = lazy(() => import('./pages/admin/RGPD'))
+const AdminSettings      = lazy(() => import('./pages/admin/SiteSettings'))
 
-// Maintenance
-import Maintenance from './pages/Maintenance'
-import NotFound    from './pages/NotFound'
+// 404
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Brand (dev uniquement)
-import BrandPage    from './pages/BrandPage'
-import BrandCompare from './pages/BrandCompare'
+const BrandPage    = lazy(() => import('./pages/BrandPage'))
+const BrandCompare = lazy(() => import('./pages/BrandCompare'))
 
 // Légal
-import CGU                  from './pages/legal/CGU'
-import CGV                  from './pages/legal/CGV'
-import Privacy               from './pages/legal/Privacy'
-import Cookies               from './pages/legal/Cookies'
-import MentionsLegales       from './pages/legal/MentionsLegales'
-import CharteBonneConduite   from './pages/legal/CharteBonneConduite'
-import ReglementCatalogue    from './pages/legal/ReglementCatalogue'
+const CGU                 = lazy(() => import('./pages/legal/CGU'))
+const CGV                 = lazy(() => import('./pages/legal/CGV'))
+const Privacy             = lazy(() => import('./pages/legal/Privacy'))
+const Cookies             = lazy(() => import('./pages/legal/Cookies'))
+const MentionsLegales     = lazy(() => import('./pages/legal/MentionsLegales'))
+const CharteBonneConduite = lazy(() => import('./pages/legal/CharteBonneConduite'))
+const ReglementCatalogue  = lazy(() => import('./pages/legal/ReglementCatalogue'))
 
 function PrivateRoute({ children }) {
   const { user, profile } = useAuth()
@@ -114,6 +128,7 @@ function AppShell() {
       <Header />
 
       <main className={`flex-1 pb-16 md:pb-0 ${hasHero ? '' : 'pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-[calc(4rem+2.75rem+env(safe-area-inset-top))]'}`}>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public */}
           <Route path="/"             element={<Home />} />
@@ -188,6 +203,7 @@ function AppShell() {
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </main>
 
       <Footer />

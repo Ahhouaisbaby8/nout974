@@ -1,0 +1,31 @@
+# NOUT — Marketplace de seconde main à La Réunion (974)
+
+> NOUT est la marketplace 100 % péi de seconde main entre particuliers à La Réunion (974) : mode, chaussures, sacs, accessoires, beauté, électronique, articles pour animaux et créations d'artisans locaux. Le vendeur fixe son prix et le reçoit en entier ; l'acheteur paie des frais de protection et bénéficie d'un paiement sécurisé, avec remise en main propre gratuite ou livraison Chronopost.
+
+## Pages principales
+
+- [Accueil](https://nout.re/) : les dernières annonces publiées à La Réunion
+- [Toutes les annonces](https://nout.re/recherche) : rechercher et filtrer par catégorie, taille, ville, prix
+- [Comment ça marche](https://nout.re/comment-ca-marche) : acheter et vendre en toute sécurité
+- [Créateurs 974](https://nout.re/createurs) : les créateurs et artisans réunionnais
+- [Aide](https://nout.re/aide) : questions fréquentes
+- [À propos](https://nout.re/a-propos) : la mission de NOUT
+
+## Catégories
+
+- [Vêtements femme](https://nout.re/c/vetements-femme)
+- [Vêtements homme](https://nout.re/c/vetements-homme)
+- [Vêtements enfant & bébé](https://nout.re/c/vetements-enfant)
+- [Chaussures](https://nout.re/c/chaussures)
+- [Sacs](https://nout.re/c/sacs)
+- [Accessoires](https://nout.re/c/accessoires)
+- [Beauté & bien-être](https://nout.re/c/beaute)
+- [Électronique](https://nout.re/c/electronique)
+- [Animaux](https://nout.re/c/animaux)
+- [Fait main · Créateurs 974](https://nout.re/c/createurs)
+
+## Informations légales
+
+- [Conditions générales d'utilisation](https://nout.re/legal/cgu)
+- [Conditions générales de vente](https://nout.re/legal/cgv)
+- [Politique de confidentialité](https://nout.re/legal/confidentialite)
