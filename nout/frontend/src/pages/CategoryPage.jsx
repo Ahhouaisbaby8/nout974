@@ -99,8 +99,15 @@ export default function CategoryPage() {
       </nav>
 
       <h1 className="font-title font-bold text-xl sm:text-2xl text-nout-texte mb-1">{heading}</h1>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-gray-500 mb-3">
         {loading ? '…' : (total === 0 ? 'Aucune annonce pour le moment' : `${total} annonce${total > 1 ? 's' : ''}`)}
+      </p>
+
+      {/* Intro descriptive — SEO local 974 + repère pour le visiteur */}
+      <p className="text-[13px] text-gray-500 leading-relaxed mb-5 max-w-2xl">
+        Achète et vends {label.toLowerCase()} d'occasion partout à La Réunion (974) sur NOUT, le marketplace
+        100&nbsp;% péi entre particuliers. Remise en main propre gratuite ou livraison Chronopost,
+        paiement sécurisé&nbsp;: le vendeur reçoit son prix, l'acheteur est protégé.
       </p>
 
       {/* Sous-catégories (page racine) — liens internes crawlables */}
