@@ -135,24 +135,27 @@
 }
 
 @layer components {
+  /* Teal apaisé (plus le néon #2EC4B6) : accent sobre, pas en grands aplats criards. */
   .btn-primary {
-    @apply px-6 py-3 bg-[#2EC4B6] text-white rounded-full font-bold hover:bg-[#24A99D] transition-all cursor-pointer;
+    @apply px-6 py-3 bg-[#0E8C82] text-white rounded-full font-semibold hover:bg-[#0B716A] transition-all cursor-pointer;
   }
 
+  /* Secondaire NEUTRE (fini le contour teal partout) : gris discret, texte sombre. */
   .btn-secondary {
-    @apply px-6 py-3 bg-white text-[#2EC4B6] border-2 border-[#2EC4B6] rounded-full font-bold hover:bg-[#E0FAF8] transition-all cursor-pointer;
+    @apply px-6 py-3 bg-white text-nout-texte border border-[#DDE3EC] rounded-full font-semibold hover:bg-[#F7F9FC] hover:border-[#C3CCD9] transition-all cursor-pointer;
   }
 
   .btn-disabled {
-    @apply px-6 py-3 bg-[#B2EDE8] text-[#4A8A8A] rounded-full cursor-not-allowed;
+    @apply px-6 py-3 bg-[#E3E8EF] text-[#9AA5B5] rounded-full cursor-not-allowed;
   }
 
   .card {
     @apply bg-white rounded-[16px] overflow-hidden shadow-sm hover:shadow-md transition-shadow;
   }
 
+  /* Inputs NEUTRES (fini les bordures teal) : gris au repos, accent teal discret au focus. */
   .input-field {
-    @apply w-full px-4 py-3 border border-[#B2EDE8] rounded-lg text-[#0A1628] focus:outline-none focus:border-[#2EC4B6] transition-colors bg-white;
+    @apply w-full px-4 py-3 border border-[#DDE3EC] rounded-lg text-[#0A1628] focus:outline-none focus:border-[#0E8C82] focus:ring-2 focus:ring-[#0E8C82]/15 transition-colors bg-white;
   }
 }
 

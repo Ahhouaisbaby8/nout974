@@ -192,32 +192,32 @@ export default function Settings() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="space-y-8">
 
-        {/* ── AVATAR ── */}
-        <div className="bg-white rounded-xl p-5 shadow-sm flex items-center gap-5">
+        {/* ── AVATAR ── (rangée à plat : plus de carte dans la carte) */}
+        <div className="flex items-center gap-5">
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
             className="relative flex-shrink-0 group"
           >
             {displayAvatar ? (
-              <img src={displayAvatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-4 border-nout-primary" />
+              <img src={displayAvatar} alt="Avatar" className="w-20 h-20 rounded-full object-cover ring-1 ring-[#E8EDF3] shadow-sm" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-nout-primary text-white flex items-center justify-center text-3xl font-bold border-4 border-nout-primary">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-nout-turquoise to-nout-lagon text-white flex items-center justify-center text-3xl font-bold ring-1 ring-[#E8EDF3] shadow-sm">
                 {username?.[0]?.toUpperCase() ?? '?'}
               </div>
             )}
-            <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-white text-xl"></span>
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-white text-xs font-medium">Modifier</span>
             </div>
           </button>
           <div>
-            <p className="font-semibold text-nout-dark">Photo de profil</p>
+            <p className="font-semibold text-nout-texte">Photo de profil</p>
             <button
               type="button"
               onClick={() => fileInputRef.current.click()}
-              className="text-sm text-nout-primary hover:underline mt-1"
+              className="text-sm text-[#0E8C82] font-medium hover:underline mt-0.5"
             >
               Changer la photo
             </button>
@@ -225,8 +225,8 @@ export default function Settings() {
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
 
-        {/* ── INFOS ── */}
-        <div className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
+        {/* ── INFOS ── (à plat) */}
+        <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-nout-dark mb-1">Pseudo</label>
             <input
@@ -282,16 +282,16 @@ export default function Settings() {
           </div>
 
           {/* Créateur péi : déclaration auto (Phase 1). Affiche un badge + place dans la vitrine. */}
-          <div className="rounded-xl border border-[#B9E5E1] bg-[#EAF6F5] p-4">
+          <div className="rounded-xl border border-[#E6EAF0] bg-[#F8FAFC] p-4">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isCreator}
                 onChange={(e) => setIsCreator(e.target.checked)}
-                className="mt-0.5 w-5 h-5 accent-[#0E7FAB] cursor-pointer flex-shrink-0"
+                className="mt-0.5 w-5 h-5 accent-[#0E8C82] cursor-pointer flex-shrink-0"
               />
               <span>
-                <span className="block text-sm font-semibold text-[#0E7FAB] flex items-center gap-1.5">
+                <span className="block text-sm font-semibold text-[#0E8C82] flex items-center gap-1.5">
                   <Palette className="w-4 h-4" /> Je suis créateur péi
                 </span>
                 <span className="block text-[12px] text-gray-600 mt-0.5">
@@ -330,7 +330,7 @@ export default function Settings() {
       </form>
 
       {/* ── SECTION PAIEMENTS VENDEUR ── */}
-      <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
+      <div className="mt-8 pt-8 border-t border-[#EEF2F7]">
         <h2 className="font-bold text-nout-dark mb-1">Recevoir mes paiements</h2>
         <p className="text-sm text-gray-500 mb-4 leading-relaxed">
           Renseigne ton IBAN pour recevoir l'argent de tes ventes directement sur ton compte bancaire.
@@ -426,7 +426,7 @@ export default function Settings() {
 
       {/* ── SECTION BADGE FONDATEUR (visible uniquement si is_founder) ── */}
       {profile?.is_founder && (
-        <div className="mt-8 bg-white rounded-xl p-5 shadow-sm border border-amber-200">
+        <div className="mt-8 pt-8 border-t border-[#EEF2F7]">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <h2 className="font-bold text-nout-dark mb-1">Badge Membre Fondateur</h2>
@@ -460,7 +460,7 @@ export default function Settings() {
       )}
 
       {/* ── SECTION CONFIDENTIALITÉ ── */}
-      <div className="mt-8 bg-white rounded-xl p-5 shadow-sm">
+      <div className="mt-8 pt-8 border-t border-[#EEF2F7]">
         <h2 className="font-bold text-nout-dark mb-1">Confidentialité et compte</h2>
         <p className="text-sm text-gray-500 mb-4 leading-relaxed">
           La suppression de ton compte est définitive et irréversible.

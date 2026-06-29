@@ -215,8 +215,7 @@ export default function Profile() {
         ) : (
           /* ── En-tête normale — non fondateur ou badge désactivé ── */
           <div className="bg-white px-5 pt-5 pb-4 flex items-center gap-4 border-b border-gray-100">
-            <div className="w-[72px] h-[72px] rounded-full overflow-hidden flex-shrink-0"
-                 style={{ border: '3px solid #F97316' }}>
+            <div className="w-[72px] h-[72px] rounded-full overflow-hidden flex-shrink-0 ring-1 ring-[#E8EDF3] shadow-sm">
               {avatarUrl
                 ? <img src={avatarUrl} alt={profile.username} className="w-full h-full object-cover" />
                 : <div className="w-full h-full bg-gradient-to-br from-nout-turquoise to-nout-lagon flex items-center justify-center text-2xl font-bold text-white">
@@ -282,10 +281,10 @@ export default function Profile() {
                 <button
                   onClick={handleToggleFollow}
                   disabled={followBusy}
-                  className={`px-5 py-2 text-sm rounded-full font-bold transition-all disabled:opacity-60 ${
+                  className={`px-5 py-2 text-sm rounded-full font-semibold transition-all disabled:opacity-60 ${
                     following
                       ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      : 'bg-[#2EC4B6] text-white hover:bg-[#24A99D]'
+                      : 'bg-[#0E8C82] text-white hover:bg-[#0B716A]'
                   }`}
                 >
                   {following ? 'Abonné' : "S'abonner"}
