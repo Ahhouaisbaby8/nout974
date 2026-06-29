@@ -7,7 +7,7 @@ export default function AdminSiteSettings() {
         {[
           { icon: '', title: 'Domaine',            value: 'nout.re',                            note: 'Configuré via Netlify' },
           { icon: '', title: 'Email de contact',   value: 'contact@nout.re',                 note: 'Affiché dans le footer et les pages légales' },
-          { icon: '', title: 'Commission Stripe',  value: '10 %',                               note: 'Modifiable dans netlify/functions/create-checkout-session.js' },
+          { icon: '', title: 'Protection acheteur', value: '10 % + 0,25 €',                      note: 'Payée par l\'acheteur. Modifiable dans netlify/functions/create-checkout-session.js' },
           { icon: '', title: 'SIRET',              value: '106 334 436 00016',                  note: 'SIREN : 106 334 436' },
           { icon: '', title: 'Hébergement',        value: 'Netlify',                            note: 'Déploiement automatique depuis GitHub' },
           { icon: '', title: 'Base de données',   value: 'Supabase PostgreSQL',                note: 'pvimybfqfhrvpnmkcepy.supabase.co' },

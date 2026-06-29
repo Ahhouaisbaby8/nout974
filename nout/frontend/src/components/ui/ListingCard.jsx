@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
-import { computeBuyerTotal, getShippingFee } from '../../utils/shipping'
+import { computeProtectionFee, getShippingFee } from '../../utils/shipping'
 import { thumbUrl } from '../../utils/image'
 
 const SHIPPING_RELAY_FEE = getShippingFee('relay')
@@ -24,8 +24,9 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
   const category      = CATEGORIES.find(c => c.id === listing.category)
   const conditionLabel = CONDITIONS.find(c => c.id === listing.condition)?.label
   const views         = listing.views ?? 0
-  // Nouveau modèle : l'acheteur paie le PRIX AFFICHÉ (en main propre, 0 frais ajouté).
-  // Le port s'ajoute seulement si livraison choisie. Plus de "frais de protection" côté acheteur.
+  // Modèle protection acheteur (façon Vinted) : le prix affiché est celui du vendeur, qu'il reçoit EN ENTIER.
+  // À l'achat s'ajoute une protection acheteur (10% + 0,25€), + le port si livraison choisie.
+  const protectionFee = computeProtectionFee(listing.price)
 
   const openModal = (which) => (e) => {
     e.preventDefault()
@@ -130,7 +131,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
           onClick={openModal('price')}
           className="flex items-center gap-0.5 text-[10px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
         >
-          Main propre gratuite · port dès {formatPrice(SHIPPING_RELAY_FEE)}
+          + Protection acheteur · port dès {formatPrice(SHIPPING_RELAY_FEE)}
           <Info size={9} className="ml-0.5" />
         </button>
 
@@ -169,7 +170,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                   <span className="text-[15px] text-nout-texte">{formatPrice(listing.price)}</span>
                 </div>
 
-                {/* Protection incluse (gratuite pour l'acheteur — paiement sécurisé) */}
+                {/* Protection acheteur (10% + 0,25€) — payée par l'acheteur, finance le paiement sécurisé */}
                 <button
                   type="button"
                   onClick={openModal('protection')}
@@ -179,10 +180,10 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                     <Shield size={18} className="text-nout-turquoise" />
                   </div>
                   <p className="flex-1 text-[15px] text-nout-texte flex items-center gap-1.5">
-                    Paiement protégé inclus
+                    Protection acheteur <span className="text-gray-400 text-[13px]">(10 % + 0,25 €)</span>
                     <Info size={15} className="text-nout-turquoise" />
                   </p>
-                  <span className="text-[15px] font-medium text-emerald-600">Inclus</span>
+                  <span className="text-[15px] font-medium text-nout-texte">{formatPrice(protectionFee)}</span>
                 </button>
 
                 {/* Frais de port (info, sélectionné au paiement) */}
@@ -201,9 +202,9 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                 </div>
 
                 <p className="text-[13px] text-gray-400 leading-relaxed py-3 border-t border-gray-100">
-                  Sur NOUT, tu paies le prix affiché — aucun frais de service ajouté pour l'acheteur.
-                  En main propre, c'est gratuit. Sinon, seuls les frais de port s'ajoutent. Le paiement
-                  est sécurisé : le vendeur n'est payé qu'après confirmation de réception.
+                  Le vendeur reçoit son prix en entier. À l'achat s'ajoute une protection acheteur
+                  de 10 % + 0,25 € (et les frais de port si tu choisis une livraison). Le paiement est
+                  sécurisé : le vendeur n'est payé qu'après confirmation de réception.
                 </p>
               </div>
 

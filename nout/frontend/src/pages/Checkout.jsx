@@ -5,7 +5,7 @@ import { getListingById } from '../services/listings'
 import { supabase } from '../services/supabase'
 import { formatPrice } from '../utils/formatters'
 import {
-  SHIPPING_METHODS, SHIPPING_ORDER, getShippingFee, computeBuyerTotal,
+  SHIPPING_METHODS, SHIPPING_ORDER, getShippingFee, computeBuyerTotal, computeProtectionFee,
 } from '../utils/shipping'
 import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
@@ -52,7 +52,22 @@ export default function Checkout() {
     </div>
   )
 
+  // Article offert (0 €) : pas de paiement en ligne. On invite à contacter le vendeur.
+  if (Number(listing.price) === 0) return (
+    <div className="max-w-xl mx-auto px-4 py-16 text-center">
+      <p className="text-lg font-semibold text-nout-dark">Article offert</p>
+      <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+        Cet article est proposé gratuitement : il n'y a pas de paiement en ligne. Contacte le vendeur
+        depuis l'annonce pour organiser la remise en main propre.
+      </p>
+      <button onClick={() => navigate(`/annonce/${id}`)} className="btn-primary mt-6 px-8">
+        Voir l'annonce et contacter le vendeur
+      </button>
+    </div>
+  )
+
   const portFee       = getShippingFee(shipMethod)
+  const protectionFee = computeProtectionFee(listing.price)
   const totalAcheteur = computeBuyerTotal(listing.price, shipMethod)
   const isDelivery    = portFee > 0
   const imageUrl      = thumbUrl(listing.images?.[0] ?? null)
@@ -197,7 +212,8 @@ export default function Checkout() {
               <span>Article</span><span>{formatPrice(listing.price)}</span>
             </div>
             <div className="flex justify-between text-gray-500">
-              <span>Paiement protégé</span><span className="text-emerald-600 font-medium">Inclus</span>
+              <span className="flex items-center gap-1">Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>
+              <span>{formatPrice(protectionFee)}</span>
             </div>
             <div className="flex justify-between text-gray-500">
               <span>{isDelivery ? `Livraison (${SHIPPING_METHODS[shipMethod].label.replace('Chronopost — ', '')})` : 'Remise en main propre'}</span>

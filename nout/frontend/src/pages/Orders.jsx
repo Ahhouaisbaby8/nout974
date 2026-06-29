@@ -413,7 +413,13 @@ export default function Orders() {
                           {status.label}
                         </span>
                       </div>
-                      <p className="text-nout-primary font-extrabold mt-0.5">{formatPrice(order.total_price)}</p>
+                      {/* Achats : ce que l'acheteur a payé (prix + protection + port).
+                          Ventes : ce que le vendeur reçoit (prix plein = seller_payout). */}
+                      <p className="text-nout-primary font-extrabold mt-0.5">
+                        {formatPrice(tab === 'achats'
+                          ? order.total_price
+                          : (order.seller_payout ?? order.listing?.price ?? order.total_price))}
+                      </p>
                       {other && (
                         <p className="text-xs text-gray-400 mt-1">
                           {tab === 'achats' ? 'Vendeur' : 'Acheteur'} : {other.username}

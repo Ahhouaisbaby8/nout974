@@ -91,7 +91,7 @@ exports.handler = async (event) => {
       .select(`
         id, status, seller_id, buyer_id, total_price, ubn_ref_commande,
         shipping_phone, shipping_address, shipping_city, shipping_postcode,
-        listing:listings!listing_id(title),
+        listing:listings!listing_id(title, price),
         buyer:profiles!buyer_id(username, email)
       `)
       .eq('id', order_id)
@@ -178,7 +178,7 @@ exports.handler = async (event) => {
         description: (order.listing?.title || 'Article').slice(0, 120),
         weight,
         length: 0, width: 0, height: 0, sum_dimensions: 0,
-        value: Math.round(Number(order.total_price) || 0),
+        value: Math.round(Number(order.listing?.price ?? order.total_price) || 0),
       }],
     }
 

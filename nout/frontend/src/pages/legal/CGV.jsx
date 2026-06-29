@@ -9,15 +9,15 @@ export default function CGV() {
         <P>NOUT agit en tant qu'intermédiaire technique et financier. La vente est conclue directement entre le vendeur et l'acheteur.</P>
       </Section>
 
-      <Section title="2. Prix et commission">
-        <P>Les prix sont fixés librement par les vendeurs en euros (€), toutes charges comprises. NOUT prélève une commission de <strong>10 % + 0,25 €</strong> par transaction, à la charge du vendeur, déduite du montant qui lui est reversé. L'acheteur paie le prix affiché par le vendeur, augmenté le cas échéant des frais de port s'il opte pour une livraison.</P>
-        <P>Cette commission couvre les frais de traitement du paiement, la protection des transactions et le maintien de la plateforme.</P>
+      <Section title="2. Prix et frais de protection acheteur">
+        <P>Les prix sont fixés librement par les vendeurs en euros (€), toutes charges comprises. Le vendeur perçoit l'intégralité du prix qu'il a fixé. NOUT applique des <strong>frais de protection acheteur de 10 % + 0,25 €</strong> par transaction, à la charge de l'acheteur, ajoutés au prix affiché. L'acheteur paie donc le prix du vendeur, augmenté de ces frais de protection et, le cas échéant, des frais de port s'il opte pour une livraison.</P>
+        <P>Ces frais de protection couvrent le traitement du paiement, la sécurisation (séquestre) des transactions et le maintien de la plateforme.</P>
       </Section>
 
       <Section title="3. Paiement">
         <P>Les paiements sont sécurisés et gérés par un prestataire de paiement agréé, certifié PCI-DSS. NOUT ne stocke aucune donnée bancaire.</P>
         <P>Les moyens de paiement acceptés sont : carte bancaire (Visa, Mastercard, American Express).</P>
-        <P>Le vendeur reçoit le montant de la vente (déduction faite de la commission) directement sur son compte bancaire, dans les délais habituels de virement.</P>
+        <P>Le vendeur reçoit l'intégralité du prix de la vente directement sur son compte bancaire, dans les délais habituels de virement (les frais de protection acheteur sont payés par l'acheteur, en sus du prix).</P>
       </Section>
 
       <Section title="4. Remise de l'article">

@@ -10,7 +10,7 @@ import { getAvatarUrl } from '../utils/avatar'
 import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import { getSellerRating } from '../services/reviews'
-import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, getShippingFee } from '../utils/shipping'
+import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, computeProtectionFee, getShippingFee } from '../utils/shipping'
 import { Truck, Home as HomeIcon, Store, ShieldCheck } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { detailUrl, thumbUrl } from '../utils/image'
@@ -240,8 +240,10 @@ export default function ListingDetail() {
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
 
-  // Nouveau modèle : l'acheteur paie le prix affiché + le port (aucun frais de service ajouté).
+  // Modèle protection acheteur : l'acheteur paie le prix + protection (10%+0,25€) + port.
+  // Le vendeur, lui, reçoit le prix affiché en entier.
   const portFee        = getShippingFee(shipMethod)
+  const protectionFee  = computeProtectionFee(listing.price)
   const totalAcheteur  = computeBuyerTotal(listing.price, shipMethod)
   const images     = listing.images?.length > 0 ? listing.images : null
   const seller     = listing.profiles
@@ -535,8 +537,12 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Paiement protégé</span>
-                      <span className="text-emerald-600 font-medium">Inclus</span>
+                      <span>Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>
+                      <span>{formatPrice(protectionFee)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
+                      <span>Total en main propre</span>
+                      <span>{formatPrice(computeBuyerTotal(listing.price, 'hand'))}</span>
                     </div>
                     <p className="flex items-center gap-1.5 text-[11px] text-gray-400 pt-1">
                       <Truck className="w-3.5 h-3.5" />
@@ -600,8 +606,8 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Paiement protégé</span>
-                      <span className="text-emerald-600 font-medium">Inclus</span>
+                      <span>Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>
+                      <span>{formatPrice(protectionFee)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
                       <span>Total en main propre</span>

@@ -136,7 +136,7 @@ export default function SellerSpace() {
           <SoldeBox label="Déjà versé" amount={solde.verse} accent />
         </div>
         <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-          Tu reçois le prix de ton article. Le virement est débloqué une fois la remise confirmée avec le code à 6 chiffres.
+          Tu reçois l'intégralité du prix de ton article, sans aucun frais déduit — les frais de service sont payés par l'acheteur. Le virement est débloqué une fois la remise confirmée avec le code à 6 chiffres.
         </p>
       </section>
 
@@ -234,7 +234,7 @@ export default function SellerSpace() {
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="font-title text-nout-dark">{formatPrice(o.listing?.price ?? 0)}</p>
+                    <p className="font-title text-nout-dark">{formatPrice(o.seller_payout ?? o.listing?.price ?? 0)}</p>
                     <span className="text-[11px] text-gray-400">{STATUS[o.status] ?? o.status}</span>
                   </div>
                 </Link>

@@ -129,7 +129,7 @@ export default function HowItWorks() {
     },
     {
       q: 'Est-ce que NOUT prend une commission ?',
-      a: 'NOUT prélève des frais de service de 10 % + 0,25 € sur la vente, côté vendeur. L\'acheteur, lui, paie simplement le prix affiché (plus les frais de port s\'il choisit une livraison — la remise en main propre est gratuite). C\'est plus avantageux pour le vendeur que la plupart des plateformes.',
+      a: 'Le vendeur reçoit son prix EN ENTIER, sans aucun frais déduit. Les frais de service (10 % + 0,25 €) sont payés par l\'acheteur sous forme de protection acheteur, en plus du prix (et des frais de port s\'il choisit une livraison — la remise en main propre n\'ajoute pas de port). C\'est plus avantageux pour le vendeur que la plupart des plateformes.',
     },
     {
       q: 'C\'est sécurisé ?',

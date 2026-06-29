@@ -9,7 +9,7 @@ import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
 import { CATEGORIES, CONDITIONS, BRANDS, MATERIALS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
-import { computeSellerPayout, computeNoutFee } from '../utils/shipping'
+import { computeSellerPayout } from '../utils/shipping'
 import { describeListing } from '../utils/describeListing'
 import { formatPrice } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
@@ -150,6 +150,7 @@ export default function CreateListing() {
     if (category !== 'beaute' && !condition) return setError("Précise l'état de l'article.")
     if (isClothing && !size)        return setError('Indique la taille.')
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
+    if (Number(price) > 0 && Number(price) < 1) return setError('Le prix minimum est 1 € (ou 0 € pour offrir l\'article).')
     if (Number(price) > 50000)      return setError('Le prix maximum est 50 000 €.')
     if (!city)                      return setError('Choisis ta ville.')
 
@@ -497,22 +498,18 @@ export default function CreateListing() {
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">€</span>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Mets 0 € si tu offres l'article.</p>
+            <p className="text-xs text-gray-400 mt-1">Prix minimum 1 €. Mets 0 € si tu l'offres (remise en main propre, sans paiement en ligne).</p>
 
-            {/* Estimation de ce que touche le vendeur (transparence des frais NOUT) */}
+            {/* Le vendeur reçoit son prix EN ENTIER — les frais (protection) sont payés par l'acheteur */}
             {Number(price) > 0 && (
               <div className="mt-3 rounded-xl border border-[#B9E5E1] bg-[#EAF6F5] p-3 text-sm">
-                <div className="flex justify-between text-gray-600">
-                  <span>Frais NOUT (10 % + 0,25 €)</span>
-                  <span>− {formatPrice(computeNoutFee(Number(price)))}</span>
-                </div>
-                <div className="flex justify-between font-semibold text-nout-texte mt-1 pt-1 border-t border-[#B9E5E1]">
-                  <span>Tu reçois (en main propre)</span>
-                  <span className="text-[#0E7FAB]">{formatPrice(computeSellerPayout(Number(price), 'hand'))}</span>
+                <div className="flex justify-between font-semibold text-nout-texte">
+                  <span>Tu reçois</span>
+                  <span className="text-[#0E7FAB] text-base">{formatPrice(computeSellerPayout(Number(price)))}</span>
                 </div>
                 <p className="text-[11px] text-gray-500 mt-1.5">
-                  L'acheteur paie {formatPrice(Number(price))} (le port s'ajoute s'il choisit une livraison).
-                  Frais de paiement sécurisé inclus.
+                  Tu encaisses l'intégralité de ton prix, sans aucun frais déduit. Les frais de service
+                  (protection acheteur) sont payés par l'acheteur, en plus de ton prix.
                 </p>
               </div>
             )}

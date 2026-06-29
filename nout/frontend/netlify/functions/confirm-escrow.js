@@ -200,8 +200,12 @@ exports.handler = async (event) => {
       return { statusCode: 409, headers, body: JSON.stringify({ error: 'Cette remise a déjà été confirmée.' }) }
     }
 
-    // Transfert Stripe vers le vendeur — on verse le PAYOUT NET (prix − frais NOUT 10%+0,25€ − Stripe),
-    // PAS le prix entier. NOUT garde sa marge. Fallback : recalcul si seller_payout absent (anciennes commandes).
+    // Transfert Stripe vers le vendeur. MODÈLE protection acheteur : seller_payout = PRIX PLEIN de
+    // l'article (les frais sont payés par l'acheteur, rien n'est déduit au vendeur). NOUT garde la protection.
+    // Le champ seller_payout, figé à la commande, porte déjà le bon montant selon le modèle en vigueur ce
+    // jour-là (commandes pré-changement = montant réduit, conservé tel quel pour ne pas surverser).
+    // Fallback ultra-ancien (seller_payout jamais stocké) : ancienne formule conservatrice (ne verse pas
+    // plus que ce qui avait été encaissé à l'époque).
     const prixArticle    = Number(order.listing?.price ?? 0)
     const payoutNet      = order.seller_payout != null
       ? Number(order.seller_payout)
@@ -253,7 +257,9 @@ exports.handler = async (event) => {
 
     // ── EMAILS ──
     const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
-    const prixAffiche  = prixArticle.toFixed(2)
+    // Montant réellement viré au vendeur (= prix plein pour les nouvelles commandes) — l'email doit
+    // afficher EXACTEMENT ce qui est transféré, jamais un montant différent.
+    const prixAffiche  = payoutNet.toFixed(2)
 
     if (order.buyer?.email) {
       await sendEmail(

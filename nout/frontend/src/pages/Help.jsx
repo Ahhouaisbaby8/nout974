@@ -17,7 +17,7 @@ const FAQ = [
   },
   {
     q: "Comment fonctionne le paiement ?",
-    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. L'acheteur paie le prix affiché (plus les frais de port s'il choisit une livraison). NOUT prélève des frais de service de 10 % + 0,25 € sur la vente, côté vendeur, pour couvrir le traitement et la sécurisation de la transaction.",
+    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. Le vendeur reçoit son prix en entier. L'acheteur paie le prix affiché, plus une protection acheteur de 10 % + 0,25 € (et les frais de port s'il choisit une livraison) qui couvre le traitement et la sécurisation de la transaction.",
   },
   {
     q: "Puis-je modifier ou supprimer mon annonce ?",
@@ -33,7 +33,7 @@ const FAQ = [
   },
   {
     q: "NOUT est-il gratuit ?",
-    a: "La publication et la navigation sont entièrement gratuites. Des frais de service de 10 % + 0,25 € sont prélevés sur le vendeur uniquement lors d'une vente.",
+    a: "La publication et la navigation sont entièrement gratuites. Le vendeur reçoit son prix en entier : les frais de service de 10 % + 0,25 € sont payés par l'acheteur, en plus du prix, sous forme de protection acheteur.",
   },
 ]
 
