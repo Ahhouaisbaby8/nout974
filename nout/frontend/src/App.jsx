@@ -31,6 +31,7 @@ import BottomNav   from './components/layout/BottomNav'
 import CookieBanner from './components/legal/CookieBanner'
 import MessageToast from './components/MessageToast'
 import OrderToast   from './components/OrderToast'
+import HelpBot      from './components/HelpBot'
 
 // Accueil (page LCP) + Maintenance : chargés d'emblée (eager).
 // TOUT le reste est code-splitté par route (lazy) → bundle initial bien plus léger
@@ -211,6 +212,7 @@ function AppShell() {
       <CookieBanner />
       <MessageToast />
       <OrderToast />
+      <HelpBot />
     </div>
   )
 }
