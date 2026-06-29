@@ -32,11 +32,15 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
   const transferCents  = Math.max(0, Math.round(payoutNet * 100))
   const vendorStripeId = order.seller?.stripe_account_id
 
+  // Statuts depuis lesquels un versement automatique/acheteur est légitime. JAMAIS 'disputed' :
+  // la résolution d'un litige passe par admin-actions.js (claim-first dédié), pas par ce module.
+  const allowedStatuses = ['paid', 'shipped', 'payout_pending']
+
   // 0) GARDE TOCTOU : on relit le statut JUSTE avant de transférer. Les appelants par snapshot (cron
   //    auto-release) peuvent être périmés ; un litige acheteur ('disputed') ou un remboursement a pu
   //    survenir entre-temps. Si la commande n'est plus payable, on ne transfère RIEN (rien n'est figé).
   const { data: fresh } = await supabase.from('orders').select('status').eq('id', order_id).single()
-  if (!fresh || !['paid', 'shipped', 'payout_pending'].includes(fresh.status)) {
+  if (!fresh || !allowedStatuses.includes(fresh.status)) {
     return { outcome: 'already', transferOk: false, payoutNet, vendorStripeId, orderStatus: null }
   }
 
@@ -65,7 +69,7 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
     .from('orders')
     .update({ status: orderStatus })
     .eq('id', order_id)
-    .in('status', ['paid', 'shipped', 'payout_pending']) // jamais écraser completed/refunded/disputed/cancelled
+    .in('status', allowedStatuses) // jamais écraser completed/refunded/cancelled (ni disputed hors résolution admin)
     .select('id')
   if (updErr) {
     // Transfert déjà fait (idempotent) mais statut pas écrit : on laisse la commande telle quelle ;
