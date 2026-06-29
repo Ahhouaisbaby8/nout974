@@ -64,7 +64,7 @@ export default function CategoryNav({ light }) {
         <div
           onMouseEnter={clearTimers}
           onMouseLeave={scheduleClose}
-          className="absolute left-0 right-0 top-full bg-white border-t border-[#ECEFF4] shadow-xl z-50 animate-fade-in"
+          className="absolute left-0 right-0 top-full bg-gradient-to-b from-white to-[#F4F7FB] border-t border-[#ECEFF4] shadow-[0_28px_52px_-16px_rgba(10,15,44,0.40)] z-50 animate-fade-in"
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
             <Link
