@@ -5,7 +5,7 @@ import { getSellerDashboard } from '../services/sellerStats'
 import { formatPrice, formatDate } from '../utils/formatters'
 import { SHIPPING_METHODS } from '../utils/shipping'
 import Spinner from '../components/ui/Spinner'
-import { Handshake, Truck, ChevronRight, Plus, Tag, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { Handshake, Truck, ChevronRight, Plus, Tag, CheckCircle2, Clock, AlertCircle, Store } from 'lucide-react'
 
 const STATUS = {
   paid:           'En attente de remise',
@@ -95,8 +95,18 @@ export default function SellerSpace() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="font-title text-2xl text-nout-dark mb-1">Espace Vendeur</h1>
-      <p className="text-sm text-gray-400 mb-6">Suis tes gains et ton activité.</p>
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <h1 className="font-title text-2xl text-nout-dark mb-1">Espace Vendeur</h1>
+          <p className="text-sm text-gray-400">Suis tes gains et ton activité.</p>
+        </div>
+        <Link
+          to={`/profil/${user.id}`}
+          className="flex-shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-nout-primary border border-nout-primary/30 rounded-full px-4 py-2 hover:bg-[#EAF6F5] transition-colors"
+        >
+          <Store className="w-4 h-4" /> Voir ma vitrine
+        </Link>
+      </div>
 
       {/* ── ALERTE : activer les paiements (si pas configuré) ── */}
       {!paiementsActifs && (
