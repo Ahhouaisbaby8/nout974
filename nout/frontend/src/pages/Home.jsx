@@ -249,7 +249,7 @@ export default function Home() {
             </select>
             <button
               type="submit"
-              className="flex-shrink-0 bg-[#007A6E] hover:bg-[#006B61] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
+              className="flex-shrink-0 bg-nout-accent text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Rechercher
             </button>
