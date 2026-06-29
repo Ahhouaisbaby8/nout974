@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Bell, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet } from 'lucide-react'
+import { Heart, Bell, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet, Menu } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHeroOverlay } from '../../context/HeroContext'
 import { getUnreadCount, subscribeToNotifications } from '../../services/notifications'
 import { getAvatarUrl } from '../../utils/avatar'
+import CategoryNav from './CategoryNav'
+import MobileMenu from './MobileMenu'
 
 export default function Header() {
   const { user, profile, logout, isAdmin, unreadCount: unread } = useAuth()
   const { overHero } = useHeroOverlay()
   const navigate  = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [notifCount, setNotifCount] = useState(0)
   const menuRef = useRef(null)
 
@@ -63,6 +66,7 @@ export default function Header() {
   ]
 
   return (
+    <>
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         light
@@ -71,6 +75,15 @@ export default function Header() {
       }`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-3">
+
+        {/* ── BURGER MOBILE ── */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="Ouvrir le menu"
+          className={`lg:hidden -ml-1 w-9 h-9 flex items-center justify-center rounded-full transition-all ${light ? 'text-white hover:bg-white/15' : 'text-nout-muted hover:bg-gray-100'}`}
+        >
+          <Menu className="w-6 h-6" />
+        </button>
 
         {/* ── LOGO ── */}
         <Link
@@ -248,6 +261,18 @@ export default function Header() {
           )}
         </div>
       </div>
+
+      {/* ── 2e RANGÉE : catégories + mega-menu (desktop) ── */}
+      <CategoryNav light={light} />
     </header>
+
+    {/* ── Drawer mobile ── */}
+    <MobileMenu
+      open={mobileOpen}
+      onClose={() => setMobileOpen(false)}
+      isAdmin={isAdmin}
+      isLoggedIn={!!user}
+    />
+    </>
   )
 }

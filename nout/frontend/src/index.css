@@ -89,7 +89,21 @@
   100% { transform: translate(-14vw, 11vh) rotate(-5deg) scale(0.5)  scaleX(-1); opacity: 0; }
 }
 
+/* Apparition douce des dropdowns / mega-menus (animate-fade-in était utilisé mais jamais défini). */
+@keyframes noutFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Drawer mobile : glisse depuis la gauche. */
+@keyframes noutSlideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
 @layer utilities {
+  .animate-fade-in      { animation: noutFadeIn 0.16s ease-out both; }
+  .animate-slide-in-left { animation: noutSlideInLeft 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

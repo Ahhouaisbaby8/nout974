@@ -1,6 +1,6 @@
 export const CATEGORIES = [
   {
-    id: 'vetements-femme', label: 'Vêtements femme',
+    id: 'vetements-femme', label: 'Vêtements femme', navLabel: 'Femme',
     sub: [
       { id: 'femme-hauts',           label: 'Hauts & t-shirts' },
       { id: 'femme-chemises',        label: 'Chemises & blouses' },
@@ -21,7 +21,7 @@ export const CATEGORIES = [
     ],
   },
   {
-    id: 'vetements-homme', label: 'Vêtements homme',
+    id: 'vetements-homme', label: 'Vêtements homme', navLabel: 'Homme',
     sub: [
       { id: 'homme-hauts',         label: 'Hauts & t-shirts' },
       { id: 'homme-chemises',      label: 'Chemises & polos' },
@@ -38,7 +38,7 @@ export const CATEGORIES = [
     ],
   },
   {
-    id: 'vetements-enfant', label: 'Vêtements enfant',
+    id: 'vetements-enfant', label: 'Vêtements enfant', navLabel: 'Enfant',
     sub: [
       { id: 'enfant-bebe',          label: 'Bébé (0-2 ans)' },
       { id: 'enfant-fille',         label: 'Fille' },
@@ -103,7 +103,7 @@ export const CATEGORIES = [
     ],
   },
   {
-    id: 'beaute', label: 'Beauté / Bien-être',
+    id: 'beaute', label: 'Beauté / Bien-être', navLabel: 'Beauté',
     sub: [
       { id: 'beaute-maquillage',  label: 'Maquillage' },
       { id: 'beaute-soins',       label: 'Soins du visage' },
@@ -139,7 +139,7 @@ export const CATEGORIES = [
     ],
   },
   {
-    id: 'createurs', label: 'Fait main · Créateurs 974',
+    id: 'createurs', label: 'Fait main · Créateurs 974', navLabel: 'Créateurs',
     sub: [
       { id: 'crea-bijoux',       label: 'Bijoux & accessoires' },
       { id: 'crea-vetements',    label: 'Vêtements & textile' },

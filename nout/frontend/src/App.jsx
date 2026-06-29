@@ -113,7 +113,7 @@ function AppShell() {
       <ScrollToTop />
       <Header />
 
-      <main className={`flex-1 pb-16 md:pb-0 ${hasHero ? '' : 'pt-[calc(4rem+env(safe-area-inset-top))]'}`}>
+      <main className={`flex-1 pb-16 md:pb-0 ${hasHero ? '' : 'pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-[calc(4rem+2.75rem+env(safe-area-inset-top))]'}`}>
         <Routes>
           {/* Public */}
           <Route path="/"             element={<Home />} />
