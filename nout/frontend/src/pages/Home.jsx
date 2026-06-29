@@ -10,7 +10,6 @@ import PriceRangeSection from '../components/PriceRangeSection'
 import CategoryMenu from '../components/CategoryMenu'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
-import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
 import { Sparkles, PackageOpen } from 'lucide-react'
 import { useHeroRef } from '../context/HeroContext'
 
@@ -255,16 +254,7 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Pill Membres Fondateurs — Position B, sous la recherche */}
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold cursor-default select-none"
-               style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
-            <Sparkles className="w-3.5 h-3.5" style={{ color: '#FF6B4A' }} strokeWidth={2} />
-            <span className="text-white/85">Membres Fondateurs</span>
-            <span className="text-white/30">·</span>
-            <span className="font-bold" style={{ color: '#FF6B4A' }}>
-              {FOUNDER_TOTAL - FOUNDER_TAKEN}/{FOUNDER_TOTAL} places restantes
-            </span>
-          </div>
+          {/* Membres Fondateurs — masqué pour le moment (à la demande) */}
 
         </div>
       </section>
