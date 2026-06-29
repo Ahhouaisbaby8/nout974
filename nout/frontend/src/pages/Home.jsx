@@ -123,7 +123,7 @@ export default function Home() {
     navigate(`/recherche?${params}`)
   }
 
-  const handleCategory = (catId) => navigate(`/recherche?categorie=${catId}`)
+  const handleCategory = (catId) => navigate(`/c/${catId}`)
 
   return (
     <div>

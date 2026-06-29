@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { CATEGORIES } from '../utils/categories'
 import { ChevronDown } from 'lucide-react'
 
@@ -26,8 +26,7 @@ export default function CategoryMenu() {
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
-  const goCategory = (catId) => { setOpenId(null); navigate(`/recherche?categorie=${catId}`) }
-  const goSub      = (catId, subId) => { setOpenId(null); navigate(`/recherche?categorie=${catId}&sous=${subId}`) }
+  const goCategory = (catId) => { setOpenId(null); navigate(`/c/${catId}`) }
 
   // Survol d'une tuile : on programme l'ouverture après un court délai (intent).
   const handleTileEnter = (id) => {
@@ -83,21 +82,23 @@ export default function CategoryMenu() {
           onMouseEnter={cancelTimers}
           className="absolute left-0 right-0 top-full mt-2 z-40 bg-white rounded-2xl shadow-xl border border-[#ECEFF4] p-4 animate-fade-in max-h-[60vh] overflow-y-auto"
         >
-          <button
-            onClick={() => goCategory(openCat.id)}
+          <Link
+            to={`/c/${openCat.id}`}
+            onClick={() => setOpenId(null)}
             className="text-[13px] font-semibold text-nout-turquoise hover:underline mb-3 inline-block"
           >
             Tout voir en {openCat.label} →
-          </button>
+          </Link>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
             {openCat.sub.map(s => (
-              <button
+              <Link
                 key={s.id}
-                onClick={() => goSub(openCat.id, s.id)}
+                to={`/c/${s.id}`}
+                onClick={() => setOpenId(null)}
                 className="text-left px-3 py-2 rounded-lg text-[13px] text-nout-texte hover:bg-[#F1F7FA] hover:text-nout-lagon transition-colors"
               >
                 {s.label}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
