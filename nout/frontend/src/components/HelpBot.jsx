@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { MessageCircle, X, ChevronRight, RotateCcw } from 'lucide-react'
+import { X, ChevronRight, RotateCcw } from 'lucide-react'
+import noutIcon from '../assets/favicon.svg'
 
 // Assistant NOUT — bot GUIDÉ (pas d'API/LLM) : l'utilisateur clique des questions
 // pré-définies, les réponses sont rédigées (toujours exactes). Échappatoire = page Aide.
@@ -77,10 +78,9 @@ export default function HelpBot() {
         <button
           onClick={() => setOpen(true)}
           aria-label="Ouvrir l'assistant NOUT"
-          className="fixed z-40 right-4 md:right-6 bottom-20 md:bottom-6 w-14 h-14 rounded-full text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
-          style={{ background: GRADIENT }}
+          className="fixed z-40 right-4 md:right-6 bottom-20 md:bottom-6 w-14 h-14 rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition-transform"
         >
-          <MessageCircle className="w-6 h-6" />
+          <img src={noutIcon} alt="NOUT" className="w-full h-full" draggable={false} />
         </button>
       )}
 
@@ -90,8 +90,8 @@ export default function HelpBot() {
           {/* En-tête */}
           <div className="flex items-center justify-between px-4 py-3 text-white flex-shrink-0" style={{ background: GRADIENT }}>
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 overflow-hidden p-1">
+                <img src={noutIcon} alt="NOUT" className="w-full h-full" draggable={false} />
               </div>
               <div>
                 <p className="font-semibold text-[15px] leading-tight">Assistant NOUT</p>
