@@ -72,9 +72,10 @@ exports.handler = async (event) => {
     // Créer le compte Connect Express si pas encore fait
     if (!accountId) {
       const account = await stripe.accounts.create({
-        type:    'express',
-        country: 'FR',
-        email:   profile?.email,
+        type:          'express',
+        country:       'FR',
+        email:         profile?.email,
+        business_type: 'individual',   // PARTICULIER → pas de SIRET (le SIRET n'est demandé que pour 'company')
         capabilities: {
           transfers: { requested: true },
         },

@@ -31,6 +31,9 @@ export default function Settings() {
   const [ibanSuccess, setIbanSuccess] = useState(false)
   const [ibanError, setIbanError]     = useState('')
 
+  const [connectLoading, setConnectLoading] = useState(false)
+  const [connectError, setConnectError]     = useState('')
+
   const maskIban = (raw) => {
     if (!raw) return ''
     const clean = raw.replace(/\s/g, '')
@@ -126,6 +129,28 @@ export default function Settings() {
       setIbanError('Erreur lors de l\'enregistrement. Réessaie.')
     } finally {
       setIbanSaving(false)
+    }
+  }
+
+  // Active les paiements vendeur : crée/poursuit le compte Stripe Connect (particulier, sans SIRET)
+  // et redirige vers l'inscription hébergée par Stripe.
+  const handleActivatePayments = async () => {
+    if (connectLoading) return
+    setConnectError('')
+    setConnectLoading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/create-connect-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ userId: user.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Activation impossible. Réessaie.')
+      window.location.href = data.url   // redirection vers l'onboarding Stripe
+    } catch (e) {
+      setConnectError(e.message)
+      setConnectLoading(false)
     }
   }
 
@@ -332,9 +357,31 @@ export default function Settings() {
       {/* ── SECTION PAIEMENTS VENDEUR ── */}
       <div className="mt-8 pt-8 border-t border-[#EEF2F7]">
         <h2 className="font-bold text-nout-dark mb-1">Recevoir mes paiements</h2>
-        <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-          Renseigne ton IBAN pour recevoir l'argent de tes ventes directement sur ton compte bancaire.
+        <p className="text-sm text-gray-500 mb-3 leading-relaxed">
+          Active tes paiements pour recevoir l'argent de tes ventes sur ton compte bancaire.
+          Vérification sécurisée par Stripe, une seule fois — <strong>pas de SIRET</strong> pour un particulier.
         </p>
+
+        {connectError && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-3">
+            {connectError}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleActivatePayments}
+          disabled={connectLoading}
+          className="btn-primary px-6 py-3 text-sm disabled:opacity-60"
+        >
+          {connectLoading ? 'Redirection…' : (profile?.stripe_account_id ? 'Gérer mes paiements' : 'Activer mes paiements')}
+        </button>
+        <p className="text-xs text-gray-400 mt-2 mb-6 leading-relaxed">
+          Tu seras redirigé vers Stripe (notre prestataire de paiement sécurisé) pour vérifier ton identité
+          et ton compte bancaire. C'est à faire une seule fois ; ensuite, chaque vente est versée automatiquement.
+        </p>
+
+        <p className="text-[11px] text-gray-300 uppercase tracking-wide mb-3">Ou enregistre ton IBAN</p>
 
         {/* Toast succès — flottant, auto-disparaît après 3s */}
         {ibanSuccess && (
