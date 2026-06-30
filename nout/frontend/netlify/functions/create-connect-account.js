@@ -99,6 +99,7 @@ exports.handler = async (event) => {
 
   } catch (err) {
     console.error('Connect error:', err.message)
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Impossible de créer le compte vendeur.' }) }
+    // DEBUG TEMPORAIRE : on renvoie le vrai message Stripe pour diagnostiquer (à retirer ensuite).
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `Impossible de créer le compte vendeur. [Stripe: ${err.message}]` }) }
   }
 }
