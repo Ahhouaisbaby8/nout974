@@ -45,12 +45,26 @@ exports.handler = async (event) => {
       }) }
     }
 
-    const [account, balance] = await Promise.all([
-      stripe.accounts.retrieve(accountId),
-      stripe.balance.retrieve({ stripeAccount: accountId }),
-    ])
-    const available = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
-    const pending   = (balance.pending ?? []).find(b => b.currency === 'eur')?.amount ?? 0
+    // 1) Statut du compte (KYC / versements). Si CETTE lecture échoue, c'est le vrai problème → on remonte
+    //    la raison exacte pour diagnostiquer au lieu d'un message générique.
+    let account
+    try {
+      account = await stripe.accounts.retrieve(accountId)
+    } catch (e) {
+      console.error('[wallet-balance] accounts.retrieve:', e?.message, e?.code)
+      return { statusCode: 502, headers, body: JSON.stringify({ error: `Lecture du compte de paiement impossible (${e?.code || e?.message || 'erreur Stripe'}).` }) }
+    }
+
+    // 2) Solde du porte-monnaie. Un compte tout neuf peut ne pas encore exposer de solde : dans ce cas on
+    //    NE plante PAS toute la page — on affiche 0 € et on garde le statut du compte lu à l'étape 1.
+    let available = 0, pending = 0
+    try {
+      const balance = await stripe.balance.retrieve({ stripeAccount: accountId })
+      available = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
+      pending   = (balance.pending ?? []).find(b => b.currency === 'eur')?.amount ?? 0
+    } catch (e) {
+      console.error('[wallet-balance] balance.retrieve:', e?.message, e?.code)
+    }
 
     return { statusCode: 200, headers, body: JSON.stringify({
       activated: true,
