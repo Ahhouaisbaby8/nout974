@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabase'
@@ -25,21 +26,6 @@ export default function Settings() {
   const [error, setError]       = useState('')
 
   const fileInputRef = useRef(null)
-  const [iban, setIban]             = useState('')
-  const [ibanEditing, setIbanEditing] = useState(!profile?.iban)
-  const [ibanSaving, setIbanSaving]   = useState(false)
-  const [ibanSuccess, setIbanSuccess] = useState(false)
-  const [ibanError, setIbanError]     = useState('')
-
-  const [connectLoading, setConnectLoading] = useState(false)
-  const [connectError, setConnectError]     = useState('')
-
-  const maskIban = (raw) => {
-    if (!raw) return ''
-    const clean = raw.replace(/\s/g, '')
-    const last4 = clean.slice(-4)
-    return '**** **** **** **** **** **** ' + last4
-  }
 
   const [showFounderBadge, setShowFounderBadge]       = useState(profile?.show_founder_badge !== false)
   const [badgeToggling, setBadgeToggling]             = useState(false)
@@ -105,52 +91,6 @@ export default function Settings() {
       }
     } finally {
       setSaving(false)
-    }
-  }
-
-  const handleSaveIban = async () => {
-    setIbanError('')
-    setIbanSuccess(false)
-    const cleaned = iban.replace(/[\s-]/g, '').toUpperCase()
-    if (!/^[A-Z]{2}/.test(cleaned)) {
-      return setIbanError('L\'IBAN doit commencer par 2 lettres (ex : FR, RE…)')
-    }
-    if (cleaned.length < 15) {
-      return setIbanError('L\'IBAN doit contenir au moins 15 caractères.')
-    }
-    setIbanSaving(true)
-    try {
-      await updateProfile({ iban: cleaned })
-      setIban('')
-      setIbanEditing(false)
-      setIbanSuccess(true)
-      setTimeout(() => setIbanSuccess(false), 3000)
-    } catch {
-      setIbanError('Erreur lors de l\'enregistrement. Réessaie.')
-    } finally {
-      setIbanSaving(false)
-    }
-  }
-
-  // Active les paiements vendeur : crée/poursuit le compte Stripe Connect (particulier, sans SIRET)
-  // et redirige vers l'inscription hébergée par Stripe.
-  const handleActivatePayments = async () => {
-    if (connectLoading) return
-    setConnectError('')
-    setConnectLoading(true)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/.netlify/functions/create-connect-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
-        body: JSON.stringify({ userId: user.id }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Activation impossible. Réessaie.')
-      window.location.href = data.url   // redirection vers l'onboarding Stripe
-    } catch (e) {
-      setConnectError(e.message)
-      setConnectLoading(false)
     }
   }
 
@@ -354,121 +294,16 @@ export default function Settings() {
 
       </form>
 
-      {/* ── SECTION PAIEMENTS VENDEUR ── */}
+      {/* ── RECEVOIR MES PAIEMENTS → page dédiée « Mon argent » ── */}
       <div className="mt-8 pt-8 border-t border-[#EEF2F7]">
         <h2 className="font-bold text-nout-dark mb-1">Recevoir mes paiements</h2>
         <p className="text-sm text-gray-500 mb-3 leading-relaxed">
-          Active tes paiements pour recevoir l'argent de tes ventes sur ton compte bancaire.
-          Vérification sécurisée par Stripe, une seule fois — <strong>pas de SIRET</strong> pour un particulier.
+          L'argent de tes ventes t'attend dans ton porte-monnaie. Vérifie ton identité une fois, puis
+          retire sur ton compte bancaire quand tu veux — <strong>pas de SIRET</strong> pour un particulier.
         </p>
-
-        {connectError && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3 mb-3">
-            {connectError}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={handleActivatePayments}
-          disabled={connectLoading}
-          className="btn-primary px-6 py-3 text-sm disabled:opacity-60"
-        >
-          {connectLoading ? 'Redirection…' : (profile?.stripe_account_id ? 'Gérer mes paiements' : 'Activer mes paiements')}
-        </button>
-        <p className="text-xs text-gray-400 mt-2 mb-6 leading-relaxed">
-          Tu seras redirigé vers Stripe (notre prestataire de paiement sécurisé) pour vérifier ton identité
-          et ton compte bancaire. C'est à faire une seule fois ; ensuite, chaque vente est versée automatiquement.
-        </p>
-
-        <p className="text-[11px] text-gray-300 uppercase tracking-wide mb-3">Ou enregistre ton IBAN</p>
-
-        {/* Toast succès — flottant, auto-disparaît après 3s */}
-        {ibanSuccess && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl flex items-center gap-2 pointer-events-none">
-            IBAN mis à jour
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {ibanError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
-              {ibanError}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-nout-dark mb-1">IBAN</label>
-            {profile?.iban && !ibanEditing ? (
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  readOnly
-                  value={maskIban(profile.iban)}
-                  className="input-field flex-1 bg-gray-50 text-gray-500 font-mono tracking-wider cursor-default select-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => { setIbanEditing(true); setIban('') }}
-                  className="text-sm text-nout-primary hover:underline whitespace-nowrap"
-                >
-                  Modifier
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
-                  value={iban}
-                  onChange={(e) => { setIban(e.target.value.toUpperCase()); setIbanError('') }}
-                  className="input-field flex-1"
-                  maxLength={42}
-                  autoComplete="off"
-                />
-                {profile?.iban && (
-                  <button
-                    type="button"
-                    onClick={() => { setIbanEditing(false); setIban(''); setIbanError('') }}
-                    className="text-sm text-gray-400 hover:underline whitespace-nowrap"
-                  >
-                    Annuler
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Badge Paiements activés — sous le champ */}
-          {(profile?.stripe_account_id || profile?.iban) && (
-            <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              <span className="text-green-500"></span>
-              <p className="font-semibold text-green-700 text-sm">Paiements activés</p>
-            </div>
-          )}
-
-          {/* Texte d'aide — uniquement si aucun IBAN enregistré */}
-          {!profile?.iban && (
-            <p className="text-xs text-nout-muted">
-              Renseigne ton IBAN pour recevoir tes ventes.
-            </p>
-          )}
-
-          <p className="text-xs text-gray-400 leading-relaxed">
-            Ton IBAN sera utilisé uniquement pour recevoir tes paiements.
-          </p>
-
-          {ibanEditing && (
-            <button
-              type="button"
-              onClick={handleSaveIban}
-              disabled={ibanSaving}
-              className={`btn-primary px-6 py-3 text-sm ${ibanSaving ? 'opacity-60 cursor-not-allowed' : ''}`}
-            >
-              {ibanSaving ? 'Enregistrement…' : 'Enregistrer mon IBAN'}
-            </button>
-          )}
-        </div>
+        <Link to="/compte/paiements" className="inline-block btn-primary px-6 py-3 text-sm">
+          Aller à Mon argent
+        </Link>
       </div>
 
       {/* ── SECTION BADGE FONDATEUR (visible uniquement si is_founder) ── */}

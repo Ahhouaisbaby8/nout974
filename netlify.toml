@@ -21,6 +21,11 @@
 [functions."auto-refund"]
   schedule = "0 * * * *"
 
+# Cron : garde-fou 90 jours du porte-monnaie. Force le virement des fonds dormants d'un vendeur AVANT la
+# limite de retention Stripe (~90 j France), pour ne jamais subir un blocage/vidage du solde. Une fois/jour.
+[functions."sweep-wallets"]
+  schedule = "0 4 * * *"
+
 [[headers]]
   for = "/*"
   [headers.values]

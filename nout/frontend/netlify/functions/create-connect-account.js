@@ -69,6 +69,23 @@ exports.handler = async (event) => {
 
     let accountId = profile?.stripe_account_id
 
+    // AUTO-RÉPARATION : si un stripe_account_id est stocké mais que le compte n'existe plus côté Stripe
+    // (compte supprimé, ID d'un ancien environnement test/live, valeur corrompue), on le repère ICI et on
+    // repart de zéro — au lieu d'échouer plus loin sur accountLinks.create avec « No such account ».
+    if (accountId) {
+      try {
+        await stripe.accounts.retrieve(accountId)
+      } catch (e) {
+        if (e?.code === 'resource_missing' || e?.statusCode === 404) {
+          console.warn(`[connect] stripe_account_id ${accountId} invalide → recréation`)
+          accountId = null
+          await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
+        } else {
+          throw e
+        }
+      }
+    }
+
     // Créer le compte Connect Express si pas encore fait
     if (!accountId) {
       const account = await stripe.accounts.create({
@@ -81,6 +98,12 @@ exports.handler = async (event) => {
         },
         business_profile: {
           product_description: 'Vente d\'articles de seconde main sur NOUT 974',
+        },
+        // MODÈLE PORTE-MONNAIE : versement MANUEL. L'argent des ventes s'accumule dans le solde du compte
+        // connecté (le « porte-monnaie » du vendeur) et n'est viré vers sa banque QUE quand il le demande
+        // (bouton « Retirer »). Sans ça, Stripe viderait le solde vers la banque automatiquement chaque jour.
+        settings: {
+          payouts: { schedule: { interval: 'manual' } },
         },
       })
       accountId = account.id
@@ -98,8 +121,15 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers, body: JSON.stringify({ url: link.url }) }
 
   } catch (err) {
-    console.error('Connect error:', err.message)
-    // DEBUG TEMPORAIRE : on renvoie le vrai message Stripe pour diagnostiquer (à retirer ensuite).
-    return { statusCode: 500, headers, body: JSON.stringify({ error: `Impossible de créer le compte vendeur. [Stripe: ${err.message}]` }) }
+    // Le message brut est journalisé côté serveur (visible dans les logs Netlify), pas renvoyé à
+    // l'utilisateur. Cause n°1 d'échec = Stripe Connect pas activé sur le compte de la PLATEFORME
+    // (dashboard NOUT) : on la détecte pour afficher un message clair et actionnable.
+    console.error('Connect error:', err?.message, err?.code ?? '')
+    const raw = String(err?.message ?? '')
+    const connectNotEnabled = /sign(ed)? up for Connect|Connect (is )?(not )?(enabled|activated)|only.*Connect platforms|managed accounts|review the responsibilities/i.test(raw)
+    const msg = connectNotEnabled
+      ? 'Les paiements vendeur ne sont pas encore activés côté NOUT (Stripe Connect à activer sur le compte de la plateforme). On s\'en occupe — réessaie un peu plus tard.'
+      : 'Impossible de préparer ton compte de paiement pour le moment. Réessaie dans un instant.'
+    return { statusCode: 500, headers, body: JSON.stringify({ error: msg }) }
   }
 }
