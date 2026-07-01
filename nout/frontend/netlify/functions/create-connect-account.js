@@ -110,11 +110,12 @@ exports.handler = async (event) => {
       await supabase.from('profiles').update({ stripe_account_id: accountId }).eq('id', userId)
     }
 
-    // Générer le lien d'onboarding
+    // Générer le lien d'onboarding — retour DIRECT sur « Mon argent » (au lieu de Paramètres) pour que le
+    // vendeur voie tout de suite son statut mis à jour après la vérification Stripe.
     const link = await stripe.accountLinks.create({
       account:     accountId,
-      refresh_url: `${siteUrl}/parametres?stripe=refresh`,
-      return_url:  `${siteUrl}/parametres?stripe=success`,
+      refresh_url: `${siteUrl}/compte/paiements?stripe=refresh`,
+      return_url:  `${siteUrl}/compte/paiements?stripe=success`,
       type:        'account_onboarding',
     })
 

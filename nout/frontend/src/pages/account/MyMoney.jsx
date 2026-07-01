@@ -134,6 +134,9 @@ export default function MyMoney() {
                 Pour retirer tes gains, vérifie ton identité une seule fois (pièce d'identité + IBAN).
                 Vérification sécurisée par Stripe, notre prestataire de paiement — <strong>pas de SIRET</strong> pour un particulier.
               </p>
+              <p className="text-xs text-gray-500 mb-3 leading-relaxed bg-[#F8FAFC] border border-[#E6EAF0] rounded-lg px-3 py-2">
+                Stripe affichera « Entrepreneur individuel » : c'est juste le terme administratif pour un <strong>particulier</strong>. Aucune entreprise ni SIRET à créer — c'est normal.
+              </p>
               <button
                 type="button"
                 onClick={startVerification}
