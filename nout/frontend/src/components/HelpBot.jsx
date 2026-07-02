@@ -32,7 +32,7 @@ const QA = [
   },
   {
     id: 'tax', label: 'Ça peut me poser problème (impôts) ?',
-    answer: "Non, si tu vends tes affaires perso d'occasion : c'est entre particuliers, non imposable et sans immatriculation, quel que soit le montant. Stripe affiche « Entrepreneur individuel » — c'est juste une étiquette technique pour un particulier, ça ne crée aucune obligation. Ce n'est que si tu achètes pour revendre régulièrement (activité pro) que tu dois t'immatriculer. En cas de doute, renseigne-toi auprès d'un expert-comptable.",
+    answer: "Vends tranquille : tes paiements passent par Stripe, qui sécurise tout et te protège de la fraude. Vendre tes affaires perso = entre particuliers, non imposable et sans immatriculation, quel que soit le montant. Le mot « Entrepreneur individuel » de Stripe est juste une étiquette technique pour un particulier. Comme sur Vinted ou Leboncoin, au-delà de 30 ventes ou 2 000 €/an, tu reçois un récapitulatif et tes infos sont transmises au fisc — une simple transparence, ça ne te rend pas pro. Seule exception : acheter pour revendre régulièrement = activité pro à déclarer. Un doute ? Un expert-comptable te renseignera.",
     link: { to: '/aide', label: "Plus d'infos" },
   },
   {
