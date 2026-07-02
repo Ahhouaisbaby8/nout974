@@ -72,7 +72,10 @@ exports.handler = async (event) => {
       components: { account_onboarding: { enabled: true } },
     })
 
-    return { statusCode: 200, headers, body: JSON.stringify({ clientSecret: accountSession.client_secret }) }
+    // On renvoie AUSSI la clé publique Stripe si elle est configurée côté serveur (STRIPE_PUBLIC_KEY),
+    // pour que le front réutilise la config existante SANS avoir besoin d'une variable VITE_ dédiée.
+    const publishableKey = process.env.STRIPE_PUBLIC_KEY || process.env.VITE_STRIPE_PUBLIC_KEY || null
+    return { statusCode: 200, headers, body: JSON.stringify({ clientSecret: accountSession.client_secret, publishableKey }) }
   } catch (err) {
     console.error('[create-account-session] erreur:', err?.message, err?.code ?? '')
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Impossible de préparer la vérification pour le moment.' }) }
