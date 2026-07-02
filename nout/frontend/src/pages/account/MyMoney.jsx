@@ -1,10 +1,7 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../services/supabase'
-
-// Onboarding EMBARQUÉ (libs Stripe lourdes) → chargé à la demande, isolé dans son propre chunk.
-const StripeEmbeddedOnboarding = lazy(() => import('./StripeEmbeddedOnboarding'))
 
 // « Mon argent » — le porte-monnaie vendeur.
 // L'argent des ventes s'accumule dans le solde Stripe du vendeur (compte connecté, versement manuel) et
@@ -22,7 +19,6 @@ export default function MyMoney() {
   const [connectLoading, setConnectLoading] = useState(false)
   const [payoutLoading, setPayoutLoading]   = useState(false)
   const [toast, setToast]     = useState('')
-  const [showOnboarding, setShowOnboarding] = useState(false)  // affiche la sous-page Stripe embarquée
 
   const authHeaders = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -116,22 +112,6 @@ export default function MyMoney() {
           <div className="h-28 bg-gray-100 rounded-2xl" />
           <div className="h-12 bg-gray-100 rounded-xl w-1/2" />
         </div>
-      ) : showOnboarding ? (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowOnboarding(false)}
-            className="text-sm text-gray-500 hover:underline mb-4"
-          >
-            ← Retour
-          </button>
-          <Suspense fallback={<div className="text-sm text-gray-500 py-6">Chargement de la vérification…</div>}>
-            <StripeEmbeddedOnboarding
-              onExit={() => { setShowOnboarding(false); loadBalance() }}
-              onFallback={startVerification}
-            />
-          </Suspense>
-        </div>
       ) : (
         <>
           {/* Carte solde */}
@@ -159,10 +139,11 @@ export default function MyMoney() {
               </p>
               <button
                 type="button"
-                onClick={() => setShowOnboarding(true)}
-                className="btn-primary px-6 py-3 text-sm"
+                onClick={startVerification}
+                disabled={connectLoading}
+                className="btn-primary px-6 py-3 text-sm disabled:opacity-60"
               >
-                Vérifier mon identité pour retirer
+                {connectLoading ? 'Redirection…' : 'Vérifier mon identité pour retirer'}
               </button>
             </div>
           )}
@@ -178,10 +159,11 @@ export default function MyMoney() {
               </p>
               <button
                 type="button"
-                onClick={() => setShowOnboarding(true)}
-                className="btn-primary px-6 py-3 text-sm"
+                onClick={startVerification}
+                disabled={connectLoading}
+                className="btn-primary px-6 py-3 text-sm disabled:opacity-60"
               >
-                Terminer ma vérification
+                {connectLoading ? 'Redirection…' : 'Terminer ma vérification'}
               </button>
             </div>
           )}
@@ -207,10 +189,11 @@ export default function MyMoney() {
               </p>
               <button
                 type="button"
-                onClick={() => setShowOnboarding(true)}
-                className="text-sm text-[#0E8C82] font-medium hover:underline mt-2"
+                onClick={startVerification}
+                disabled={connectLoading}
+                className="text-sm text-[#0E8C82] font-medium hover:underline mt-2 disabled:opacity-60"
               >
-                Gérer mes informations bancaires
+                {connectLoading ? 'Redirection…' : 'Gérer mes informations bancaires'}
               </button>
             </div>
           )}
