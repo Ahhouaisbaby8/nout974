@@ -27,8 +27,13 @@ const QA = [
   },
   {
     id: 'payout', label: 'Comment je reçois mon argent ?',
-    answer: "Renseigne ton IBAN dans tes réglages. Dès que l'acheteur confirme la remise, le virement part automatiquement sur ton compte.",
-    link: { to: '/compte/paiements', label: 'Mes paiements' },
+    answer: "L'argent de tes ventes s'accumule dans ton porte-monnaie « Mon argent ». Tu vérifies ton identité une seule fois (pièce d'identité + IBAN, pas de SIRET pour un particulier), puis tu retires ton solde vers ton compte bancaire quand tu veux.",
+    link: { to: '/compte/paiements', label: 'Mon argent' },
+  },
+  {
+    id: 'tax', label: 'Ça peut me poser problème (impôts) ?',
+    answer: "Non, si tu vends tes affaires perso d'occasion : c'est entre particuliers, non imposable et sans immatriculation, quel que soit le montant. Stripe affiche « Entrepreneur individuel » — c'est juste une étiquette technique pour un particulier, ça ne crée aucune obligation. Ce n'est que si tu achètes pour revendre régulièrement (activité pro) que tu dois t'immatriculer. En cas de doute, renseigne-toi auprès d'un expert-comptable.",
+    link: { to: '/aide', label: "Plus d'infos" },
   },
   {
     id: 'ship', label: 'Livraison ou main propre ?',

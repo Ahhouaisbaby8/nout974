@@ -20,6 +20,14 @@ const FAQ = [
     a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. Le vendeur reçoit son prix en entier. L'acheteur paie le prix affiché, plus une protection acheteur de 10 % + 0,25 € (et les frais de port s'il choisit une livraison) qui couvre le traitement et la sécurisation de la transaction.",
   },
   {
+    q: "Comment je reçois l'argent de mes ventes ?",
+    a: "L'argent de tes ventes s'accumule dans ton porte-monnaie, dans « Mon argent ». Pour le retirer sur ton compte bancaire, tu vérifies ton identité une seule fois (pièce d'identité + IBAN) auprès de Stripe, notre prestataire de paiement — pas de SIRET pour un particulier. Ensuite, tu vires ton solde vers ta banque quand tu veux, en un clic.",
+  },
+  {
+    q: "Vendre sur NOUT peut-il me poser un problème (impôts, statut) ?",
+    a: "Non, si tu vends tes propres affaires d'occasion : c'est de la vente entre particuliers, non imposable et sans immatriculation, quel que soit le montant. Notre partenaire de paiement (Stripe) affiche le libellé « Entrepreneur individuel » : c'est juste une étiquette technique pour un particulier, ça ne t'inscrit nulle part et ne crée aucune obligation. En revanche, si tu achètes pour revendre régulièrement (activité professionnelle), tu dois t'immatriculer (micro-entrepreneur). Comme toutes les plateformes, au-delà de 30 ventes ou 2 000 €/an, NOUT transmet tes informations à l'administration fiscale (obligation légale) — cela ne fait pas de toi un professionnel. En cas de doute, renseigne-toi auprès d'un expert-comptable ou des impôts.",
+  },
+  {
     q: "Puis-je modifier ou supprimer mon annonce ?",
     a: "Oui. Ouvre ton annonce et tu verras les boutons \"Modifier\" et \"Supprimer\" si tu en es le propriétaire. La suppression est définitive.",
   },
