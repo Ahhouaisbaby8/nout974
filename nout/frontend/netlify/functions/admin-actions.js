@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const Stripe = require('stripe')
+const { computeRefundAmount } = require('./_fees')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -117,9 +118,10 @@ exports.handler = async (event) => {
       }
 
       case 'resolve_dispute_refund': {
-        // Litige tranché EN FAVEUR DE L'ACHETEUR : remboursement Stripe intégral + remise en ligne.
+        // Litige tranché EN FAVEUR DE L'ACHETEUR : remboursement du prix + port. OPTION A : NOUT GARDE ses
+        // frais de protection (jamais de perte pour NOUT). Garde-fou anciennes commandes = remboursement plein.
         const { data: order } = await supabase.from('orders')
-          .select('id, status, stripe_payment_id, listing_id')
+          .select('id, status, stripe_payment_id, listing_id, total_price, seller_payout, shipping_fee, shipping_method')
           .eq('id', targetId).single()
         if (!order) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Commande introuvable.' }) }
         if (order.status !== 'disputed') return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande n\'est pas en litige.' }) }
@@ -133,8 +135,18 @@ exports.handler = async (event) => {
         if (!claimed || !claimed.length) {
           return { statusCode: 409, headers, body: JSON.stringify({ error: 'Commande déjà traitée (remboursée, versée ou clôturée).' }) }
         }
+        const refundInfo = computeRefundAmount(order)
+        // Pas de pré-check de solde ici (la revue argent a montré que le solde GLOBAL est un mauvais signal
+        // et bloquerait des remboursements légitimes) : si le solde est réellement insuffisant, Stripe
+        // rejette le refund et le catch ci-dessous rollback la réservation (disputed) — Stripe est l'arbitre.
         try {
-          await stripe.refunds.create({ payment_intent: order.stripe_payment_id }, { idempotencyKey: `refund_${order.id}` })
+          await stripe.refunds.create(
+            {
+              payment_intent: order.stripe_payment_id,
+              ...(refundInfo.amountCents > 0 ? { amount: refundInfo.amountCents } : {}),
+            },
+            { idempotencyKey: `refund_${order.id}` },
+          )
         } catch (e) {
           // Refund échoué : on annule la réservation pour pouvoir re-tenter (rollback vers 'disputed').
           await supabase.from('orders').update({ status: 'disputed' }).eq('id', order.id).eq('status', 'refunded')

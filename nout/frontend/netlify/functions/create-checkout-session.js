@@ -1,31 +1,9 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { randomInt } = require('crypto')
-
-// Tarifs livraison — DOIT rester synchronisé avec src/utils/shipping.js (source de vérité front).
-// MODÈLE « protection acheteur » (façon Vinted) : le VENDEUR reçoit son prix EN ENTIER.
-// Les frais NOUT (10% + 0,25€) sont AJOUTÉS À L'ACHETEUR ; NOUT paie Stripe avec et garde ~8,5%.
-const SHIPPING_FEES = { hand: 0, relay: 6.51, home: 10.80 }
-const COMMISSION_RATE  = 0.10   // 10 % du prix — protection acheteur (payée par l'acheteur)
-const COMMISSION_FIXED = 0.25   // + 0,25 € fixe
-
-// Frais de protection acheteur = 10% + 0,25€, AJOUTÉS au prix payé par l'acheteur.
-function computeProtectionFee(price) {
-  return Math.round((price * COMMISSION_RATE + COMMISSION_FIXED) * 100) / 100
-}
-
-// Recalcul SÉCURISÉ du total ACHETEUR côté serveur (ne jamais faire confiance au client).
-// = prix + protection acheteur (10%+0,25€) + port.
-function computeTotals(price, methodId) {
-  const port = SHIPPING_FEES[methodId] ?? 0
-  return Math.round((price + computeProtectionFee(price) + port) * 100) / 100
-}
-
-// Versement au vendeur = le PRIX AFFICHÉ, INTÉGRALEMENT (les frais sont payés par l'acheteur).
-// Stocké sur la commande, utilisé au transfert escrow à la confirmation du code.
-function computeSellerPayout(price) {
-  return Math.round(Number(price) * 100) / 100
-}
+// Frais NOUT : source unique partagée (voir _fees.js) — DOIT rester synchronisée avec src/utils/shipping.js.
+// Modèle « protection acheteur » : le vendeur reçoit son prix plein, les frais sont ajoutés à l'acheteur.
+const { SHIPPING_FEES, computeProtectionFee, computeTotals, computeSellerPayout } = require('./_fees')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -191,6 +169,7 @@ exports.handler = async (event) => {
       listing_id:        listingId,
       total_price:       totalAcheteur,
       seller_payout:     sellerPayout,
+      shipping_fee:      port,      // port FIGÉ (sert au calcul de remboursement, stable dans le temps)
       shipping_method:   method,
       shipping_phone:    isDelivery ? phone : null,
       shipping_address:  isDelivery ? addr : null,

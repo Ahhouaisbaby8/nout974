@@ -312,5 +312,65 @@ exports.handler = async (event) => {
     }
   }
 
+  if (stripeEvent.type === 'charge.dispute.created') {
+    const dispute = stripeEvent.data.object
+    const paymentIntent = dispute.payment_intent
+    if (paymentIntent) {
+      // Contestation bancaire (chargeback) de l'acheteur. Modèle « separate charges & transfers » : la banque
+      // reprend le montant sur le solde PLATEFORME, mais le versement déjà poussé au vendeur n'est PAS reversé
+      // automatiquement. On (1) flague la commande 'chargeback' [→ gèle les retraits du vendeur, cf.
+      // request-payout/sweep-wallets], (2) tente de RAPPELER le transfert encore dans le wallet du vendeur
+      // (reversal) pour que NOUT ne perde pas le prix, (3) alerte l'admin pour le résiduel (CGV §8).
+      const { data: order } = await supabase.from('orders')
+        .select('id, status, seller_id, listing:listings!listing_id(title), seller:profiles!seller_id(stripe_account_id)')
+        .eq('stripe_payment_id', paymentIntent)
+        .maybeSingle()
+      if (order && order.status !== 'chargeback') {
+        await supabase.from('orders').update({ status: 'chargeback' }).eq('id', order.id)
+        const montant = ((dispute.amount ?? 0) / 100).toFixed(2)
+
+        // (2) Récupération auto : rappeler le transfert vendeur tant que les fonds sont ENCORE dans son wallet.
+        let reversalNote = 'Aucun versement vendeur identifié à récupérer.'
+        const vendorStripeId = order.seller?.stripe_account_id
+        if (vendorStripeId) {
+          try {
+            const transfers = await stripe.transfers.list({ destination: vendorStripeId, limit: 100 })
+            const t = transfers.data.find((x) => String(x.metadata?.order_id) === String(order.id) && x.amount_reversed < x.amount)
+            if (t) {
+              const rev = await stripe.transfers.createReversal(
+                t.id,
+                { amount: t.amount - t.amount_reversed, metadata: { order_id: String(order.id), reason: 'chargeback' } },
+                { idempotencyKey: `revchargeback_${order.id}` },
+              )
+              reversalNote = `Versement vendeur RÉCUPÉRÉ : ${(rev.amount / 100).toFixed(2)} € rapatriés du porte-monnaie du vendeur.`
+            } else {
+              reversalNote = 'Transfert vendeur introuvable ou déjà entièrement rappelé — à vérifier manuellement.'
+            }
+          } catch (e) {
+            reversalNote = `Récupération auto ÉCHOUÉE (${e.message}) — le vendeur a probablement déjà retiré ses fonds. Récupérer via CGV §8.`
+          }
+        }
+
+        await sendEmail(
+          'contact@nout.re',
+          `Chargeback reçu — commande ${order.id}`,
+          `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
+             <h1 style="color:#B91C1C;font-size:18px;margin:0 0 12px">Contestation bancaire (chargeback)</h1>
+             <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+               Contestation de <strong>${montant} €</strong> sur la commande <strong>${order.id}</strong>
+               (« ${escHtml(order.listing?.title ?? 'article')} »). Statut → <strong>chargeback</strong> (retraits du vendeur gelés).
+             </p>
+             <p style="color:#1A1A2E;font-size:14px;line-height:1.6"><strong>Récupération :</strong> ${escHtml(reversalNote)}</p>
+             <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+               À traiter dans Stripe (fournir les preuves si la contestation est infondée). Résiduel éventuel
+               (protection + port + frais de litige) à récupérer auprès du vendeur (CGV §8).
+             </p>
+           </div>`,
+        )
+        console.log(`[webhook] chargeback order ${order.id} (${montant} €) — ${reversalNote}`)
+      }
+    }
+  }
+
   return { statusCode: 200, body: 'OK' }
 }

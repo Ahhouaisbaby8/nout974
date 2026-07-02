@@ -1,12 +1,9 @@
-// Action ACHETEUR sur une LIVRAISON (modèle Vinted) :
-//   - action 'received' (défaut) : « J'ai bien reçu » → libère le paiement au vendeur (commande 'shipped').
-//   - action 'problem'           : « Signaler un problème » → passe la commande en 'disputed' (exclue de
-//                                  l'auto-versement ; le support tranche).
-// Le face-à-face garde son code via confirm-escrow.js. Anti-double-paiement : transfert idempotent +
-// transition de statut atomique (cf. _payout.js) — on ne pose AUCUN verrou avant que l'argent soit parti.
-const { checkAndAssignFounder } = require('./_founder-check')
-const { releaseSellerPayout } = require('./_payout')
-const Stripe = require('stripe')
+// Action ACHETEUR sur une LIVRAISON :
+//   - action 'problem'  : « Signaler un problème » → passe la commande en 'disputed' (le support tranche).
+//   - action 'received' : DÉSACTIVÉE. La réception d'un colis n'est plus validée par l'acheteur ; elle le
+//     sera par le SUIVI DU TRANSPORTEUR (à brancher). Cette fonction ne déclenche donc PLUS aucun versement
+//     vendeur — elle ne fait que gérer le signalement de problème.
+// Le face-à-face garde son code via confirm-escrow.js.
 const { createClient } = require('@supabase/supabase-js')
 
 const escHtml = (str) =>
@@ -17,7 +14,6 @@ const escHtml = (str) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 
-const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
@@ -99,75 +95,18 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true, status: 'disputed' }) }
     }
 
-    // ── J'AI BIEN REÇU : uniquement une livraison expédiée. ──
-    if (order.status !== 'shipped') {
-      const msg = (order.status === 'completed' || order.status === 'payout_pending')
-        ? 'Cette commande est déjà confirmée.'
-        : order.status === 'paid'
-          ? 'Le vendeur n\'a pas encore expédié ton colis.'
-          : order.status === 'disputed'
-            ? 'Un problème a été signalé sur cette commande : notre équipe la traite.'
-            : 'Cette commande ne peut pas être confirmée.'
-      return { statusCode: 400, headers, body: JSON.stringify({ error: msg }) }
+    // ── « J'AI BIEN REÇU » DÉSACTIVÉ pour la livraison ──
+    // La réception d'un colis n'est plus validée par l'acheteur : ce sera le SUIVI DU TRANSPORTEUR
+    // qui confirmera la livraison (à brancher). L'acheteur ne peut donc plus débloquer le paiement —
+    // il peut seulement « Signaler un problème » (mode 'problem' ci-dessus). AUCUN mouvement d'argent ici.
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({
+        error: 'La réception est validée automatiquement via le suivi du transporteur. En cas de souci, utilise « Signaler un problème ».',
+        code: 'received_disabled',
+      }),
     }
-
-    // Versement : transfert idempotent D'ABORD, finalisation atomique ENSUITE (cf. _payout.js).
-    const res = await releaseSellerPayout({ stripe, supabase, order })
-    if (res.outcome === 'retry') {
-      return { statusCode: 503, headers, body: JSON.stringify({ error: 'Le versement n\'a pas pu être finalisé à l\'instant. Réessaie dans un moment.' }) }
-    }
-    if (res.outcome === 'already') {
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, status: 'completed' }) }
-    }
-
-    // outcome 'settled' → CET appel a finalisé la commande : notifs vendeur + éligibilité fondateur.
-    await Promise.allSettled([
-      checkAndAssignFounder(order.buyer_id).catch(e => console.error('[founder] buyer:', e.message)),
-      checkAndAssignFounder(order.seller_id).catch(e => console.error('[founder] seller:', e.message)),
-    ])
-
-    const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
-    const montant      = res.payoutNet.toFixed(2)
-    if (order.seller?.email) {
-      const corps = (res.vendorStripeId && res.transferOk)
-        ? `<strong>${montant} €</strong> vont être virés sur ton compte bancaire dans les prochains jours ouvrés.`
-        : `Pour recevoir tes <strong>${montant} €</strong>, active tes paiements dans <strong>Paramètres → Activer les paiements</strong>.`
-      await sendEmail(
-        order.seller.email,
-        `Ton acheteur a confirmé la réception — ${order.listing?.title ?? 'NOUT 974'}`,
-        `
-          <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px 24px;background:#F8FAFF">
-            <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-              <div style="text-align:center;margin-bottom:24px">
-                <span style="font-size:48px">🎉</span>
-                <h1 style="color:#1A3A8F;font-size:22px;margin:12px 0 4px">Réception confirmée</h1>
-                <p style="color:#6B7A99;margin:0">Bonjour ${escHtml(order.seller.username)}, l'acheteur a bien reçu son colis.</p>
-              </div>
-              <div style="background:#F5F0E8;border-radius:12px;padding:20px;margin:20px 0">
-                <p style="margin:0 0 8px;color:#6B7A99;font-size:13px">Article vendu</p>
-                <p style="margin:0 0 4px;font-weight:bold;color:#1A1A2E;font-size:16px">${titreAnnonce}</p>
-                <p style="margin:0;font-size:24px;font-weight:800;color:#00C4B4">${montant} €</p>
-              </div>
-              <p style="color:#6B7A99;font-size:14px;line-height:1.6">${corps}</p>
-            </div>
-          </div>
-        `,
-      )
-    }
-    if (order.seller_id) {
-      fetch(`${SITE_URL}/.netlify/functions/send-push`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
-        body: JSON.stringify({
-          receiver_id: order.seller_id,
-          title: '🎉 Réception confirmée — NOUT 974',
-          body: `L'acheteur a reçu « ${order.listing?.title ?? 'ton article'} ». Ton paiement est en route.`,
-          url: '/commandes?tab=ventes',
-        }),
-      }).catch(err => console.error('send-push vendeur confirm-receipt:', err.message))
-    }
-
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, status: res.orderStatus }) }
   } catch (err) {
     console.error('[confirm-receipt] erreur:', err.message)
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la confirmation. Réessaie.' }) }

@@ -311,18 +311,9 @@ function BuyerTrackingPanel({ order, onConfirmed }) {
         <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2">{error}</div>
       )}
 
-      <button
-        type="button"
-        onClick={() => callAction('received')}
-        disabled={!!loading}
-        className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-          loading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
-        }`}
-      >
-        {loading === 'received' ? 'Confirmation…' : "J'ai bien reçu mon colis"}
-      </button>
-      <p className="text-[11px] text-gray-400 text-center leading-relaxed">
-        Confirme la réception pour libérer le paiement au vendeur.
+      <p className="text-[12px] text-gray-500 text-center leading-relaxed">
+        La réception est validée automatiquement via le suivi du transporteur. Ton paiement reste protégé
+        jusque-là, tu n'as rien à faire.
       </p>
       <button
         type="button"

@@ -45,7 +45,14 @@ export default function CGV() {
         <P>Pour tout litige de consommation non résolu, vous pouvez avoir recours au médiateur de la consommation.</P>
       </Section>
 
-      <Section title="8. Droit applicable">
+      <Section title="8. Remboursements, contestations de paiement et responsabilité financière">
+        <P>NOUT agit en qualité d'intermédiaire technique et financier. <strong>Le coût d'un remboursement, d'une contestation de paiement (« chargeback ») ou de toute pénalité associée est supporté par la partie à l'origine du problème — jamais par NOUT.</strong></P>
+        <P>Lorsqu'un remboursement résulte d'un manquement du <strong>vendeur</strong> (article non remis, non conforme à la description, contrefait, ou comportement frauduleux), le vendeur en supporte le coût intégral. NOUT est autorisé à récupérer ces sommes (montant remboursé et frais éventuels) en les déduisant du solde du vendeur, de ses versements à venir, ou par tout autre moyen de recouvrement.</P>
+        <P>Les <strong>frais de protection acheteur</strong> rémunèrent la sécurisation de la transaction (paiement sécurisé, séquestre des fonds, service de remboursement). À ce titre, ils <strong>restent acquis à NOUT et ne sont pas remboursés en cas de remboursement, quel qu'en soit le motif</strong>. L'acheteur est remboursé du prix de l'article et, le cas échéant, des frais de livraison non engagés.</P>
+        <P>Le vendeur s'engage à garantir et indemniser NOUT de toute somme (remboursement, frais de litige, amende) mise à la charge de NOUT par le prestataire de paiement en raison d'une transaction qui lui est imputable. En créant une annonce, le vendeur accepte cette clause.</P>
+      </Section>
+
+      <Section title="9. Droit applicable">
         <P>Les présentes CGV sont soumises au droit français.</P>
       </Section>
 
