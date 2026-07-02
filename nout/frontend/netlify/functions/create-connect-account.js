@@ -67,11 +67,25 @@ exports.handler = async (event) => {
       .eq('id', userId)
       .single()
 
+    // Crée un compte connecté Express PARTICULIER (sans SIRET ; versement MANUEL = porte-monnaie : l'argent
+    // s'accumule dans le solde du compte connecté et n'est viré à la banque que sur demande « Retirer ») et le stocke.
+    const createConnectedAccount = async () => {
+      const account = await stripe.accounts.create({
+        type:          'express',
+        country:       'FR',
+        email:         profile?.email,
+        business_type: 'individual',
+        capabilities:  { transfers: { requested: true } },
+        business_profile: { product_description: 'Vente d\'articles de seconde main sur NOUT 974' },
+        settings:      { payouts: { schedule: { interval: 'manual' } } },
+      })
+      await supabase.from('profiles').update({ stripe_account_id: account.id }).eq('id', userId)
+      return account.id
+    }
+
     let accountId = profile?.stripe_account_id
 
-    // AUTO-RÉPARATION : si un stripe_account_id est stocké mais que le compte n'existe plus côté Stripe
-    // (compte supprimé, ID d'un ancien environnement test/live, valeur corrompue), on le repère ICI et on
-    // repart de zéro — au lieu d'échouer plus loin sur accountLinks.create avec « No such account ».
+    // AUTO-RÉPARATION 1 : si l'ID stocké ne correspond plus à un compte Stripe existant → on repart de zéro.
     if (accountId) {
       try {
         await stripe.accounts.retrieve(accountId)
@@ -81,45 +95,35 @@ exports.handler = async (event) => {
           accountId = null
           await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
         } else {
-          // Erreur transitoire/autre : on NE plante PAS et on NE recrée PAS — on GARDE l'ID existant et on
-          // laisse accountLinks.create tenter (= comportement d'avant l'ajout de l'auto-réparation).
+          // Erreur transitoire/autre : on NE plante PAS, on garde l'ID et on laisse accountLinks.create tenter.
           console.warn(`[connect] retrieve ${accountId} a échoué (${e?.code || e?.message}) — on garde l'ID`)
         }
       }
     }
 
-    // Créer le compte Connect Express si pas encore fait
-    if (!accountId) {
-      const account = await stripe.accounts.create({
-        type:          'express',
-        country:       'FR',
-        email:         profile?.email,
-        business_type: 'individual',   // PARTICULIER → pas de SIRET (le SIRET n'est demandé que pour 'company')
-        capabilities: {
-          transfers: { requested: true },
-        },
-        business_profile: {
-          product_description: 'Vente d\'articles de seconde main sur NOUT 974',
-        },
-        // MODÈLE PORTE-MONNAIE : versement MANUEL. L'argent des ventes s'accumule dans le solde du compte
-        // connecté (le « porte-monnaie » du vendeur) et n'est viré vers sa banque QUE quand il le demande
-        // (bouton « Retirer »). Sans ça, Stripe viderait le solde vers la banque automatiquement chaque jour.
-        settings: {
-          payouts: { schedule: { interval: 'manual' } },
-        },
-      })
-      accountId = account.id
-      await supabase.from('profiles').update({ stripe_account_id: accountId }).eq('id', userId)
-    }
+    if (!accountId) accountId = await createConnectedAccount()
 
-    // Générer le lien d'onboarding — retour DIRECT sur « Mon argent » (au lieu de Paramètres) pour que le
-    // vendeur voie tout de suite son statut mis à jour après la vérification Stripe.
-    const link = await stripe.accountLinks.create({
-      account:     accountId,
+    const linkParams = {
       refresh_url: `${siteUrl}/compte/paiements?stripe=refresh`,
       return_url:  `${siteUrl}/compte/paiements?stripe=success`,
       type:        'account_onboarding',
-    })
+    }
+
+    // AUTO-RÉPARATION 2 : l'ID stocké existe mais n'est PAS un compte connecté de NOTRE plateforme (ancien
+    // ID, compte plateforme lui-même, valeur corrompue) → Stripe renvoie « not connected to your platform /
+    // does not exist ». Dans ce cas on réinitialise et on recrée un compte connecté propre, puis on réessaie.
+    let link
+    try {
+      link = await stripe.accountLinks.create({ account: accountId, ...linkParams })
+    } catch (e) {
+      const badAccount = e?.code === 'account_invalid'
+        || /not connected to your platform|does not exist|No such account/i.test(String(e?.message ?? ''))
+      if (!badAccount) throw e
+      console.warn(`[connect] accountLink KO pour ${accountId} (${e?.message}) → recréation d'un compte connecté propre`)
+      await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
+      accountId = await createConnectedAccount()
+      link = await stripe.accountLinks.create({ account: accountId, ...linkParams })
+    }
 
     return { statusCode: 200, headers, body: JSON.stringify({ url: link.url }) }
 
