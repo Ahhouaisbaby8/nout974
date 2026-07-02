@@ -81,7 +81,9 @@ exports.handler = async (event) => {
           accountId = null
           await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
         } else {
-          throw e
+          // Erreur transitoire/autre : on NE plante PAS et on NE recrée PAS — on GARDE l'ID existant et on
+          // laisse accountLinks.create tenter (= comportement d'avant l'ajout de l'auto-réparation).
+          console.warn(`[connect] retrieve ${accountId} a échoué (${e?.code || e?.message}) — on garde l'ID`)
         }
       }
     }
@@ -128,9 +130,10 @@ exports.handler = async (event) => {
     console.error('Connect error:', err?.message, err?.code ?? '')
     const raw = String(err?.message ?? '')
     const connectNotEnabled = /sign(ed)? up for Connect|Connect (is )?(not )?(enabled|activated)|only.*Connect platforms|managed accounts|review the responsibilities/i.test(raw)
-    const msg = connectNotEnabled
-      ? 'Les paiements vendeur ne sont pas encore activés côté NOUT (Stripe Connect à activer sur le compte de la plateforme). On s\'en occupe — réessaie un peu plus tard.'
-      : 'Impossible de préparer ton compte de paiement pour le moment. Réessaie dans un instant.'
-    return { statusCode: 500, headers, body: JSON.stringify({ error: msg }) }
+    const base = connectNotEnabled
+      ? 'Les paiements vendeur ne sont pas encore activés côté NOUT (Stripe Connect à activer sur le compte de la plateforme).'
+      : 'Impossible de préparer ton compte de paiement pour le moment.'
+    // DIAGNOSTIC TEMPORAIRE : on renvoie le code + message Stripe pour identifier la vraie cause. À retirer.
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `${base} [diag: ${err?.code || ''} — ${err?.message || ''}]`.trim() }) }
   }
 }
