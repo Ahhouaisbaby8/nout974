@@ -63,7 +63,6 @@ exports.handler = async (event) => {
   } catch (err) {
     const status = err instanceof UbnError ? err.status : 502
     console.error('ubn-points-relais error:', err.code || '', err.message)
-    // [diag temporaire] code/message EXACT d'UBN pour distinguer invalid_api_key vs source_site_blocked. À RETIRER.
-    return { statusCode: status, headers, body: JSON.stringify({ error: 'Impossible de récupérer les points relais UBN.', _diag: { code: err.code || null, message: err.message || null, status: err.status || null } }) }
+    return { statusCode: status, headers, body: JSON.stringify({ error: 'Impossible de récupérer les points relais UBN.' }) }
   }
 }
