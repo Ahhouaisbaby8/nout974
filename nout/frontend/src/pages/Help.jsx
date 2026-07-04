@@ -17,7 +17,23 @@ const FAQ = [
   },
   {
     q: "Comment fonctionne le paiement ?",
-    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. Le vendeur reçoit son prix en entier. L'acheteur paie le prix affiché, plus une protection acheteur de 10 % + 0,25 € (et les frais de port s'il choisit une livraison) qui couvre le traitement et la sécurisation de la transaction.",
+    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. Le vendeur reçoit son prix en entier. L'acheteur paie le prix affiché, plus une protection acheteur de 10 % + 0,25 € (et les frais de port s'il choisit une livraison) qui couvre le traitement et la sécurisation de la transaction. Point important : l'argent est bloqué en sécurité et n'est versé au vendeur qu'une fois la transaction confirmée — ni l'acheteur ni le vendeur ne peut « prendre l'argent et disparaître ».",
+  },
+  {
+    q: "Comment se passe une remise en main propre ?",
+    a: "C'est le mode le plus simple, et gratuit. L'acheteur paie et reçoit un code à 6 chiffres. Au rendez-vous, il remet ce code au vendeur, qui le saisit sur NOUT : le paiement est alors libéré aussitôt. Conseil vendeur important : saisis toujours le code au moment de la remise, AVANT de laisser partir l'objet — c'est ta garantie d'être payé. Conseil acheteur : ne donne ton code qu'après avoir vérifié l'article, et privilégie un lieu public pour le rendez-vous.",
+  },
+  {
+    q: "Comment se passe la livraison, côté vendeur ?",
+    a: "Quand l'acheteur choisit la livraison, il paie l'article ET les frais de port au moment de la commande. Le vendeur reçoit l'adresse, emballe l'article, l'expédie via le transporteur puis renseigne le numéro de suivi. Bientôt, NOUT générera l'étiquette d'envoi automatiquement : tu n'auras qu'à déposer ton colis en point relais, sans contacter personne, et le paiement se libérera automatiquement à la livraison. Garde toujours ta preuve d'envoi.",
+  },
+  {
+    q: "Que se passe-t-il si la remise n'est pas confirmée ?",
+    a: "Si le code n'est pas saisi dans les 7 jours, l'acheteur est remboursé automatiquement (ça le protège s'il a payé sans jamais recevoir l'article, ou si le rendez-vous n'a pas eu lieu). C'est pour cela qu'en tant que vendeur, tu dois saisir le code au moment même de la remise. Si tu as bien remis l'objet mais que l'acheteur refuse de donner son code, écris-nous à contact@nout.re avec tes preuves : l'argent reste bloqué et nous examinons le litige.",
+  },
+  {
+    q: "J'ai un problème avec un colis (jamais reçu, vide, abîmé)",
+    a: "Ton paiement est protégé : l'argent reste bloqué tant que ce n'est pas résolu, le vendeur n'est pas payé pendant ce temps. Ne confirme pas la réception et signale le problème sous 48 h à contact@nout.re, avec des photos (le colis et son contenu) et, si possible, une vidéo de déballage. Nous examinons le suivi du transporteur, la preuve d'envoi et les photos, puis nous tranchons : remboursement ou libération du paiement. Si le suivi indique « perdu » ou « non livré », le transporteur est responsable et tu es remboursé (avec l'assurance colis si elle a été souscrite).",
   },
   {
     q: "Comment je reçois l'argent de mes ventes ?",
