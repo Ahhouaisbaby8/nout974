@@ -57,7 +57,7 @@ exports.handler = async (event) => {
 
   try {
     const {
-      listingId, buyerId, shippingMethod, offerId,
+      listingId, buyerId, deliveryId, relayId, relayName, offerId,
       shippingPhone, shippingAddress, shippingCity, shippingPostcode,
     } = JSON.parse(event.body)
 
@@ -66,16 +66,30 @@ exports.handler = async (event) => {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
-    // Valider le mode de livraison (défaut : main propre)
-    const method = SHIPPING_FEES[shippingMethod] !== undefined ? shippingMethod : 'hand'
+    // Option de livraison : id validé contre la table serveur (défaut main propre). Le transporteur et
+    // le mode sont DÉDUITS de l'option ici (jamais crus du client), pour éviter toute incohérence prix.
+    const optionId = SHIPPING_FEES[deliveryId] !== undefined ? deliveryId : 'hand'
+    const OPTION_META = {
+      hand:         { carrier: null,         genericMethod: 'hand',  isRelay: false, isHome: false },
+      ubn_relay:    { carrier: 'ubn',        genericMethod: 'relay', isRelay: true,  isHome: false },
+      chrono_relay: { carrier: 'chronopost', genericMethod: 'relay', isRelay: true,  isHome: false },
+      ubn_home:     { carrier: 'ubn',        genericMethod: 'home',  isRelay: false, isHome: true  },
+      chrono_home:  { carrier: 'chronopost', genericMethod: 'home',  isRelay: false, isHome: true  },
+    }
+    const meta = OPTION_META[optionId] || OPTION_META.hand
+    const isDelivery = optionId !== 'hand'
 
-    // Si livraison : adresse + téléphone obligatoires (recalcul de sécurité côté serveur)
-    const isDelivery = method === 'relay' || method === 'home'
     const clean = (s) => (typeof s === 'string' ? s.trim().slice(0, 200) : '')
     const phone = clean(shippingPhone), addr = clean(shippingAddress)
     const cityShip = clean(shippingCity), postcode = clean(shippingPostcode)
-    if (isDelivery && (!phone || !addr || !cityShip || !postcode)) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Adresse et téléphone obligatoires pour une livraison.' }) }
+    const relay = clean(relayId), relayLbl = clean(relayName)
+
+    // Domicile : adresse complète + téléphone. Point relais : relais choisi + CP/ville + téléphone.
+    if (meta.isHome && (!phone || !addr || !cityShip || !postcode)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Adresse et téléphone obligatoires pour une livraison à domicile.' }) }
+    }
+    if (meta.isRelay && (!relay || !phone || !cityShip || !postcode)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Point relais, code postal, ville et téléphone obligatoires pour un retrait en point relais.' }) }
     }
 
     // Récupérer l'annonce (plus besoin du stripe_account_id vendeur)
@@ -156,8 +170,8 @@ exports.handler = async (event) => {
     // Modèle protection acheteur : total acheteur = prix + protection (10%+0,25€) + port.
     // Versement vendeur = le PRIX PLEIN (les frais sont payés par l'acheteur).
     const protectionFee  = computeProtectionFee(prixArticle)
-    const port           = SHIPPING_FEES[method] ?? 0
-    const totalAcheteur  = computeTotals(prixArticle, method)
+    const port           = SHIPPING_FEES[optionId] ?? 0
+    const totalAcheteur  = computeTotals(prixArticle, optionId)
     const sellerPayout   = computeSellerPayout(prixArticle)
 
     const siteUrl     = process.env.URL || 'http://localhost:8888'
@@ -169,10 +183,16 @@ exports.handler = async (event) => {
       listing_id:        listingId,
       total_price:       totalAcheteur,
       seller_payout:     sellerPayout,
-      shipping_fee:      port,      // port FIGÉ (sert au calcul de remboursement, stable dans le temps)
-      shipping_method:   method,
+      shipping_fee:      port,                 // port FIGÉ (sert au calcul de remboursement, stable dans le temps)
+      shipping_method:   meta.genericMethod,   // 'hand'/'relay'/'home' — générique (compat affichage + logique existante)
+      delivery_option:   optionId,             // option exacte ('ubn_relay'…) pour la création d'étiquette
+      carrier:           meta.carrier,         // 'ubn' | 'chronopost' | null
+      relay_id:          meta.isRelay ? relay : null,
+      relay_label:       meta.isRelay ? relayLbl : null,
+      // ubn-create-shipment.js lit ubn_pr_user_id → on le renseigne pour les relais UBN (compat).
+      ubn_pr_user_id:    (meta.isRelay && meta.carrier === 'ubn') ? relay : null,
       shipping_phone:    isDelivery ? phone : null,
-      shipping_address:  isDelivery ? addr : null,
+      shipping_address:  meta.isHome ? addr : null,
       shipping_city:     isDelivery ? cityShip : null,
       shipping_postcode: isDelivery ? postcode : null,
       status:            'pending',
@@ -228,9 +248,7 @@ exports.handler = async (event) => {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: method === 'home'
-                ? 'Livraison Chronopost à domicile'
-                : 'Livraison Chronopost en point relais',
+              name: `Livraison ${meta.isHome ? 'à domicile' : 'en point relais'}${meta.carrier ? ` (${meta.carrier === 'ubn' ? 'UBN' : 'Chronopost'})` : ''}`,
             },
             unit_amount: Math.round(port * 100),
           },

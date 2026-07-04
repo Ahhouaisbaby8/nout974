@@ -120,8 +120,9 @@ exports.handler = async (event) => {
         const titreAnnonce = escHtml(annonce?.title ?? 'ton article')
         const prixVendeur  = Number(annonce?.price ?? 0).toFixed(2)
         const isLivraison  = order.shipping_method === 'relay' || order.shipping_method === 'home'
-        const modeLabel    = order.shipping_method === 'relay' ? 'Point relais Chronopost'
-                           : order.shipping_method === 'home'  ? 'Livraison à domicile Chronopost'
+        // Libellé neutre : le transporteur (UBN/Chronopost) varie selon l'option choisie par l'acheteur.
+        const modeLabel    = order.shipping_method === 'relay' ? 'Livraison en point relais'
+                           : order.shipping_method === 'home'  ? 'Livraison à domicile'
                            : 'Remise en main propre'
 
         // Email acheteur — code de remise

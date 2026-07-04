@@ -6,10 +6,12 @@ export default function AdminFinances() {
   const [stats, setStats] = useState(null)
 
   useEffect(() => {
-    // Port par mode (synchro avec shipping.js) pour isoler la commission réelle NOUT
+    // Port figé sur la commande (shipping_fee) = source exacte, tous transporteurs. Le PORT par mode
+    // n'est qu'un REPLI pour les anciennes commandes sans shipping_fee (sinon UBN relais/domicile serait
+    // surestimé au tarif Chronopost et la commission afficherait un faux négatif).
     const PORT = { hand: 0, relay: 6.51, home: 10.80 }
     Promise.all([
-      supabase.from('orders').select('total_price, seller_payout, shipping_method').eq('status', 'paid'),
+      supabase.from('orders').select('total_price, seller_payout, shipping_method, shipping_fee').eq('status', 'paid'),
       supabase.from('orders').select('total_price').eq('status', 'delivered'),
       supabase.from('orders').select('*', { count: 'exact', head: true }),
     ]).then(([paid, delivered, total]) => {
@@ -20,7 +22,7 @@ export default function AdminFinances() {
       // Modèle protection acheteur : le vendeur reçoit le PRIX PLEIN, donc commission = la protection (10%+0,25€).
       // Fallback si seller_payout non figé (vieilles commandes) : estimation à partir du total hors port.
       const commission = paidRows.reduce((s, o) => {
-        const port = PORT[o.shipping_method] ?? 0
+        const port = o.shipping_fee != null ? Number(o.shipping_fee) : (PORT[o.shipping_method] ?? 0)
         const payout = o.seller_payout != null
           ? Number(o.seller_payout)
           : (Number(o.total_price) - port) / 1.10

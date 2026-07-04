@@ -45,11 +45,40 @@ export const SHIPPING_METHODS = {
   },
 }
 
+// ─── OPTIONS DE LIVRAISON MULTI-TRANSPORTEUR (checkout) ────────────────────────────
+// L'acheteur choisit son transporteur (UBN ou Chronopost) + le mode. Chaque option porte
+// son PORT et son transporteur. Les prix sont ceux confirmés (UBN moins cher). Ces valeurs
+// DOIVENT rester alignées avec le recalcul serveur (_fees.js SHIPPING_FEES) — jamais croire le client.
+//   carrier : 'ubn' | 'chronopost' | null (main propre)
+//   mode    : mode transporteur ('relais' | 'home'/'express') — sert à la création d'étiquette
+//   needsRelay   : affiche le sélecteur de point relais du transporteur choisi
+//   needsAddress : exige l'adresse de livraison de l'acheteur
+export const DELIVERY_OPTIONS = [
+  { id: 'hand',         carrier: null,         mode: 'hand',    label: 'Remise en main propre',      sublabel: 'Gratuit — paiement protégé par code',  fee: 0,     delay: null,          needsRelay: false, needsAddress: false, recommended: true },
+  { id: 'ubn_relay',    carrier: 'ubn',        mode: 'relais',  label: 'Point relais — UBN',         sublabel: 'Retrait en point relais · sous 48/72h', fee: 4,     delay: 'Sous 48/72h', needsRelay: true,  needsAddress: false },
+  { id: 'chrono_relay', carrier: 'chronopost', mode: 'relais',  label: 'Point relais — Chronopost',  sublabel: 'Retrait en point relais Chronopost',    fee: 6.51,  delay: '1 à 2 j ouvrés', needsRelay: true,  needsAddress: false },
+  { id: 'ubn_home',     carrier: 'ubn',        mode: 'home',    label: 'Domicile — UBN',             sublabel: 'Livraison chez toi · sous 48/72h',      fee: 6,     delay: 'Sous 48/72h', needsRelay: false, needsAddress: true },
+  { id: 'chrono_home',  carrier: 'chronopost', mode: 'express', label: 'Domicile — Chronopost',      sublabel: 'Livraison express chez toi',            fee: 10.80, delay: '1 à 2 j ouvrés', needsRelay: false, needsAddress: true },
+]
+
+// Ordre d'affichage (main propre en premier, puis du moins cher au plus cher)
+export const DELIVERY_ORDER = DELIVERY_OPTIONS.map((o) => o.id)
+
+// Retrouve une option par id (repli sur main propre si inconnu).
+export const getDeliveryOption = (id) => DELIVERY_OPTIONS.find((o) => o.id === id) ?? DELIVERY_OPTIONS[0]
+
+// Port d'une option de livraison. Repli sur l'ancien modèle (relay/home) pour les commandes existantes.
+export const getDeliveryFee = (id) => {
+  const opt = DELIVERY_OPTIONS.find((o) => o.id === id)
+  if (opt) return opt.fee
+  return SHIPPING_METHODS[id]?.fee ?? 0
+}
+
 // Frais de service NOUT, AJOUTÉS À L'ACHETEUR (protection acheteur) : taux variable + part fixe.
 export const COMMISSION_RATE = 0.10   // 10 % du prix
 export const COMMISSION_FIXED = 0.25  // + 0,25 € fixe
 
-// Liste ordonnée pour l'affichage (main propre en premier = mise en avant)
+// Liste ordonnée pour l'affichage (ancien modèle — conservé pour compat)
 export const SHIPPING_ORDER = ['hand', 'relay', 'home']
 
 const method = (methodId) => SHIPPING_METHODS[methodId] ?? SHIPPING_METHODS.hand
@@ -68,7 +97,8 @@ export const computeSellerPayout = (price) =>
   Math.round(Number(price) * 100) / 100
 
 // Total payé par l'ACHETEUR = prix + protection acheteur (10 % + 0,25 €) + port éventuel.
+// Accepte aussi bien un id d'option de livraison ('ubn_relay'…) qu'un ancien mode ('relay').
 export const computeBuyerTotal = (price, methodId = 'hand') => {
-  const total = Number(price) + computeProtectionFee(price) + getShippingFee(methodId)
+  const total = Number(price) + computeProtectionFee(price) + getDeliveryFee(methodId)
   return Math.round(total * 100) / 100
 }

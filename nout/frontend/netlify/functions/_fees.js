@@ -5,7 +5,15 @@
 // MODÈLE « protection acheteur » (façon Vinted) : le VENDEUR reçoit son prix EN ENTIER. Les frais NOUT
 // (10 % + 0,25 €) sont AJOUTÉS À L'ACHETEUR ; NOUT paie Stripe avec et garde le reste (~8,5 %).
 
-const SHIPPING_FEES    = { hand: 0, relay: 6.51, home: 10.80 }
+// Port par option de livraison. `hand`/`relay`/`home` = anciens ids (commandes existantes, compat).
+// `ubn_*`/`chrono_*` = nouvelles options multi-transporteur (checkout). DOIT rester aligné avec
+// src/utils/shipping.js (DELIVERY_OPTIONS). Le serveur recalcule TOUJOURS le port depuis cette table.
+const SHIPPING_FEES    = {
+  hand: 0,
+  relay: 6.51, home: 10.80,          // anciens ids (compat)
+  ubn_relay: 4, chrono_relay: 6.51,  // point relais
+  ubn_home: 6, chrono_home: 10.80,   // domicile
+}
 const COMMISSION_RATE  = 0.10   // 10 % du prix — protection acheteur (payée par l'acheteur)
 const COMMISSION_FIXED = 0.25   // + 0,25 € fixe
 
