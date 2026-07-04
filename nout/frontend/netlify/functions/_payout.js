@@ -49,7 +49,10 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
   if (vendorStripeId && transferCents > 0) {
     try {
       await stripe.transfers.create(
-        { amount: transferCents, currency: 'eur', destination: vendorStripeId, metadata: { order_id } },
+        // transfer_group = 'order_<id>' : permet de RETROUVER PRÉCISÉMENT le(s) transfert(s) d'une commande
+        // via transfers.list({ transfer_group }) — sans limite/pagination — pour ne JAMAIS re-verser un
+        // transfert déjà parti (le rattrapage cron s'en sert ; la clé d'idempotence ne dure que 24h).
+        { amount: transferCents, currency: 'eur', destination: vendorStripeId, transfer_group: `order_${order_id}`, metadata: { order_id } },
         { idempotencyKey: `transfer_${order_id}` },
       )
       transferOk = true

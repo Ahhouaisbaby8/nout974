@@ -1,6 +1,7 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { computeRefundAmount } = require('./_fees')
+const { releaseSellerPayout } = require('./_payout')
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -415,7 +416,122 @@ exports.handler = async (event) => {
     }
   }
 
-  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${frozen} gelée(s) en litige, ${errors} erreur(s).`
+  // ── RATTRAPAGE payout_pending — RÉESSAI SÉCURISÉ DES TRANSFERTS VENDEUR COINCÉS ──
+  // Une vente CONFIRMÉE dont le transfert vers le porte-monnaie du vendeur a ÉCHOUÉ (solde DISPONIBLE
+  // plateforme trop bas au moment T, ou compte vendeur pas prêt) reste bloquée en 'payout_pending'. Le seul
+  // rattrapage existant (drain webhook account.updated) ne se déclenche QUE quand un vendeur active ses
+  // paiements — rien ne réessaie quand le solde redevient positif. Ce balayage réessaie à chaque passage.
+  //
+  // GARDE-FOUS (durci après revue argent adverse — 4 failles corrigées) :
+  //  1) Pas de compte connecté → on NE fait RIEN (surtout pas de fausse notif « argent arrivé »).
+  //  2) Anti double-paiement : la clé d'idempotence Stripe n'est retenue que 24h ; comme on retente au-delà,
+  //     on vérifie D'ABORD chez Stripe qu'aucun transfert n'existe déjà pour cette commande (réponse HTTP
+  //     perdue lors d'un passage précédent) → sinon on marque 'completed' SANS re-transférer.
+  //  3) Anti versé-pendant-litige : si le paiement acheteur est contesté (chargeback), on NE verse PAS.
+  //  4) Notif au vendeur UNIQUEMENT si un vrai transfert a eu lieu ce passage (res.transferOk), jamais sur no-op.
+  // Résiduel connu : course de quelques ms entre le check litige (3) et le transfert → filet = reversal webhook.
+  let drained = 0
+  const { data: pendingPayouts, error: pendingErr } = await supabase
+    .from('orders')
+    .select(`id, status, seller_id, seller_payout, stripe_payment_id,
+             listing:listings!listing_id(title, price),
+             seller:profiles!seller_id(email, username, stripe_account_id)`)
+    .eq('status', 'payout_pending')
+
+  if (pendingErr) {
+    console.error('Erreur lecture commandes payout_pending :', pendingErr.message)
+  } else if (pendingPayouts?.length) {
+    console.log(`${pendingPayouts.length} commande(s) payout_pending à examiner.`)
+    for (const order of pendingPayouts) {
+      const vendorStripeId = order.seller?.stripe_account_id
+      try {
+        // GARDE 1 — pas de compte connecté : transfert impossible. On ne touche à rien (pas de fausse notif).
+        if (!vendorStripeId) continue
+
+        // GARDE 2 — anti double-paiement : un transfert existe-t-il DÉJÀ pour cette commande côté Stripe ?
+        // (a) Recherche PRÉCISE par transfer_group ('order_<id>') → pas de limite/pagination, fiable à tout
+        //     volume pour les transferts créés DEPUIS ce correctif (corrige le trou « limit:100 »).
+        // (b) REPLI metadata pour les transferts créés AVANT ce correctif (sans transfer_group, jamais
+        //     rétro-rempli par Stripe) : sinon un vieux transfert « réussi mais réponse perdue » serait
+        //     invisible → re-versement. limit:100 couvre largement le volume actuel.
+        // Dans les deux cas on ne compte QUE les transferts NON entièrement reversés (amount_reversed < amount,
+        // aligné sur le reversal du webhook) : un transfert repris par chargeback ≠ vendeur payé.
+        let alreadyTransferred = false
+        try {
+          const byGroup = await stripe.transfers.list({ transfer_group: `order_${order.id}`, limit: 10 })
+          alreadyTransferred = (byGroup.data || []).some(t => (t.amount_reversed ?? 0) < t.amount)
+          if (!alreadyTransferred) {
+            const byMeta = await stripe.transfers.list({ destination: vendorStripeId, limit: 100 })
+            alreadyTransferred = (byMeta.data || []).some(t =>
+              String(t.metadata?.order_id) === String(order.id) && (t.amount_reversed ?? 0) < t.amount)
+          }
+        } catch (e) {
+          console.error(`[payout-retry] transfers.list order ${order.id} :`, e.message)
+          continue   // doute sur l'état Stripe → on NE transfère PAS (prudence argent)
+        }
+        if (alreadyTransferred) {
+          const { data: fixed } = await supabase.from('orders')
+            .update({ status: 'completed' }).eq('id', order.id).eq('status', 'payout_pending').select('id')
+          if (fixed?.length) console.log(`[payout-retry] order ${order.id} : transfert déjà présent chez Stripe → 'completed' (pas de re-versement).`)
+          continue
+        }
+
+        // GARDE 3 — anti versé-pendant-litige : si le paiement acheteur est contesté, on suspend le versement.
+        if (order.stripe_payment_id) {
+          try {
+            const pi = await stripe.paymentIntents.retrieve(order.stripe_payment_id, { expand: ['latest_charge'] })
+            if (pi?.latest_charge && typeof pi.latest_charge === 'object' && pi.latest_charge.disputed) {
+              console.warn(`[payout-retry] order ${order.id} : paiement contesté (litige) → versement suspendu.`)
+              continue
+            }
+          } catch (e) {
+            console.error(`[payout-retry] paymentIntents.retrieve order ${order.id} :`, e.message)
+            continue   // doute → on ne verse pas
+          }
+        }
+
+        // Transfert via le helper partagé (idempotent, garde de statut atomique). Ne réussit que si le solde
+        // dispo suffit ET le compte vendeur peut recevoir. En cas d'échec : rien touché → retenté plus tard.
+        const res = await releaseSellerPayout({ stripe, supabase, order })
+
+        // GARDE 4 — notif SEULEMENT si un vrai transfert a eu lieu CE passage (jamais sur un no-op self-update).
+        if (res.outcome === 'settled' && res.transferOk) {
+          drained++
+          console.log(`💸 payout_pending débloqué — order ${order.id} : ${res.payoutNet} € → ${vendorStripeId}`)
+          if (order.seller?.email) {
+            await sendEmail(
+              order.seller.email,
+              `Ton argent est disponible — ${order.listing?.title ?? 'NOUT 974'}`,
+              `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
+                 <h1 style="color:#1A3A8F;font-size:18px;margin:0 0 12px">Ton argent est arrivé 🎉</h1>
+                 <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+                   Le versement de <strong>${Number(res.payoutNet).toFixed(2)} €</strong> pour « ${escHtml(order.listing?.title ?? 'ton article')} »
+                   vient d'arriver dans ton porte-monnaie NOUT. Tu peux le retirer vers ta banque depuis « Mon argent ».
+                 </p>
+               </div>`
+            )
+          }
+          if (order.seller_id) {
+            fetch(`${SITE_URL}/.netlify/functions/send-push`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
+              body: JSON.stringify({
+                receiver_id: order.seller_id,
+                title: '💸 Ton argent est disponible — NOUT 974',
+                body: `${Number(res.payoutNet).toFixed(2)} € sont arrivés dans ton porte-monnaie.`,
+                url: '/compte/paiements',
+              }),
+            }).catch(err => console.error('send-push vendeur drain payout_pending:', err.message))
+          }
+        }
+      } catch (e) {
+        console.error(`Rattrapage payout_pending order ${order.id} :`, e.message)
+        errors++
+      }
+    }
+  }
+
+  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${drained} payout_pending débloqué(s), ${frozen} gelée(s) en litige, ${errors} erreur(s).`
   console.log(summary)
   return { statusCode: 200, body: summary }
 }

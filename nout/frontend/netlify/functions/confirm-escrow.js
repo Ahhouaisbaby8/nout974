@@ -224,10 +224,12 @@ exports.handler = async (event) => {
     if (vendorStripeId) {
       try {
         await stripe.transfers.create({
-          amount:      transferCents,
-          currency:    'eur',
-          destination: vendorStripeId,
-          metadata:    { order_id },
+          amount:        transferCents,
+          currency:      'eur',
+          destination:   vendorStripeId,
+          // transfer_group = 'order_<id>' : retrouvable précisément par le rattrapage cron (anti double-versement).
+          transfer_group: `order_${order_id}`,
+          metadata:      { order_id },
         }, {
           // Idempotence : Stripe garantit lui-même qu'un même transfert ne part
           // qu'une seule fois, même si la fonction est rejouée (anti double-paiement vendeur).
