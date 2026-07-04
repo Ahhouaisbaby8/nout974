@@ -380,11 +380,27 @@ export default function CreateListing() {
             {category !== 'beaute' && (
               <div>
                 <label className="block text-sm font-medium text-nout-dark mb-2">État</label>
-                <ChoiceChips
-                  options={CONDITIONS.map(c => ({ value: c.id, label: c.label }))}
-                  value={condition}
-                  onChange={setCondition}
-                />
+                <div className="flex flex-col gap-2">
+                  {CONDITIONS.map(c => {
+                    const active = condition === c.id
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setCondition(active ? '' : c.id)}
+                        aria-pressed={active}
+                        className={`text-left rounded-xl border-2 px-4 py-3 transition-all
+                          ${active ? 'border-[#1A3A8F] bg-[#F5F8FF]' : 'border-[#D6E0F5] bg-white hover:border-[#00C4B4]'}`}
+                      >
+                        <span className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-nout-dark">{c.label}</span>
+                          <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-colors ${active ? 'border-[#1A3A8F] bg-[#1A3A8F]' : 'border-gray-300 bg-white'}`} />
+                        </span>
+                        {c.desc && <span className="block text-xs text-gray-500 mt-1 leading-snug">{c.desc}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>

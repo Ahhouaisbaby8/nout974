@@ -153,11 +153,11 @@ export const CATEGORIES = [
 ]
 
 export const CONDITIONS = [
-  { id: 'neuf_avec_etiquette', label: 'Neuf avec étiquette' },
-  { id: 'neuf_sans_etiquette', label: 'Neuf sans étiquette' },
-  { id: 'tres_bon_etat',       label: 'Très bon état' },
-  { id: 'bon_etat',            label: 'Bon état' },
-  { id: 'etat_correct',        label: 'État correct' },
+  { id: 'neuf_avec_etiquette', label: 'Neuf avec étiquette', desc: "Article neuf, jamais porté ou utilisé, avec son étiquette ou son emballage d'origine." },
+  { id: 'neuf_sans_etiquette', label: 'Neuf sans étiquette', desc: "Article neuf, jamais porté ou utilisé, sans étiquette ni emballage d'origine." },
+  { id: 'tres_bon_etat',       label: 'Très bon état',       desc: "Très peu porté ou utilisé, peut présenter de légères imperfections. Précise-les avec des photos et une description détaillée." },
+  { id: 'bon_etat',            label: 'Bon état',            desc: "Porté ou utilisé quelques fois, présente des imperfections et des signes d'usure. Précise-les avec des photos et une description détaillée." },
+  { id: 'etat_correct',        label: 'État correct',        desc: "Porté ou utilisé plusieurs fois, signes d'usure marqués. Précise les défauts avec des photos et une description détaillée." },
 ]
 
 export const MATERIALS = [

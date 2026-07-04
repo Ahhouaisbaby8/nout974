@@ -8,7 +8,7 @@ import { createOffer } from '../services/offers'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
-import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon } from 'lucide-react'
+import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import { getSellerRating } from '../services/reviews'
 import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, computeProtectionFee, getShippingFee } from '../utils/shipping'
@@ -127,6 +127,9 @@ export default function ListingDetail() {
   const [copyToast, setCopyToast]         = useState(false)
   const [detailFav, setDetailFav] = useState(false)
   const [favPulse, setFavPulse]   = useState(false)
+  const [favCount, setFavCount]   = useState(null)   // nombre de likes (favoris) — null tant que non chargé
+  const [lightbox, setLightbox]   = useState(false)  // visionneuse plein écran des photos
+  const [touchX, setTouchX]       = useState(null)   // suivi du swipe mobile dans la visionneuse
   const [sellerRating, setSellerRating] = useState(null)
   const [shipMethod, setShipMethod] = useState('hand')
   // Coordonnées de livraison (obligatoires si livraison). Pré-remplies depuis le profil.
@@ -139,6 +142,10 @@ export default function ListingDetail() {
     getListingById(id)
       .then(data => {
         setListing(data)
+        // Compteur de likes : lu depuis la colonne dénormalisée listings.favorite_count (maintenue par
+        // un trigger côté base). Reste null si la colonne n'existe pas encore (migration non passée) → le
+        // compteur et le badge « En demande » sont simplement masqués (aucune erreur).
+        if (typeof data.favorite_count === 'number') setFavCount(data.favorite_count)
         document.title = `${data.title} — ${formatPrice(data.price)} | NOUT 974`
         if (data.category) {
           setLoadingSimilar(true)
@@ -156,8 +163,41 @@ export default function ListingDetail() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
 
-    return () => { document.title = 'NOUT — Marketplace seconde main La Réunion 974' }
+    // Temps réel : on écoute les changements de la ligne listing (le trigger met à jour favorite_count
+    // à chaque like/unlike de N'IMPORTE quel membre) → le compteur bouge en direct sans recharger la page.
+    // Nécessite que la réplication Realtime soit activée sur la table `listings` côté Supabase.
+    const channel = supabase
+      .channel(`listing-${id}`)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'listings', filter: `id=eq.${id}` },
+        (payload) => {
+          if (typeof payload.new?.favorite_count === 'number') setFavCount(payload.new.favorite_count)
+        })
+      .subscribe()
+
+    return () => {
+      document.title = 'NOUT — Marketplace seconde main La Réunion 974'
+      supabase.removeChannel(channel)
+    }
   }, [id])
+
+  // Navigation photo (miniatures + visionneuse) — boucle sur le tableau d'images.
+  const photoCount = listing?.images?.length ?? 0
+  const nextPhoto = () => setPhotoIdx(i => (photoCount ? (i + 1) % photoCount : 0))
+  const prevPhoto = () => setPhotoIdx(i => (photoCount ? (i - 1 + photoCount) % photoCount : 0))
+
+  // Clavier dans la visionneuse : ← / → pour défiler, Échap pour fermer.
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setLightbox(false)
+      else if (e.key === 'ArrowRight') nextPhoto()
+      else if (e.key === 'ArrowLeft') prevPhoto()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox, photoCount])
 
   useEffect(() => {
     if (user?.id) {
@@ -299,11 +339,13 @@ export default function ListingDetail() {
     setTimeout(() => setFavPulse(false), 400)
     const next = !detailFav
     setDetailFav(next)
+    setFavCount(c => (c == null ? c : Math.max(0, c + (next ? 1 : -1))))  // maj optimiste du compteur
     try {
       if (next) await addFavorite(user.id, id)
       else      await removeFavorite(user.id, id)
     } catch {
       setDetailFav(!next)
+      setFavCount(c => (c == null ? c : Math.max(0, c + (next ? -1 : 1))))  // rollback si échec
     }
   }
 
@@ -315,18 +357,33 @@ export default function ListingDetail() {
 
         {/* ── GALERIE ── */}
         <div>
-          <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden">
+          <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden">
             {images ? (
-              <img
-                src={detailUrl(images[photoIdx])}
-                alt={listing.title}
-                width="900"
-                height="900"
-                fetchPriority="high"
-                className="w-full h-full object-cover"
-              />
+              <button
+                type="button"
+                onClick={() => setLightbox(true)}
+                aria-label="Agrandir la photo"
+                className="w-full h-full block cursor-zoom-in"
+              >
+                <img
+                  src={detailUrl(images[photoIdx])}
+                  alt={listing.title}
+                  width="900"
+                  height="900"
+                  fetchPriority="high"
+                  className="w-full h-full object-cover"
+                />
+              </button>
             ) : (
               <div className="w-full h-full flex items-center justify-center text-7xl text-gray-300"></div>
+            )}
+
+            {/* Compteur de likes en direct (façon Vinted), en surimpression sur la photo */}
+            {favCount != null && favCount > 0 && (
+              <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full pl-2.5 pr-3 py-1 shadow-sm">
+                <Heart className="w-4 h-4 fill-red-500 stroke-red-500" />
+                <span className="text-sm font-semibold text-nout-dark tabular-nums">{favCount}</span>
+              </div>
             )}
           </div>
 
@@ -352,6 +409,12 @@ export default function ListingDetail() {
           <div className="flex flex-wrap gap-2">
             {listing.is_sold && (
               <span className="bg-gray-200 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">VENDU</span>
+            )}
+            {/* Preuve sociale « En demande » : affichée quand l'article dépasse un seuil de likes (façon Vinted) */}
+            {!listing.is_sold && favCount != null && favCount >= 3 && (
+              <span className="bg-[#FDECEC] text-[#C0392B] text-xs font-bold px-3 py-1 rounded-full">
+                En demande
+              </span>
             )}
             {category && (
               <span className="bg-[#EAF6F5] text-nout-primary text-xs font-medium px-3 py-1 rounded-full">
@@ -765,6 +828,61 @@ export default function ListingDetail() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── VISIONNEUSE PHOTO PLEIN ÉCRAN ── (clic sur la photo → défile flèches / swipe / miniatures) */}
+      {lightbox && images && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/90 flex flex-col"
+          onClick={() => setLightbox(false)}
+          onTouchStart={(e) => setTouchX(e.touches[0].clientX)}
+          onTouchEnd={(e) => {
+            if (touchX == null) return
+            const dx = e.changedTouches[0].clientX - touchX
+            if (dx > 50) prevPhoto()
+            else if (dx < -50) nextPhoto()
+            setTouchX(null)
+          }}
+        >
+          {/* Barre du haut : position + fermer */}
+          <div className="flex items-center justify-between p-4 text-white/90" onClick={(e) => e.stopPropagation()}>
+            <span className="text-sm tabular-nums">{photoIdx + 1} / {images.length}</span>
+            <button type="button" onClick={() => setLightbox(false)} aria-label="Fermer" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Image + flèches */}
+          <div className="flex-1 flex items-center justify-center px-2 min-h-0" onClick={(e) => e.stopPropagation()}>
+            {images.length > 1 && (
+              <button type="button" onClick={prevPhoto} aria-label="Photo précédente" className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white">
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+            <img src={detailUrl(images[photoIdx])} alt={listing.title} className="max-h-full max-w-full object-contain mx-2 select-none" />
+            {images.length > 1 && (
+              <button type="button" onClick={nextPhoto} aria-label="Photo suivante" className="hidden sm:flex flex-shrink-0 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white">
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
+          </div>
+
+          {/* Miniatures */}
+          {images.length > 1 && (
+            <div className="flex gap-2 justify-center p-4 overflow-x-auto" onClick={(e) => e.stopPropagation()}>
+              {images.map((url, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPhotoIdx(i)}
+                  className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === photoIdx ? 'border-white' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                >
+                  <img src={thumbUrl(url)} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
