@@ -31,6 +31,17 @@ exports.handler = async (event) => {
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
 
+  // [diag temporaire — demandé par UBN] valeur BRUTE exacte de la clé lue côté serveur (JSON.stringify +
+  // longueur + code de chaque caractère) → détecte tout caractère invisible/espace/retour ligne. À RETIRER.
+  if (event.queryStringParameters?.envcheck === '2') {
+    const rawKey = process.env.UBN_API_KEY
+    return { statusCode: 200, headers, body: JSON.stringify({
+      UBN_API_KEY_FULL:   JSON.stringify(rawKey),
+      UBN_API_KEY_LENGTH: rawKey?.length ?? null,
+      UBN_API_KEY_CHARS:  [...String(rawKey || '')].map(c => c.charCodeAt(0)),
+    }) }
+  }
+
   const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()
   if (isRateLimited(ip)) {
     return { statusCode: 429, headers, body: JSON.stringify({ error: 'Trop de requêtes. Réessaie dans une minute.' }) }
