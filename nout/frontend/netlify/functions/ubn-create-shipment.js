@@ -26,8 +26,10 @@ const UBN_CITY_CP = {
 }
 const UBN_SERVICES = ['relais', 'economique', 'express', 'express_pro', 'samedi_express']
 
-// Adresse expéditeur NOUT (configurable via env, valeurs par défaut neutres)
-const shipper = () => ({
+// Adresse expéditeur de repli (NOUT) — utilisée SEULEMENT si le vendeur n'a pas
+// encore renseigné son adresse d'expédition. Sur une marketplace, l'expéditeur est
+// normalement LE VENDEUR (c'est lui qui dépose le colis + reçoit les retours).
+const fallbackShipper = () => ({
   company: process.env.UBN_SHIPPER_COMPANY || 'NOUT',
   name:    process.env.UBN_SHIPPER_NAME    || 'NOUT',
   cp:      process.env.UBN_SHIPPER_CP      || '97490',
@@ -36,6 +38,31 @@ const shipper = () => ({
   phone:   process.env.UBN_SHIPPER_PHONE   || '',
   email:   process.env.UBN_SHIPPER_EMAIL   || 'contact@nout.re',
 })
+
+// Construit l'expéditeur = le VENDEUR à partir de son profil (adresse d'expédition +
+// téléphone). Lecture directe avec la SERVICE KEY (côté serveur, contourne la RLS) —
+// PAS via get_my_account (qui dépend de auth.uid(), absent avec la service key).
+// Repli sur NOUT si l'adresse vendeur est incomplète.
+async function sellerShipper(sellerId) {
+  const { data: s } = await supabase
+    .from('profiles')
+    .select('username, city, phone, ship_address, ship_address2, ship_postcode, ship_city, email')
+    .eq('id', sellerId)
+    .single()
+  const shipCity = s?.ship_city || s?.city
+  if (s?.ship_address && s?.ship_postcode && shipCity && s?.phone) {
+    return {
+      company: (s.username || 'Vendeur').slice(0, 60),
+      name:    (s.username || 'Vendeur').slice(0, 60),
+      cp:      s.ship_postcode,
+      ville:   shipCity,
+      address: [s.ship_address, s.ship_address2].filter(Boolean).join(' ').slice(0, 100),
+      phone:   s.phone,
+      email:   s.email || 'contact@nout.re',
+    }
+  }
+  return fallbackShipper()
+}
 
 const _rateLimits = new Map()
 function isRateLimited(ip) {
@@ -138,7 +165,7 @@ exports.handler = async (event) => {
     const refCommande = `NOUT-${order.id}`
 
     const buyerName = (order.buyer?.username || 'Client').slice(0, 60)
-    const s = shipper()
+    const s = await sellerShipper(order.seller_id)
 
     // Poids : par défaut 1 kg si non précisé (vêtements légers), borné à 30 kg/ligne
     const weight = Math.min(30, Math.max(0.1, Number(weight_kg) || 1))
