@@ -31,6 +31,19 @@ exports.handler = async (event) => {
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
 
+  // [envcheck temporaire — demandé par UBN] vérifie ce que le serveur lit vraiment. Ne révèle que les
+  // 4 derniers caractères de la clé (jamais la clé entière). À RETIRER après diagnostic.
+  if (event.queryStringParameters?.envcheck === '1') {
+    const k = (process.env.UBN_API_KEY || '')
+    return { statusCode: 200, headers, body: JSON.stringify({
+      apiKeySet:   !!process.env.UBN_API_KEY,
+      apiKeyLast4: k.trim().slice(-4),
+      partner:     process.env.UBN_PARTNER,
+      customer:    process.env.UBN_CUSTOMER,
+      sourceSite:  process.env.UBN_SOURCE_SITE,
+    }) }
+  }
+
   const ip = (event.headers['x-forwarded-for'] ?? event.headers['client-ip'] ?? 'unknown').split(',')[0].trim()
   if (isRateLimited(ip)) {
     return { statusCode: 429, headers, body: JSON.stringify({ error: 'Trop de requêtes. Réessaie dans une minute.' }) }
