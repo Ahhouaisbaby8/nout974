@@ -179,12 +179,53 @@ function SellerShippingPanel({ order, onShipped }) {
   const [loading, setLoading]               = useState(false)
   const [error, setError]                   = useState('')
   const [success, setSuccess]               = useState(false)
+  const [labelUrl, setLabelUrl]             = useState(null)
 
   // Uniquement pour les commandes en livraison (pas la remise en main propre)
   const isLivraison = order.shipping_method === 'relay' || order.shipping_method === 'home'
   if (!user || order.seller_id !== user.id || order.status !== 'paid' || !isLivraison) return null
 
-  const handleSubmit = async () => {
+  // Transporteur choisi par l'acheteur au checkout → génération d'étiquette automatique.
+  const carrier = order.carrier // 'ubn' | 'chronopost' | null
+  const isAuto = carrier === 'ubn' || carrier === 'chronopost'
+
+  // ── Génère l'étiquette automatiquement via le bon transporteur ──
+  const handleGenerate = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const endpoint = carrier === 'chronopost'
+        ? '/.netlify/functions/chronopost-create-shipment'
+        : '/.netlify/functions/ubn-create-shipment'
+      // UBN attend service + point relais ; Chronopost déduit tout de la commande.
+      const payload = carrier === 'chronopost'
+        ? { order_id: order.id }
+        : {
+            order_id: order.id,
+            service: order.delivery_option === 'ubn_home' ? 'express' : 'relais',
+            ubn_pr_user_id: order.ubn_pr_user_id || order.relay_id,
+            ubn_pr_label: order.relay_label,
+          }
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur inconnue')
+      if (data.label_url) setLabelUrl(data.label_url)
+      setSuccess(true)
+      setTimeout(() => onShipped?.(), 2500)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Repli : saisie manuelle du numéro de suivi (transporteur non géré) ──
+  const handleManual = async () => {
     if (!trackingNumber.trim()) { setError('Saisis le numéro de suivi.'); return }
     setError('')
     setLoading(true)
@@ -192,10 +233,7 @@ function SellerShippingPanel({ order, onShipped }) {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/.netlify/functions/update-order-shipping', {
         method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${session?.access_token ?? ''}`,
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
         body: JSON.stringify({ order_id: order.id, tracking_number: trackingNumber.trim() }),
       })
       const data = await res.json()
@@ -211,21 +249,25 @@ function SellerShippingPanel({ order, onShipped }) {
 
   if (success) {
     return (
-      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
-        <span></span>
-        <p className="text-sm font-semibold text-green-700">Commande marquée comme expédiée</p>
+      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+        <p className="text-sm font-semibold text-green-700">Commande expédiée</p>
+        {labelUrl && (
+          <a href={labelUrl} download={`etiquette-${order.id}.pdf`}
+             className="inline-block mt-2 text-sm font-semibold text-[#0E7FAB] underline">
+            Télécharger l'étiquette (PDF)
+          </a>
+        )}
       </div>
     )
   }
 
+  const carrierName = carrier === 'chronopost' ? 'Chronopost' : carrier === 'ubn' ? 'UBN' : 'notre service de livraison'
+
   return (
     <div className="mt-4 border border-blue-200 rounded-xl overflow-hidden">
       <div className="bg-blue-50 px-4 pt-4 pb-3 border-b border-blue-100">
-        <div className="flex items-center gap-2">
-          <span></span>
-          <h3 className="font-semibold text-nout-dark text-sm">Expédier cette commande</h3>
-        </div>
-        <p className="text-xs text-gray-500 mt-0.5">Via notre service de livraison</p>
+        <h3 className="font-semibold text-nout-dark text-sm">Expédier cette commande</h3>
+        <p className="text-xs text-gray-500 mt-0.5">Via {carrierName}</p>
       </div>
       <div className="px-4 py-4 bg-white flex flex-col gap-3">
         {/* Adresse de livraison fournie par l'acheteur (pour préparer le colis) */}
@@ -235,7 +277,7 @@ function SellerShippingPanel({ order, onShipped }) {
             <p className="text-nout-texte">{order.buyer?.username}</p>
             <p className="text-nout-texte">{order.shipping_address}</p>
             <p className="text-nout-texte">{order.shipping_postcode} {order.shipping_city}</p>
-            {order.shipping_phone && <p className="text-nout-texte mt-0.5">📞 {order.shipping_phone}</p>}
+            {order.relay_label && <p className="text-nout-texte mt-0.5">Point relais : {order.relay_label}</p>}
           </div>
         )}
         {error && (
@@ -243,32 +285,55 @@ function SellerShippingPanel({ order, onShipped }) {
             {error}
           </div>
         )}
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
-            Numéro de suivi transporteur
-          </label>
-          <input
-            type="text"
-            placeholder="Ex : 974-XXXXXX"
-            value={trackingNumber}
-            onChange={(e) => { setTrackingNumber(e.target.value); setError('') }}
-            maxLength={100}
-            className="input-field text-sm"
-            disabled={loading}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading || !trackingNumber.trim()}
-          className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-            loading || !trackingNumber.trim()
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
-          }`}
-        >
-          {loading ? 'Enregistrement…' : 'Marquer comme expédiée'}
-        </button>
+
+        {isAuto ? (
+          // Génération automatique de l'étiquette (UBN ou Chronopost)
+          <>
+            <p className="text-xs text-gray-500">
+              Génère l'étiquette, imprime-la, colle-la sur ton colis et dépose-le.
+            </p>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={loading}
+              className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
+                loading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
+              }`}
+            >
+              {loading ? 'Génération…' : `Générer l'étiquette ${carrierName}`}
+            </button>
+          </>
+        ) : (
+          // Repli : saisie manuelle du numéro de suivi
+          <>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+                Numéro de suivi transporteur
+              </label>
+              <input
+                type="text"
+                placeholder="Ex : 974-XXXXXX"
+                value={trackingNumber}
+                onChange={(e) => { setTrackingNumber(e.target.value); setError('') }}
+                maxLength={100}
+                className="input-field text-sm"
+                disabled={loading}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleManual}
+              disabled={loading || !trackingNumber.trim()}
+              className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
+                loading || !trackingNumber.trim()
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
+              }`}
+            >
+              {loading ? 'Enregistrement…' : 'Marquer comme expédiée'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
