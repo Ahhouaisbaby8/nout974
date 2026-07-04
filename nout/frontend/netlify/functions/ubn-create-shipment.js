@@ -91,7 +91,7 @@ exports.handler = async (event) => {
       .select(`
         id, status, seller_id, buyer_id, total_price, ubn_ref_commande,
         shipping_phone, shipping_address, shipping_city, shipping_postcode,
-        listing:listings!listing_id(title),
+        listing:listings!listing_id(title, price),
         buyer:profiles!buyer_id(username, email)
       `)
       .eq('id', order_id)
@@ -178,7 +178,7 @@ exports.handler = async (event) => {
         description: (order.listing?.title || 'Article').slice(0, 120),
         weight,
         length: 0, width: 0, height: 0, sum_dimensions: 0,
-        value: Math.round(Number(order.total_price) || 0),
+        value: Math.round(Number(order.listing?.price ?? order.total_price) || 0),
       }],
     }
 
@@ -216,6 +216,20 @@ exports.handler = async (event) => {
     if (updErr) {
       // L'expédition est créée côté UBN ; on log mais on ne perd pas l'info pour l'utilisateur
       console.error(`ubn-create-shipment : update orders échoué (order ${order_id}):`, updErr.message)
+    }
+
+    // Prolonge le code escrow à expédition + 10 jours (même logique que update-order-shipping.js) :
+    // sans ça, une livraison lente ferait expirer le code avant réception → argent bloqué.
+    // On ne touche jamais un code déjà confirmé ou remboursé.
+    const escrowExpiry = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+    const { error: escrowExtendErr } = await supabase
+      .from('escrow_codes')
+      .update({ expires_at: escrowExpiry })
+      .eq('order_id', order_id)
+      .is('confirmed_at', null)
+      .is('refunded_at', null)
+    if (escrowExtendErr) {
+      console.error(`ubn-create-shipment : escrow extend échoué (order ${order_id}):`, escrowExtendErr.message)
     }
 
     // Notifier l'acheteur que son colis part (best-effort, comme le flux Chronopost)

@@ -1,9 +1,11 @@
 import { supabase } from './supabase'
 
+// Profil OWN/affichage — colonnes non sensibles uniquement (email/iban/stripe/phone
+// ne sont jamais exposés via la table ; le propriétaire les lit via la RPC get_my_account).
 export const getProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, username, avatar_url, bio, city, role, is_verified, is_banned, is_founder, founder_number, show_founder_badge, is_creator, creator_craft, created_at, updated_at')
     .eq('id', userId)
     .single()
   if (error) throw error
@@ -15,12 +17,13 @@ export const getProfile = async (userId) => {
 export const getPublicProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge, is_creator, creator_craft, phone')
+    .select('id, username, avatar_url, bio, city, created_at, role, is_founder, founder_number, show_founder_badge, is_creator, creator_craft')
     .eq('id', userId)
     .single()
   if (error) throw error
-  const { phone, ...pub } = data
-  return { ...pub, has_phone: !!(phone && phone.trim()) }
+  // phone retiré du périmètre public (le numéro ne doit jamais transiter via l'API).
+  // Badge "téléphone vérifié" à re-câbler plus tard via une colonne générée booléenne si besoin.
+  return { ...data, has_phone: false }
 }
 
 // Liste les créateurs péi (pour la page vitrine « Nos créateurs »).
@@ -41,7 +44,7 @@ export const updateProfile = async (userId, updates) => {
     .from('profiles')
     .update(updates)
     .eq('id', userId)
-    .select()
+    .select('id, username, avatar_url, bio, city, role, is_creator, creator_craft, updated_at')
     .single()
   if (error) throw error
   return data

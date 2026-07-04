@@ -1,6 +1,9 @@
 const { createClient } = require('@supabase/supabase-js')
+const Stripe = require('stripe')
+const { computeRefundAmount } = require('./_fees')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const CORS_ORIGIN = process.env.URL || 'https://nout.re'
 
@@ -111,6 +114,86 @@ exports.handler = async (event) => {
 
         const { error: deleteErr } = await supabase.auth.admin.deleteUser(targetId)
         if (deleteErr) throw new Error(`Erreur suppression auth : ${deleteErr.message}`)
+        break
+      }
+
+      case 'resolve_dispute_refund': {
+        // Litige tranché EN FAVEUR DE L'ACHETEUR : remboursement du prix + port. OPTION A : NOUT GARDE ses
+        // frais de protection (jamais de perte pour NOUT). Garde-fou anciennes commandes = remboursement plein.
+        const { data: order } = await supabase.from('orders')
+          .select('id, status, stripe_payment_id, listing_id, total_price, seller_payout, shipping_fee, shipping_method')
+          .eq('id', targetId).single()
+        if (!order) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Commande introuvable.' }) }
+        if (order.status !== 'disputed') return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande n\'est pas en litige.' }) }
+        if (!order.stripe_payment_id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Aucun paiement à rembourser.' }) }
+        // RÉSERVATION ATOMIQUE du statut AVANT le refund : on sort la commande de 'disputed' en une seule
+        // opération gardée → une « libération » concurrente (resolve_dispute_release, qui relit le statut
+        // juste avant de transférer dans _payout) verra 'refunded' (hors allowedStatuses) et n'enverra rien.
+        // Ferme la course « remboursé ET payé ». Le refund Stripe reste idempotent (refund_${order.id}).
+        const { data: claimed } = await supabase.from('orders')
+          .update({ status: 'refunded' }).eq('id', order.id).eq('status', 'disputed').select('id')
+        if (!claimed || !claimed.length) {
+          return { statusCode: 409, headers, body: JSON.stringify({ error: 'Commande déjà traitée (remboursée, versée ou clôturée).' }) }
+        }
+        const refundInfo = computeRefundAmount(order)
+        // Pas de pré-check de solde ici (la revue argent a montré que le solde GLOBAL est un mauvais signal
+        // et bloquerait des remboursements légitimes) : si le solde est réellement insuffisant, Stripe
+        // rejette le refund et le catch ci-dessous rollback la réservation (disputed) — Stripe est l'arbitre.
+        try {
+          await stripe.refunds.create(
+            {
+              payment_intent: order.stripe_payment_id,
+              ...(refundInfo.amountCents > 0 ? { amount: refundInfo.amountCents } : {}),
+            },
+            { idempotencyKey: `refund_${order.id}` },
+          )
+        } catch (e) {
+          // Refund échoué : on annule la réservation pour pouvoir re-tenter (rollback vers 'disputed').
+          await supabase.from('orders').update({ status: 'disputed' }).eq('id', order.id).eq('status', 'refunded')
+          return { statusCode: 502, headers, body: JSON.stringify({ error: `Remboursement Stripe échoué : ${e.message}` }) }
+        }
+        await supabase.from('listings').update({ is_sold: false }).eq('id', order.listing_id)
+        await supabase.from('escrow_codes').update({ refunded_at: new Date().toISOString() }).eq('order_id', order.id).is('refunded_at', null)
+        break
+      }
+
+      case 'resolve_dispute_release': {
+        // Litige tranché EN FAVEUR DU VENDEUR : versement du prix au vendeur.
+        const { data: order } = await supabase.from('orders')
+          .select('id, status, seller_payout, listing:listings!listing_id(price), seller:profiles!seller_id(stripe_account_id)')
+          .eq('id', targetId).single()
+        if (!order) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Commande introuvable.' }) }
+        if (order.status !== 'disputed') return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande n\'est pas en litige.' }) }
+        const vendorStripeId = order.seller?.stripe_account_id
+        if (!vendorStripeId) {
+          return { statusCode: 400, headers, body: JSON.stringify({ error: 'Le vendeur n\'a pas activé ses paiements (Stripe). Impossible de libérer le versement.' }) }
+        }
+        // RÉSERVATION ATOMIQUE du statut AVANT le transfert (symétrique au remboursement) : disputed -> completed
+        // en une seule opération gardée. Un « Rembourser » concurrent (qui réserve disputed -> refunded) ne peut
+        // donc PAS passer en même temps -> jamais « remboursé ET payé ».
+        const { data: claimed } = await supabase.from('orders')
+          .update({ status: 'completed' }).eq('id', order.id).eq('status', 'disputed').select('id')
+        if (!claimed || !claimed.length) {
+          return { statusCode: 409, headers, body: JSON.stringify({ error: 'Commande déjà traitée (remboursée, versée ou clôturée).' }) }
+        }
+        const prixArticle  = Number(order.listing?.price ?? 0)
+        const payoutNet    = order.seller_payout != null
+          ? Number(order.seller_payout)
+          : Math.round((prixArticle - (prixArticle * 0.10 + 0.25) - (prixArticle * 0.015 + 0.25)) * 100) / 100
+        const transferCents = Math.max(0, Math.round(payoutNet * 100))
+        try {
+          if (transferCents > 0) {
+            await stripe.transfers.create(
+              { amount: transferCents, currency: 'eur', destination: vendorStripeId, metadata: { order_id: order.id } },
+              { idempotencyKey: `transfer_${order.id}` }, // même clé que tous les chemins -> jamais payé 2x
+            )
+          }
+        } catch (e) {
+          // Transfert échoué : on annule la réservation pour pouvoir re-tenter (rollback -> disputed).
+          await supabase.from('orders').update({ status: 'disputed' }).eq('id', order.id).eq('status', 'completed')
+          return { statusCode: 502, headers, body: JSON.stringify({ error: `Versement Stripe échoué : ${e.message}` }) }
+        }
+        await supabase.from('escrow_codes').update({ confirmed_at: new Date().toISOString() }).eq('order_id', order.id).is('confirmed_at', null)
         break
       }
 

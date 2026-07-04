@@ -16,10 +16,14 @@ export default function AdminFinances() {
       const paidRows       = paid.data ?? []
       const paidTotal      = paidRows.reduce((s, o) => s + Number(o.total_price), 0)
       const deliveredTotal = (delivered.data ?? []).reduce((s, o) => s + Number(o.total_price), 0)
-      // Commission NOUT = total encaissé − reversé au vendeur − port (reversé au transporteur)
+      // Commission NOUT (brute, avant frais Stripe) = total encaissé − reversé au vendeur − port.
+      // Modèle protection acheteur : le vendeur reçoit le PRIX PLEIN, donc commission = la protection (10%+0,25€).
+      // Fallback si seller_payout non figé (vieilles commandes) : estimation à partir du total hors port.
       const commission = paidRows.reduce((s, o) => {
         const port = PORT[o.shipping_method] ?? 0
-        const payout = o.seller_payout != null ? Number(o.seller_payout) : Number(o.total_price) * 0.10
+        const payout = o.seller_payout != null
+          ? Number(o.seller_payout)
+          : (Number(o.total_price) - port) / 1.10
         return s + (Number(o.total_price) - payout - port)
       }, 0)
       setStats({ paidTotal, commission, deliveredTotal, totalOrders: total.count ?? 0 })
@@ -50,7 +54,7 @@ export default function AdminFinances() {
       <div className="bg-white rounded-xl shadow-sm p-6">
         <h2 className="font-bold text-nout-dark mb-2">Configuration Stripe</h2>
         <p className="text-sm text-gray-500 leading-relaxed">
-          Les paiements sont gérés via <strong>Stripe Connect</strong>. NOUT prélève automatiquement <strong>10 % + 0,25 €</strong> de commission sur le vendeur. Les vendeurs reçoivent le solde sur leur compte bancaire via Stripe Express.
+          Les paiements sont gérés via <strong>Stripe Connect</strong>. Les frais de protection acheteur (<strong>10 % + 0,25 €</strong>) sont payés par l'acheteur, en plus du prix. Les vendeurs reçoivent l'intégralité de leur prix sur leur compte bancaire via Stripe Express.
         </p>
         <p className="text-xs text-gray-400 mt-2">Dashboard complet sur <strong>dashboard.stripe.com</strong></p>
       </div>

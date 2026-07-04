@@ -3,8 +3,9 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
-import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
+import { CATEGORIES, CONDITIONS, BRANDS, MATERIALS, COLORS, SIZES_VETEMENTS, SIZES_CHAUSSURES, SIZES_ENFANT } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
+import { Search as SearchIcon } from 'lucide-react'
 import ListingCard from '../components/ui/ListingCard'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
@@ -26,6 +27,9 @@ export default function Search() {
   const [minPrice, setMinPrice] = useState(searchParams.get('min')       ?? '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('max')       ?? '')
   const [sortBy,   setSortBy]   = useState(searchParams.get('tri')       ?? 'recent')
+  const [size,     setSize]     = useState(searchParams.get('taille')    ?? '')
+  const [color,    setColor]    = useState(searchParams.get('couleur')   ?? '')
+  const [material, setMaterial] = useState(searchParams.get('matiere')   ?? '')
   const [showFilters, setShowFilters] = useState(false)
 
   const [listings,  setListings]  = useState([])
@@ -42,10 +46,13 @@ export default function Search() {
     city:     (city && city !== 'Toute La Réunion') ? city : undefined,
     condition:condition || undefined,
     brand:    brand     || undefined,
+    size:     size      || undefined,
+    color:    color     || undefined,
+    material: material  || undefined,
     minPrice: minPrice  || undefined,
     maxPrice: maxPrice  || undefined,
     sortBy,
-  }), [query, category, subcategory, city, condition, brand, minPrice, maxPrice, sortBy])
+  }), [query, category, subcategory, city, condition, brand, size, color, material, minPrice, maxPrice, sortBy])
 
   const runSearch = useCallback(async (reset = true) => {
     const p = reset ? 1 : page + 1
@@ -91,11 +98,14 @@ export default function Search() {
     if (city && city !== 'Toute La Réunion') p.ville = city
     if (condition) p.etat     = condition
     if (brand)    p.marque    = brand
+    if (size)     p.taille    = size
+    if (color)    p.couleur   = color
+    if (material) p.matiere   = material
     if (minPrice) p.min       = minPrice
     if (maxPrice) p.max       = maxPrice
     if (sortBy !== 'recent') p.tri = sortBy
     setSearchParams(p, { replace: true })
-  }, [query, category, subcategory, city, condition, brand, minPrice, maxPrice, sortBy])
+  }, [query, category, subcategory, city, condition, brand, size, color, material, minPrice, maxPrice, sortBy])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -108,6 +118,9 @@ export default function Search() {
     setCity('Toute La Réunion')
     setCondition('')
     setBrand('')
+    setSize('')
+    setColor('')
+    setMaterial('')
     setMinPrice('')
     setMaxPrice('')
     setSortBy('recent')
@@ -120,8 +133,26 @@ export default function Search() {
   }
 
   const subOptions = CATEGORIES.find(c => c.id === category)?.sub ?? []
+  const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
+    : category === 'vetements-enfant' ? SIZES_ENFANT
+    : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
+    : SIZES_VETEMENTS
+  const catLabel  = CATEGORIES.find(c => c.id === category)?.label
+  const subLabel  = subOptions.find(s => s.id === subcategory)?.label
+  const cityLabel = (city && city !== 'Toute La Réunion') ? city : 'La Réunion'
+  const heading = query
+    ? `« ${query} »`
+    : subLabel ? `${subLabel} à ${cityLabel} (974)`
+    : catLabel ? `${catLabel} à ${cityLabel} (974)`
+    : `Toutes les annonces à ${cityLabel} (974)`
 
-  const hasFilters = category || subcategory || (city && city !== 'Toute La Réunion') || condition || brand || minPrice || maxPrice
+  // Titre d'onglet dynamique (SEO + UX)
+  useEffect(() => {
+    document.title = `${heading} — NOUT 974`
+    return () => { document.title = 'NOUT — Marketplace seconde main La Réunion 974' }
+  }, [heading])
+
+  const hasFilters = category || subcategory || (city && city !== 'Toute La Réunion') || condition || brand || size || color || material || minPrice || maxPrice
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -135,8 +166,9 @@ export default function Search() {
           onChange={(e) => setQuery(e.target.value)}
           className="flex-1 input-field"
         />
-        <button type="submit" className="btn-primary px-5">
-                  </button>
+        <button type="submit" aria-label="Rechercher" className="btn-primary px-5 flex items-center justify-center">
+          <SearchIcon className="w-5 h-5" />
+        </button>
         <button
           type="button"
           onClick={() => setShowFilters(f => !f)}
@@ -195,6 +227,30 @@ export default function Search() {
           </div>
 
           <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Taille</label>
+            <select value={size} onChange={(e) => setSize(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Couleur</label>
+            <select value={color} onChange={(e) => setColor(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Matière</label>
+            <select value={material} onChange={(e) => setMaterial(e.target.value)} className="input-field text-sm py-2">
+              <option value="">Toutes</option>
+              {MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+
+          <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">Prix min (€)</label>
             <input
               type="number" min="0" max={PRICE_MAX} placeholder="0"
@@ -232,6 +288,7 @@ export default function Search() {
       )}
 
       {/* ── RÉSULTATS ── */}
+      <h1 className="font-title font-bold text-xl sm:text-2xl text-nout-texte mb-2">{heading}</h1>
       <div className="flex justify-between items-center mb-4">
         <p className="text-sm text-gray-500">
           {loading ? '...' : (

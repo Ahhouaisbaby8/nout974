@@ -95,6 +95,21 @@ exports.handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la mise à jour de la commande.' }) }
     }
 
+    // Le code escrow expire 7 j après le PAIEMENT. Pour une livraison, ce délai peut tomber AVANT
+    // l'arrivée du colis (Chronopost lent) → la confirmation deviendrait impossible et l'argent
+    // resterait bloqué (ni versé, ni remboursé). On prolonge donc le code à expédition + 10 jours
+    // (transit + marge de confirmation). On ne touche jamais un code déjà confirmé ou remboursé.
+    const escrowExpiry = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+    const { error: escrowExtendError } = await supabase
+      .from('escrow_codes')
+      .update({ expires_at: escrowExpiry })
+      .eq('order_id', order_id)
+      .is('confirmed_at', null)
+      .is('refunded_at', null)
+    if (escrowExtendError) {
+      console.error('[update-order-shipping] escrow extend error:', escrowExtendError.message)
+    }
+
     // Notification push à l'acheteur — best-effort
     if (order.buyer_id) {
       fetch(`${SITE_URL}/.netlify/functions/send-push`, {

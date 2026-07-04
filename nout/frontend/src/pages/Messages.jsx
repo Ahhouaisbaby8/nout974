@@ -5,6 +5,7 @@ import { getConversations } from '../services/messages'
 import { supabase } from '../services/supabase'
 import { formatRelativeDate } from '../utils/formatters'
 import { getAvatarUrl } from '../utils/avatar'
+import logoNout from '../assets/logo.svg'
 
 const WELCOME_KEY = 'nout_welcome_seen'
 
@@ -75,34 +76,45 @@ export default function Messages() {
 
       {/* Message de bienvenue NOUT */}
       {showWelcome && (
-        <div className="bg-white rounded-2xl shadow-sm border-l-4 border-nout-primary p-5 mb-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-nout-primary text-white flex items-center justify-center font-extrabold text-sm flex-shrink-0">
-              N
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-center mb-2">
-                <p className="font-bold text-nout-dark text-sm">L'équipe NOUT</p>
-                <span className="text-xs text-gray-400">Maintenant</span>
+        <div className="relative bg-white rounded-2xl shadow-sm border border-nout-border p-6 mb-5 overflow-hidden">
+          {/* Liseré de marque en haut */}
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-nout-turquoise to-nout-lagon" />
+
+          <div className="flex items-center justify-between mb-4">
+            <img src={logoNout} alt="NOUT" className="h-6 w-auto" />
+            <span className="text-xs text-gray-400">Maintenant</span>
+          </div>
+
+          <h2 className="font-title font-bold text-lg text-nout-texte mb-1.5">Bienvenue sur NOUT</h2>
+          <p className="text-sm text-gray-500 leading-relaxed mb-5">
+            La marketplace 100&nbsp;% réunionnaise pour acheter et vendre tes articles de seconde main entre particuliers.
+          </p>
+
+          <div className="flex flex-col gap-3 mb-6">
+            {[
+              ['Publie une annonce', 'Une belle photo, une description, ton prix.'],
+              ['Réponds aux messages', 'Les acheteurs te contactent ici, dans cette boîte.'],
+              ['Finalise la vente', 'Échangez et concluez la transaction en toute sécurité.'],
+            ].map(([title, desc], i) => (
+              <div key={i} className="flex gap-3 items-start">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-nout-turquoise/10 text-nout-turquoise text-xs font-bold flex items-center justify-center mt-0.5">
+                  {i + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-nout-texte leading-tight">{title}</p>
+                  <p className="text-xs text-gray-500">{desc}</p>
+                </div>
               </div>
-              <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">
-                {WELCOME_MESSAGE.content}
-              </p>
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => navigate('/publier')}
-                  className="btn-primary px-4 py-2 text-xs"
-                >
-                  Publier une annonce
-                </button>
-                <button
-                  onClick={dismissWelcome}
-                  className="text-xs text-gray-400 hover:text-gray-600 underline"
-                >
-                  Fermer
-                </button>
-              </div>
-            </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/publier')} className="btn-primary px-5 py-2.5 text-sm">
+              Publier une annonce
+            </button>
+            <button onClick={dismissWelcome} className="text-xs text-gray-400 hover:text-gray-600">
+              Plus tard
+            </button>
           </div>
         </div>
       )}

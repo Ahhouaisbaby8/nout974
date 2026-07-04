@@ -4,8 +4,27 @@
   publish = "dist"
   edge_functions = "netlify/edge-functions"
 
+# Cles PUBLIQUES exposees volontairement dans le bundle client (Vite n'expose
+# que les variables prefixees VITE_). Ce ne sont pas des secrets : cle anon
+# Supabase (protegee par RLS), cle publishable Stripe, URL projet Supabase,
+# cle VAPID publique. On les exclut du scanner de secrets Netlify (faux
+# positifs qui font echouer le build). Les vrais secrets serveur
+# (service_role, sk_live, RESEND, etc.) restent scannes normalement.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,SUPABASE_URL,VITE_SUPABASE_ANON_KEY,SUPABASE_ANON_KEY,VITE_STRIPE_PUBLIC_KEY,STRIPE_PUBLIC_KEY,VITE_VAPID_PUBLIC_KEY,VAPID_PUBLIC_KEY"
+
 [functions]
   directory = "netlify/functions"
+
+# Cron : remboursement auto des escrows expires. Recupere ici depuis l'ancien
+# nout/netlify.toml (imbrique) qui etait IGNORE par Netlify -> le cron ne tournait pas.
+[functions."auto-refund"]
+  schedule = "0 * * * *"
+
+# Cron : garde-fou 90 jours du porte-monnaie. Force le virement des fonds dormants d'un vendeur AVANT la
+# limite de retention Stripe (~90 j France), pour ne jamais subir un blocage/vidage du solde. Une fois/jour.
+[functions."sweep-wallets"]
+  schedule = "0 4 * * *"
 
 [[headers]]
   for = "/*"
@@ -17,12 +36,62 @@
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.supabase.co https://www.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.resend.com; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'"
 
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-  force = true
+# Pages privees / transactionnelles : interdites a l'indexation (SEO + confidentialite).
+# X-Robots-Tag au niveau HTTP = fiable meme pour une SPA (independant du JS).
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/compte/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/commander/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/commandes"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/messages"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/messages/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/favoris"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/notifications"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/espace-vendeur"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/publier"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/paiement-succes"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/connexion"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/inscription"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
 
+# SPA fallback — DOIT rester en dernier
 [[redirects]]
   from = "/*"
   to = "/index.html"

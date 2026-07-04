@@ -13,14 +13,14 @@ export const getPublicSellerStats = async (sellerId) => {
 }
 
 // Agrège toutes les données business d'un vendeur pour l'Espace Vendeur.
-// Le vendeur reçoit le PRIX DE SON ARTICLE (listing.price), pas le total payé par l'acheteur
-// (qui inclut frais de protection + port). C'est ce montant net qui compte pour ses gains.
+// Le vendeur reçoit son versement net (seller_payout), pas le total payé par l'acheteur (qui inclut la
+// protection + le port). Nouveau modèle : seller_payout = prix plein ; anciennes commandes = montant réduit conservé.
 export const getSellerDashboard = async (sellerId) => {
   // 1. Ventes (commandes où il est vendeur) avec le prix réel de l'article
   const { data: sales, error: salesErr } = await supabase
     .from('orders')
     .select(`
-      id, status, total_price, shipping_method, created_at,
+      id, status, total_price, seller_payout, shipping_method, created_at,
       listing:listings(id, title, images, price),
       buyer:profiles!buyer_id(id, username, avatar_url)
     `)
@@ -43,14 +43,15 @@ export const getSellerDashboard = async (sellerId) => {
     .eq('seller_id', sellerId)
 
   // 4. Profil vendeur — pour savoir si les paiements (Stripe/IBAN) sont configurés
+  // On ne lit QUE is_verified (public) — jamais l'IBAN/Stripe d'un vendeur tiers (fuite RGPD).
   const { data: profile } = await supabase
     .from('profiles')
-    .select('stripe_account_id, iban, is_verified')
+    .select('is_verified')
     .eq('id', sellerId)
     .single()
 
-  // Montant net vendeur = prix de l'article (pas le total payé par l'acheteur)
-  const montant = (o) => Number(o.listing?.price ?? 0)
+  // Montant net vendeur = ce qui lui est réellement versé (seller_payout figé), repli sur le prix de l'article.
+  const montant = (o) => Number(o.seller_payout ?? o.listing?.price ?? 0)
 
   // Solde réparti par état (cf. flux escrow)
   //   paid           = vendu, en attente de remise/confirmation du code
@@ -121,7 +122,7 @@ export const getSellerDashboard = async (sellerId) => {
     }))
 
   // Paiements configurés ?
-  const paiementsActifs = !!(profile?.stripe_account_id || profile?.iban)
+  const paiementsActifs = !!profile?.is_verified
 
   return {
     solde: {

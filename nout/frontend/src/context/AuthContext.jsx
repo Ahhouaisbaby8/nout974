@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, avatar_url, bio, city, role, is_verified, is_banned, is_founder, founder_number, show_founder_badge, is_creator, creator_craft, created_at, updated_at')
         .eq('id', userId)
         .single()
       if (error) return
@@ -85,7 +85,26 @@ export function AuthProvider({ children }) {
         window.location.replace('/connexion')
         return
       }
-      setProfile(data)
+      // Champs sensibles du propriétaire (email/phone/iban/stripe) :
+      // 1) via la RPC sécurisée get_my_account (après migration) ;
+      // 2) sinon repli sur une lecture directe (encore autorisée tant que le REVOKE
+      //    n'est pas appliqué) → aucune régression d'affichage quel que soit l'état
+      //    de la migration. Dans les deux cas ces champs ne transitent que pour SOI.
+      let priv = {}
+      try {
+        const { data: acc, error: rpcErr } = await supabase.rpc('get_my_account')
+        if (!rpcErr && Array.isArray(acc) && acc[0]) {
+          priv = acc[0]
+        } else {
+          const { data: own } = await supabase
+            .from('profiles')
+            .select('email, phone, iban, stripe_account_id')
+            .eq('id', userId)
+            .single()
+          if (own) priv = own
+        }
+      } catch { /* champs sensibles indisponibles, pas de blocage */ }
+      setProfile({ ...data, ...priv })
     } catch {
       // profil non chargé — l'utilisateur reste connecté mais sans profil
     }

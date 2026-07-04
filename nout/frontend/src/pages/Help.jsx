@@ -17,7 +17,15 @@ const FAQ = [
   },
   {
     q: "Comment fonctionne le paiement ?",
-    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. L'acheteur paie le prix affiché (plus les frais de port s'il choisit une livraison). NOUT prélève des frais de service de 10 % + 0,25 € sur la vente, côté vendeur, pour couvrir le traitement et la sécurisation de la transaction.",
+    a: "Le paiement en ligne est sécurisé par un prestataire certifié PCI-DSS. Le vendeur reçoit son prix en entier. L'acheteur paie le prix affiché, plus une protection acheteur de 10 % + 0,25 € (et les frais de port s'il choisit une livraison) qui couvre le traitement et la sécurisation de la transaction.",
+  },
+  {
+    q: "Comment je reçois l'argent de mes ventes ?",
+    a: "L'argent de tes ventes s'accumule dans ton porte-monnaie, dans « Mon argent ». Pour le retirer sur ton compte bancaire, tu vérifies ton identité une seule fois (pièce d'identité + IBAN) auprès de Stripe, notre prestataire de paiement — pas de SIRET pour un particulier. Ensuite, tu vires ton solde vers ta banque quand tu veux, en un clic.",
+  },
+  {
+    q: "Vendre sur NOUT peut-il me poser un problème (impôts, statut) ?",
+    a: "Vends l'esprit tranquille. Tes paiements passent par Stripe (leader mondial du paiement) : c'est ce qui sécurise chaque transaction et te protège contre la fraude. Vendre tes propres affaires d'occasion, c'est de la vente entre particuliers : non imposable et sans immatriculation, quel que soit le montant. Le libellé « Entrepreneur individuel » affiché par Stripe est juste une étiquette technique pour un particulier — ça ne t'inscrit nulle part et ne crée aucune obligation. Comme sur toutes les grandes plateformes (Vinted, Leboncoin…), si tu dépasses 30 ventes ou 2 000 € de ventes dans l'année, tu reçois un récapitulatif de tes ventes et ces informations sont transmises à l'administration fiscale : une simple formalité de transparence, qui ne fait pas de toi un professionnel. La seule exception : acheter pour revendre régulièrement dans un but de profit est une activité pro, à déclarer. En cas de doute, un expert-comptable ou le service des impôts te renseignera.",
   },
   {
     q: "Puis-je modifier ou supprimer mon annonce ?",
@@ -33,7 +41,7 @@ const FAQ = [
   },
   {
     q: "NOUT est-il gratuit ?",
-    a: "La publication et la navigation sont entièrement gratuites. Des frais de service de 10 % + 0,25 € sont prélevés sur le vendeur uniquement lors d'une vente.",
+    a: "La publication et la navigation sont entièrement gratuites. Le vendeur reçoit son prix en entier : les frais de service de 10 % + 0,25 € sont payés par l'acheteur, en plus du prix, sous forme de protection acheteur.",
   },
 ]
 

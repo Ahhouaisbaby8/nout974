@@ -1,5 +1,6 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
+const { computeRefundAmount } = require('./_fees')
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -53,11 +54,19 @@ exports.handler = async (event) => {
     .lt('created_at', oneHourAgo)
 
   if (stalePending?.length > 0) {
+    let cancelled = 0
     await Promise.all(stalePending.map(async (o) => {
-      await supabase.from('orders').update({ status: 'cancelled' }).eq('id', o.id)
-      await supabase.from('listings').update({ is_sold: false }).eq('id', o.listing_id)
+      // Garde de statut : n'annuler QUE si la commande est TOUJOURS 'pending'. Si elle est passée 'paid'
+      // entre le SELECT et maintenant (webhook Stripe d'un paiement finalisé tardivement), on ne l'annule
+      // PAS et on ne remet PAS l'article en vente — sinon argent acheteur piégé + double-vente possible.
+      const { data: cxl } = await supabase
+        .from('orders').update({ status: 'cancelled' }).eq('id', o.id).eq('status', 'pending').select('id')
+      if (cxl && cxl.length) {
+        cancelled++
+        await supabase.from('listings').update({ is_sold: false }).eq('id', o.listing_id)
+      }
     }))
-    console.log(`🧹 ${stalePending.length} commande(s) pending expirée(s) annulée(s).`)
+    console.log(`🧹 ${cancelled} commande(s) pending expirée(s) annulée(s).`)
   }
 
   // Récupérer tous les codes expirés, non confirmés, non encore remboursés
@@ -97,6 +106,9 @@ exports.handler = async (event) => {
           buyer_id,
           seller_id,
           total_price,
+          seller_payout,
+          shipping_fee,
+          shipping_method,
           listing:listings!listing_id(id, title),
           buyer:profiles!buyer_id(email, username),
           seller:profiles!seller_id(email, username)
@@ -122,14 +134,41 @@ exports.handler = async (event) => {
         continue
       }
 
+      // Montant à rembourser — OPTION A : NOUT GARDE ses frais de protection (jamais de perte quand une vente
+      // échoue par la faute d'un tiers). L'acheteur récupère le prix + le port. Garde-fou anciennes commandes :
+      // remboursement PLEIN si la commande ne colle pas au nouveau modèle.
+      const refundInfo = computeRefundAmount(order)
+
+      // ── VEILLE SOLDE (NON BLOQUANTE) ──
+      // La revue argent a montré qu'un BLOCAGE sur le solde ici est contre-productif : balance.retrieve()
+      // renvoie le solde GLOBAL (souvent bas sur une plateforme qui verse ses vendeurs), or Stripe sait
+      // rembourser depuis les fonds entrants / un léger négatif temporaire. Bloquer figerait des
+      // remboursements LÉGITIMES en boucle (l'acheteur jamais remboursé → chargeback → NOUT perd plus).
+      // On se contente donc d'un LOG d'alerte et on laisse Stripe gérer.
+      if (refundInfo.amountCents > 0) {
+        try {
+          const bal = await stripe.balance.retrieve()
+          const availCents = (bal.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
+          if (availCents < refundInfo.amountCents) {
+            console.warn(`[auto-refund] solde dispo bas order ${orderId} : ${availCents / 100} € < ${refundInfo.amountCents / 100} € (remboursement lancé quand même)`)
+          }
+        } catch (e) {
+          console.error(`[auto-refund] lecture solde échouée order ${orderId} :`, e.message)
+        }
+      }
+
       // ── POINT DE NON-RETOUR ──
       // Verrouiller le code escrow de manière atomique avant d'appeler Stripe.
       // Si deux invocations tournaient en parallèle, une seule passerait ce filtre.
+      // Verrou SYMÉTRIQUE : on refuse si le code a déjà été CONFIRMÉ (confirmed_at) — c.-à-d. si
+      // confirm-escrow est en train de / a fini de verser le vendeur — autant que s'il a déjà été remboursé.
+      // Sans le check confirmed_at, une commande pouvait être VERSÉE au vendeur ET REMBOURSÉE à l'acheteur.
       const { data: locked, error: lockError } = await supabase
         .from('escrow_codes')
         .update({ refunded_at: new Date().toISOString() })
         .eq('order_id', orderId)
         .is('refunded_at', null)
+        .is('confirmed_at', null)
         .select()
         .single()
 
@@ -138,16 +177,18 @@ exports.handler = async (event) => {
         continue
       }
 
-      // Déclencher le remboursement Stripe
-      try {
+      // Déclencher le remboursement Stripe (montant calculé plus haut).
       let refundOk = false
       try {
         await stripe.refunds.create(
-          { payment_intent: order.stripe_payment_id },
+          {
+            payment_intent: order.stripe_payment_id,
+            ...(refundInfo.amountCents > 0 ? { amount: refundInfo.amountCents } : {}),
+          },
           { idempotencyKey: `refund_${orderId}` },   // anti double-remboursement
         )
         refundOk = true
-        console.log(`Remboursement Stripe OK — order ${orderId}`)
+        console.log(`Remboursement Stripe OK — order ${orderId} : ${refundInfo.amountCents / 100} € (${refundInfo.model}, protection gardée ${refundInfo.keptProtection} €)`)
       } catch (stripeErr) {
         // M5 — Stripe a échoué : NE PAS marquer "refunded" ni envoyer d'email "remboursé"
         // (l'acheteur croirait être remboursé alors qu'il ne l'est pas). Traitement manuel requis.
@@ -161,7 +202,8 @@ exports.handler = async (event) => {
 
       // Mettre à jour la commande + remettre l'annonce en vente
       const [{ error: orderRefundErr }, { error: listingRelistErr }] = await Promise.all([
-        supabase.from('orders').update({ status: 'refunded' }).eq('id', orderId),
+        // Garde de statut : on ne repasse en 'refunded' que depuis 'paid' (défense en profondeur).
+        supabase.from('orders').update({ status: 'refunded' }).eq('id', orderId).eq('status', 'paid'),
         supabase.from('listings').update({ is_sold: false }).eq('id', order.listing_id),
       ])
       if (orderRefundErr)   console.error(`Update order ${orderId} refunded:`, orderRefundErr.message)
@@ -169,7 +211,20 @@ exports.handler = async (event) => {
 
       // ── EMAILS ──
       const titreAnnonce = escHtml(order.listing?.title ?? 'l\'article')
-      const montant      = Number(order.total_price).toFixed(2)
+      const montant      = (refundInfo.amountCents / 100).toFixed(2)   // montant réellement remboursé
+
+      // auto-refund ne touche QUE les commandes 'paid' (non expédiées) : soit une remise en main propre
+      // non confirmée, soit une LIVRAISON jamais expédiée par le vendeur. On adapte le wording au mode.
+      const isDelivery   = order.shipping_method === 'relay' || order.shipping_method === 'home'
+      const raisonAcheteur = isDelivery
+        ? 'Le vendeur n\'a pas expédié l\'article dans les 7 jours.'
+        : 'La remise en main propre n\'a pas été confirmée dans les 7 jours.'
+      const raisonVendeur = isDelivery
+        ? 'Tu n\'as pas expédié l\'article dans les 7 jours.'
+        : 'La remise en main propre n\'a pas été confirmée dans les 7 jours.'
+      const recoursVendeur = isDelivery
+        ? 'Si tu as bien expédié l\'article mais que la commande n\'a pas été marquée comme expédiée à temps, contacte-nous à'
+        : 'Si la remise a bien eu lieu mais que tu n\'as pas pu saisir le code à temps, contacte-nous à'
 
       // Email acheteur — remboursement
       if (order.buyer?.email) {
@@ -193,7 +248,7 @@ exports.handler = async (event) => {
 
                 <div style="border-left:4px solid #F59E0B;padding:12px 16px;background:#FFFBEB;border-radius:0 8px 8px 0;margin:20px 0">
                   <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
-                    La remise en main propre n'a pas été confirmée dans les 7 jours. Ton paiement de <strong>${montant} €</strong> a été intégralement remboursé sur ton moyen de paiement d'origine.
+                    ${raisonAcheteur} Un remboursement de <strong>${montant} €</strong> (prix de l'article + livraison) a été effectué sur ton moyen de paiement d'origine.${refundInfo.keptProtection > 0 ? ' Conformément aux CGV, les frais de protection acheteur ne sont pas remboursables.' : ''}
                   </p>
                 </div>
 
@@ -239,12 +294,12 @@ exports.handler = async (event) => {
 
                 <div style="border-left:4px solid #EF4444;padding:12px 16px;background:#FFF5F5;border-radius:0 8px 8px 0;margin:20px 0">
                   <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
-                    La remise en main propre n'a pas été confirmée dans les 7 jours. L'acheteur a été remboursé et ton annonce a été <strong>remise en ligne automatiquement</strong>.
+                    ${raisonVendeur} L'acheteur a été remboursé et ton annonce a été <strong>remise en ligne automatiquement</strong>.
                   </p>
                 </div>
 
                 <p style="color:#6B7A99;font-size:13px;line-height:1.6">
-                  Si la remise a bien eu lieu mais que tu n'as pas pu saisir le code à temps, contacte-nous à
+                  ${recoursVendeur}
                   <a href="mailto:contact@nout.re" style="color:#1A3A8F">contact@nout.re</a> avec le numéro de commande <strong>${orderId}</strong>.
                 </p>
 
@@ -300,7 +355,67 @@ exports.handler = async (event) => {
     }
   }
 
-  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${errors} erreur(s).`
+  // ── TEMPS 1 — FILET DE SÉCURITÉ LIVRAISON (gel pour examen manuel) ──
+  // Tant que le SUIVI TRANSPORTEUR (UBN/Chronopost) n'est pas branché, on ne peut PAS savoir si un colis
+  // est livré. Donc : NI auto-versement vendeur (trop risqué : on paierait même un colis jamais reçu),
+  // NI commande bloquée à vie. Une commande 'shipped' dont le délai a expiré est GELÉE en 'disputed' +
+  // notif admin → examen manuel dans le back-office (rembourser l'acheteur OU libérer le vendeur).
+  // AUCUN mouvement d'argent ici. (TEMPS 3 remplacera ce gel par la libération auto sur confirmation
+  // du transporteur.)
+  let frozen = 0
+  const SHIP_FREEZE_DAYS = 12
+  const freezeCutoff = new Date(Date.now() - SHIP_FREEZE_DAYS * 24 * 60 * 60 * 1000).toISOString()
+  const { data: staleShipped, error: shippedErr } = await supabase
+    .from('orders')
+    .select(`id, status, shipped_at, total_price, listing_id, listing:listings!listing_id(title)`)
+    .eq('status', 'shipped')
+    .lt('shipped_at', freezeCutoff)
+
+  if (shippedErr) {
+    console.error('Erreur lecture commandes shipped (gel litige) :', shippedErr.message)
+  } else if (staleShipped?.length) {
+    console.log(`${staleShipped.length} commande(s) expédiée(s) expirée(s) à geler en litige (>${SHIP_FREEZE_DAYS}j).`)
+    for (const order of staleShipped) {
+      try {
+        // Gel ATOMIQUE : on ne passe en 'disputed' que si la commande est ENCORE 'shipped'
+        // (garde anti double-traitement / concurrence). AUCUN appel Stripe, aucun argent déplacé.
+        const { data: frozenRow } = await supabase
+          .from('orders')
+          .update({ status: 'disputed' })
+          .eq('id', order.id)
+          .eq('status', 'shipped')
+          .select('id')
+        if (!frozenRow || !frozenRow.length) continue   // déjà traitée ailleurs
+        frozen++
+        console.log(`Order ${order.id} gelée en litige (livraison non confirmée, >${SHIP_FREEZE_DAYS}j).`)
+
+        // Notif ADMIN (même canal que confirm-receipt : email support). Examen humain requis.
+        const titre   = escHtml(order.listing?.title ?? 'l\'article')
+        const montant = Number(order.total_price ?? 0).toFixed(2)
+        await sendEmail(
+          'contact@nout.re',
+          `Livraison à examiner (gelée) — commande ${order.id}`,
+          `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
+             <h1 style="color:#1A3A8F;font-size:18px;margin:0 0 12px">Commande livraison à examiner</h1>
+             <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+               La commande <strong>${order.id}</strong> (« ${titre} », ${montant} €) a été expédiée il y a plus de
+               ${SHIP_FREEZE_DAYS} jours sans confirmation. Le suivi transporteur n'étant pas encore branché,
+               elle a été <strong>gelée en litige</strong> (auto-versement suspendu).
+             </p>
+             <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+               À traiter dans le back-office (rembourser l'acheteur ou libérer le vendeur).
+               <strong>Vérifier d'abord sur Stripe qu'aucun virement n'est déjà parti</strong> pour cette commande.
+             </p>
+           </div>`
+        )
+      } catch (e) {
+        console.error(`Gel litige order ${order.id} :`, e.message)
+        errors++
+      }
+    }
+  }
+
+  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${frozen} gelée(s) en litige, ${errors} erreur(s).`
   console.log(summary)
   return { statusCode: 200, body: summary }
 }

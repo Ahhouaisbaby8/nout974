@@ -1,31 +1,9 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { randomInt } = require('crypto')
-
-// Tarifs livraison — DOIT rester synchronisé avec src/utils/shipping.js (source de vérité front).
-// MODÈLE (27 juin 2026) : frais NOUT (10% + 0,25€) prélevés SUR LE VENDEUR.
-// L'acheteur paie le PRIX AFFICHÉ + le port (aucun frais de service ajouté). Main propre gratuite.
-const SHIPPING_FEES = { hand: 0, relay: 6.51, home: 10.80 }
-const COMMISSION_RATE  = 0.10   // 10 % du prix (sur le vendeur)
-const COMMISSION_FIXED = 0.25   // + 0,25 € fixe (couvre le fixe Stripe)
-const STRIPE_PCT = 0.015
-const STRIPE_FIX = 0.25
-
-// Recalcul SÉCURISÉ du total ACHETEUR côté serveur (ne jamais faire confiance au client).
-// = prix + port (l'acheteur ne paie aucun frais de service).
-function computeTotals(price, methodId) {
-  const port = SHIPPING_FEES[methodId] ?? 0
-  return Math.round((price + port) * 100) / 100
-}
-
-// Versement NET au vendeur = prix − frais NOUT (10%+0,25€) − frais Stripe sur l'encaissement total.
-// Calculé ici pour être stocké sur la commande (utilisé au transfert escrow). NOUT garde 10%+0,25€ net.
-function computeSellerPayout(price, methodId) {
-  const port   = SHIPPING_FEES[methodId] ?? 0
-  const stripe = (price + port) * STRIPE_PCT + STRIPE_FIX
-  const payout = price - (price * COMMISSION_RATE + COMMISSION_FIXED) - stripe
-  return Math.round(payout * 100) / 100
-}
+// Frais NOUT : source unique partagée (voir _fees.js) — DOIT rester synchronisée avec src/utils/shipping.js.
+// Modèle « protection acheteur » : le vendeur reçoit son prix plein, les frais sont ajoutés à l'acheteur.
+const { SHIPPING_FEES, computeProtectionFee, computeTotals, computeSellerPayout } = require('./_fees')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -79,7 +57,7 @@ exports.handler = async (event) => {
 
   try {
     const {
-      listingId, buyerId, shippingMethod,
+      listingId, buyerId, shippingMethod, offerId,
       shippingPhone, shippingAddress, shippingCity, shippingPostcode,
     } = JSON.parse(event.body)
 
@@ -116,6 +94,17 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Tu ne peux pas acheter ta propre annonce.' }) }
     }
 
+    // Garde blocage : pas d'achat si un blocage existe entre l'acheteur et le vendeur
+    // (un sens ou l'autre). Service key → RLS bypassée, d'où cette vérif explicite.
+    const { data: blockRows } = await supabase
+      .from('blocks')
+      .select('id')
+      .or(`and(blocker_id.eq.${buyerId},blocked_id.eq.${listing.user_id}),and(blocker_id.eq.${listing.user_id},blocked_id.eq.${buyerId})`)
+      .limit(1)
+    if (blockRows && blockRows.length > 0) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Vous ne pouvez pas acheter auprès de ce vendeur (blocage).' }) }
+    }
+
     if (listing.is_sold) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article a déjà été vendu.' }) }
     }
@@ -138,12 +127,39 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article est déjà en cours d\'achat.' }) }
     }
 
-    const prixArticle   = listing.price
-    // Total acheteur = prix + port (aucun frais de service ajouté). Versement vendeur = prix − frais NOUT − Stripe.
-    const totalAcheteur = computeTotals(prixArticle, method)
-    const sellerPayout  = computeSellerPayout(prixArticle, method)
+    let prixArticle      = Number(listing.price)
 
-    const amountCents = Math.round(totalAcheteur * 100)
+    // OFFRE ACCEPTÉE : on paie au PRIX CONVENU. Validé SERVEUR (offre 'accepted' + bon acheteur + bonne
+    // annonce) — le client ne peut JAMAIS imposer un prix arbitraire, seulement le montant d'une offre acceptée.
+    if (offerId) {
+      const { data: offer } = await supabase
+        .from('offers')
+        .select('id, amount, status, buyer_id, listing_id')
+        .eq('id', offerId)
+        .single()
+      // Sécurité anti-offre-forgée : l'offre doit être acceptée, appartenir à CET acheteur, pour CETTE
+      // annonce, ET son vendeur doit être le VRAI propriétaire (sinon auto-acceptation buyer=seller=self).
+      if (!offer || offer.status !== 'accepted'
+          || offer.buyer_id !== buyerId || offer.listing_id !== listingId
+          || offer.seller_id !== listing.user_id || offer.buyer_id === listing.user_id) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Offre invalide ou non acceptée.' }) }
+      }
+      prixArticle = Number(offer.amount)
+    }
+
+    // Garde-fou : pas de paiement en ligne sous 1 €. Un article à 0 € (« offert ») se récupère en
+    // contactant le vendeur ; et un total < 0,50 € serait de toute façon refusé par Stripe. On bloque
+    // AVANT de créer la commande/le code escrow pour ne pas laisser de commande orpheline.
+    if (Number(prixArticle) < 1) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article ne s\'achète pas en ligne (offert ou prix sous 1 €). Contacte le vendeur pour organiser la remise.' }) }
+    }
+    // Modèle protection acheteur : total acheteur = prix + protection (10%+0,25€) + port.
+    // Versement vendeur = le PRIX PLEIN (les frais sont payés par l'acheteur).
+    const protectionFee  = computeProtectionFee(prixArticle)
+    const port           = SHIPPING_FEES[method] ?? 0
+    const totalAcheteur  = computeTotals(prixArticle, method)
+    const sellerPayout   = computeSellerPayout(prixArticle)
+
     const siteUrl     = process.env.URL || 'http://localhost:8888'
 
     // Créer la commande en base
@@ -153,6 +169,7 @@ exports.handler = async (event) => {
       listing_id:        listingId,
       total_price:       totalAcheteur,
       seller_payout:     sellerPayout,
+      shipping_fee:      port,      // port FIGÉ (sert au calcul de remboursement, stable dans le temps)
       shipping_method:   method,
       shipping_phone:    isDelivery ? phone : null,
       shipping_address:  isDelivery ? addr : null,
@@ -185,17 +202,41 @@ exports.handler = async (event) => {
     // Créer la session Stripe Checkout — argent capturé sur le compte NOUT, pas de transfert vendeur
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name:   listing.title,
-            images: listing.images?.slice(0, 1) ?? [],
+      // Lignes détaillées pour que l'acheteur voie clairement le découpage sur la page Stripe.
+      // La somme des lignes = total_price stocké sur la commande (prix + protection + port).
+      line_items: [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name:   listing.title,
+              images: listing.images?.slice(0, 1) ?? [],
+            },
+            unit_amount: Math.round(prixArticle * 100),
           },
-          unit_amount: amountCents,
+          quantity: 1,
         },
-        quantity: 1,
-      }],
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: { name: 'Frais de protection acheteur (10 % + 0,25 €)' },
+            unit_amount: Math.round(protectionFee * 100),
+          },
+          quantity: 1,
+        },
+        ...(port > 0 ? [{
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: method === 'home'
+                ? 'Livraison Chronopost à domicile'
+                : 'Livraison Chronopost en point relais',
+            },
+            unit_amount: Math.round(port * 100),
+          },
+          quantity: 1,
+        }] : []),
+      ],
       payment_intent_data: {
         // Pas de transfer_data ni application_fee_amount : l'argent reste sur le compte Stripe NOUT.
         // Le transfert au vendeur sera déclenché manuellement à la confirmation du code escrow.

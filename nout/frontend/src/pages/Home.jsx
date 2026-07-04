@@ -10,7 +10,6 @@ import PriceRangeSection from '../components/PriceRangeSection'
 import CategoryMenu from '../components/CategoryMenu'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
-import { FOUNDER_TAKEN, FOUNDER_TOTAL } from '../components/ui/FounderBadge'
 import { Sparkles, PackageOpen } from 'lucide-react'
 import { useHeroRef } from '../context/HeroContext'
 
@@ -123,7 +122,7 @@ export default function Home() {
     navigate(`/recherche?${params}`)
   }
 
-  const handleCategory = (catId) => navigate(`/recherche?categorie=${catId}`)
+  const handleCategory = (catId) => navigate(`/c/${catId}`)
 
   return (
     <div>
@@ -249,28 +248,19 @@ export default function Home() {
             </select>
             <button
               type="submit"
-              className="flex-shrink-0 bg-[#007A6E] hover:bg-[#006B61] text-white px-6 py-2.5 rounded-full text-sm font-semibold transition-colors"
+              className="flex-shrink-0 bg-nout-accent text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Rechercher
             </button>
           </form>
 
-          {/* Pill Membres Fondateurs — Position B, sous la recherche */}
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold cursor-default select-none"
-               style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
-            <Sparkles className="w-3.5 h-3.5" style={{ color: '#FF6B4A' }} strokeWidth={2} />
-            <span className="text-white/85">Membres Fondateurs</span>
-            <span className="text-white/30">·</span>
-            <span className="font-bold" style={{ color: '#FF6B4A' }}>
-              {FOUNDER_TOTAL - FOUNDER_TAKEN}/{FOUNDER_TOTAL} places restantes
-            </span>
-          </div>
+          {/* Membres Fondateurs — masqué pour le moment (à la demande) */}
 
         </div>
       </section>
 
-      {/* ── CATÉGORIES ───────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 pt-12 pb-4">
+      {/* ── CATÉGORIES (mobile uniquement : sur desktop la barre du header suffit, pas de doublon) ── */}
+      <section className="lg:hidden max-w-7xl mx-auto px-4 pt-12 pb-4">
         <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#00897B] mb-2">
           <span className="text-nout-turquoise">•</span> Explore <span className="text-nout-turquoise">•</span>
         </p>

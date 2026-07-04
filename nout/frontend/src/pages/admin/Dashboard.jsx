@@ -19,7 +19,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_sold', false),
       supabase.from('orders').select('*', { count: 'exact', head: true }),
       supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
@@ -95,11 +95,13 @@ function RecentListings() {
 function RecentUsers() {
   const [users, setUsers] = useState([])
   useEffect(() => {
-    supabase.from('profiles')
-      .select('id, username, email, role, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5)
-      .then(({ data }) => setUsers(data ?? []))
+    // Données sensibles (email) via la RPC admin sécurisée — pas via la table publique.
+    supabase.rpc('admin_accounts')
+      .then(({ data }) => setUsers(
+        (data ?? [])
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 5)
+      ))
   }, [])
 
   return (

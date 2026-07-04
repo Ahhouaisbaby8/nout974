@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getAvatarUrl } from '../../utils/avatar'
 import {
-  User, ShieldCheck, Wallet, Bell, Users, CreditCard, Star, Trash2, Menu, X,
+  User, ShieldCheck, Wallet, Bell, Users, Star, Trash2, Menu, X, Ban,
 } from 'lucide-react'
 
 // Sections de l'espace compte. "soon" = fonction à venir (badge Bientôt, non cliquable).
@@ -13,7 +13,7 @@ const NAV = [
     items: [
       { to: '/compte/profil',        label: 'Mon profil',        icon: User },
       { to: '/compte/securite',      label: 'Sécurité',          icon: ShieldCheck },
-      { to: '/compte/paiements',     label: 'Paiements & ventes', icon: Wallet },
+      { to: '/compte/paiements',     label: 'Mon argent',        icon: Wallet },
       { to: '/compte/notifications', label: 'Notifications',     icon: Bell },
     ],
   },
@@ -21,13 +21,13 @@ const NAV = [
     group: 'Communauté',
     items: [
       { to: '/compte/parrainage',    label: 'Parrainage',    icon: Users,      soon: true },
-      { to: '/compte/porte-monnaie', label: 'Porte-monnaie', icon: CreditCard, soon: true },
+      { to: '/compte/bloques',       label: 'Membres bloqués', icon: Ban },
     ],
   },
   {
     group: 'Préférences',
     items: [
-      { to: '/compte/fondateur',  label: 'Membre Fondateur',    icon: Star },
+      // « Membre Fondateur » masqué pour le moment (projet mis de côté).
       { to: '/compte/supprimer',  label: 'Supprimer mon compte', icon: Trash2, danger: true },
     ],
   },
@@ -45,10 +45,10 @@ export default function AccountLayout() {
       <div className="flex items-center gap-3 px-[18px] py-5 bg-[#F8FAFC] border-b border-[#EEF2F7]">
         {avatarUrl ? (
           <img src={avatarUrl} alt={profile?.username}
-               className="w-11 h-11 rounded-full object-cover flex-shrink-0" style={{ border: '2px solid #00C4B4' }} />
+               className="w-11 h-11 rounded-full object-cover flex-shrink-0" style={{ border: '2px solid #E5EAF1' }} />
         ) : (
           <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-[17px] flex-shrink-0 bg-white text-nout-roi"
-               style={{ border: '2px solid #00C4B4' }}>
+               style={{ border: '2px solid #E5EAF1' }}>
             {profile?.username?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
           </div>
         )}
@@ -67,7 +67,7 @@ export default function AccountLayout() {
                 <div key={to} className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-gray-400 cursor-default">
                   <Icon className="w-[17px] h-[17px] flex-shrink-0 opacity-70" />
                   {label}
-                  <span className="ml-auto text-[10px] font-bold bg-[#FFF3E0] text-[#E08600] rounded-full px-2 py-0.5">Bientôt</span>
+                  <span className="ml-auto text-[10px] font-semibold bg-[#F1F4F8] text-[#8A95A5] rounded-full px-2 py-0.5">Bientôt</span>
                 </div>
               ) : (
                 <NavLink

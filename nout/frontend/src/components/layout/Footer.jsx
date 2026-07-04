@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { CATEGORIES } from '../../utils/categories'
 
 export default function Footer() {
   return (
@@ -80,6 +81,20 @@ export default function Footer() {
             </ul>
           </div>
 
+        </div>
+
+        {/* ── CATÉGORIES (liens internes crawlables vers les pages /c/:slug) ── */}
+        <div className="border-t border-white/10 pt-8 mb-8">
+          <h4 className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-4">
+            Catégories
+          </h4>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {CATEGORIES.map(c => (
+              <Link key={c.id} to={`/c/${c.id}`} className="text-sm text-white/60 hover:text-white transition-colors">
+                {c.label}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* ── PIED DE PAGE ── */}

@@ -67,37 +67,77 @@ exports.handler = async (event) => {
       .eq('id', userId)
       .single()
 
-    let accountId = profile?.stripe_account_id
-
-    // Créer le compte Connect Express si pas encore fait
-    if (!accountId) {
+    // Crée un compte connecté Express PARTICULIER (sans SIRET ; versement MANUEL = porte-monnaie : l'argent
+    // s'accumule dans le solde du compte connecté et n'est viré à la banque que sur demande « Retirer ») et le stocke.
+    const createConnectedAccount = async () => {
       const account = await stripe.accounts.create({
-        type:    'express',
-        country: 'FR',
-        email:   profile?.email,
-        capabilities: {
-          transfers: { requested: true },
-        },
-        business_profile: {
-          product_description: 'Vente d\'articles de seconde main sur NOUT 974',
-        },
+        type:          'express',
+        country:       'FR',
+        email:         profile?.email,
+        business_type: 'individual',
+        capabilities:  { transfers: { requested: true } },
+        business_profile: { product_description: 'Vente d\'articles de seconde main sur NOUT 974' },
+        settings:      { payouts: { schedule: { interval: 'manual' } } },
       })
-      accountId = account.id
-      await supabase.from('profiles').update({ stripe_account_id: accountId }).eq('id', userId)
+      await supabase.from('profiles').update({ stripe_account_id: account.id }).eq('id', userId)
+      return account.id
     }
 
-    // Générer le lien d'onboarding
-    const link = await stripe.accountLinks.create({
-      account:     accountId,
-      refresh_url: `${siteUrl}/parametres?stripe=refresh`,
-      return_url:  `${siteUrl}/parametres?stripe=success`,
+    let accountId = profile?.stripe_account_id
+
+    // AUTO-RÉPARATION 1 : si l'ID stocké ne correspond plus à un compte Stripe existant → on repart de zéro.
+    if (accountId) {
+      try {
+        await stripe.accounts.retrieve(accountId)
+      } catch (e) {
+        if (e?.code === 'resource_missing' || e?.statusCode === 404) {
+          console.warn(`[connect] stripe_account_id ${accountId} invalide → recréation`)
+          accountId = null
+          await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
+        } else {
+          // Erreur transitoire/autre : on NE plante PAS, on garde l'ID et on laisse accountLinks.create tenter.
+          console.warn(`[connect] retrieve ${accountId} a échoué (${e?.code || e?.message}) — on garde l'ID`)
+        }
+      }
+    }
+
+    if (!accountId) accountId = await createConnectedAccount()
+
+    const linkParams = {
+      refresh_url: `${siteUrl}/compte/paiements?stripe=refresh`,
+      return_url:  `${siteUrl}/compte/paiements?stripe=success`,
       type:        'account_onboarding',
-    })
+    }
+
+    // AUTO-RÉPARATION 2 : l'ID stocké existe mais n'est PAS un compte connecté de NOTRE plateforme (ancien
+    // ID, compte plateforme lui-même, valeur corrompue) → Stripe renvoie « not connected to your platform /
+    // does not exist ». Dans ce cas on réinitialise et on recrée un compte connecté propre, puis on réessaie.
+    let link
+    try {
+      link = await stripe.accountLinks.create({ account: accountId, ...linkParams })
+    } catch (e) {
+      const badAccount = e?.code === 'account_invalid'
+        || /not connected to your platform|does not exist|No such account/i.test(String(e?.message ?? ''))
+      if (!badAccount) throw e
+      console.warn(`[connect] accountLink KO pour ${accountId} (${e?.message}) → recréation d'un compte connecté propre`)
+      await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
+      accountId = await createConnectedAccount()
+      link = await stripe.accountLinks.create({ account: accountId, ...linkParams })
+    }
 
     return { statusCode: 200, headers, body: JSON.stringify({ url: link.url }) }
 
   } catch (err) {
-    console.error('Connect error:', err.message)
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Impossible de créer le compte vendeur.' }) }
+    // Le message brut est journalisé côté serveur (visible dans les logs Netlify), pas renvoyé à
+    // l'utilisateur. Cause n°1 d'échec = Stripe Connect pas activé sur le compte de la PLATEFORME
+    // (dashboard NOUT) : on la détecte pour afficher un message clair et actionnable.
+    console.error('Connect error:', err?.message, err?.code ?? '')
+    const raw = String(err?.message ?? '')
+    const connectNotEnabled = /sign(ed)? up for Connect|Connect (is )?(not )?(enabled|activated)|only.*Connect platforms|managed accounts|review the responsibilities/i.test(raw)
+    const base = connectNotEnabled
+      ? 'Les paiements vendeur ne sont pas encore activés côté NOUT (Stripe Connect à activer sur le compte de la plateforme).'
+      : 'Impossible de préparer ton compte de paiement pour le moment.'
+    // DIAGNOSTIC TEMPORAIRE : on renvoie le code + message Stripe pour identifier la vraie cause. À retirer.
+    return { statusCode: 500, headers, body: JSON.stringify({ error: `${base} [diag: ${err?.code || ''} — ${err?.message || ''}]`.trim() }) }
   }
 }

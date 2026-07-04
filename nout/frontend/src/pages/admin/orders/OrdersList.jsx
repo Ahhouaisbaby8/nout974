@@ -1,22 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../../services/supabase'
 import { formatPrice, formatRelativeDate } from '../../../utils/formatters'
 
 const STATUS = {
-  pending:   { label: 'En attente',  color: 'bg-yellow-100 text-yellow-700' },
-  paid:      { label: 'Payée',       color: 'bg-blue-100 text-blue-700' },
-  shipped:   { label: 'Expédiée',    color: 'bg-purple-100 text-purple-700' },
-  delivered: { label: 'Livrée',      color: 'bg-green-100 text-green-700' },
-  cancelled: { label: 'Annulée',     color: 'bg-gray-100 text-gray-500' },
-  disputed:  { label: 'Litige',      color: 'bg-red-100 text-red-600' },
+  pending:        { label: 'En attente',  color: 'bg-yellow-100 text-yellow-700' },
+  paid:           { label: 'Payée',       color: 'bg-blue-100 text-blue-700' },
+  shipped:        { label: 'Expédiée',    color: 'bg-purple-100 text-purple-700' },
+  completed:      { label: 'Terminée',    color: 'bg-green-100 text-green-700' },
+  payout_pending: { label: 'Virement en attente', color: 'bg-amber-100 text-amber-700' },
+  refunded:       { label: 'Remboursée',  color: 'bg-gray-100 text-gray-500' },
+  cancelled:      { label: 'Annulée',     color: 'bg-gray-100 text-gray-500' },
+  disputed:       { label: 'Litige',      color: 'bg-red-100 text-red-600' },
 }
 
 export default function OrdersList() {
   const [orders,  setOrders]  = useState([])
   const [loading, setLoading] = useState(true)
   const [filter,  setFilter]  = useState('all')
+  const [busy,    setBusy]    = useState(null)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true)
     let q = supabase.from('orders')
       .select(`id, total_price, status, created_at,
@@ -27,6 +30,33 @@ export default function OrdersList() {
     if (filter !== 'all') q = q.eq('status', filter)
     q.then(({ data }) => setOrders(data ?? [])).finally(() => setLoading(false))
   }, [filter])
+
+  useEffect(() => { load() }, [load])
+
+  // Résolution d'un litige (admin) : rembourse l'acheteur OU libère le paiement au vendeur.
+  const resolve = async (orderId, action) => {
+    if (busy) return
+    const verb = action === 'resolve_dispute_refund'
+      ? "REMBOURSER l'acheteur"
+      : 'LIBÉRER le paiement au vendeur'
+    if (!window.confirm(`Litige — confirmer : ${verb} pour cette commande ?\nVérifie d'abord sur Stripe qu'aucun mouvement n'est déjà parti.`)) return
+    setBusy(orderId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ action, targetId: orderId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Erreur')
+      load()
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setBusy(null)
+    }
+  }
 
   return (
     <div>
@@ -52,6 +82,7 @@ export default function OrdersList() {
                 <th className="px-4 py-3 text-left">Montant</th>
                 <th className="px-4 py-3 text-left">Statut</th>
                 <th className="px-4 py-3 text-left">Date</th>
+                <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -65,6 +96,26 @@ export default function OrdersList() {
                     <td className="px-4 py-3 font-semibold text-nout-primary">{formatPrice(o.total_price)}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full ${s.color}`}>{s.label}</span></td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{formatRelativeDate(o.created_at)}</td>
+                    <td className="px-4 py-3">
+                      {o.status === 'disputed' ? (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => resolve(o.id, 'resolve_dispute_refund')}
+                            disabled={busy === o.id}
+                            className="text-[11px] font-semibold px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50"
+                          >
+                            {busy === o.id ? '…' : 'Rembourser'}
+                          </button>
+                          <button
+                            onClick={() => resolve(o.id, 'resolve_dispute_release')}
+                            disabled={busy === o.id}
+                            className="text-[11px] font-semibold px-2 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                          >
+                            {busy === o.id ? '…' : 'Libérer'}
+                          </button>
+                        </div>
+                      ) : <span className="text-gray-300">—</span>}
+                    </td>
                   </tr>
                 )
               })}

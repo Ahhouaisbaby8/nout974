@@ -12,9 +12,13 @@ export default function UsersList() {
   const [banError,   setBanError]   = useState({})
 
   useEffect(() => {
-    supabase.from('profiles').select('id, username, email, role, city, created_at, is_banned')
-      .order('created_at', { ascending: false }).limit(100)
-      .then(({ data }) => setUsers(data ?? []))
+    // RPC admin sécurisée (renvoie email/téléphone/etc. uniquement aux admins).
+    supabase.rpc('admin_accounts')
+      .then(({ data }) => setUsers(
+        (data ?? [])
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 100)
+      ))
       .finally(() => setLoading(false))
   }, [])
 
