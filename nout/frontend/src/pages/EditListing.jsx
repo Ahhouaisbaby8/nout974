@@ -6,7 +6,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById, updateListing, uploadListingImage } from '../services/listings'
 import { compressImage } from '../utils/imageCompressor'
-import { CATEGORIES, CONDITIONS, BRANDS } from '../utils/categories'
+import { CONDITIONS, BRANDS } from '../utils/categories'
+import CategoryPicker from '../components/ui/CategoryPicker'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
@@ -46,6 +47,7 @@ export default function EditListing() {
   const [title, setTitle]         = useState('')
   const [description, setDesc]    = useState('')
   const [category, setCategory]   = useState('')
+  const [subcategory, setSubcategory] = useState('')
   const [condition, setCondition] = useState('')
   const [price, setPrice]         = useState('')
   const [city, setCity]           = useState('')
@@ -73,6 +75,7 @@ export default function EditListing() {
         setTitle(listing.title)
         setDesc(listing.description ?? '')
         setCategory(listing.category)
+        setSubcategory(listing.subcategory ?? '')
         setCondition(listing.condition)
         setPrice(String(listing.price))
         setCity(listing.city)
@@ -147,6 +150,7 @@ export default function EditListing() {
         title:       clean(title.trim()),
         description: clean(description.trim()),
         category,
+        subcategory: subcategory || null,
         condition:   condition || null,
         price:       Number(price),
         city,
@@ -276,17 +280,12 @@ export default function EditListing() {
           <div className="grid grid-cols-2 gap-4">
             <div className={category === 'beaute' ? 'col-span-2' : ''}>
               <label className="block text-sm font-medium text-nout-dark mb-1">Catégorie</label>
-              <select
-                required
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="input-field cursor-pointer"
-              >
-                <option value="">Choisir...</option>
-                {CATEGORIES.map(c => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
-                ))}
-              </select>
+              {/* Sélecteur en cascade (rubrique → sous-rubrique), aligné sur le formulaire Vendre. */}
+              <CategoryPicker
+                category={category}
+                subcategory={subcategory}
+                onSelect={({ category: cat, subcategory: sub }) => { setCategory(cat); setSubcategory(sub) }}
+              />
             </div>
 
             {category !== 'beaute' && (

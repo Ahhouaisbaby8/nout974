@@ -199,6 +199,15 @@ export default function MyMoney() {
           )}
         </>
       )}
+
+      {/* Mention PSP (transparence + cadre légal) : les fonds sont détenus par Stripe, prestataire de
+          services de paiement agréé — jamais par NOUT. Même rôle que la mention Mangopay chez Vinted. */}
+      <p className="text-xs text-gray-400 mt-6 leading-relaxed border-t border-gray-100 pt-4">
+        Ton porte-monnaie NOUT est géré par <strong>Stripe</strong>, notre prestataire de services de paiement (PSP) agréé.
+        L'argent de tes ventes est conservé de façon sécurisée par Stripe — jamais par NOUT — jusqu'à ton retrait.
+        En activant ton porte-monnaie, tu acceptes les conditions du PSP ainsi que le transfert de tes données au PSP.
+        Une vérification d'identité (« Know Your Customer ») peut t'être demandée par Stripe avant le premier retrait.
+      </p>
     </div>
   )
 }

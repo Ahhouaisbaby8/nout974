@@ -7,14 +7,14 @@ import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
 import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
-import { CATEGORIES, CONDITIONS, BRANDS, MATERIALS } from '../utils/categories'
+import { CONDITIONS, BRANDS, MATERIALS } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import { computeSellerPayout } from '../utils/shipping'
 import { describeListing } from '../utils/describeListing'
 import { formatPrice } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
-import ChoiceChips from '../components/ui/ChoiceChips'
+import CategoryPicker from '../components/ui/CategoryPicker'
 import { Sparkles } from 'lucide-react'
 
 // Phrases-types pour aider à rédiger la description (un clic = ajout)
@@ -73,7 +73,6 @@ export default function CreateListing() {
 
   const isClothing = CLOTHING_CATS.includes(category)
   const isFashion  = FASHION_CATS.includes(category)
-  const subOptions = CATEGORIES.find(c => c.id === category)?.sub ?? []
   const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
     : category === 'vetements-enfant' ? SIZES_ENFANT
     : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
@@ -102,8 +101,9 @@ export default function CreateListing() {
   }, [])
 
   useEffect(() => {
+    // La sous-catégorie n'est PAS remise à zéro ici : le CategoryPicker pose toujours la paire
+    // (catégorie + sous-catégorie) de façon cohérente et atomique.
     setSize('')
-    setSubcategory('')
     if (category === 'beaute') setCondition('')
   }, [category])
 
@@ -357,25 +357,13 @@ export default function CreateListing() {
           <div className="flex flex-col gap-4">
             <div>
               <label className="block text-sm font-medium text-nout-dark mb-2">Catégorie</label>
-              <ChoiceChips
-                options={CATEGORIES.map(c => ({ value: c.id, label: c.label }))}
-                value={category}
-                onChange={setCategory}
+              {/* Sélecteur en cascade (rubrique → sous-rubrique), remplace les chips à plat. */}
+              <CategoryPicker
+                category={category}
+                subcategory={subcategory}
+                onSelect={({ category: cat, subcategory: sub }) => { setCategory(cat); setSubcategory(sub) }}
               />
             </div>
-
-            {subOptions.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-nout-dark mb-2">
-                  Sous-catégorie <span className="text-gray-400 font-normal">(optionnel)</span>
-                </label>
-                <ChoiceChips
-                  options={subOptions.map(s => ({ value: s.id, label: s.label }))}
-                  value={subcategory}
-                  onChange={setSubcategory}
-                />
-              </div>
-            )}
 
             {category !== 'beaute' && (
               <div>
