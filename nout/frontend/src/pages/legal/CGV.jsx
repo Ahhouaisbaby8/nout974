@@ -21,13 +21,22 @@ export default function CGV() {
       </Section>
 
       <Section title="4. Remise de l'article">
-        <P>Les modalités de remise sont définies entre l'acheteur et le vendeur :</P>
+        <P>L'acheteur choisit son mode de remise au moment du paiement :</P>
         <Ul items={[
           'Remise en main propre — le mode le plus courant à La Réunion',
-          'Point relais — selon accord entre les parties',
-          'Livraison à domicile — selon accord entre les parties',
+          'Livraison en point relais (via notre transporteur partenaire)',
+          'Livraison à domicile (via notre transporteur partenaire)',
         ]} />
-        <P>NOUT décline toute responsabilité en cas de litige concernant la remise de l'article.</P>
+
+        <P><strong>Remise en main propre.</strong> Après paiement, l'acheteur reçoit un code de confirmation à 6 chiffres. Il le communique au vendeur <strong>uniquement au moment où il reçoit l'article en main propre</strong>. La saisie de ce code par le vendeur confirme la bonne remise et déclenche le versement des fonds au vendeur. L'acheteur ne doit jamais communiquer ce code avant d'avoir l'article entre les mains.</P>
+
+        <P><strong>Livraison (point relais ou domicile).</strong> Aucun code n'est utilisé : la remise est constatée par le suivi du transporteur. Une fois la livraison confirmée par le transporteur, l'acheteur dispose d'un délai de <strong>48 heures</strong> pour signaler un éventuel problème depuis son espace personnel (« Signaler un problème »). Passé ce délai sans signalement, la vente est réputée conforme et le versement au vendeur est déclenché. Pour un retrait en point relais, l'acheteur doit récupérer son colis dans le délai d'instance fixé par le transporteur (généralement 7 jours) ; à défaut, le colis est retourné à l'expéditeur.</P>
+
+        <P><strong>Défaut d'expédition.</strong> Si le vendeur n'expédie pas l'article dans un délai de <strong>7 jours</strong> après le paiement, la commande est automatiquement annulée et l'acheteur est intégralement remboursé du prix de l'article et des frais de livraison.</P>
+
+        <P><strong>Délais de versement.</strong> Une fois le versement déclenché, les fonds sont crédités sur le porte-monnaie du vendeur puis virés sur son compte bancaire selon les délais de notre prestataire de paiement (généralement quelques jours ouvrés).</P>
+
+        <P>NOUT décline toute responsabilité en cas de litige concernant la remise de l'article, mais met à disposition un service de médiation (voir article 7).</P>
       </Section>
 
       <Section title="5. Droit de rétractation">
