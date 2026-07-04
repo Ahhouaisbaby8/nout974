@@ -74,6 +74,12 @@ export const getDeliveryFee = (id) => {
   return SHIPPING_METHODS[id]?.fee ?? 0
 }
 
+// Port de livraison LE MOINS CHER (hors main propre gratuite) — pour l'affichage
+// « livraison à partir de X € ». Aujourd'hui : UBN point relais à 4 €.
+export const MIN_SHIPPING_FEE = Math.min(
+  ...DELIVERY_OPTIONS.filter((o) => o.fee > 0).map((o) => o.fee)
+)
+
 // Frais de service NOUT, AJOUTÉS À L'ACHETEUR (protection acheteur) : taux variable + part fixe.
 export const COMMISSION_RATE = 0.10   // 10 % du prix
 export const COMMISSION_FIXED = 0.25  // + 0,25 € fixe

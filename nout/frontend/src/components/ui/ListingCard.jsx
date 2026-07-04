@@ -6,10 +6,9 @@ import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
-import { computeProtectionFee, getShippingFee } from '../../utils/shipping'
+import { computeProtectionFee, computeBuyerTotal, MIN_SHIPPING_FEE } from '../../utils/shipping'
 import { thumbUrl } from '../../utils/image'
 
-const SHIPPING_RELAY_FEE = getShippingFee('relay')
 import { FounderCardBadge } from './FounderBadge'
 
 export default function ListingCard({ listing, isFavorited = false, isFounderSeller = false, founderNumber = null }) {
@@ -126,13 +125,16 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
           {formatPrice(listing.price)}
         </p>
 
+        {/* Total façon Vinted : ce que l'acheteur paie, protection incluse. PAS de port ici :
+            il n'est ajouté qu'au checkout, quand l'acheteur choisit son mode de livraison.
+            Le détail complet s'ouvre au clic sur le ⓘ. */}
         <button
           type="button"
           onClick={openModal('price')}
-          className="flex items-center gap-0.5 text-[10px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
+          className="flex items-center gap-0.5 text-[11px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
         >
-          + Protection acheteur · port dès {formatPrice(SHIPPING_RELAY_FEE)}
-          <Info size={9} className="ml-0.5" />
+          {formatPrice(computeBuyerTotal(listing.price, 'hand'))} · protection incluse
+          <Info size={10} className="ml-0.5" />
         </button>
 
         <p className="text-[10px] text-nout-muted mt-1.5">
@@ -180,7 +182,7 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                     <Shield size={18} className="text-nout-turquoise" />
                   </div>
                   <p className="flex-1 text-[15px] text-nout-texte flex items-center gap-1.5">
-                    Protection acheteur <span className="text-gray-400 text-[13px]">(10 % + 0,25 €)</span>
+                    Protection acheteur
                     <Info size={15} className="text-nout-turquoise" />
                   </p>
                   <span className="text-[15px] font-medium text-nout-texte">{formatPrice(protectionFee)}</span>
@@ -195,15 +197,15 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
                     </div>
                     <div className="flex-1">
                       <p className="text-[15px] text-nout-texte">Frais de port</p>
-                      <p className="text-[13px] text-gray-400">Main propre gratuite, ou livraison à partir de {formatPrice(SHIPPING_RELAY_FEE)}</p>
+                      <p className="text-[13px] text-gray-400">Main propre gratuite, ou livraison à partir de {formatPrice(MIN_SHIPPING_FEE)}</p>
                     </div>
-                    <span className="text-[15px] text-nout-texte">dès {formatPrice(SHIPPING_RELAY_FEE)}</span>
+                    <span className="text-[15px] text-nout-texte">dès {formatPrice(MIN_SHIPPING_FEE)}</span>
                   </div>
                 </div>
 
                 <p className="text-[13px] text-gray-400 leading-relaxed py-3 border-t border-gray-100">
                   Le vendeur reçoit son prix en entier. À l'achat s'ajoute une protection acheteur
-                  de 10 % + 0,25 € (et les frais de port si tu choisis une livraison). Le paiement est
+                  (et les frais de port si tu choisis une livraison). Le paiement est
                   sécurisé : le vendeur n'est payé qu'après confirmation de réception.
                 </p>
               </div>
