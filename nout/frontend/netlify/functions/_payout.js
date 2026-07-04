@@ -34,7 +34,9 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
 
   // Statuts depuis lesquels un versement automatique/acheteur est légitime. JAMAIS 'disputed' :
   // la résolution d'un litige passe par admin-actions.js (claim-first dédié), pas par ce module.
-  const allowedStatuses = ['paid', 'shipped', 'payout_pending']
+  // 'delivered' est inclus : release-delivered verse DIRECTEMENT depuis 'delivered' (48h après livraison),
+  // sans repositionner la commande en 'shipped' (ce qui l'exposait au gel 12j d'auto-refund → double-paiement).
+  const allowedStatuses = ['paid', 'shipped', 'delivered', 'payout_pending']
 
   // 0) GARDE TOCTOU : on relit le statut JUSTE avant de transférer. Les appelants par snapshot (cron
   //    auto-release) peuvent être périmés ; un litige acheteur ('disputed') ou un remboursement a pu
@@ -47,20 +49,43 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
   // 1) TRANSFERT d'abord (idempotent). Aucune écriture terminale tant que ce n'est pas acquis.
   let transferOk = false
   if (vendorStripeId && transferCents > 0) {
+    // ── GARDE ANTI-DOUBLE-TRANSFERT (centralisée pour TOUS les appelants) ──
+    // La clé d'idempotence Stripe ne dure que ~24h. Si un versement pour cette commande est DÉJÀ parti
+    // (retry au-delà de 24h, réponse HTTP perdue, résolution admin tardive…), on NE recrée PAS un transfert.
+    // Recherche précise par transfer_group ('order_<id>', sans pagination) + repli metadata pour les transferts
+    // créés avant l'ajout du transfer_group. On ne compte QUE les transferts NON entièrement reversés
+    // (amount_reversed < amount) : un transfert repris par chargeback ≠ vendeur payé.
     try {
-      await stripe.transfers.create(
-        // transfer_group = 'order_<id>' : permet de RETROUVER PRÉCISÉMENT le(s) transfert(s) d'une commande
-        // via transfers.list({ transfer_group }) — sans limite/pagination — pour ne JAMAIS re-verser un
-        // transfert déjà parti (le rattrapage cron s'en sert ; la clé d'idempotence ne dure que 24h).
-        { amount: transferCents, currency: 'eur', destination: vendorStripeId, transfer_group: `order_${order_id}`, metadata: { order_id } },
-        { idempotencyKey: `transfer_${order_id}` },
-      )
-      transferOk = true
-      console.log(`[payout] transfert OK : ${transferCents / 100} € → ${vendorStripeId} (order ${order_id})`)
+      const byGroup = await stripe.transfers.list({ transfer_group: `order_${order_id}`, limit: 10 })
+      transferOk = (byGroup.data || []).some(t => (t.amount_reversed ?? 0) < t.amount)
+      if (!transferOk) {
+        const byMeta = await stripe.transfers.list({ destination: vendorStripeId, limit: 100 })
+        transferOk = (byMeta.data || []).some(t =>
+          String(t.metadata?.order_id) === String(order_id) && (t.amount_reversed ?? 0) < t.amount)
+      }
+      if (transferOk) console.log(`[payout] transfert déjà présent chez Stripe (order ${order_id}) → pas de re-versement`)
     } catch (err) {
-      // Échec transfert : on ne touche À RIEN → commande inchangée = rejouable (re-clic / prochain cron).
-      console.error(`[payout] transfert échoué (order ${order_id}) :`, err.message)
+      // Doute sur l'état Stripe → on NE transfère PAS (prudence argent). Rejouable au prochain passage.
+      console.error(`[payout] transfers.list (pré-check anti-double) échoué (order ${order_id}) :`, err.message)
       return { outcome: 'retry', transferOk: false, payoutNet, vendorStripeId, orderStatus: null }
+    }
+
+    if (!transferOk) {
+      try {
+        await stripe.transfers.create(
+          // transfer_group = 'order_<id>' : permet de RETROUVER PRÉCISÉMENT le(s) transfert(s) d'une commande
+          // via transfers.list({ transfer_group }) — sans limite/pagination — pour ne JAMAIS re-verser un
+          // transfert déjà parti (le pré-check ci-dessus s'en sert ; la clé d'idempotence ne dure que 24h).
+          { amount: transferCents, currency: 'eur', destination: vendorStripeId, transfer_group: `order_${order_id}`, metadata: { order_id } },
+          { idempotencyKey: `transfer_${order_id}` },
+        )
+        transferOk = true
+        console.log(`[payout] transfert OK : ${transferCents / 100} € → ${vendorStripeId} (order ${order_id})`)
+      } catch (err) {
+        // Échec transfert : on ne touche À RIEN → commande inchangée = rejouable (re-clic / prochain cron).
+        console.error(`[payout] transfert échoué (order ${order_id}) :`, err.message)
+        return { outcome: 'retry', transferOk: false, payoutNet, vendorStripeId, orderStatus: null }
+      }
     }
   } else if (!vendorStripeId) {
     console.log(`[payout] vendeur sans compte Stripe (order ${order_id}) → payout_pending`)

@@ -26,6 +26,16 @@
 [functions."sweep-wallets"]
   schedule = "0 4 * * *"
 
+# Cron : suivi transporteur Chronopost. Interroge le suivi et passe la commande en 'delivered' + delivered_at
+# a la livraison (ouvre la fenetre de protection 48h). Toutes les heures a :15 (decale de auto-refund a :00).
+[functions."chronopost-tracking"]
+  schedule = "15 * * * *"
+
+# Cron : versement vendeur 48h apres livraison (release-delivered). Verse depuis 'delivered' via
+# releaseSellerPayout. A :45 (bien decale de auto-refund a :00) pour ne jamais croiser le gel/rattrapage argent.
+[functions."release-delivered"]
+  schedule = "45 * * * *"
+
 [[headers]]
   for = "/*"
   [headers.values]

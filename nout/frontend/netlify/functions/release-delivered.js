@@ -97,18 +97,12 @@ exports.handler = async (event) => {
         }
       }
 
-      // ⚠️ releaseSellerPayout autorise paid/shipped/payout_pending mais PAS 'delivered'.
-      // On repositionne d'abord la commande en 'shipped' de façon ATOMIQUE (rowcount) : seul
-      // le 1er passage gagne, et si un litige l'a fait passer 'disputed' entre-temps, l'update
-      // ne touche 0 ligne → on ne verse pas. C'est le sas anti-course sûr.
-      const { data: moved } = await supabase
-        .from('orders')
-        .update({ status: 'shipped' })
-        .eq('id', order.id)
-        .eq('status', 'delivered')
-        .select('id')
-      if (!moved || !moved.length) { skipped++; continue } // déjà traité ou passé en litige
-
+      // releaseSellerPayout accepte désormais 'delivered' directement : on verse SANS repositionner la
+      // commande en 'shipped'. CORRECTION RACINE du double-paiement : avant, le retry laissait la commande
+      // en 'shipped' avec un shipped_at périmé → auto-refund la gelait en 'disputed' (alors que le virement
+      // était déjà parti) → l'admin pouvait re-verser/rembourser. Désormais, sur retry la commande reste
+      // 'delivered' → reprise au prochain passage (jamais gelée : auto-refund n'agit que sur 'shipped').
+      // Le double-versement est de toute façon impossible : garde transfer_group dans releaseSellerPayout.
       const res = await releaseSellerPayout({ stripe, supabase, order })
 
       if (res.outcome === 'settled' && res.transferOk) {
@@ -131,10 +125,9 @@ exports.handler = async (event) => {
            </div>`,
         )
       } else if (res.outcome === 'retry') {
-        // Échec transitoire (transfert/écriture) : la commande a été remise 'shipped' → le
-        // prochain passage la reprendra (elle n'est plus 'delivered', mais releaseSellerPayout
-        // accepte 'shipped'). Rejouable, aucun argent figé.
-        console.warn(`release-delivered : order ${order.id} outcome=retry, sera repris.`)
+        // Échec transitoire (transfert/écriture) : la commande RESTE 'delivered' → reprise au prochain
+        // passage (jamais gelée par auto-refund, qui n'agit que sur 'shipped'). Rejouable, aucun argent figé.
+        console.warn(`release-delivered : order ${order.id} outcome=retry, sera repris (reste 'delivered').`)
         skipped++
       } else {
         // 'already' : un autre passage a déjà versé. Rien à faire.

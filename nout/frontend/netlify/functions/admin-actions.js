@@ -121,11 +121,38 @@ exports.handler = async (event) => {
         // Litige tranché EN FAVEUR DE L'ACHETEUR : remboursement du prix + port. OPTION A : NOUT GARDE ses
         // frais de protection (jamais de perte pour NOUT). Garde-fou anciennes commandes = remboursement plein.
         const { data: order } = await supabase.from('orders')
-          .select('id, status, stripe_payment_id, listing_id, total_price, seller_payout, shipping_fee, shipping_method')
+          .select('id, status, stripe_payment_id, listing_id, total_price, seller_payout, shipping_fee, shipping_method, seller:profiles!seller_id(stripe_account_id)')
           .eq('id', targetId).single()
         if (!order) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Commande introuvable.' }) }
         if (order.status !== 'disputed') return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande n\'est pas en litige.' }) }
         if (!order.stripe_payment_id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Aucun paiement à rembourser.' }) }
+
+        // GARDE ANTI-DOUBLE-SORTIE : le vendeur a-t-il DÉJÀ été payé pour cette commande ? Si oui, rembourser
+        // l'acheteur par-dessus ferait sortir l'argent DEUX FOIS (versement vendeur + remboursement) → perte NOUT.
+        // On BLOQUE : l'admin doit d'abord rappeler le virement (reversal) côté Stripe avant de rembourser.
+        // La recherche par transfer_group ('order_<id>') tourne SANS dépendre du compte vendeur : elle retrouve
+        // le virement même si le stripe_account_id du profil a changé depuis (auto-réparation d'onboarding).
+        {
+          const vendorStripeId = order.seller?.stripe_account_id
+          let paidEur = null
+          try {
+            const byGroup = await stripe.transfers.list({ transfer_group: `order_${order.id}`, limit: 10 })
+            let hit = (byGroup.data || []).find(t => (t.amount_reversed ?? 0) < t.amount)
+            if (!hit && vendorStripeId) {
+              // Repli metadata (anciens transferts sans transfer_group) — nécessite la destination.
+              const byMeta = await stripe.transfers.list({ destination: vendorStripeId, limit: 100 })
+              hit = (byMeta.data || []).find(t => String(t.metadata?.order_id) === String(order.id) && (t.amount_reversed ?? 0) < t.amount)
+            }
+            if (hit) paidEur = ((hit.amount - (hit.amount_reversed ?? 0)) / 100).toFixed(2)
+          } catch (e) {
+            console.error(`[admin] resolve_dispute_refund transfers.list order ${order.id} :`, e.message)
+            return { statusCode: 502, headers, body: JSON.stringify({ error: 'Impossible de vérifier l\'état des versements Stripe. Réessaie.' }) }
+          }
+          if (paidEur != null) {
+            return { statusCode: 409, headers, body: JSON.stringify({ error: `Le vendeur a déjà été payé (${paidEur} €) pour cette commande. Rappelle d'abord ce virement dans Stripe (reversal) avant de rembourser l'acheteur, sinon double décaissement.` }) }
+          }
+        }
+
         // RÉSERVATION ATOMIQUE du statut AVANT le refund : on sort la commande de 'disputed' en une seule
         // opération gardée → une « libération » concurrente (resolve_dispute_release, qui relit le statut
         // juste avant de transférer dans _payout) verra 'refunded' (hors allowedStatuses) et n'enverra rien.
@@ -160,7 +187,7 @@ exports.handler = async (event) => {
       case 'resolve_dispute_release': {
         // Litige tranché EN FAVEUR DU VENDEUR : versement du prix au vendeur.
         const { data: order } = await supabase.from('orders')
-          .select('id, status, seller_payout, listing:listings!listing_id(price), seller:profiles!seller_id(stripe_account_id)')
+          .select('id, status, seller_payout, stripe_payment_id, listing:listings!listing_id(price), seller:profiles!seller_id(stripe_account_id)')
           .eq('id', targetId).single()
         if (!order) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Commande introuvable.' }) }
         if (order.status !== 'disputed') return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande n\'est pas en litige.' }) }
@@ -168,6 +195,42 @@ exports.handler = async (event) => {
         if (!vendorStripeId) {
           return { statusCode: 400, headers, body: JSON.stringify({ error: 'Le vendeur n\'a pas activé ses paiements (Stripe). Impossible de libérer le versement.' }) }
         }
+
+        // GARDE SYMÉTRIQUE ANTI-DOUBLE-SORTIE : l'acheteur a-t-il DÉJÀ été remboursé pour cette commande ?
+        // Cas réel : « Rembourser » réussit chez Stripe mais la réponse HTTP se perd → rollback en 'disputed' →
+        // l'admin change d'avis et clique « Libérer » → sans ce check, NOUT rembourse l'acheteur ET paie le
+        // vendeur (double décaissement). On BLOQUE si un remboursement non-échoué existe sur le paiement.
+        if (order.stripe_payment_id) {
+          try {
+            const refunds = await stripe.refunds.list({ payment_intent: order.stripe_payment_id, limit: 10 })
+            const done = (refunds.data || []).find(r => r.status !== 'failed' && r.status !== 'canceled')
+            if (done) {
+              return { statusCode: 409, headers, body: JSON.stringify({ error: `L'acheteur a déjà été remboursé (${(done.amount / 100).toFixed(2)} €) pour cette commande : impossible de verser le vendeur en plus. À traiter manuellement dans Stripe si besoin.` }) }
+            }
+          } catch (e) {
+            console.error(`[admin] resolve_dispute_release refunds.list order ${order.id} :`, e.message)
+            return { statusCode: 502, headers, body: JSON.stringify({ error: 'Impossible de vérifier l\'état des remboursements Stripe. Réessaie.' }) }
+          }
+        }
+
+        // GARDE ANTI-DOUBLE-PAIEMENT : un virement pour cette commande est-il DÉJÀ parti chez Stripe ?
+        // (la clé d'idempotence transfer_<id> ne dure que ~24h ; un litige peut être tranché bien après.)
+        // Recherche par transfer_group ('order_<id>') + repli metadata ; on ignore les transferts entièrement
+        // reversés (chargeback). Si un versement existe déjà, on NE recrée PAS -> on finalise juste la commande.
+        let alreadyPaid = false
+        try {
+          const byGroup = await stripe.transfers.list({ transfer_group: `order_${order.id}`, limit: 10 })
+          alreadyPaid = (byGroup.data || []).some(t => (t.amount_reversed ?? 0) < t.amount)
+          if (!alreadyPaid) {
+            const byMeta = await stripe.transfers.list({ destination: vendorStripeId, limit: 100 })
+            alreadyPaid = (byMeta.data || []).some(t =>
+              String(t.metadata?.order_id) === String(order.id) && (t.amount_reversed ?? 0) < t.amount)
+          }
+        } catch (e) {
+          console.error(`[admin] resolve_dispute_release transfers.list order ${order.id} :`, e.message)
+          return { statusCode: 502, headers, body: JSON.stringify({ error: 'Impossible de vérifier l\'état des versements Stripe. Réessaie.' }) }
+        }
+
         // RÉSERVATION ATOMIQUE du statut AVANT le transfert (symétrique au remboursement) : disputed -> completed
         // en une seule opération gardée. Un « Rembourser » concurrent (qui réserve disputed -> refunded) ne peut
         // donc PAS passer en même temps -> jamais « remboursé ET payé ».
@@ -176,6 +239,15 @@ exports.handler = async (event) => {
         if (!claimed || !claimed.length) {
           return { statusCode: 409, headers, body: JSON.stringify({ error: 'Commande déjà traitée (remboursée, versée ou clôturée).' }) }
         }
+
+        if (alreadyPaid) {
+          // Le vendeur a DÉJÀ été payé (ex. release-delivered a versé puis la commande a fini en litige) :
+          // on finalise SANS re-transférer. Sinon, clé d'idempotence expirée (>24h) = double-paiement.
+          console.log(`[admin] resolve_dispute_release order ${order.id} : versement déjà présent chez Stripe → completed sans re-versement`)
+          await supabase.from('escrow_codes').update({ confirmed_at: new Date().toISOString() }).eq('order_id', order.id).is('confirmed_at', null)
+          break
+        }
+
         const prixArticle  = Number(order.listing?.price ?? 0)
         const payoutNet    = order.seller_payout != null
           ? Number(order.seller_payout)
@@ -184,8 +256,8 @@ exports.handler = async (event) => {
         try {
           if (transferCents > 0) {
             await stripe.transfers.create(
-              { amount: transferCents, currency: 'eur', destination: vendorStripeId, metadata: { order_id: order.id } },
-              { idempotencyKey: `transfer_${order.id}` }, // même clé que tous les chemins -> jamais payé 2x
+              { amount: transferCents, currency: 'eur', destination: vendorStripeId, transfer_group: `order_${order.id}`, metadata: { order_id: order.id } },
+              { idempotencyKey: `transfer_${order.id}` }, // même clé que tous les chemins -> jamais payé 2x (<24h), + garde transfer_group ci-dessus (>24h)
             )
           }
         } catch (e) {
