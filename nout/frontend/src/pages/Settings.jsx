@@ -16,6 +16,12 @@ export default function Settings() {
   const [bio, setBio]           = useState(profile?.bio ?? '')
   const [phone, setPhone]       = useState(profile?.phone ?? '')
   const [city, setCity]         = useState(profile?.city ?? '')
+  // Adresse d'EXPÉDITION du vendeur (expéditeur sur les étiquettes transporteur).
+  // Vient de get_my_account (chargé dans profile). ≠ adresse de livraison acheteur (sur la commande).
+  const [shipAddress,  setShipAddress]  = useState(profile?.ship_address  ?? '')
+  const [shipAddress2, setShipAddress2] = useState(profile?.ship_address2 ?? '')
+  const [shipPostcode, setShipPostcode] = useState(profile?.ship_postcode ?? '')
+  const [shipCity,     setShipCity]     = useState(profile?.ship_city     ?? '')
   const [isCreator, setIsCreator]     = useState(profile?.is_creator ?? false)
   const [creatorCraft, setCreatorCraft] = useState(profile?.creator_craft ?? '')
   const [avatarPreview, setAvatarPreview] = useState(null)
@@ -79,6 +85,11 @@ export default function Settings() {
         city,
         is_creator:    isCreator,
         creator_craft: isCreator ? clean(creatorCraft.trim()) : null,
+        // Adresse d'expédition vendeur (null si vide → champ optionnel tant que pas de vente livrée)
+        ship_address:  clean(shipAddress.trim())  || null,
+        ship_address2: clean(shipAddress2.trim()) || null,
+        ship_postcode: clean(shipPostcode.trim()) || null,
+        ship_city:     clean(shipCity.trim())     || null,
       })
       setSuccess(true)
       setAvatarFile(null)
@@ -281,6 +292,65 @@ export default function Settings() {
                 />
               </div>
             )}
+          </div>
+
+          {/* Adresse d'expédition (vendeur) : sert d'expéditeur sur l'étiquette de livraison.
+              ≠ adresse de livraison de l'acheteur. Optionnelle tant que tu ne vends pas en livraison. */}
+          <div className="rounded-xl border border-[#E6EAF0] bg-[#F8FAFC] p-4 space-y-3">
+            <div>
+              <span className="block text-sm font-semibold text-nout-dark">Adresse d'expédition</span>
+              <span className="block text-[12px] text-gray-600 mt-0.5">
+                Utilisée comme adresse d'envoi quand tu expédies une vente (point relais ou domicile).
+                Elle reste privée. Nécessaire seulement si tu vends avec livraison.
+              </span>
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-nout-dark mb-1">Adresse</label>
+              <input
+                type="text" maxLength={38}
+                placeholder="Ex : 12 rue des Flamboyants"
+                value={shipAddress}
+                onChange={(e) => setShipAddress(e.target.value)}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-nout-dark mb-1">
+                Complément <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="text" maxLength={38}
+                placeholder="Bâtiment, étage, résidence…"
+                value={shipAddress2}
+                onChange={(e) => setShipAddress2(e.target.value)}
+                className="input-field"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[12px] font-medium text-nout-dark mb-1">Code postal</label>
+                <input
+                  type="text" inputMode="numeric" maxLength={5}
+                  placeholder="974xx"
+                  value={shipPostcode}
+                  onChange={(e) => setShipPostcode(e.target.value.replace(/\D/g, ''))}
+                  className="input-field"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-[12px] font-medium text-nout-dark mb-1">Ville</label>
+                <select
+                  value={shipCity}
+                  onChange={(e) => setShipCity(e.target.value)}
+                  className="input-field cursor-pointer"
+                >
+                  <option value="">Choisir…</option>
+                  {REUNION_CITIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 

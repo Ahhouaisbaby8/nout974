@@ -50,6 +50,36 @@ export const updateProfile = async (userId, updates) => {
   return data
 }
 
+// Adresse d'EXPÉDITION du vendeur (données perso → lues via la RPC sécurisée
+// get_my_account, jamais via un SELECT public). Sert d'expéditeur sur les étiquettes
+// transporteur. NE PAS confondre avec l'adresse de livraison de l'acheteur (sur la commande).
+export const getMyShippingAddress = async () => {
+  const { data, error } = await supabase.rpc('get_my_account')
+  if (error) throw error
+  const acc = Array.isArray(data) ? data[0] : data
+  return {
+    ship_address:  acc?.ship_address  ?? '',
+    ship_address2: acc?.ship_address2 ?? '',
+    ship_postcode: acc?.ship_postcode ?? '',
+    ship_city:     acc?.ship_city     ?? '',
+  }
+}
+
+// Enregistre l'adresse d'expédition du vendeur (écriture couverte par la RLS
+// "UPDATE USING (id = auth.uid())"). On ne renvoie pas les champs (ils sont sensibles).
+export const updateMyShippingAddress = async (userId, addr) => {
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      ship_address:  addr.ship_address?.trim()  || null,
+      ship_address2: addr.ship_address2?.trim() || null,
+      ship_postcode: addr.ship_postcode?.trim() || null,
+      ship_city:     addr.ship_city?.trim()     || null,
+    })
+    .eq('id', userId)
+  if (error) throw error
+}
+
 export const uploadAvatar = async (userId, file) => {
   const name = file.name ?? 'avatar.jpg'
   const ext  = name.includes('.') ? name.split('.').pop() : 'jpg'
