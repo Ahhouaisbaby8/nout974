@@ -9,10 +9,11 @@ import {
   DELIVERY_OPTIONS, DELIVERY_ORDER, getDeliveryOption, getDeliveryFee,
   computeBuyerTotal, computeProtectionFee,
 } from '../utils/shipping'
-import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck } from 'lucide-react'
+import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck, Info } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { thumbUrl } from '../utils/image'
 import Spinner from '../components/ui/Spinner'
+import ProtectionInfoModal from '../components/ui/ProtectionInfoModal'
 
 const OPTION_ICON = { hand: Store, ubn_relay: MapPin, chrono_relay: MapPin, ubn_home: HomeIcon, chrono_home: Truck }
 
@@ -69,6 +70,7 @@ export default function Checkout() {
 
   const [paying, setPaying]     = useState(false)
   const [payError, setPayError] = useState('')
+  const [showProtection, setShowProtection] = useState(false)
 
   useEffect(() => {
     if (!user) { navigate(`/connexion?redirect=/commander/${id}`); return }
@@ -325,7 +327,7 @@ export default function Checkout() {
               <span>Article</span><span>{formatPrice(prix)}</span>
             </div>
             <div className="flex justify-between text-gray-500">
-              <span className="flex items-center gap-1">Protection acheteur</span>
+              <span className="flex items-center gap-1">Protection acheteur <button type="button" onClick={() => setShowProtection(true)} aria-label="En savoir plus sur la protection acheteur" className="text-nout-primary/70 hover:text-nout-primary"><Info className="w-3.5 h-3.5" /></button></span>
               <span>{formatPrice(protectionFee)}</span>
             </div>
             <div className="flex justify-between text-gray-500">
@@ -349,6 +351,8 @@ export default function Checkout() {
           </p>
         </div>
       </div>
+
+      <ProtectionInfoModal open={showProtection} onClose={() => setShowProtection(false)} />
     </div>
   )
 }

@@ -8,7 +8,7 @@ import { createOffer } from '../services/offers'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
-import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon, X, ChevronLeft, ChevronRight, Info } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import { getSellerRating } from '../services/reviews'
 import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, computeProtectionFee, getShippingFee, MIN_SHIPPING_FEE } from '../utils/shipping'
@@ -98,6 +98,7 @@ import SkeletonCard from '../components/ui/SkeletonCard'
 import ListingAttributes from '../components/ui/ListingAttributes'
 import CreatorBadge from '../components/ui/CreatorBadge'
 import ConfirmModal from '../components/ui/ConfirmModal'
+import ProtectionInfoModal from '../components/ui/ProtectionInfoModal'
 
 export default function ListingDetail() {
   const { id } = useParams()
@@ -116,6 +117,7 @@ export default function ListingDetail() {
   const [markError, setMarkError]     = useState('')
   const [offerError, setOfferError]   = useState('')
   const [showReport, setShowReport] = useState(false)
+  const [showProtection, setShowProtection] = useState(false)
   const [showOffer, setShowOffer]   = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showVenduConfirm, setShowVenduConfirm]   = useState(false)
@@ -603,7 +605,7 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Protection acheteur</span>
+                      <span className="flex items-center gap-1">Protection acheteur <button type="button" onClick={() => setShowProtection(true)} aria-label="En savoir plus sur la protection acheteur" className="text-nout-primary/70 hover:text-nout-primary"><Info className="w-3.5 h-3.5" /></button></span>
                       <span>{formatPrice(protectionFee)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
@@ -672,7 +674,7 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Protection acheteur</span>
+                      <span className="flex items-center gap-1">Protection acheteur <button type="button" onClick={() => setShowProtection(true)} aria-label="En savoir plus sur la protection acheteur" className="text-nout-primary/70 hover:text-nout-primary"><Info className="w-3.5 h-3.5" /></button></span>
                       <span>{formatPrice(protectionFee)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
@@ -785,6 +787,8 @@ export default function ListingDetail() {
           onClose={() => setShowReport(false)}
         />
       )}
+
+      <ProtectionInfoModal open={showProtection} onClose={() => setShowProtection(false)} />
 
       {copyToast && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-nout-dark text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
