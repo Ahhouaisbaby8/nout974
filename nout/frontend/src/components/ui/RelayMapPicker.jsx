@@ -38,7 +38,9 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
   // Init de la carte à l'ouverture (Leaflet est impératif → on le pilote via des refs).
   useEffect(() => {
     if (!open || !mapEl.current) return
-    const map = L.map(mapEl.current).setView(REUNION_CENTER, 10)
+    // fadeAnimation:false → les tuiles s'affichent immédiatement (sans transition d'opacité qui reste
+    // bloquée à 0 quand la carte s'initialise dans un modal qui vient d'apparaître = fond blanc).
+    const map = L.map(mapEl.current, { fadeAnimation: false }).setView(REUNION_CENTER, 10)
     // URL canonique OSM (sans sous-domaine {s}, recommandée aujourd'hui).
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
