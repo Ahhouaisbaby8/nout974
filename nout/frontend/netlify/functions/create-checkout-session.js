@@ -148,7 +148,7 @@ exports.handler = async (event) => {
     if (offerId) {
       const { data: offer } = await supabase
         .from('offers')
-        .select('id, amount, status, buyer_id, listing_id')
+        .select('id, amount, status, buyer_id, seller_id, listing_id')
         .eq('id', offerId)
         .single()
       // Sécurité anti-offre-forgée : l'offre doit être acceptée, appartenir à CET acheteur, pour CETTE

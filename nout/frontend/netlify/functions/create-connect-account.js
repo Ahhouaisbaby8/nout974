@@ -137,7 +137,7 @@ exports.handler = async (event) => {
     const base = connectNotEnabled
       ? 'Les paiements vendeur ne sont pas encore activés côté NOUT (Stripe Connect à activer sur le compte de la plateforme).'
       : 'Impossible de préparer ton compte de paiement pour le moment.'
-    // DIAGNOSTIC TEMPORAIRE : on renvoie le code + message Stripe pour identifier la vraie cause. À retirer.
-    return { statusCode: 500, headers, body: JSON.stringify({ error: `${base} [diag: ${err?.code || ''} — ${err?.message || ''}]`.trim() }) }
+    // Message générique côté client (le détail Stripe reste dans console.error / logs Netlify uniquement).
+    return { statusCode: 500, headers, body: JSON.stringify({ error: base }) }
   }
 }

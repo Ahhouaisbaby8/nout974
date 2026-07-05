@@ -13,7 +13,17 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const SWEEP_AFTER_DAYS = 75
 const DAY_MS = 24 * 60 * 60 * 1000
 
-exports.handler = async () => {
+exports.handler = async (event) => {
+  // Auth cron : une invocation planifiée Netlify arrive sans httpMethod ; un appel HTTP direct doit
+  // présenter x-nout-cron = CRON_SECRET. Sans cette garde, N'IMPORTE QUI pouvait déclencher des
+  // virements bancaires forcés pour tous les vendeurs (et marteler l'API Stripe).
+  if (event?.httpMethod) {
+    const secret = process.env.CRON_SECRET
+    if (!secret || event.headers['x-nout-cron'] !== secret) {
+      return { statusCode: 401, body: 'Non autorisé.' }
+    }
+  }
+
   const now = Date.now()
   let checked = 0, swept = 0, errors = 0
 
