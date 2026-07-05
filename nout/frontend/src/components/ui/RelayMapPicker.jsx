@@ -31,6 +31,7 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
   const meMarkerRef  = useRef(null)
   const [query, setQuery]       = useState('')
   const [locating, setLocating] = useState(false)
+  const [geoError, setGeoError] = useState('')
 
   const withCoords = useMemo(() => points.filter((p) => p.lat != null && p.lng != null), [points])
 
@@ -38,8 +39,9 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
   useEffect(() => {
     if (!open || !mapEl.current) return
     const map = L.map(mapEl.current).setView(REUNION_CENTER, 10)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap', maxZoom: 19,
+    // URL canonique OSM (sans sous-domaine {s}, recommandée aujourd'hui).
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
     }).addTo(map)
     mapRef.current = map
     markersRef.current = {}
@@ -48,12 +50,18 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
       m.on('click', () => onSelect(p.id))
       markersRef.current[p.id] = m
     })
-    if (withCoords.length) {
-      map.fitBounds(L.latLngBounds(withCoords.map((p) => [p.lat, p.lng])).pad(0.3), { maxZoom: 14 })
+    // CRUCIAL : à l'ouverture du modal, le conteneur est souvent mesuré à 0 → si on charge les tuiles /
+    // cadre tout de suite, le fond de carte reste BLANC. On recalcule d'abord la taille (invalidateSize)
+    // PUIS on cadre. Un 2e invalidateSize couvre l'animation d'ouverture.
+    const fit = () => {
+      map.invalidateSize()
+      if (withCoords.length) {
+        map.fitBounds(L.latLngBounds(withCoords.map((p) => [p.lat, p.lng])).pad(0.3), { maxZoom: 14 })
+      }
     }
-    // Le conteneur est mesuré à 0 tant que le modal s'ouvre → on force un recalcul.
-    const t = setTimeout(() => map.invalidateSize(), 120)
-    return () => { clearTimeout(t); map.remove(); mapRef.current = null; markersRef.current = {} }
+    const t1 = setTimeout(fit, 150)
+    const t2 = setTimeout(() => map.invalidateSize(), 500)
+    return () => { clearTimeout(t1); clearTimeout(t2); map.remove(); mapRef.current = null; markersRef.current = {} }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, withCoords])
 
@@ -66,8 +74,8 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
   }, [selectedId, withCoords])
 
   const locateMe = () => {
-    if (!navigator.geolocation) return
-    setLocating(true)
+    if (!navigator.geolocation) { setGeoError('Géolocalisation non disponible sur cet appareil.'); return }
+    setLocating(true); setGeoError('')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false)
@@ -80,7 +88,7 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
         }).addTo(map)
         map.setView([latitude, longitude], 12)
       },
-      () => setLocating(false),
+      () => { setLocating(false); setGeoError('Localisation refusée ou indisponible. Autorise-la dans ton navigateur.') },
       { enableHighAccuracy: true, timeout: 8000 },
     )
   }
@@ -138,6 +146,8 @@ export default function RelayMapPicker({ open, onClose, points = [], selectedId,
             <LocateFixed className="w-4 h-4" /> {locating ? '…' : 'Près de moi'}
           </button>
         </div>
+
+        {geoError && <p className="px-3 pb-2 text-[12px] text-amber-600 flex-shrink-0">{geoError}</p>}
 
         {/* Corps : liste + carte */}
         <div className="flex-1 flex flex-col sm:flex-row min-h-0">
