@@ -36,6 +36,16 @@
 [functions."release-delivered"]
   schedule = "45 * * * *"
 
+# Callback statut UBN (doc API Distant v4.6 §11-14) : le HUB UBN POST le changement de statut d'une
+# livraison sur le chemin canonique du doc. On le route vers la fonction ubn-status-sync (statut 200 =
+# rewrite transparent, l'URL reste /wp-json/...). Le HUB peut donc utiliser soit ce chemin, soit l'URL
+# directe /.netlify/functions/ubn-status-sync.
+[[redirects]]
+  from = "/wp-json/ubn-api-distant/v1/status-sync"
+  to = "/.netlify/functions/ubn-status-sync"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]

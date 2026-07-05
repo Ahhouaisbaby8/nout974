@@ -4,6 +4,7 @@ const { randomInt } = require('crypto')
 // Frais NOUT : source unique partagée (voir _fees.js) — DOIT rester synchronisée avec src/utils/shipping.js.
 // Modèle « protection acheteur » : le vendeur reçoit son prix plein, les frais sont ajoutés à l'acheteur.
 const { SHIPPING_FEES, computeProtectionFee, computeTotals, computeSellerPayout } = require('./_fees')
+const { isUbnCovered } = require('./_ubn-cities')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -87,6 +88,11 @@ exports.handler = async (event) => {
     // Domicile : adresse complète + téléphone. Point relais : relais choisi + CP/ville + téléphone.
     if (meta.isHome && (!phone || !addr || !cityShip || !postcode)) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Adresse et téléphone obligatoires pour une livraison à domicile.' }) }
+    }
+    // UBN à domicile : la commune DOIT être desservie (doc §20). Sinon l'étiquette échouerait après paiement
+    // (city_postcode_mismatch) → remboursement, NOUT perd le port. On bloque AVANT le paiement.
+    if (optionId === 'ubn_home' && !isUbnCovered(cityShip)) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette commune n\'est pas desservie par UBN à domicile. Choisis un point relais, ou la livraison Chronopost.' }) }
     }
     if (meta.isRelay && (!relay || !phone || !cityShip || !postcode)) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Point relais, code postal, ville et téléphone obligatoires pour un retrait en point relais.' }) }

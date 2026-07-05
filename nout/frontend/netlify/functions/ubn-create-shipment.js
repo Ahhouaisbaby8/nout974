@@ -11,20 +11,10 @@
 
 const { createClient } = require('@supabase/supabase-js')
 const { ubnPost, isUbnConfigured, UbnError } = require('./_ubn-client')
+const { ubnPostcodeFor } = require('./_ubn-cities')   // table ville→CP officielle (source unique, doc §20)
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
-
-// Table ville → CP (974) imposée par le HUB. DOIT rester synchronisée avec src/utils/ubn.js.
-const UBN_CITY_CP = {
-  'Sainte-Marie': '97438', 'Saint-Denis': '97400', 'Sainte-Clotilde': '97490',
-  'Saint-Pierre': '97410', 'Saint-Paul': '97460', 'Saint-Leu': '97436',
-  'Le Port': '97420', 'La Possession': '97419', 'Saint-Benoît': '97470',
-  'Bras-Panon': '97412', 'Saint-Louis': '97450', 'Le Tampon': '97430',
-  'Saint-Joseph': '97480', 'Petite-Île': '97429', 'Étang-Salé': '97427',
-  'Les Avirons': '97425',
-}
-const UBN_SERVICES = ['relais', 'economique', 'express', 'express_pro', 'samedi_express']
 
 // Adresse expéditeur de repli (NOUT) — utilisée SEULEMENT si le vendeur n'a pas
 // encore renseigné son adresse d'expédition. Sur une marketplace, l'expéditeur est
@@ -170,11 +160,13 @@ exports.handler = async (event) => {
       if (!order.shipping_address || !city) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: 'Adresse de livraison incomplète.' }) }
       }
-      // Le HUB refuse les couples ville/CP non conformes → on impose le CP officiel si connu
-      if (UBN_CITY_CP[city]) cp = UBN_CITY_CP[city]
-      else if (!cp) {
+      // Le HUB refuse les couples ville/CP non conformes → on impose TOUJOURS le CP officiel (lookup tolérant
+      // casse/accents). Le checkout bloque déjà une commune non desservie ; ici c'est le filet serveur.
+      const officialCp = ubnPostcodeFor(city)
+      if (!officialCp) {
         return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ville de livraison non desservie par UBN.' }) }
       }
+      cp = officialCp
     }
 
     // Référence unique de commande pour le HUB (anti-doublon)
