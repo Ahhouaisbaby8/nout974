@@ -66,7 +66,7 @@ exports.handler = async (event) => {
       .from('orders')
       .select(`
         id, status, seller_id, buyer_id, total_price, carrier, delivery_option,
-        relay_id, relay_label, chronopost_tracking_number,
+        relay_id, relay_label, chronopost_tracking_number, ubn_ref_commande,
         shipping_phone, shipping_address, shipping_city, shipping_postcode,
         listing:listings!listing_id(title, price),
         buyer:profiles!buyer_id(username, email)
@@ -82,6 +82,15 @@ exports.handler = async (event) => {
     }
     if (!['paid', 'shipped'].includes(order.status)) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande doit être payée avant l\'expédition.' }) }
+    }
+    // ── GARDE TRANSPORTEUR (anti-abus vendeur) ──
+    // Refuse une commande qui n'est pas une livraison Chronopost, et refuse une 2e étiquette si une
+    // expédition UBN existe déjà (sinon NOUT paierait DEUX transporteurs pour un seul port encaissé).
+    if (order.carrier && order.carrier !== 'chronopost') {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette commande n\'est pas une livraison Chronopost.' }) }
+    }
+    if (order.ubn_ref_commande) {
+      return { statusCode: 409, headers, body: JSON.stringify({ error: 'Une expédition UBN existe déjà pour cette commande.' }) }
     }
     // Idempotence : une étiquette Chronopost existe déjà → on ne recrée pas.
     if (order.chronopost_tracking_number) {

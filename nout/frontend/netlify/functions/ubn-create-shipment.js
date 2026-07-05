@@ -101,15 +101,9 @@ exports.handler = async (event) => {
   if (authError || !authUser) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Session invalide.' }) }
 
   try {
-    const { order_id, service, ubn_pr_user_id, ubn_pr_label, weight_kg } = JSON.parse(event.body)
-    if (!order_id || !service) {
+    const { order_id, weight_kg } = JSON.parse(event.body)
+    if (!order_id) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Paramètres manquants.' }) }
-    }
-    if (!UBN_SERVICES.includes(service)) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Service UBN invalide.' }) }
-    }
-    if (service === 'relais' && !ubn_pr_user_id) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Point relais non sélectionné.' }) }
     }
 
     // Charger la commande + destinataire (acheteur)
@@ -117,6 +111,7 @@ exports.handler = async (event) => {
       .from('orders')
       .select(`
         id, status, seller_id, buyer_id, total_price, ubn_ref_commande,
+        carrier, delivery_option, relay_id, relay_label, ubn_pr_user_id, chronopost_tracking_number,
         shipping_phone, shipping_address, shipping_city, shipping_postcode,
         listing:listings!listing_id(title, price),
         buyer:profiles!buyer_id(username, email)
@@ -136,6 +131,27 @@ exports.handler = async (event) => {
     // La commande doit être payée
     if (!['paid', 'shipped'].includes(order.status)) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'La commande doit être payée avant l\'expédition.' }) }
+    }
+
+    // ── GARDE TRANSPORTEUR (anti-abus vendeur) ──
+    // Le SERVICE et le POINT RELAIS sont DÉRIVÉS DE LA COMMANDE, jamais du body : sinon un vendeur pourrait
+    // choisir un service plus cher (facturé au contrat UBN de NOUT) ou rediriger le colis vers un autre relais
+    // que celui payé par l'acheteur. On refuse aussi une commande qui n'est pas une livraison UBN, et le
+    // croisement (déjà expédiée via Chronopost) pour ne jamais payer deux transporteurs pour un seul port.
+    if (order.carrier && order.carrier !== 'ubn') {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette commande n\'est pas une livraison UBN.' }) }
+    }
+    if (order.chronopost_tracking_number) {
+      return { statusCode: 409, headers, body: JSON.stringify({ error: 'Une étiquette Chronopost existe déjà pour cette commande.' }) }
+    }
+    const OPTION_TO_UBN_SERVICE = { ubn_relay: 'relais', ubn_home: 'economique' }
+    const service = OPTION_TO_UBN_SERVICE[order.delivery_option]
+    if (!service) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Option de livraison UBN inconnue pour cette commande.' }) }
+    }
+    const relayId = order.ubn_pr_user_id || order.relay_id
+    if (service === 'relais' && !relayId) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Point relais non sélectionné pour cette commande.' }) }
     }
 
     // Idempotence : si une expédition existe déjà pour cette commande, on ne recrée pas
@@ -209,8 +225,8 @@ exports.handler = async (event) => {
       }],
     }
 
-    // Point relais : on envoie seulement l'id canonique, le HUB hydrate le reste
-    if (service === 'relais') payload.ubn_pr_user_id = String(ubn_pr_user_id)
+    // Point relais : on envoie seulement l'id canonique (issu de la COMMANDE), le HUB hydrate le reste
+    if (service === 'relais') payload.ubn_pr_user_id = String(relayId)
 
     // ── Appel signé HUB ──
     const result = await ubnPost('/shipments', payload)
@@ -227,8 +243,8 @@ exports.handler = async (event) => {
       ubn_tracking_number:  trackingNumber,
       ubn_tracking_url:     result.tracking_url || null,
       ubn_bordereau_status: result.bordereau_status || 'pending',
-      ubn_pr_user_id:       service === 'relais' ? String(ubn_pr_user_id) : null,
-      ubn_pr_label:         service === 'relais' ? (ubn_pr_label || null) : null,
+      ubn_pr_user_id:       service === 'relais' ? String(relayId) : null,
+      ubn_pr_label:         service === 'relais' ? (order.relay_label || null) : null,
       tracking_number:      trackingNumber || `UBN-${refCommande}`,
       shipped_at:           new Date().toISOString(),
       status:               'shipped',
