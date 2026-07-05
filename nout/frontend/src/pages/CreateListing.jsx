@@ -52,6 +52,7 @@ export default function CreateListing() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
+  const titleRef = useRef(null)
 
   const [photos, setPhotos]       = useState([])
   const [cropQueue, setCropQueue] = useState([])
@@ -94,6 +95,9 @@ export default function CreateListing() {
     })
     if (t) setTitle(t)
     if (d) setDesc(d)
+    // Le titre/description sont plus haut dans le formulaire → on y remonte pour que le vendeur
+    // voie le texte généré et puisse l'ajuster.
+    requestAnimationFrame(() => titleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
   }
 
   useEffect(() => {
@@ -290,26 +294,8 @@ export default function CreateListing() {
         <section className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <h2 className="font-bold text-nout-dark">Informations</h2>
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={!canGenerate}
-              title={canGenerate ? '' : "Renseigne d'abord la catégorie et au moins la marque, la taille ou la couleur"}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full border transition-all ${
-                canGenerate
-                  ? 'text-white bg-[#00C4B4] border-[#00C4B4] hover:bg-[#00b0a2]'
-                  : 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" /> Rédiger pour moi
-            </button>
+            <span className="text-[11px] text-gray-400">Astuce : « Rédiger » est en bas du formulaire</span>
           </div>
-          {!canGenerate && (
-            <p className="text-[11px] text-gray-400 -mt-2">
-              Astuce : remplis la catégorie et les détails de l'article (marque, taille, couleur…) plus bas,
-              puis clique sur « Rédiger pour moi » pour générer le titre et la description automatiquement.
-            </p>
-          )}
 
           <div>
             <div className="flex items-center justify-between mb-1">
@@ -317,6 +303,7 @@ export default function CreateListing() {
             </div>
             <input
               type="text"
+              ref={titleRef}
               required
               maxLength={80}
               placeholder="Ex : Robe Zara fleurie, taille M"
@@ -528,6 +515,27 @@ export default function CreateListing() {
             </select>
           </div>
         </section>
+
+        {/* ── RÉDACTION AUTO (en bas : on l'utilise une fois les détails remplis) ── */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={!canGenerate}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 rounded-xl border transition-all ${
+              canGenerate
+                ? 'text-white bg-[#00C4B4] border-[#00C4B4] hover:bg-[#00b0a2]'
+                : 'text-gray-400 bg-gray-50 border-gray-200 cursor-not-allowed'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" /> Rédiger le titre et la description
+          </button>
+          <p className="text-[11px] text-gray-400 mt-2 text-center">
+            {canGenerate
+              ? 'Génère le titre et la description à partir des infos saisies — tu pourras les modifier.'
+              : "Renseigne d'abord la catégorie et au moins la marque, la taille ou la couleur."}
+          </p>
+        </div>
 
         {/* ── SUBMIT ── */}
         <button
