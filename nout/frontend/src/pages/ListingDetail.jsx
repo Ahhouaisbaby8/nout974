@@ -550,7 +550,7 @@ export default function ListingDetail() {
                   : 'border-nout-primary bg-nout-primary text-white hover:opacity-90'
               }`}
             >
-              {followBusy ? '…' : followingSeller ? 'Abonné à ce vendeur' : "S'abonner à ce vendeur"}
+              {followBusy ? '…' : followingSeller ? 'Abonné' : 'Suivre'}
             </button>
           )}
 
