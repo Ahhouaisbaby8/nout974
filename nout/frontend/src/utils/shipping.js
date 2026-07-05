@@ -56,9 +56,9 @@ export const SHIPPING_METHODS = {
 export const DELIVERY_OPTIONS = [
   { id: 'hand',         carrier: null,         mode: 'hand',    label: 'Remise en main propre',      sublabel: 'Gratuit — paiement protégé par code',  fee: 0,     delay: null,          needsRelay: false, needsAddress: false, recommended: true },
   { id: 'ubn_relay',    carrier: 'ubn',        mode: 'relais',  label: 'Point relais — UBN',         sublabel: 'Retrait en point relais · sous 48/72h', fee: 4,     delay: 'Sous 48/72h', needsRelay: true,  needsAddress: false },
-  { id: 'chrono_relay', carrier: 'chronopost', mode: 'relais',  label: 'Point relais — Chronopost',  sublabel: 'Retrait en point relais Chronopost',    fee: 6.51,  delay: '1 à 2 j ouvrés', needsRelay: true,  needsAddress: false },
+  { id: 'chrono_relay', carrier: 'chronopost', mode: 'relais',  label: 'Point relais — Chronopost',  sublabel: 'Retrait en point relais Chronopost',    fee: 8.52,  delay: '1 à 2 j ouvrés', needsRelay: true,  needsAddress: false },
   { id: 'ubn_home',     carrier: 'ubn',        mode: 'home',    label: 'Domicile — UBN',             sublabel: 'Livraison chez toi · sous 48/72h',      fee: 6,     delay: 'Sous 48/72h', needsRelay: false, needsAddress: true },
-  { id: 'chrono_home',  carrier: 'chronopost', mode: 'express', label: 'Domicile — Chronopost',      sublabel: 'Livraison express chez toi',            fee: 10.80, delay: '1 à 2 j ouvrés', needsRelay: false, needsAddress: true },
+  { id: 'chrono_home',  carrier: 'chronopost', mode: 'express', label: 'Domicile — Chronopost',      sublabel: 'Livraison express chez toi',            fee: 10.96, delay: '1 à 2 j ouvrés', needsRelay: false, needsAddress: true },
 ]
 
 // Ordre d'affichage (main propre en premier, puis du moins cher au plus cher)
