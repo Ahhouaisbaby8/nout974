@@ -281,6 +281,21 @@ exports.handler = async (event) => {
           const { error: notifErr } = await supabase.from('notifications').insert(notifs)
           if (notifErr) console.error('webhook: insert notifications:', notifErr.message)
         }
+
+        // Carte « Achat effectué » dans la conversation acheteur↔vendeur — pour organiser la remise.
+        // Best-effort (service_role) : ne DOIT jamais faire échouer le webhook de paiement.
+        // Reste inerte tant que la colonne `type` n'existe pas (migration 20260705_message_type.sql).
+        if (order.buyer_id && order.seller_id) {
+          const cardText = `Achat effectué — ${annonce?.title ?? 'article'}. Organisez la remise ici.`
+          const { error: cardErr } = await supabase.from('messages').insert({
+            sender_id:   order.buyer_id,
+            receiver_id: order.seller_id,
+            listing_id:  listingId ?? null,
+            content:     cardText,
+            type:        'order',
+          })
+          if (cardErr) console.error(`webhook: insert order card ${orderId}:`, cardErr.message)
+        }
       }
     }
   }

@@ -11,7 +11,7 @@ import { getAvatarUrl } from '../utils/avatar'
 import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
 import { getSellerRating } from '../services/reviews'
-import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, computeProtectionFee, getShippingFee } from '../utils/shipping'
+import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, computeProtectionFee, getShippingFee, MIN_SHIPPING_FEE } from '../utils/shipping'
 import { Truck, Home as HomeIcon, Store, ShieldCheck } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { detailUrl, thumbUrl } from '../utils/image'
@@ -236,7 +236,7 @@ export default function ListingDetail() {
     <div className="max-w-5xl mx-auto px-4 py-6 animate-pulse">
       <div className="h-5 w-20 bg-gray-200 rounded-full mb-4" />
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="aspect-square bg-gray-200 rounded-2xl" />
+        <div className="aspect-[3/4] bg-gray-200 rounded-2xl" />
         <div className="flex flex-col gap-4">
           <div className="flex gap-2">
             <div className="h-6 w-20 bg-gray-200 rounded-full" />
@@ -357,7 +357,7 @@ export default function ListingDetail() {
 
         {/* ── GALERIE ── */}
         <div>
-          <div className="relative aspect-square bg-gray-100 rounded-2xl overflow-hidden">
+          <div className="relative aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden">
             {images ? (
               <button
                 type="button"
@@ -369,9 +369,9 @@ export default function ListingDetail() {
                   src={detailUrl(images[photoIdx])}
                   alt={listing.title}
                   width="900"
-                  height="900"
+                  height="1200"
                   fetchPriority="high"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </button>
             ) : (
@@ -612,7 +612,7 @@ export default function ListingDetail() {
                     </div>
                     <p className="flex items-center gap-1.5 text-[11px] text-gray-400 pt-1">
                       <Truck className="w-3.5 h-3.5" />
-                      Main propre gratuite, ou livraison dès {formatPrice(getShippingFee('relay'))} (au choix à l'étape suivante)
+                      Main propre gratuite, ou livraison dès {formatPrice(MIN_SHIPPING_FEE)} (au choix à l'étape suivante)
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -681,7 +681,7 @@ export default function ListingDetail() {
                     </div>
                     <p className="flex items-center gap-1.5 text-[11px] text-gray-400 pt-1">
                       <Truck className="w-3.5 h-3.5" />
-                      Livraison Chronopost disponible au paiement (dès {formatPrice(getShippingFee('relay'))})
+                      Livraison disponible au paiement (dès {formatPrice(MIN_SHIPPING_FEE)})
                     </p>
                   </div>
                   <div className="flex gap-2">

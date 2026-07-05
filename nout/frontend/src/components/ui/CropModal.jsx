@@ -36,6 +36,9 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
   const [croppedAreaPixels, setCroppedPixels] = useState(null)
   const [loading, setLoading]                 = useState(false)
   const [error, setError]                     = useState('')
+  // Format du cadre : portrait 3:4 par défaut (façon Vinted → la photo verticale entière tient)
+  // ou carré 1:1. Le vendeur peut toujours zoomer/déplacer pour recadrer dans le format choisi.
+  const [aspect, setAspect]                   = useState(3 / 4)
 
   const onCropComplete = useCallback((_, pixels) => {
     setCroppedPixels(pixels)
@@ -62,16 +65,16 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
 
         <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <h2 className="font-bold text-[#1A1A2E]">Recadrer la photo</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Format carré — glisse et zoome pour ajuster</p>
+          <p className="text-xs text-gray-400 mt-0.5">Choisis le format, puis glisse et zoome pour ajuster</p>
         </div>
 
-        {/* Hauteur responsive : 320px max, réduit automatiquement sur mobile paysage */}
-        <div className="relative w-full bg-black overflow-hidden" style={{ height: 'min(320px, calc(100dvh - 220px))' }}>
+        {/* Hauteur responsive : un peu plus haute pour laisser respirer le format portrait */}
+        <div className="relative w-full bg-black overflow-hidden" style={{ height: 'min(380px, calc(100dvh - 240px))' }}>
           <Cropper
             image={imageSrc}
             crop={crop}
             zoom={zoom}
-            aspect={1}
+            aspect={aspect}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
@@ -79,6 +82,29 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
         </div>
 
         <div className="px-5 py-4">
+          {/* Choix du format — portrait (photo verticale entière) ou carré */}
+          <div className="flex gap-2 mb-4">
+            {[
+              { id: 'portrait', label: 'Portrait', ratio: 3 / 4 },
+              { id: 'carre',    label: 'Carré',    ratio: 1 },
+            ].map(({ id, label, ratio }) => {
+              const active = aspect === ratio
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setAspect(ratio)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                    active
+                      ? 'border-[#00C4B4] bg-[#00C4B4]/10 text-[#0E7FAB]'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs text-gray-400">−</span>
             <input

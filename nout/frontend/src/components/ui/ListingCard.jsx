@@ -63,8 +63,8 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
       to={`/annonce/${listing.id}`}
       className="group relative block bg-white rounded-[16px] overflow-hidden border border-[#D6E0F5] shadow-nout-md transition-all duration-300 hover:-translate-y-1 hover:shadow-nout-hover hover:border-nout-turquoise"
     >
-      {/* ── IMAGE (ratio 4:5 portrait — standard mode) ── */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
+      {/* ── IMAGE (ratio 3:4 portrait — façon Vinted, aligné sur le format photo & le recadrage) ── */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
         {imageUrl ? (
           <img
             src={imageUrl}

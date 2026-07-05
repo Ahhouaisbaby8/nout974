@@ -19,7 +19,7 @@ export const getConversations = async (userId) => {
 export const getMessages = async (userId, otherUserId, listingId = null) => {
   let query = supabase
     .from('messages')
-    .select(`*, sender:profiles!sender_id(id, username, avatar_url)`)
+    .select(`*, sender:profiles!sender_id(id, username, avatar_url), listing:listings(id, title, price, images)`)
     .or(
       `and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`
     )

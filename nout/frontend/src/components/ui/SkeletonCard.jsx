@@ -1,7 +1,7 @@
 export default function SkeletonCard() {
   return (
     <div className="block bg-white rounded-[16px] overflow-hidden border border-[#D6E0F5] shadow-nout-md">
-      <div className="aspect-[4/5] bg-gray-200 animate-pulse" />
+      <div className="aspect-[3/4] bg-gray-200 animate-pulse" />
       <div className="p-3 space-y-2">
         <div className="h-3 bg-gray-200 rounded-full animate-pulse w-full" />
         <div className="h-3 bg-gray-200 rounded-full animate-pulse w-2/3" />

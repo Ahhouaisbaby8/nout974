@@ -207,7 +207,7 @@ export default function EditListing() {
             {photos.map((p, i) => {
               const src = p.preview ?? p.url
               return (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-nout-border group">
+                <div key={i} className="relative aspect-[3/4] rounded-lg overflow-hidden border border-nout-border group">
                   <img src={src} alt="" className="w-full h-full object-cover" />
                   {i === 0 && (
                     <span className="absolute bottom-0 left-0 right-0 bg-nout-primary text-white text-[10px] text-center py-0.5">
@@ -230,7 +230,7 @@ export default function EditListing() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current.click()}
-                className="aspect-square rounded-lg border-2 border-dashed border-nout-border hover:border-nout-primary flex flex-col items-center justify-center text-gray-400 hover:text-nout-primary transition-colors cursor-pointer"
+                className="aspect-[3/4] rounded-lg border-2 border-dashed border-nout-border hover:border-nout-primary flex flex-col items-center justify-center text-gray-400 hover:text-nout-primary transition-colors cursor-pointer"
               >
                 <span className="text-2xl">+</span>
                 <span className="text-xs mt-1">Photo</span>

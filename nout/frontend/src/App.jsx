@@ -1,6 +1,46 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy as reactLazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+
+// ── Récupération auto d'un chunk périmé ────────────────────────────────────────────
+// Quand un déploiement a lieu pendant qu'un onglet est ouvert, l'ancien index.html (en mémoire dans
+// la SPA) référence des hashs de chunks qui n'existent plus sur le serveur → l'import() dynamique d'une
+// route lazy renvoie 404. Sans garde, ça tombait dans l'ErrorBoundary = page « Quelque chose s'est mal
+// passé » à chaque navigation vers une page pas encore chargée (typiquement /annonce/:id juste après une
+// publication). Ici on RECHARGE pour récupérer le nouveau build → l'utilisateur ne voit jamais l'erreur.
+//
+// Garde anti-boucle SÛRE : compteur borné (MAX_RELOADS) qui survit au reload (sessionStorage), et qui
+// n'est remis à zéro QUE lorsqu'un import réussit réellement (preuve que le build est sain) — jamais par
+// une simple horloge. Ainsi, même si l'échec est LENT (mobile flaky, SW bloqué sur un shell périmé), on
+// ne recharge jamais plus de MAX_RELOADS fois : au-delà on laisse l'ErrorBoundary afficher « Rafraîchir ».
+const RELOAD_KEY = 'nout_chunk_reload'
+const MAX_RELOADS = 2
+function lazy(factory) {
+  return reactLazy(() =>
+    factory().then(
+      (mod) => {
+        try { sessionStorage.removeItem(RELOAD_KEY) } catch { /* noop */ }
+        return mod
+      },
+      (err) => {
+        // On n'auto-recharge QUE si le compteur peut être lu ET incrémenté de façon persistante.
+        // Si sessionStorage est indisponible (navigation privée stricte, quota, SecurityError…), un
+        // reload ne pourrait jamais être compté → boucle infinie. Dans ce cas on s'abstient de
+        // recharger : repli direct sur l'ErrorBoundary (bouton « Rafraîchir » manuel). Le setItem est
+        // DANS le try, avant le reload → si l'écriture échoue, on ne recharge pas.
+        try {
+          const n = Number(sessionStorage.getItem(RELOAD_KEY)) || 0
+          if (n < MAX_RELOADS) {
+            sessionStorage.setItem(RELOAD_KEY, String(n + 1))
+            window.location.reload()
+            return new Promise(() => {})   // le reload arrive : on ne rend jamais l'erreur
+          }
+        } catch { /* sessionStorage KO → pas d'auto-reload, l'ErrorBoundary prend le relais */ }
+        throw err   // plafond atteint (ou stockage indispo) → repli sur l'ErrorBoundary
+      },
+    ),
+  )
+}
 
 // Spinner de transition pendant le chargement d'une route splittée (lazy).
 // min-height pour éviter tout saut de mise en page (CLS reste à 0).

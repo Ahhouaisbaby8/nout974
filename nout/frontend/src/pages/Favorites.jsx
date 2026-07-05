@@ -62,7 +62,7 @@ export default function Favorites() {
             return (
               <div key={listing_id} className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                 <Link to={`/annonce/${listing.id}`}>
-                  <div className="aspect-square bg-gray-100 overflow-hidden">
+                  <div className="aspect-[3/4] bg-gray-100 overflow-hidden">
                     {image ? (
                       <img src={image} alt={listing.title} className="w-full h-full object-cover" />
                     ) : (
