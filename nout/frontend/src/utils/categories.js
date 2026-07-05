@@ -139,6 +139,20 @@ export const CATEGORIES = [
     ],
   },
   {
+    id: 'livres-medias', label: 'Livres & médias', navLabel: 'Livres & médias',
+    sub: [
+      { id: 'livres-romans',   label: 'Romans & littérature' },
+      { id: 'livres-bd',       label: 'BD, comics & mangas' },
+      { id: 'livres-jeunesse', label: 'Jeunesse & enfants' },
+      { id: 'livres-scolaire', label: 'Scolaire & études' },
+      { id: 'livres-pratique', label: 'Loisirs & vie pratique' },
+      { id: 'livres-art',      label: "Beaux-livres & art" },
+      { id: 'media-cd',        label: 'CD & vinyles' },
+      { id: 'media-dvd',       label: 'DVD & Blu-ray' },
+      { id: 'media-presse',    label: 'Magazines & presse' },
+    ],
+  },
+  {
     id: 'createurs', label: 'Fait main · Créateurs 974', navLabel: 'Créateurs',
     sub: [
       { id: 'crea-bijoux',       label: 'Bijoux & accessoires' },
