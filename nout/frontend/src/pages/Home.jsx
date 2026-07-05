@@ -103,7 +103,10 @@ export default function Home() {
   }, [search])
 
   useEffect(() => {
-    getListings({ limit: 8 })
+    // Phase de lancement : peu d'annonces → on en affiche BEAUCOUP sur l'accueil pour que les
+    // « anciennes nouveautés » restent visibles (rien ne disparaît de l'accueil). À réduire quand le
+    // volume montera (repasser à ~8-12). Rien n'expire jamais côté catalogue (/recherche montre tout).
+    getListings({ limit: 30 })
       .then(({ data }) => setListings(data ?? []))
       .catch(() => setListings([]))
       .finally(() => setLoading(false))

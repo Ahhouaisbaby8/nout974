@@ -121,6 +121,11 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
           </p>
         )}
 
+        {/* État de l'article (façon Vinted) — celui choisi par le vendeur */}
+        {conditionLabel && (
+          <p className="text-[11px] text-nout-muted mt-0.5">{conditionLabel}</p>
+        )}
+
         <p className="font-title font-bold text-[17px] leading-tight text-nout-texte tracking-tight mt-1.5">
           {formatPrice(listing.price)}
         </p>
