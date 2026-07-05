@@ -10,6 +10,7 @@ import { CATEGORIES, CONDITIONS } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
 import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon, X, ChevronLeft, ChevronRight, Info } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
+import { isFollowing as checkFollowingSeller, followUser, unfollowUser } from '../services/follow'
 import { getSellerRating } from '../services/reviews'
 import { SHIPPING_METHODS, SHIPPING_ORDER, computeBuyerTotal, computeProtectionFee, getShippingFee, MIN_SHIPPING_FEE } from '../utils/shipping'
 import { Truck, Home as HomeIcon, Store, ShieldCheck } from 'lucide-react'
@@ -133,6 +134,8 @@ export default function ListingDetail() {
   const [lightbox, setLightbox]   = useState(false)  // visionneuse plein écran des photos
   const [touchX, setTouchX]       = useState(null)   // suivi du swipe mobile dans la visionneuse
   const [sellerRating, setSellerRating] = useState(null)
+  const [followingSeller, setFollowingSeller] = useState(false)
+  const [followBusy, setFollowBusy] = useState(false)
   const [shipMethod, setShipMethod] = useState('hand')
   // Coordonnées de livraison (obligatoires si livraison). Pré-remplies depuis le profil.
   const [shipPhone, setShipPhone]       = useState(profile?.phone ?? '')
@@ -206,6 +209,16 @@ export default function ListingDetail() {
       isFavorite(user.id, id).then(setDetailFav).catch(() => {})
     }
   }, [user?.id, id])
+
+  // Suis-je déjà abonné au vendeur ? (le vendeur = listing.user_id)
+  useEffect(() => {
+    const sellerId = listing?.user_id
+    if (user?.id && sellerId && user.id !== sellerId) {
+      checkFollowingSeller(user.id, sellerId).then(setFollowingSeller).catch(() => {})
+    } else {
+      setFollowingSeller(false)
+    }
+  }, [user?.id, listing?.user_id])
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -333,6 +346,22 @@ export default function ListingDetail() {
     setCopyToast(true)
     setTimeout(() => setCopyToast(false), 2500)
     setShowShareMenu(false)
+  }
+
+  const handleToggleFollow = async () => {
+    if (!user) { navigate('/connexion'); return }
+    if (followBusy) return
+    setFollowBusy(true)
+    const was = followingSeller
+    setFollowingSeller(!was)   // optimiste
+    try {
+      if (was) await unfollowUser(user.id, seller.id)
+      else     await followUser(user.id, seller.id, profile?.username)
+    } catch {
+      setFollowingSeller(was)   // rollback
+    } finally {
+      setFollowBusy(false)
+    }
   }
 
   const handleDetailFav = async () => {
@@ -507,6 +536,22 @@ export default function ListingDetail() {
               </div>
               <span className="ml-auto text-gray-300">›</span>
             </Link>
+          )}
+
+          {/* S'abonner au vendeur (façon Vinted) */}
+          {seller && !isOwner && (
+            <button
+              type="button"
+              onClick={handleToggleFollow}
+              disabled={followBusy}
+              className={`w-full py-2.5 rounded-nout border-2 font-semibold text-sm transition-all disabled:opacity-60 ${
+                followingSeller
+                  ? 'border-nout-primary text-nout-primary bg-white hover:bg-[#F0FFFE]'
+                  : 'border-nout-primary bg-nout-primary text-white hover:opacity-90'
+              }`}
+            >
+              {followBusy ? '…' : followingSeller ? 'Abonné à ce vendeur' : "S'abonner à ce vendeur"}
+            </button>
           )}
 
           {/* Partager cette annonce */}
@@ -740,6 +785,19 @@ export default function ListingDetail() {
               Signaler cette annonce
             </button>
           )}
+
+          {/* Mention légale — vente entre particuliers (façon Vinted) */}
+          <details className="mt-2 text-[11px] text-gray-400 leading-relaxed">
+            <summary className="cursor-pointer hover:text-gray-600 select-none">Informations légales sur cette transaction</summary>
+            <p className="mt-2">
+              Les lois de protection des consommateurs ne s'appliquent pas aux achats effectués auprès d'autres
+              particuliers. Le droit de rétractation (art.&nbsp;L221-18) et la garantie légale de conformité
+              (art.&nbsp;L217-4 et suivants du Code de la consommation) ne s'appliquent pas à cette transaction.
+              En revanche, la garantie des défauts cachés de la chose vendue (art.&nbsp;1641 et suivants du Code
+              civil) s'applique. Les achats réalisés via le bouton «&nbsp;Acheter&nbsp;» sont couverts par notre{' '}
+              <Link to="/legal/cgv" className="underline hover:text-gray-600">Protection acheteurs</Link>.
+            </p>
+          </details>
 
 
         </div>
