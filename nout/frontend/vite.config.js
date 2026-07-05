@@ -39,6 +39,13 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Le nouveau service worker prend le contrôle IMMÉDIATEMENT (sans attendre la fermeture de tous les
+        // onglets) → les mises à jour (surtout sur mobile / PWA installée) apparaissent dès le rechargement
+        // suivant au lieu de rester bloquées sur une version en cache. cleanupOutdatedCaches purge les vieux
+        // précaches (évite les chunks périmés → moins d'erreurs « Quelque chose s'est mal passé »).
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         importScripts: ['/push-handler.js'],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
