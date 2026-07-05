@@ -55,12 +55,8 @@ export const sendMessage = async ({ senderId, receiverId, listingId = null, cont
     fetch('/.netlify/functions/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({
-        receiver_id: receiverId,
-        title: senderName,
-        body: content.length > 80 ? content.slice(0, 80) + '…' : content,
-        url: `/messages/${senderId}`,
-      }),
+      // Contenu construit côté serveur (anti-phishing) : on n'envoie que le type + le destinataire.
+      body: JSON.stringify({ type: 'message', receiver_id: receiverId }),
     }).catch(() => {})
   }).catch(() => {})
 

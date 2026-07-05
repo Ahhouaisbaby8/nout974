@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Secrets — jamais commiter un .env (repo public). .env.example (sans valeurs) reste autorisé.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

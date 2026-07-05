@@ -34,7 +34,9 @@ exports.handler = async (event) => {
       .from('orders')
       .select('id')
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
-      .in('status', ['paid', 'payout_pending'])
+      // Toute commande « vivante » bloque la suppression (sinon un vendeur en litige/chargeback pourrait
+      // effacer son compte pour échapper à la résolution). Inclut shipped/delivered/disputed/chargeback.
+      .in('status', ['paid', 'shipped', 'delivered', 'payout_pending', 'disputed', 'chargeback'])
 
     if (activeOrders?.length > 0) {
       return {

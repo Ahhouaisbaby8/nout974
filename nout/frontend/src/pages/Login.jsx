@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { safeInternalPath } from '../utils/safeRedirect'
 
 export default function Login() {
   const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const rawRedirect = searchParams.get('redirect') || '/'
-  const redirect = rawRedirect.startsWith('/') ? rawRedirect : '/'
+  const redirect = safeInternalPath(searchParams.get('redirect') || '/')
 
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')

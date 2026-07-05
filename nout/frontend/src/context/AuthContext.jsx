@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../services/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
+import { safeInternalPath } from '../utils/safeRedirect'
 
 const AuthContext = createContext(null)
 
@@ -58,9 +59,8 @@ export function AuthProvider({ children }) {
           const savedRedirect = sessionStorage.getItem('nout_auth_redirect')
           if (savedRedirect) {
             sessionStorage.removeItem('nout_auth_redirect')
-            if (savedRedirect.startsWith('/')) {
-              window.location.replace(savedRedirect)
-            }
+            // safeInternalPath bloque `//evil.com` & co (open-redirect / phishing après login Google).
+            window.location.replace(safeInternalPath(savedRedirect))
           }
         }
       } else {

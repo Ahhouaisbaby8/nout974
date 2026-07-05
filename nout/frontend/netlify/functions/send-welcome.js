@@ -1,3 +1,12 @@
+const { createClient } = require('@supabase/supabase-js')
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+
+const escHtml = (str) =>
+  String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
 const _rateLimits = new Map()
 function isRateLimited(ip) {
   const max = 3, windowMs = 60_000, now = Date.now()
@@ -18,21 +27,30 @@ exports.handler = async (event) => {
     return { statusCode: 429, body: 'Trop de tentatives.' }
   }
 
-  let email, username
+  let email
   try {
-    const body = JSON.parse(event.body ?? '{}')
-    email    = body.email
-    username = body.username
+    email = String(JSON.parse(event.body ?? '{}').email ?? '').trim().toLowerCase()
   } catch {
     return { statusCode: 400, body: 'Invalid JSON' }
   }
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { statusCode: 400, body: 'Email invalide' }
+  }
 
-  if (!email) return { statusCode: 400, body: 'Email requis' }
+  // ANTI-RELAIS DE SPAM : on n'envoie un « bienvenue » QUE pour une adresse qui vient de créer un compte.
+  // Le trigger handle_new_user crée la ligne profiles avec l'email dès le signUp (avant confirmation), donc
+  // elle existe déjà ici. Sans ce garde, l'endpoint (sans session au signup) permettait d'envoyer un mail
+  // signé contact@nout.re à N'IMPORTE quelle adresse (spam/phishing, atteinte à la réputation du domaine).
+  const { data: prof } = await supabase
+    .from('profiles').select('created_at').eq('email', email).maybeSingle()
+  if (!prof) return { statusCode: 403, body: 'Compte introuvable.' }
+  if (Date.now() - new Date(prof.created_at).getTime() > 30 * 60 * 1000) {
+    return { statusCode: 403, body: 'Bienvenue non applicable.' }
+  }
 
-  // Prénom à partir du champ username ou du préfixe email
-  const prenom = username
-    ? username.charAt(0).toUpperCase() + username.slice(1)
-    : email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1)
+  // Prénom = préfixe de l'email UNIQUEMENT (jamais de contenu libre du body) + échappement HTML anti-injection.
+  const prefix = email.split('@')[0]
+  const prenom = escHtml(prefix.charAt(0).toUpperCase() + prefix.slice(1))
 
   if (!process.env.RESEND_API_KEY) {
     return { statusCode: 200, body: JSON.stringify({ ok: true, skipped: 'no api key' }) }

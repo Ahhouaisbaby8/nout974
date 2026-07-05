@@ -52,7 +52,8 @@ exports.handler = async (event) => {
       account = await stripe.accounts.retrieve(accountId)
     } catch (e) {
       console.error('[wallet-balance] accounts.retrieve:', e?.message, e?.code)
-      return { statusCode: 502, headers, body: JSON.stringify({ error: `Lecture du compte de paiement impossible (${e?.code || e?.message || 'erreur Stripe'}).` }) }
+      // Message générique côté client (le détail Stripe reste dans les logs serveur uniquement).
+      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Lecture du compte de paiement impossible pour le moment. Réessaie.' }) }
     }
 
     // 2) Solde du porte-monnaie. Un compte tout neuf peut ne pas encore exposer de solde : dans ce cas on

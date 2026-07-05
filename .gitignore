@@ -51,7 +51,7 @@ WPS Cloud Files/
 # Fichiers de secrets (sécurité)
 # ============================================================
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.pem
 *.key

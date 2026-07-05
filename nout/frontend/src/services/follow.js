@@ -24,12 +24,8 @@ export const followUser = async (followerId, followingId, followerName) => {
     fetch('/.netlify/functions/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({
-        receiver_id: followingId,
-        title: 'Nouvel abonné',
-        body: `${followerName ?? 'Quelqu’un'} s’est abonné à votre profil`,
-        url: `/profil/${followerId}`,
-      }),
+      // Contenu construit côté serveur (anti-phishing) : on n'envoie que le type + le destinataire.
+      body: JSON.stringify({ type: 'follow', receiver_id: followingId }),
     }).catch(() => {})
   }).catch(() => {})
 }
