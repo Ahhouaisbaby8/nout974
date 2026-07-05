@@ -14,6 +14,7 @@ import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { thumbUrl } from '../utils/image'
 import Spinner from '../components/ui/Spinner'
 import ProtectionInfoModal from '../components/ui/ProtectionInfoModal'
+import RelayMapPicker from '../components/ui/RelayMapPicker'
 
 const OPTION_ICON = { hand: Store, ubn_relay: MapPin, chrono_relay: MapPin, ubn_home: HomeIcon, chrono_home: Truck }
 
@@ -29,6 +30,8 @@ async function fetchRelays(carrier, cp, ville) {
       address:  it.address || '',
       city:     it.city || '',
       postcode: it.postcode || it.cp || '',
+      lat:      it.lat != null ? Number(it.lat) : null,
+      lng:      it.lng != null ? Number(it.lng) : null,
     })).filter((p) => p.id)
     return { ok: true, points }
   }
@@ -41,6 +44,8 @@ async function fetchRelays(carrier, cp, ville) {
     address:  p.adresse || '',
     city:     p.ville || '',
     postcode: p.codePostal || '',
+    lat:      p.latitude != null ? Number(p.latitude) : null,
+    lng:      p.longitude != null ? Number(p.longitude) : null,
   })).filter((p) => p.id)
   return { ok: true, points }
 }
@@ -71,6 +76,7 @@ export default function Checkout() {
   const [paying, setPaying]     = useState(false)
   const [payError, setPayError] = useState('')
   const [showProtection, setShowProtection] = useState(false)
+  const [showMap, setShowMap] = useState(false)
 
   useEffect(() => {
     if (!user) { navigate(`/connexion?redirect=/commander/${id}`); return }
@@ -255,22 +261,31 @@ export default function Checkout() {
               {relaysError && <p className="text-[13px] text-amber-600">{relaysError}</p>}
 
               {relays.length > 0 && (
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {relays.map((r) => {
-                    const active = selectedRelayId === r.id
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setSelectedRelayId(r.id)}
-                        className={`w-full text-left rounded-xl border-2 px-3 py-2.5 transition-all ${active ? 'border-nout-primary bg-[#F0FFFE]' : 'border-gray-200 hover:border-gray-300'}`}
-                      >
-                        <p className="text-sm font-semibold text-nout-dark">{r.name}</p>
-                        <p className="text-[12px] text-gray-500">{r.address}{r.postcode ? ` · ${r.postcode}` : ''} {r.city}</p>
-                      </button>
-                    )
-                  })}
-                </div>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(true)}
+                    className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-white bg-nout-primary rounded-xl py-2.5 hover:opacity-90 transition-opacity"
+                  >
+                    <MapPin className="w-4 h-4" /> Voir les points relais sur la carte
+                  </button>
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {relays.map((r) => {
+                      const active = selectedRelayId === r.id
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => setSelectedRelayId(r.id)}
+                          className={`w-full text-left rounded-xl border-2 px-3 py-2.5 transition-all ${active ? 'border-nout-primary bg-[#F0FFFE]' : 'border-gray-200 hover:border-gray-300'}`}
+                        >
+                          <p className="text-sm font-semibold text-nout-dark">{r.name}</p>
+                          <p className="text-[12px] text-gray-500">{r.address}{r.postcode ? ` · ${r.postcode}` : ''} {r.city}</p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -353,6 +368,13 @@ export default function Checkout() {
       </div>
 
       <ProtectionInfoModal open={showProtection} onClose={() => setShowProtection(false)} />
+      <RelayMapPicker
+        open={showMap}
+        onClose={() => setShowMap(false)}
+        points={relays}
+        selectedId={selectedRelayId}
+        onSelect={setSelectedRelayId}
+      />
     </div>
   )
 }
