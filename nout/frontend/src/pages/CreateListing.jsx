@@ -15,6 +15,7 @@ import { formatPrice } from '../utils/formatters'
 import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
 import CategoryPicker from '../components/ui/CategoryPicker'
+import ColorPicker from '../components/ui/ColorPicker'
 import { Sparkles } from 'lucide-react'
 
 // Phrases-types pour aider à rédiger la description (un clic = ajout)
@@ -46,7 +47,6 @@ const FASHION_CATS   = [...CLOTHING_CATS, 'accessoires', 'sacs']
 const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
 const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
-const COLORS = ['Blanc', 'Noir', 'Gris', 'Beige', 'Marron', 'Rouge', 'Rose', 'Orange', 'Jaune', 'Vert', 'Bleu', 'Violet', 'Multicolore']
 
 export default function CreateListing() {
   const { user } = useAuth()
@@ -67,7 +67,7 @@ export default function CreateListing() {
   const [materialCustom, setMaterialCustom] = useState('')
   const [brandSelect, setBrandSelect] = useState('')
   const [brandCustom, setBrandCustom] = useState('')
-  const [color, setColor]         = useState('')
+  const [colors, setColors]       = useState([])   // jusqu'à 2 couleurs
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
 
@@ -84,12 +84,12 @@ export default function CreateListing() {
   const finalMaterial = materialSelect === '__autre__' ? materialCustom : materialSelect
 
   // Assez d'infos pour proposer une rédaction automatique ?
-  const canGenerate = Boolean(category && (finalBrand || color || size || finalMaterial))
+  const canGenerate = Boolean(category && (finalBrand || colors[0] || size || finalMaterial))
 
   // Génère titre + description à partir des attributs saisis (sans IA, instantané)
   const handleGenerate = () => {
     const { title: t, description: d } = describeListing({
-      brand: finalBrand, category, subcategory, size, color,
+      brand: finalBrand, category, subcategory, size, color: colors.join(' et ') || undefined,
       material: finalMaterial, condition, city,
     })
     if (t) setTitle(t)
@@ -188,7 +188,8 @@ export default function CreateListing() {
         size:        isFashion ? (size || null) : null,
         material:    isFashion ? (clean(finalMaterial.trim()) || null) : null,
         brand:       isFashion ? (clean(finalBrand.trim()) || null) : null,
-        color:       isFashion ? (color || null) : null,
+        color:       isFashion ? (colors[0] ?? null) : null,
+        colors:      isFashion ? colors : [],
       })
 
       // Vérification éligibilité fondateur en arrière-plan (ne bloque pas la navigation)
@@ -468,17 +469,10 @@ export default function CreateListing() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-nout-dark mb-1">
-                Couleur <span className="text-gray-400 font-normal">(optionnel)</span>
+              <label className="block text-sm font-medium text-nout-dark mb-2">
+                Couleur <span className="text-gray-400 font-normal">(optionnel · 2 max)</span>
               </label>
-              <select
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="input-field cursor-pointer"
-              >
-                <option value="">Choisir une couleur…</option>
-                {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <ColorPicker value={colors} onChange={setColors} max={2} />
             </div>
           </section>
         )}

@@ -287,7 +287,28 @@ export const BRANDS = [
 
 // Couleurs et tailles — partagées entre le dépôt d'annonce (CreateListing) et la recherche.
 // IMPORTANT : ces valeurs doivent rester identiques à ce qui est stocké en base.
-export const COLORS = ['Blanc', 'Noir', 'Gris', 'Beige', 'Marron', 'Rouge', 'Rose', 'Orange', 'Jaune', 'Vert', 'Bleu', 'Violet', 'Multicolore']
+// Couleurs — liste ordonnée (neutres → chaudes → froides), façon Vinted. Source UNIQUE
+// (avant : dupliquée en local dans CreateListing/EditListing). Le vendeur peut en choisir 2 max.
+export const COLORS = [
+  'Blanc', 'Crème', 'Beige', 'Gris', 'Noir', 'Marron', 'Kaki',
+  'Rouge', 'Bordeaux', 'Corail', 'Orange', 'Moutarde', 'Jaune', 'Doré', 'Argenté',
+  'Rose', 'Fuchsia', 'Violet', 'Lila',
+  'Bleu clair', 'Bleu', 'Marine', 'Turquoise', 'Menthe', 'Vert', 'Vert foncé',
+  'Multicolore',
+]
+
+// Pastille (couleur d'affichage) pour chaque nom — aide au repérage visuel (accessibilité).
+// 'multicolore' = valeur sentinelle → dégradé arc-en-ciel côté composant.
+export const COLOR_SWATCHES = {
+  'Blanc': '#FFFFFF', 'Crème': '#F3ECDD', 'Beige': '#D8C4A0', 'Gris': '#9CA3AF',
+  'Noir': '#1B1B1B', 'Marron': '#5A3A22', 'Kaki': '#78785A',
+  'Rouge': '#D62828', 'Bordeaux': '#6E1423', 'Corail': '#FF7F6B', 'Orange': '#F57C00',
+  'Moutarde': '#D4A017', 'Jaune': '#F4D03F', 'Doré': '#C6A03C', 'Argenté': '#C4C7CC',
+  'Rose': '#F5A9BC', 'Fuchsia': '#E4187E', 'Violet': '#7A2E8C', 'Lila': '#C8A2D8',
+  'Bleu clair': '#8FCDE8', 'Bleu': '#1E7FD0', 'Marine': '#26305F', 'Turquoise': '#A6DAD6',
+  'Menthe': '#B7EFCB', 'Vert': '#2F9E52', 'Vert foncé': '#2C4A33',
+  'Multicolore': 'multicolore',
+}
 
 export const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 export const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']

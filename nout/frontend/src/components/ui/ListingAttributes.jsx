@@ -1,5 +1,6 @@
 import { Tag, Layers, Ruler, BadgeCheck, Palette, Shirt, MapPin } from 'lucide-react'
 import { CATEGORIES, CONDITIONS } from '../../utils/categories'
+import { ColorDot } from './ColorPicker'
 
 // Tableau d'attributs façon Vinted : libellé (icône) à gauche, valeur en gras à droite,
 // lignes séparées. N'affiche que les champs renseignés. Lisible et pro.
@@ -16,14 +17,18 @@ export default function ListingAttributes({ listing }) {
     return t
   }
 
-  // Ordre Vinted-like. Chaque entrée : { icon, label, value }
+  // Couleurs : la colonne `colors` (jusqu'à 2) si présente, sinon repli sur l'ancienne `color`.
+  const colorList = (listing.colors?.length ? listing.colors : (listing.color ? [listing.color] : []))
+    .map(clean).filter(Boolean)
+
+  // Ordre Vinted-like. Chaque entrée : { icon, label, value } (ou { colors } pour la ligne couleurs)
   const rows = [
     cat        && { icon: Tag,        label: 'Catégorie',     value: cat.label },
     sub        && { icon: Layers,     label: 'Sous-catégorie', value: sub.label },
     clean(listing.brand)    && { icon: BadgeCheck, label: 'Marque',   value: clean(listing.brand) },
     clean(listing.size)     && { icon: Ruler,      label: 'Taille',   value: clean(listing.size) },
     condition  && { icon: BadgeCheck, label: 'État',          value: condition.label },
-    clean(listing.color)    && { icon: Palette,    label: 'Couleur',  value: clean(listing.color) },
+    colorList.length        && { icon: Palette,    label: colorList.length > 1 ? 'Couleurs' : 'Couleur', colors: colorList },
     clean(listing.material) && { icon: Shirt,      label: 'Matière',  value: clean(listing.material) },
     clean(listing.city)     && { icon: MapPin,     label: 'Localisation', value: clean(listing.city) },
   ].filter(Boolean)
@@ -36,13 +41,23 @@ export default function ListingAttributes({ listing }) {
         Informations
       </h2>
       <dl className="divide-y divide-gray-100">
-        {rows.map(({ icon: Icon, label, value }) => (
+        {rows.map(({ icon: Icon, label, value, colors }) => (
           <div key={label} className="flex items-center justify-between gap-3 py-2.5">
             <dt className="flex items-center gap-2 text-sm text-gray-500">
               <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
               {label}
             </dt>
-            <dd className="text-sm font-semibold text-nout-texte text-right">{value}</dd>
+            <dd className="text-sm font-semibold text-nout-texte text-right">
+              {colors ? (
+                <span className="inline-flex items-center gap-2.5 flex-wrap justify-end">
+                  {colors.map((c) => (
+                    <span key={c} className="inline-flex items-center gap-1.5">
+                      <ColorDot name={c} size={14} />{c}
+                    </span>
+                  ))}
+                </span>
+              ) : value}
+            </dd>
           </div>
         ))}
       </dl>
