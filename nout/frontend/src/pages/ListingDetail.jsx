@@ -603,7 +603,7 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>
+                      <span>Protection acheteur</span>
                       <span>{formatPrice(protectionFee)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">
@@ -672,7 +672,7 @@ export default function ListingDetail() {
                       <span>{formatPrice(listing.price)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
-                      <span>Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>
+                      <span>Protection acheteur</span>
                       <span>{formatPrice(protectionFee)}</span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 flex justify-between font-semibold text-nout-texte">

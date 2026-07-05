@@ -325,7 +325,7 @@ export default function Checkout() {
               <span>Article</span><span>{formatPrice(prix)}</span>
             </div>
             <div className="flex justify-between text-gray-500">
-              <span className="flex items-center gap-1">Protection acheteur <span className="text-gray-400">(10 % + 0,25 €)</span></span>
+              <span className="flex items-center gap-1">Protection acheteur</span>
               <span>{formatPrice(protectionFee)}</span>
             </div>
             <div className="flex justify-between text-gray-500">

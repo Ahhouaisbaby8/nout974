@@ -211,11 +211,19 @@ export default function Conversation() {
 
   // Temps réel — nouveaux messages entrants
   useEffect(() => {
-    const channel = subscribeToMessages(user.id, (payload) => {
-      if (payload.new.sender_id === otherUserId) {
-        setMessages(prev => [...prev, payload.new])
-        markAsRead([payload.new.id]).then(() => refreshUnreadCount())
+    const channel = subscribeToMessages(user.id, async (payload) => {
+      if (payload.new.sender_id !== otherUserId) return
+      let msg = payload.new
+      // Le payload temps réel n'inclut PAS les jointures → pour une carte « Achat effectué »
+      // (type='order'), on récupère l'annonce afin d'afficher vignette/titre/prix immédiatement
+      // (sinon la carte reste « nue » jusqu'au prochain rechargement).
+      if (msg.type === 'order' && msg.listing_id) {
+        const { data } = await supabase
+          .from('listings').select('id, title, price, images').eq('id', msg.listing_id).single()
+        if (data) msg = { ...msg, listing: data }
       }
+      setMessages(prev => [...prev, msg])
+      markAsRead([payload.new.id]).then(() => refreshUnreadCount())
     })
     return () => supabase.removeChannel(channel)
   }, [user.id, otherUserId])
