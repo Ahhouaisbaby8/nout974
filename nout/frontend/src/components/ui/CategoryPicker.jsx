@@ -86,13 +86,14 @@ export default function CategoryPicker({ category, subcategory, onSelect, placeh
             <div className="flex items-center gap-2 p-3 border-b border-gray-100">
               <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
                 <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                {/* text-base (16px) = empêche le zoom auto d'iOS à la mise au point (fini le « obligé de
+                    dézoomer »). Pas d'autoFocus : le clavier ne pop plus d'emblée → la liste reste visible. */}
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Trouver une catégorie"
-                  className="flex-1 bg-transparent text-sm outline-none text-nout-dark placeholder:text-gray-400"
-                  autoFocus
+                  className="flex-1 bg-transparent text-base outline-none text-nout-dark placeholder:text-gray-400"
                 />
               </div>
               <button type="button" onClick={close} aria-label="Fermer" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50">

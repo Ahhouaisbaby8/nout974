@@ -8,7 +8,12 @@ export const CATEGORIES = [
       { id: 'femme-sweats',          label: 'Sweats & hoodies' },
       { id: 'femme-robes',           label: 'Robes' },
       { id: 'femme-jupes',           label: 'Jupes' },
-      { id: 'femme-pantalons',       label: 'Pantalons & jeans' },
+      { id: 'femme-pantalons',       label: 'Pantalons' },
+      { id: 'femme-jeans-skinny',    label: 'Jeans skinny' },
+      { id: 'femme-jeans-slim',      label: 'Jeans slim' },
+      { id: 'femme-jeans-droit',     label: 'Jeans coupe droite' },
+      { id: 'femme-jeans-large',     label: 'Jeans large / mom' },
+      { id: 'femme-jeans-troue',     label: 'Jeans troués' },
       { id: 'femme-shorts',          label: 'Shorts' },
       { id: 'femme-combinaisons',    label: 'Combinaisons' },
       { id: 'femme-manteaux',        label: 'Manteaux & vestes' },
@@ -27,7 +32,12 @@ export const CATEGORIES = [
       { id: 'homme-chemises',      label: 'Chemises & polos' },
       { id: 'homme-sweats',        label: 'Sweats & pulls' },
       { id: 'homme-gilets',        label: 'Gilets & cardigans' },
-      { id: 'homme-pantalons',     label: 'Pantalons & jeans' },
+      { id: 'homme-pantalons',     label: 'Pantalons' },
+      { id: 'homme-jeans-skinny',  label: 'Jeans skinny' },
+      { id: 'homme-jeans-slim',    label: 'Jeans slim' },
+      { id: 'homme-jeans-droit',   label: 'Jeans coupe droite' },
+      { id: 'homme-jeans-large',   label: 'Jeans large' },
+      { id: 'homme-jeans-troue',   label: 'Jeans troués' },
       { id: 'homme-shorts',        label: 'Shorts' },
       { id: 'homme-manteaux',      label: 'Manteaux & vestes' },
       { id: 'homme-costumes',      label: 'Costumes & blazers' },
@@ -313,6 +323,14 @@ export const COLOR_SWATCHES = {
 export const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 export const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
 export const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
+
+// Équivalences de tailles vêtement (Intl → FR / US-UK) — affichées en LIBELLÉ pour aider au choix.
+// La VALEUR stockée reste la taille de base (ex. 'M') → aucun impact sur le stockage ni le filtre recherche.
+export const SIZE_EQUIV = {
+  'XS': '34 / 6', 'S': '36 / 8', 'M': '38 / 10', 'L': '40 / 12',
+  'XL': '42 / 14', 'XXL': '44 / 16', '3XL': '46 / 18',
+}
+export const sizeLabel = (s) => (SIZE_EQUIV[s] ? `${s} · ${SIZE_EQUIV[s]}` : s)
 
 // Résout un slug d'URL (= id de catégorie) vers { root, sub } pour les pages /c/:slug.
 // sub vaut null pour une racine ; renvoie null si le slug est inconnu.

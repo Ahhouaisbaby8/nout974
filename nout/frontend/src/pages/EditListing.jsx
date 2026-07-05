@@ -6,9 +6,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListingById, updateListing, uploadListingImage } from '../services/listings'
 import { compressImage } from '../utils/imageCompressor'
-import { CONDITIONS, BRANDS } from '../utils/categories'
+import { CONDITIONS, BRANDS, sizeLabel } from '../utils/categories'
 import CategoryPicker from '../components/ui/CategoryPicker'
 import ColorPicker from '../components/ui/ColorPicker'
+import SizeGuideModal from '../components/ui/SizeGuideModal'
 import { REUNION_CITIES } from '../utils/cities'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
@@ -52,6 +53,7 @@ export default function EditListing() {
   const [price, setPrice]         = useState('')
   const [city, setCity]           = useState('')
   const [size, setSize]           = useState('')
+  const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [material, setMaterial]   = useState('')
   const [brandSelect, setBrandSelect] = useState('')
   const [brandCustom, setBrandCustom] = useState('')
@@ -184,6 +186,7 @@ export default function EditListing() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <BackButton />
+      <SizeGuideModal open={showSizeGuide} onClose={() => setShowSizeGuide(false)} />
 
       <h1 className="text-2xl font-extrabold text-nout-dark mb-6 mt-4">
         Modifier l'annonce
@@ -318,16 +321,23 @@ export default function EditListing() {
             </h2>
 
             <div>
-              <label className="block text-sm font-medium text-nout-dark mb-1">
-                {sizePlaceholder}{isClothing && <span className="text-red-500"> *</span>}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-nout-dark">
+                  {sizePlaceholder}{isClothing && <span className="text-red-500"> *</span>}
+                </label>
+                {(category === 'vetements-femme' || category === 'vetements-homme') && (
+                  <button type="button" onClick={() => setShowSizeGuide(true)} className="text-xs font-medium text-[#0E7FAB] hover:underline">
+                    Guide des tailles
+                  </button>
+                )}
+              </div>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 className="input-field cursor-pointer"
               >
                 <option value="">Choisir {sizePlaceholder.toLowerCase()}…</option>
-                {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                {sizeOptions.map(s => <option key={s} value={s}>{sizeLabel(s)}</option>)}
               </select>
             </div>
 

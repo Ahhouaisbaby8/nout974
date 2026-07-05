@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
 import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
-import { CONDITIONS, BRANDS, MATERIALS } from '../utils/categories'
+import { CONDITIONS, BRANDS, MATERIALS, sizeLabel } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
 import { computeSellerPayout } from '../utils/shipping'
 import { describeListing } from '../utils/describeListing'
@@ -16,6 +16,7 @@ import BackButton from '../components/ui/BackButton'
 import CropModal from '../components/ui/CropModal'
 import CategoryPicker from '../components/ui/CategoryPicker'
 import ColorPicker from '../components/ui/ColorPicker'
+import SizeGuideModal from '../components/ui/SizeGuideModal'
 import { Sparkles } from 'lucide-react'
 
 // Phrases-types pour aider à rédiger la description (un clic = ajout)
@@ -64,6 +65,7 @@ export default function CreateListing() {
   const [price, setPrice]         = useState('')
   const [city, setCity]           = useState('')
   const [size, setSize]           = useState('')
+  const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [materialSelect, setMaterialSelect] = useState('')
   const [materialCustom, setMaterialCustom] = useState('')
   const [brandSelect, setBrandSelect] = useState('')
@@ -224,6 +226,7 @@ export default function CreateListing() {
         onCancel={handleCropCancel}
       />
     )}
+    <SizeGuideModal open={showSizeGuide} onClose={() => setShowSizeGuide(false)} />
     <div className="max-w-2xl mx-auto px-4 py-8">
       <BackButton />
 
@@ -392,16 +395,23 @@ export default function CreateListing() {
             </h2>
 
             <div>
-              <label className="block text-sm font-medium text-nout-dark mb-1">
-                {sizePlaceholder}{isClothing && <span className="text-red-500"> *</span>}
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-nout-dark">
+                  {sizePlaceholder}{isClothing && <span className="text-red-500"> *</span>}
+                </label>
+                {(category === 'vetements-femme' || category === 'vetements-homme') && (
+                  <button type="button" onClick={() => setShowSizeGuide(true)} className="text-xs font-medium text-[#0E7FAB] hover:underline">
+                    Guide des tailles
+                  </button>
+                )}
+              </div>
               <select
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 className="input-field cursor-pointer"
               >
                 <option value="">Choisir {sizePlaceholder.toLowerCase()}…</option>
-                {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                {sizeOptions.map(s => <option key={s} value={s}>{sizeLabel(s)}</option>)}
               </select>
             </div>
 
