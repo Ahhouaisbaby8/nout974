@@ -39,7 +39,7 @@ exports.handler = async (event) => {
   try {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('stripe_account_id')
+      .select('stripe_account_id, is_verified')
       .eq('id', authUser.id)
       .single()
 
@@ -90,6 +90,15 @@ exports.handler = async (event) => {
       }))
     } catch (e) {
       console.error('[wallet-balance] payouts.list:', e?.message, e?.code)
+    }
+
+    // Self-heal du drapeau public `is_verified` (affiché ailleurs, ex. Espace Vendeur) : il DOIT suivre
+    // payouts_enabled. Les comptes 'transfers-only' n'ont jamais charges_enabled → le webhook ne le posait
+    // pas → l'Espace Vendeur affichait « Active tes paiements » alors que le compte est actif. On le
+    // rattrape ici dès que Stripe confirme payouts_enabled (écriture idempotente, service_role).
+    if (account.payouts_enabled && !profile?.is_verified) {
+      const { error: healErr } = await supabase.from('profiles').update({ is_verified: true }).eq('id', authUser.id)
+      if (healErr) console.error('[wallet-balance] backfill is_verified:', healErr.message)
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({

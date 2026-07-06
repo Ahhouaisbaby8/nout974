@@ -96,6 +96,7 @@ exports.handler = async (event) => {
         buyer_id,
         total_price,
         seller_payout,
+        stripe_payment_id,
         listing:listings!listing_id(title, price),
         buyer:profiles!buyer_id(email, username),
         seller:profiles!seller_id(email, username, stripe_account_id)
@@ -222,6 +223,19 @@ exports.handler = async (event) => {
     let transferOk = false
 
     if (vendorStripeId) {
+      // source_transaction = la CHARGE d'origine de la vente. Lie le transfert à SA vente précise → il ne
+      // peut plus échouer pour « solde plateforme insuffisant » (Stripe l'exécute dès que les fonds de
+      // CETTE vente sont dispos) + traçabilité. Best-effort : si l'ID est indispo, on transfère quand même
+      // (repli = comportement d'avant ; le rattrapage cron via _payout.js prendra le relais au besoin).
+      let sourceTransaction = null
+      if (order.stripe_payment_id) {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(order.stripe_payment_id)
+          sourceTransaction = pi.latest_charge || null
+        } catch (e) {
+          console.error(`[confirm-escrow] source_transaction indispo (order ${order_id}) :`, e.message)
+        }
+      }
       try {
         await stripe.transfers.create({
           amount:        transferCents,
@@ -230,6 +244,7 @@ exports.handler = async (event) => {
           // transfer_group = 'order_<id>' : retrouvable précisément par le rattrapage cron (anti double-versement).
           transfer_group: `order_${order_id}`,
           metadata:      { order_id },
+          ...(sourceTransaction ? { source_transaction: sourceTransaction } : {}),
         }, {
           // Idempotence : Stripe garantit lui-même qu'un même transfert ne part
           // qu'une seule fois, même si la fonction est rejouée (anti double-paiement vendeur).
