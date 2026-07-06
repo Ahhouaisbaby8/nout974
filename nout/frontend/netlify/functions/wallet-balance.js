@@ -41,7 +41,7 @@ exports.handler = async (event) => {
     if (!accountId) {
       // Pas encore de compte connecté : rien à afficher, la vérification n'a jamais été lancée.
       return { statusCode: 200, headers, body: JSON.stringify({
-        activated: false, payoutsEnabled: false, detailsSubmitted: false, available: 0, pending: 0,
+        activated: false, payoutsEnabled: false, detailsSubmitted: false, available: 0, pending: 0, payouts: [],
       }) }
     }
 
@@ -60,11 +60,30 @@ exports.handler = async (event) => {
     //    NE plante PAS toute la page — on affiche 0 € et on garde le statut du compte lu à l'étape 1.
     let available = 0, pending = 0
     try {
-      const balance = await stripe.balance.retrieve({ stripeAccount: accountId })
+      // Le compte connecté se passe en OPTION (2e arg → entête Stripe-Account), PAS en paramètre de
+      // requête : sinon Stripe renvoie 400 « unknown parameter: stripeAccount » et le solde retombe à 0.
+      const balance = await stripe.balance.retrieve({}, { stripeAccount: accountId })
       available = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
       pending   = (balance.pending ?? []).find(b => b.currency === 'eur')?.amount ?? 0
     } catch (e) {
       console.error('[wallet-balance] balance.retrieve:', e?.message, e?.code)
+    }
+
+    // 3) Historique des virements (versements du porte-monnaie vers la banque du vendeur). Lecture seule,
+    //    sert uniquement à l'affichage « virement en route / derniers retraits » côté NOUT — le vendeur
+    //    n'a pas de tableau de bord Stripe (compte dashboard 'none'), donc c'est ici qu'il voit son argent
+    //    bouger. On ne renvoie que des champs d'affichage (montant, statut, dates), aucune donnée sensible.
+    let payouts = []
+    try {
+      const list = await stripe.payouts.list({ limit: 6 }, { stripeAccount: accountId })
+      payouts = (list.data ?? []).map(p => ({
+        amount:      (p.amount ?? 0) / 100,
+        status:      p.status,        // paid | in_transit | pending | canceled | failed
+        arrivalDate: p.arrival_date,  // timestamp Unix (secondes)
+        created:     p.created,
+      }))
+    } catch (e) {
+      console.error('[wallet-balance] payouts.list:', e?.message, e?.code)
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({
@@ -73,6 +92,7 @@ exports.handler = async (event) => {
       detailsSubmitted: !!account.details_submitted,  // onboarding rempli (vérif éventuellement en cours)
       available: available / 100,
       pending:   pending / 100,
+      payouts,
     }) }
   } catch (err) {
     console.error('[wallet-balance] erreur:', err?.message, err?.code ?? '')

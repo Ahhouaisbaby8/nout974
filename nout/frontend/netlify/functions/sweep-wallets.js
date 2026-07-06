@@ -57,7 +57,9 @@ exports.handler = async (event) => {
       const bankChangedAt = Number(account.metadata?.bank_changed_at ?? 0)
       if (Number.isFinite(bankChangedAt) === false || (bankChangedAt > 0 && (now / 1000 - bankChangedAt) < 48 * 3600)) continue
 
-      const balance = await stripe.balance.retrieve({ stripeAccount: acct })
+      // Compte connecté en OPTION (2e arg → entête Stripe-Account), PAS en paramètre : sinon 400
+      // « unknown parameter: stripeAccount » → solde lu = 0 → le sweep ne balaie jamais personne.
+      const balance = await stripe.balance.retrieve({}, { stripeAccount: acct })
       const amount = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
       if (amount <= 0) continue
       checked++
