@@ -41,7 +41,7 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
   // 0) GARDE TOCTOU : on relit le statut JUSTE avant de transférer. Les appelants par snapshot (cron
   //    auto-release) peuvent être périmés ; un litige acheteur ('disputed') ou un remboursement a pu
   //    survenir entre-temps. Si la commande n'est plus payable, on ne transfère RIEN (rien n'est figé).
-  const { data: fresh } = await supabase.from('orders').select('status').eq('id', order_id).single()
+  const { data: fresh } = await supabase.from('orders').select('status, stripe_payment_id').eq('id', order_id).single()
   if (!fresh || !allowedStatuses.includes(fresh.status)) {
     return { outcome: 'already', transferOk: false, payoutNet, vendorStripeId, orderStatus: null }
   }
@@ -71,16 +71,34 @@ async function releaseSellerPayout({ stripe, supabase, order }) {
     }
 
     if (!transferOk) {
+      // source_transaction = la CHARGE d'origine de la vente. Lie le transfert à SA vente précise →
+      //  1) le transfert ne peut JAMAIS échouer pour « solde plateforme insuffisant » : Stripe l'exécute
+      //     dès que les fonds de CETTE vente sont disponibles (fin des payout_pending « balance_insufficient »),
+      //  2) traçabilité : chaque euro versé est rattaché à sa vente exacte dans le dashboard Stripe.
+      // Best-effort : si l'ID de charge est indisponible, on transfère quand même (repli = comportement actuel).
+      let sourceTransaction = null
+      if (fresh.stripe_payment_id) {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(fresh.stripe_payment_id)
+          sourceTransaction = pi.latest_charge || null
+        } catch (e) {
+          console.error(`[payout] source_transaction indispo (order ${order_id}) :`, e.message)
+        }
+      }
       try {
         await stripe.transfers.create(
           // transfer_group = 'order_<id>' : permet de RETROUVER PRÉCISÉMENT le(s) transfert(s) d'une commande
           // via transfers.list({ transfer_group }) — sans limite/pagination — pour ne JAMAIS re-verser un
           // transfert déjà parti (le pré-check ci-dessus s'en sert ; la clé d'idempotence ne dure que 24h).
-          { amount: transferCents, currency: 'eur', destination: vendorStripeId, transfer_group: `order_${order_id}`, metadata: { order_id } },
+          {
+            amount: transferCents, currency: 'eur', destination: vendorStripeId,
+            transfer_group: `order_${order_id}`, metadata: { order_id },
+            ...(sourceTransaction ? { source_transaction: sourceTransaction } : {}),
+          },
           { idempotencyKey: `transfer_${order_id}` },
         )
         transferOk = true
-        console.log(`[payout] transfert OK : ${transferCents / 100} € → ${vendorStripeId} (order ${order_id})`)
+        console.log(`[payout] transfert OK : ${transferCents / 100} € → ${vendorStripeId} (order ${order_id})${sourceTransaction ? ' [source_transaction]' : ''}`)
       } catch (err) {
         // Échec transfert : on ne touche À RIEN → commande inchangée = rejouable (re-clic / prochain cron).
         console.error(`[payout] transfert échoué (order ${order_id}) :`, err.message)
