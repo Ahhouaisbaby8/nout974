@@ -166,6 +166,8 @@ export const CATEGORIES = [
     id: 'loisirs-collections', label: 'Loisirs & collections', navLabel: 'Loisirs',
     sub: [
       { id: 'loisirs-cartes',       label: 'Cartes à collectionner' },
+      { id: 'loisirs-voitures',     label: 'Voitures miniatures & modèles réduits' },
+      { id: 'loisirs-maquettes',    label: 'Maquettes & Lego' },
       { id: 'loisirs-jeux-societe', label: 'Jeux de société' },
       { id: 'loisirs-puzzles',      label: 'Puzzles' },
       { id: 'loisirs-plateau',      label: 'Jeux de plateau & miniatures' },
