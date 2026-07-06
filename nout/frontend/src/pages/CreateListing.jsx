@@ -43,7 +43,7 @@ const traduireErreur = (error) => {
 }
 
 const MAX_PHOTOS = 5
-const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'chaussures']
+const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'vetements-mixte', 'chaussures']
 const FASHION_CATS   = [...CLOTHING_CATS, 'accessoires', 'sacs']
 const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
@@ -54,6 +54,15 @@ export default function CreateListing() {
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
   const titleRef = useRef(null)
+  // Refs des champs obligatoires — pour surligner en rouge + faire défiler jusqu'au 1er champ manquant.
+  const photosRef   = useRef(null)
+  const categoryRef = useRef(null)
+  const conditionRef = useRef(null)
+  const sizeRef     = useRef(null)
+  const priceRef    = useRef(null)
+  const cityRef     = useRef(null)
+  // Champ actuellement en erreur ('photos' | 'title' | 'category' | 'condition' | 'size' | 'price' | 'city' | '')
+  const [errorField, setErrorField] = useState('')
 
   const [photos, setPhotos]       = useState([])
   const [cropQueue, setCropQueue] = useState([])
@@ -126,6 +135,7 @@ export default function CreateListing() {
     const preview = URL.createObjectURL(blob)
     setPhotos(prev => [...prev, { file: blob, preview }].slice(0, MAX_PHOTOS))
     setCropQueue(prev => prev.slice(1))
+    if (errorField === 'photos') setErrorField('')
   }
 
   const handleCropCancel = () => {
@@ -144,21 +154,36 @@ export default function CreateListing() {
     handleFiles(e.dataTransfer.files)
   }
 
+  // Refs par champ, pour faire défiler jusqu'au champ fautif.
+  const fieldRefs = {
+    photos: photosRef, title: titleRef, category: categoryRef,
+    condition: conditionRef, size: sizeRef, price: priceRef, city: cityRef,
+  }
+
+  // Signale une erreur SUR un champ précis : message + surlignage rouge + défilement vers le champ.
+  const failField = (field, message) => {
+    setError(message)
+    setErrorField(field)
+    const el = fieldRefs[field]?.current
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setErrorField('')
 
     const clean = (str) => stripEmoji(DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }))
 
-    if (photos.length === 0)        return setError('Ajoute au moins une photo.')
-    if (!title.trim())              return setError('Le titre est obligatoire.')
-    if (!category)                  return setError('Choisis une catégorie.')
-    if (category !== 'beaute' && !condition) return setError("Précise l'état de l'article.")
-    if (isClothing && !size)        return setError('Indique la taille.')
-    if (!price || Number(price) < 0) return setError('Indique un prix valide.')
-    if (Number(price) > 0 && Number(price) < 1) return setError('Le prix minimum est 1 € (ou 0 € pour offrir l\'article).')
-    if (Number(price) > 50000)      return setError('Le prix maximum est 50 000 €.')
-    if (!city)                      return setError('Choisis ta ville.')
+    if (photos.length === 0)        return failField('photos', 'Ajoute au moins une photo.')
+    if (!title.trim())              return failField('title', 'Le titre est obligatoire.')
+    if (!category)                  return failField('category', 'Choisis une catégorie.')
+    if (category !== 'beaute' && !condition) return failField('condition', "Précise l'état de l'article.")
+    if (isClothing && !size)        return failField('size', 'Indique la taille.')
+    if (!price || Number(price) < 0) return failField('price', 'Indique un prix valide.')
+    if (Number(price) > 0 && Number(price) < 1) return failField('price', 'Le prix minimum est 1 € (ou 0 € pour offrir l\'article).')
+    if (Number(price) > 50000)      return failField('price', 'Le prix maximum est 50 000 €.')
+    if (!city)                      return failField('city', 'Choisis ta ville.')
 
     setLoading(true)
     try {
@@ -243,7 +268,10 @@ export default function CreateListing() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
         {/* ── PHOTOS ── */}
-        <section className="bg-white rounded-xl p-5 shadow-sm">
+        <section
+          ref={photosRef}
+          className={`bg-white rounded-xl p-5 shadow-sm transition-colors ${errorField === 'photos' ? 'ring-2 ring-red-400' : ''}`}
+        >
           <h2 className="font-bold text-nout-dark mb-1">Photos</h2>
           <p className="text-xs text-gray-400 mb-4">
             Jusqu'à {MAX_PHOTOS} photos · La première sera la photo principale
@@ -311,8 +339,8 @@ export default function CreateListing() {
               maxLength={80}
               placeholder="Ex : Robe Zara fleurie, taille M"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="input-field"
+              onChange={(e) => { setTitle(e.target.value); if (errorField === 'title') setErrorField('') }}
+              className={`input-field ${errorField === 'title' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
             />
             <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/80</p>
           </div>
@@ -346,18 +374,24 @@ export default function CreateListing() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div>
+            <div
+              ref={categoryRef}
+              className={errorField === 'category' ? 'rounded-xl ring-2 ring-red-400 p-2 -m-2' : ''}
+            >
               <label className="block text-sm font-medium text-nout-dark mb-2">Catégorie</label>
               {/* Sélecteur en cascade (rubrique → sous-rubrique), remplace les chips à plat. */}
               <CategoryPicker
                 category={category}
                 subcategory={subcategory}
-                onSelect={({ category: cat, subcategory: sub }) => { setCategory(cat); setSubcategory(sub) }}
+                onSelect={({ category: cat, subcategory: sub }) => { setCategory(cat); setSubcategory(sub); if (errorField === 'category') setErrorField('') }}
               />
             </div>
 
             {category !== 'beaute' && (
-              <div>
+              <div
+                ref={conditionRef}
+                className={errorField === 'condition' ? 'rounded-xl ring-2 ring-red-400 p-2 -m-2' : ''}
+              >
                 <label className="block text-sm font-medium text-nout-dark mb-2">État</label>
                 <div className="flex flex-col gap-2">
                   {CONDITIONS.map(c => {
@@ -366,7 +400,7 @@ export default function CreateListing() {
                       <button
                         key={c.id}
                         type="button"
-                        onClick={() => setCondition(active ? '' : c.id)}
+                        onClick={() => { setCondition(active ? '' : c.id); if (errorField === 'condition') setErrorField('') }}
                         aria-pressed={active}
                         className={`text-left rounded-xl border-2 px-4 py-3 transition-all
                           ${active ? 'border-[#1A3A8F] bg-[#F5F8FF]' : 'border-[#D6E0F5] bg-white hover:border-[#00C4B4]'}`}
@@ -406,9 +440,10 @@ export default function CreateListing() {
                 )}
               </div>
               <select
+                ref={sizeRef}
                 value={size}
-                onChange={(e) => setSize(e.target.value)}
-                className="input-field cursor-pointer"
+                onChange={(e) => { setSize(e.target.value); if (errorField === 'size') setErrorField('') }}
+                className={`input-field cursor-pointer ${errorField === 'size' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
               >
                 <option value="">Choisir {sizePlaceholder.toLowerCase()}…</option>
                 {sizeOptions.map(s => <option key={s} value={s}>{sizeLabel(s)}</option>)}
@@ -482,14 +517,15 @@ export default function CreateListing() {
             <label className="block text-sm font-medium text-nout-dark mb-1">Prix (€)</label>
             <div className="relative">
               <input
+                ref={priceRef}
                 type="number"
                 required
                 min="0"
                 step="0.01"
                 placeholder="0.00"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="input-field pr-10"
+                onChange={(e) => { setPrice(e.target.value); if (errorField === 'price') setErrorField('') }}
+                className={`input-field pr-10 ${errorField === 'price' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">€</span>
             </div>
@@ -513,10 +549,11 @@ export default function CreateListing() {
           <div>
             <label className="block text-sm font-medium text-nout-dark mb-1">Ville</label>
             <select
+              ref={cityRef}
               required
               value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="input-field cursor-pointer"
+              onChange={(e) => { setCity(e.target.value); if (errorField === 'city') setErrorField('') }}
+              className={`input-field cursor-pointer ${errorField === 'city' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
             >
               <option value="">Choisir ta ville...</option>
               {REUNION_CITIES.map(c => (

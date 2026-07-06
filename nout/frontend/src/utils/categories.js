@@ -68,6 +68,22 @@ export const CATEGORIES = [
     ],
   },
   {
+    id: 'vetements-mixte', label: 'Mode mixte / Unisexe', navLabel: 'Mixte',
+    sub: [
+      { id: 'mixte-hauts',       label: 'Hauts & t-shirts' },
+      { id: 'mixte-sweats',      label: 'Sweats & hoodies' },
+      { id: 'mixte-pulls',       label: 'Pulls & gilets' },
+      { id: 'mixte-chemises',    label: 'Chemises' },
+      { id: 'mixte-pantalons',   label: 'Pantalons & jeans' },
+      { id: 'mixte-shorts',      label: 'Shorts' },
+      { id: 'mixte-manteaux',    label: 'Manteaux & vestes' },
+      { id: 'mixte-sport',       label: 'Vêtements de sport' },
+      { id: 'mixte-maillots',    label: 'Maillots de bain' },
+      { id: 'mixte-accessoires', label: 'Accessoires (casquettes, écharpes…)' },
+      { id: 'mixte-lots',        label: 'Lots de vêtements' },
+    ],
+  },
+  {
     id: 'chaussures', label: 'Chaussures',
     sub: [
       { id: 'chaussures-femme',      label: 'Femme' },

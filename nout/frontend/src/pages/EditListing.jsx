@@ -27,7 +27,7 @@ const traduireErreur = (error) => {
 }
 
 const MAX_PHOTOS = 5
-const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'chaussures']
+const CLOTHING_CATS  = ['vetements-femme', 'vetements-homme', 'vetements-enfant', 'vetements-mixte', 'chaussures']
 const FASHION_CATS   = [...CLOTHING_CATS, 'accessoires', 'sacs']
 const SIZES_VETEMENTS  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'Unique']
 const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
