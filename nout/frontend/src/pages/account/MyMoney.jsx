@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
 
 // « Mon argent » — le porte-monnaie vendeur.
@@ -9,14 +8,12 @@ import { supabase } from '../../services/supabase'
 // de vérité) — NOUT ne détient jamais les fonds. La vérification d'identité (KYC) est exigée par Stripe
 // avant tout retrait (obligation légale) : on la présente comme « vérifier pour retirer ».
 export default function MyMoney() {
-  const { user } = useAuth()
   const [params] = useSearchParams()
 
   const [state, setState]     = useState(null)   // { activated, payoutsEnabled, detailsSubmitted, available, pending }
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
 
-  const [connectLoading, setConnectLoading] = useState(false)
   const [payoutLoading, setPayoutLoading]   = useState(false)
   const [toast, setToast]     = useState('')
 
@@ -41,33 +38,13 @@ export default function MyMoney() {
 
   useEffect(() => { loadBalance() }, [loadBalance])
 
-  // Retour depuis l'onboarding Stripe (?stripe=success|refresh) : on recharge le solde/statut.
+  // Retour depuis l'onboarding hébergé (?stripe=success|refresh) : juste le toast — le solde est déjà
+  // chargé par l'effet de montage (le retour Stripe est une navigation complète → remontage).
   useEffect(() => {
-    if (params.get('stripe')) {
-      setToast(params.get('stripe') === 'success' ? 'Vérification enregistrée. Ton statut se met à jour.' : '')
-      loadBalance()
+    if (params.get('stripe') === 'success') {
+      setToast('Vérification enregistrée. Ton statut se met à jour.')
     }
-  }, [params, loadBalance])
-
-  // Lance / poursuit l'onboarding Stripe (création du compte connecté au besoin) et redirige vers Stripe.
-  const startVerification = async () => {
-    if (connectLoading) return
-    setError('')
-    setConnectLoading(true)
-    try {
-      const res = await fetch('/.netlify/functions/create-connect-account', {
-        method: 'POST',
-        headers: await authHeaders(),
-        body: JSON.stringify({ userId: user.id }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Activation impossible. Réessaie.')
-      window.location.href = data.url
-    } catch (e) {
-      setError(e.message)
-      setConnectLoading(false)
-    }
-  }
+  }, [params])
 
   // Retire tout le solde disponible vers la banque du vendeur.
   const withdraw = async () => {
@@ -127,24 +104,17 @@ export default function MyMoney() {
             )}
           </div>
 
-          {/* Cas 1 — jamais activé : lancer la vérification */}
+          {/* Cas 1 — jamais activé : lancer la vérification (sous-page NOUT, zéro page Stripe) */}
           {!state?.activated && (
             <div>
               <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                Pour retirer tes gains, vérifie ton identité une seule fois (pièce d'identité + IBAN).
-                Vérification sécurisée par Stripe (leader mondial du paiement) — ça te <strong>protège de la fraude</strong>, et <strong>pas de SIRET</strong> pour un particulier.
+                Pour retirer tes gains, vérifie ton identité <strong>une seule fois, en 2 minutes,
+                directement sur NOUT</strong>. Pas d'entreprise, pas de SIRET : tu restes un
+                particulier, comme sur Vinted.
               </p>
-              <p className="text-xs text-gray-500 mb-3 leading-relaxed bg-[#F8FAFC] border border-[#E6EAF0] rounded-lg px-3 py-2">
-                Stripe affichera « Entrepreneur individuel » : c'est juste le terme administratif pour un <strong>particulier</strong>. Aucune entreprise ni SIRET à créer — c'est normal.
-              </p>
-              <button
-                type="button"
-                onClick={startVerification}
-                disabled={connectLoading}
-                className="btn-primary px-6 py-3 text-sm disabled:opacity-60"
-              >
-                {connectLoading ? 'Redirection…' : 'Vérifier mon identité pour retirer'}
-              </button>
+              <Link to="/compte/paiements/verifier" className="btn-primary inline-block px-6 py-3 text-sm">
+                Vérifier mon identité pour retirer
+              </Link>
             </div>
           )}
 
@@ -157,14 +127,9 @@ export default function MyMoney() {
               <p className="text-sm text-gray-600 mb-3 leading-relaxed">
                 Ton identité ou ton IBAN ne sont pas encore validés. Termine la vérification pour pouvoir retirer.
               </p>
-              <button
-                type="button"
-                onClick={startVerification}
-                disabled={connectLoading}
-                className="btn-primary px-6 py-3 text-sm disabled:opacity-60"
-              >
-                {connectLoading ? 'Redirection…' : 'Terminer ma vérification'}
-              </button>
+              <Link to="/compte/paiements/verifier" className="btn-primary inline-block px-6 py-3 text-sm">
+                Terminer ma vérification
+              </Link>
             </div>
           )}
 
@@ -185,16 +150,11 @@ export default function MyMoney() {
                   : state?.available > 0 ? `Retirer ${euro(state.available)}` : 'Rien à retirer'}
               </button>
               <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-                Le virement arrive sur ton compte sous 1 à 3 jours ouvrés. Tu peux modifier ton IBAN via « Vérifier mon identité ».
+                Le virement arrive sur ton compte sous 1 à 3 jours ouvrés.
               </p>
-              <button
-                type="button"
-                onClick={startVerification}
-                disabled={connectLoading}
-                className="text-sm text-[#0E8C82] font-medium hover:underline mt-2 disabled:opacity-60"
-              >
-                {connectLoading ? 'Redirection…' : 'Gérer mes informations bancaires'}
-              </button>
+              <Link to="/compte/paiements/verifier" className="inline-block text-sm text-[#0E8C82] font-medium hover:underline mt-2">
+                Gérer mes informations bancaires
+              </Link>
             </div>
           )}
         </>

@@ -51,6 +51,12 @@ exports.handler = async (event) => {
       const account = await stripe.accounts.retrieve(acct)
       if (!account.payouts_enabled) continue   // KYC/IBAN incomplet : impossible de virer, rien à balayer.
 
+      // GEL 48 h APRÈS CHANGEMENT D'IBAN (même garde que request-payout) : sans elle, le sweep
+      // quotidien viderait le wallet vers l'IBAN d'un fraudeur PENDANT la fenêtre d'alerte. Après
+      // 48 h le vendeur a été prévenu → le sweep reprend (l'échéance ~90 j laisse la marge).
+      const bankChangedAt = Number(account.metadata?.bank_changed_at ?? 0)
+      if (Number.isFinite(bankChangedAt) === false || (bankChangedAt > 0 && (now / 1000 - bankChangedAt) < 48 * 3600)) continue
+
       const balance = await stripe.balance.retrieve({ stripeAccount: acct })
       const amount = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
       if (amount <= 0) continue

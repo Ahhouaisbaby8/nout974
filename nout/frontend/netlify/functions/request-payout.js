@@ -77,6 +77,15 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Ton identité ou ton IBAN ne sont pas encore validés. Termine la vérification pour pouvoir retirer.', code: 'payouts_disabled' }) }
     }
 
+    // GEL 48 h APRÈS CHANGEMENT D'IBAN (anti-détournement) : si l'IBAN de destination vient d'être
+    // remplacé (metadata.bank_changed_at posé par connect-kyc-submit), on suspend les retraits le temps
+    // que le vendeur puisse réagir à l'alerte s'il n'est pas à l'origine du changement (session volée).
+    const bankChangedAt = Number(account.metadata?.bank_changed_at ?? 0)
+    if (!Number.isFinite(bankChangedAt) || (bankChangedAt > 0 && (Date.now() / 1000 - bankChangedAt) < 48 * 3600)) {
+      // Valeur illisible = on gèle aussi (fail-closed : sur l'argent, le doute profite à la sécurité).
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Ton IBAN a été modifié récemment. Par sécurité, les retraits sont suspendus pendant 48 h après un changement de compte bancaire.', code: 'bank_change_hold' }) }
+    }
+
     // Solde disponible du porte-monnaie (= solde du compte connecté). On ne verse QUE le 'available' réel.
     const balance = await stripe.balance.retrieve({ stripeAccount: accountId })
     const amount = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0

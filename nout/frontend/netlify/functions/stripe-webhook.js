@@ -302,7 +302,11 @@ exports.handler = async (event) => {
 
   if (stripeEvent.type === 'account.updated') {
     const account = stripeEvent.data.object
-    if (account.charges_enabled) {
+    // charges_enabled = anciens comptes Express ; payouts_enabled = nouveaux comptes API (capability
+    // transfers uniquement → charges_enabled reste false à vie chez eux, l'activation réelle du wallet
+    // est payouts_enabled). Sans ce OR, les vendeurs du nouveau flux ne seraient jamais marqués
+    // vérifiés et leurs payout_pending ne seraient drainés que par le cron (retard).
+    if (account.charges_enabled || account.payouts_enabled) {
       await supabase.from('profiles')
         .update({ is_verified: true })
         .eq('stripe_account_id', account.id)

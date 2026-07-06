@@ -64,6 +64,7 @@ export default function Privacy() {
           'Netlify — pour l\'hébergement du site',
           'Autorités compétentes — sur demande légale',
         ]} />
+        <P><strong>Vérification d'identité des vendeurs (KYC).</strong> Pour recevoir l'argent de ses ventes, un vendeur doit être vérifié par notre prestataire de paiement Stripe (obligation légale de lutte contre le blanchiment et la fraude — LCB-FT). Les informations saisies dans le formulaire de vérification (identité, date de naissance, adresse, IBAN, et le cas échéant pièce d'identité ou justificatif de domicile) sont transmises chiffrées, depuis le navigateur du vendeur, directement à Stripe — elles ne transitent pas par les serveurs de NOUT et n'y sont pas conservées. Base légale : obligation légale et exécution du contrat. Stripe agit comme responsable de ses propres traitements (voir sa politique de confidentialité : stripe.com/fr/privacy).</P>
       </Section>
 
       <Section title="7. Vos droits">
