@@ -87,7 +87,9 @@ exports.handler = async (event) => {
     }
 
     // Solde disponible du porte-monnaie (= solde du compte connecté). On ne verse QUE le 'available' réel.
-    const balance = await stripe.balance.retrieve({ stripeAccount: accountId })
+    // Le compte connecté se passe en OPTION (2e arg → entête Stripe-Account), PAS en paramètre : sinon
+    // Stripe renvoie 400 « unknown parameter: stripeAccount » → le solde lu = 0 → retrait impossible.
+    const balance = await stripe.balance.retrieve({}, { stripeAccount: accountId })
     const amount = (balance.available ?? []).find(b => b.currency === 'eur')?.amount ?? 0
     if (amount <= 0) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Aucun montant disponible au retrait pour le moment.', code: 'no_funds' }) }

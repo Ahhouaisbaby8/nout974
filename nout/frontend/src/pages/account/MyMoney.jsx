@@ -7,10 +7,27 @@ import { supabase } from '../../services/supabase'
 // n'est viré vers sa banque QUE quand il clique « Retirer ». Le solde affiché est lu chez Stripe (source
 // de vérité) — NOUT ne détient jamais les fonds. La vérification d'identité (KYC) est exigée par Stripe
 // avant tout retrait (obligation légale) : on la présente comme « vérifier pour retirer ».
+//
+// Le vendeur n'a PAS de tableau de bord Stripe (compte 'none') : c'est donc ICI qu'il voit son argent
+// bouger → bandeau « virement en route » + historique des retraits (statuts lus chez Stripe).
+
+// Statut de virement Stripe → libellé FR + style de la pastille.
+const PAYOUT_STATUS = {
+  paid:       { label: 'Reçu',     cls: 'bg-green-50 text-green-700 border-green-200' },
+  in_transit: { label: 'En route', cls: 'bg-[#E6F4F2] text-[#0b6f67] border-[#bfe3df]' },
+  pending:    { label: 'En route', cls: 'bg-[#E6F4F2] text-[#0b6f67] border-[#bfe3df]' },
+  failed:     { label: 'Échoué',   cls: 'bg-red-50 text-red-600 border-red-200' },
+  canceled:   { label: 'Annulé',   cls: 'bg-gray-100 text-gray-500 border-gray-200' },
+}
+
+// Timestamp Unix (secondes) → « 6 juillet 2026 ».
+const formatDate = (sec) =>
+  sec ? new Date(sec * 1000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+
 export default function MyMoney() {
   const [params] = useSearchParams()
 
-  const [state, setState]     = useState(null)   // { activated, payoutsEnabled, detailsSubmitted, available, pending }
+  const [state, setState]     = useState(null)   // { activated, payoutsEnabled, detailsSubmitted, available, pending, payouts }
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
 
@@ -66,6 +83,9 @@ export default function MyMoney() {
 
   const euro = (n) => `${Number(n ?? 0).toFixed(2)} €`
 
+  const payouts   = state?.payouts ?? []
+  const inTransit = payouts.filter(p => p.status === 'in_transit' || p.status === 'pending')
+
   return (
     <div>
       <h1 className="font-title text-[22px] font-bold text-nout-texte mb-1">Mon argent</h1>
@@ -103,6 +123,19 @@ export default function MyMoney() {
               </p>
             )}
           </div>
+
+          {/* Virement(s) en route vers la banque — le vendeur n'a pas de dashboard Stripe, c'est ici
+              qu'il voit que son argent arrive. */}
+          {inTransit.length > 0 && (
+            <div className="rounded-xl border border-[#bfe3df] bg-[#E6F4F2] px-4 py-3 mb-5 space-y-1">
+              {inTransit.map((p, i) => (
+                <p key={i} className="text-sm text-[#0b6f67] leading-relaxed">
+                  <strong>Virement de {euro(p.amount)} en route</strong> vers ta banque
+                  {p.arrivalDate ? <> — arrivée prévue le {formatDate(p.arrivalDate)}</> : ''}.
+                </p>
+              ))}
+            </div>
+          )}
 
           {/* Cas 1 — jamais activé : lancer la vérification (sous-page NOUT, zéro page Stripe) */}
           {!state?.activated && (
@@ -155,6 +188,27 @@ export default function MyMoney() {
               <Link to="/compte/paiements/verifier" className="inline-block text-sm text-[#0E8C82] font-medium hover:underline mt-2">
                 Gérer mes informations bancaires
               </Link>
+            </div>
+          )}
+
+          {/* Historique des retraits — le vendeur suit ses virements ici (pas de dashboard Stripe). */}
+          {payouts.length > 0 && (
+            <div className="mt-7">
+              <p className="text-[13px] font-semibold text-nout-texte mb-2">Derniers retraits</p>
+              <div className="rounded-xl border border-[#E6EAF0] divide-y divide-[#F0F2F4]">
+                {payouts.map((p, i) => {
+                  const s = PAYOUT_STATUS[p.status] ?? { label: p.status, cls: 'bg-gray-100 text-gray-500 border-gray-200' }
+                  return (
+                    <div key={i} className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-nout-texte tabular-nums">{euro(p.amount)}</p>
+                        <p className="text-[12px] text-gray-400">{formatDate(p.arrivalDate || p.created)}</p>
+                      </div>
+                      <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </>
