@@ -68,7 +68,10 @@ export default function Header() {
   return (
     <>
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      /* transition-colors (PAS transition-all) : animer backdrop-filter re-floute tout l'arrière-plan
+         à chaque frame pendant 300ms → micro-freeze au franchissement du hero (surtout à l'inversion
+         du scroll sur mobile). Le blur s'applique d'un coup, seules les couleurs sont animées (150ms). */
+      className={`fixed top-0 inset-x-0 z-50 transition-colors duration-150 ${
         light
           ? 'bg-transparent'
           : 'bg-white/70 backdrop-blur-lg border-b border-white/40 shadow-nout-sm'
