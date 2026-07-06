@@ -25,59 +25,49 @@ function makeIconSvg(size) {
 }
 
 // --- SVG og-image 1200×630 ---
+// Version épurée : SEULEMENT « NOUT » + le point turquoise (identité NOUT), centré.
+// (Avant : un logo-icône N à gauche PUIS le mot NOUT → se lisait « N NOUT ». Corrigé.)
 function makeOgSvg() {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <!-- Fond noir -->
-  <rect width="1200" height="630" fill="#0D0D0D"/>
-
-  <!-- Lueur turquoise gauche -->
-  <radialGradient id="gl" cx="25%" cy="50%" r="40%">
-    <stop offset="0%" stop-color="#48CAE4" stop-opacity="0.18"/>
-    <stop offset="100%" stop-color="#48CAE4" stop-opacity="0"/>
+  <!-- Fond bleu nuit NOUT + légère lueur centrale -->
+  <radialGradient id="glow" cx="50%" cy="42%" r="62%">
+    <stop offset="0%" stop-color="#13214191"/>
+    <stop offset="0%" stop-color="#132141"/>
+    <stop offset="100%" stop-color="#0A0F2C"/>
   </radialGradient>
-  <rect width="1200" height="630" fill="url(#gl)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <!-- Icône N (280×280, centré verticalement à gauche) -->
-  <g transform="translate(160,175)">
-    <rect width="280" height="280" rx="50" fill="#161616"/>
-    <!-- barre gauche -->
-    <rect x="48" y="39" width="46" height="202" fill="white"/>
-    <!-- barre droite -->
-    <rect x="186" y="39" width="46" height="202" fill="white"/>
-    <!-- diagonale -->
-    <polygon points="48,39 94,39 232,241 186,241" fill="white"/>
-    <!-- dot -->
-    <circle cx="224" cy="224" r="32" fill="#48CAE4"/>
-  </g>
-
-  <!-- Texte NOUT -->
-  <text x="600" y="295"
+  <!-- NOUT (mot seul, centré) -->
+  <text x="588" y="300"
         font-family="'Arial Black',Arial,sans-serif"
-        font-size="160"
+        font-size="172"
         font-weight="900"
         text-anchor="middle"
-        letter-spacing="-4"
+        letter-spacing="4"
         fill="white">NOUT</text>
 
-  <!-- Sous-titre -->
-  <text x="600" y="380"
+  <!-- Point turquoise (identité NOUT), après le T -->
+  <circle cx="902" cy="308" r="26" fill="#00C4B4"/>
+
+  <!-- 974 -->
+  <text x="600" y="384"
         font-family="Arial,Helvetica,sans-serif"
-        font-size="40"
-        font-weight="600"
+        font-size="46"
+        font-weight="700"
         text-anchor="middle"
-        fill="#48CAE4"
-        letter-spacing="6">974</text>
+        fill="#00C4B4"
+        letter-spacing="18">974</text>
 
   <!-- Tagline -->
-  <text x="600" y="455"
+  <text x="600" y="456"
         font-family="Arial,Helvetica,sans-serif"
-        font-size="28"
+        font-size="33"
         font-weight="400"
         text-anchor="middle"
-        fill="#888888">Le marketplace 100 % réunionnais de seconde main</text>
+        fill="#9aa4bd">Le marketplace 100 % réunionnais de seconde main</text>
 
-  <!-- Ligne décorative bas -->
-  <rect x="480" y="500" width="240" height="3" rx="2" fill="#48CAE4" opacity="0.4"/>
+  <!-- Trait turquoise décoratif -->
+  <rect x="540" y="502" width="120" height="5" rx="2.5" fill="#00C4B4"/>
 </svg>`
 }
 
