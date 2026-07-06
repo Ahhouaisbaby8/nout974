@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { Heart, Shield, Camera, Info, X, Truck, RefreshCcw } from 'lucide-react'
@@ -11,7 +11,10 @@ import { thumbUrl } from '../../utils/image'
 
 import { FounderCardBadge } from './FounderBadge'
 
-export default function ListingCard({ listing, isFavorited = false, isFounderSeller = false, founderNumber = null }) {
+// memo : les props sont stables (listing = même référence tant que la liste n'est pas rechargée,
+// le reste = primitives) → un re-render du parent (ex. toggle d'UN favori dans Home) ne re-rend
+// plus les 29 autres cartes de la grille. Aucun callback en prop, donc le memo est réellement effectif.
+function ListingCard({ listing, isFavorited = false, isFounderSeller = false, founderNumber = null }) {
   const { user } = useAuth()
   const navigate  = useNavigate()
   const [fav, setFav]         = useState(isFavorited)
@@ -61,17 +64,23 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
   return (
     <Link
       to={`/annonce/${listing.id}`}
-      className="group relative block bg-white rounded-[16px] overflow-hidden border border-[#D6E0F5] shadow-nout-md transition-all duration-300 hover:-translate-y-1 hover:shadow-nout-hover hover:border-nout-turquoise"
+      className="group relative block bg-white rounded-[16px] overflow-hidden border border-[#D6E0F5] shadow-nout-md transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:shadow-nout-hover hover:border-nout-turquoise"
     >
       {/* ── IMAGE (ratio 3:4 portrait — façon Vinted, aligné sur le format photo & le recadrage) ── */}
       <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
+        {/* decoding=async : décodage hors du thread principal (sinon micro-freeze quand des cartes
+            re-rentrent dans le viewport au scroll). width/height : dimensions intrinsèques connues
+            d'emblée. Pas de fondu onLoad : 30 transitions d'opacité simultanées coûtaient du paint
+            pour rien — le fond gris du conteneur sert déjà de placeholder. */}
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={listing.title}
             loading="lazy"
-            onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
-            className="w-full h-full object-cover opacity-0 transition-all duration-500 group-hover:scale-105"
+            decoding="async"
+            width="400"
+            height="400"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-200">
@@ -296,3 +305,5 @@ export default function ListingCard({ listing, isFavorited = false, isFounderSel
     </Link>
   )
 }
+
+export default memo(ListingCard)

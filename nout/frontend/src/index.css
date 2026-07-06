@@ -43,12 +43,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes sunsetCycle {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 @keyframes palmSway {
   0%, 100% { transform: rotate(-2.5deg); }
   50%       { transform: rotate(2deg); }
@@ -115,12 +109,16 @@
   .hero-fade-up-1 { animation: heroFadeUp 0.65s ease 0.12s both; }
   .hero-fade-up-2 { animation: heroFadeUp 0.65s ease 0.26s both; }
 
+  /* Dégradé STATIQUE (figé sur la 1re frame de l'ancienne animation sunsetCycle) : animer
+     background-position n'est pas composité par le GPU → le hero plein écran se repeignait à
+     CHAQUE frame, en continu — gros consommateur du budget de rendu mobile (jank au scroll).
+     Le rendu au chargement est identique ; seul le glissement (imperceptible sur 16s) disparaît. */
   .hero-sunset {
     background: linear-gradient(135deg,
       #FF8C42, #E8455A, #9B35B5, #1A3A8F, #0A0F2C, #0E7FAB, #00C4B4, #FF8C42
     );
     background-size: 500% 500%;
-    animation: sunsetCycle 16s ease infinite;
+    background-position: 0% 50%;
   }
 
   .palm-left  { transform-origin: bottom center; animation: palmSway  4.5s ease-in-out infinite; }
@@ -154,8 +152,10 @@
   }
 
   /* Inputs NEUTRES (fini les bordures teal) : gris au repos, accent teal discret au focus. */
+  /* text-base (16px) OBLIGATOIRE : en dessous de 16px, iOS Safari zoome automatiquement au focus
+     d'un champ (le corps du site est à 14px) — gênant sur mobile, la cible n°1 du trafic. */
   .input-field {
-    @apply w-full px-4 py-3 border border-[#DDE3EC] rounded-lg text-[#0A1628] focus:outline-none focus:border-[#0E8C82] focus:ring-2 focus:ring-[#0E8C82]/15 transition-colors bg-white;
+    @apply w-full px-4 py-3 text-base border border-[#DDE3EC] rounded-lg text-[#0A1628] focus:outline-none focus:border-[#0E8C82] focus:ring-2 focus:ring-[#0E8C82]/15 transition-colors bg-white;
   }
 }
 

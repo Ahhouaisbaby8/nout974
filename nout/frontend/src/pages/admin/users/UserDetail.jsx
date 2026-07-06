@@ -9,6 +9,7 @@ export default function UserDetail() {
   const navigate = useNavigate()
   const [profile,  setProfile]  = useState(null)
   const [listings, setListings] = useState([])
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -17,9 +18,13 @@ export default function UserDetail() {
     ]).then(([{ data: accts }, { data: l }]) => {
       setProfile((accts ?? []).find(a => a.id === id) ?? null)
       setListings(l ?? [])
+    }).catch((err) => {
+      console.error('[admin] chargement du profil utilisateur échoué :', err?.message)
+      setLoadError(true)
     })
   }, [id])
 
+  if (loadError) return <p className="text-red-500 text-sm">Impossible de charger cet utilisateur. Réessaie.</p>
   if (!profile) return <p className="text-gray-400 text-sm">Chargement…</p>
 
   return (

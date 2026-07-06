@@ -32,7 +32,7 @@ export default function AdminDashboard() {
         reports:  reports.count  ?? 0,
         sold:     sold.count     ?? 0,
       })
-    })
+    }).catch((err) => console.error('[admin] chargement des stats du tableau de bord échoué :', err?.message))
   }, [])
 
   return (
