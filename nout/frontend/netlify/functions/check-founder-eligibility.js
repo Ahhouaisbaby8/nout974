@@ -2,6 +2,7 @@
 
 const { createClient } = require('@supabase/supabase-js')
 const { checkAndAssignFounder } = require('./_founder-check')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 // Client service_role pour valider le JWT entrant
 const supabase = createClient(
@@ -33,6 +34,11 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST')    return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 20 vérifications/min par IP (requêtes DB répétées)
+  if (rateLimit(getClientIp(event), 'check-founder-eligibility', 20)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   // Vérification JWT
   const token = (event.headers['authorization'] || event.headers['Authorization'] || '')

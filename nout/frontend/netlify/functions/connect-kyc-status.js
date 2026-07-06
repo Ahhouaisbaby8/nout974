@@ -5,6 +5,7 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { buildKycSnapshot, EMPTY_SNAPSHOT } = require('./_kyc')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -22,6 +23,11 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 20 lectures de statut KYC/min par IP (appelle Stripe → coûteux si bombardé)
+  if (rateLimit(getClientIp(event), 'connect-kyc-status', 20)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   // Auth JWT — l'appelant lit son PROPRE statut (jamais de userId en body).
   const authHeader = event.headers['authorization'] || event.headers['Authorization']

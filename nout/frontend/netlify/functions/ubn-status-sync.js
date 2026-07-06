@@ -13,6 +13,7 @@
 //  - On répond toujours 200 sur une commande introuvable / statut non éligible (pas de retry en boucle UBN).
 
 const { createClient } = require('@supabase/supabase-js')
+const { rateLimit, getClientIp } = require('./_rate-limit')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
@@ -39,6 +40,12 @@ const sendEmail = async (to, subject, html) => {
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
+
+  // Anti-flooding : max 60 callbacks/min par IP (le HUB UBN légitime reste bien en-dessous ;
+  // borne les tentatives de brute-force du secret status-sync).
+  if (rateLimit(getClientIp(event), 'ubn-status-sync', 60)) {
+    return { statusCode: 429, body: 'Trop de requêtes.' }
+  }
 
   // ── Auth : secret status-sync fourni par le HUB UBN (plusieurs en-têtes possibles, doc §14) ──
   const secret = process.env.UBN_STATUS_SYNC_SECRET

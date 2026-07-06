@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
@@ -16,6 +17,11 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 20 avertissements/min par IP (envoi de mails)
+  if (rateLimit(getClientIp(event), 'send-warning', 20)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   // Vérification JWT
   const token = (event.headers['authorization'] || event.headers['Authorization'] || '').replace('Bearer ', '').trim()

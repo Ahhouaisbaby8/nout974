@@ -5,6 +5,7 @@
 // les fonds ne transitent jamais sous la garde de NOUT → conforme (pas d'activité d'établissement de paiement).
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
@@ -22,6 +23,11 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 20 lectures de solde/min par IP (appelle Stripe → coûteux si bombardé)
+  if (rateLimit(getClientIp(event), 'wallet-balance', 20)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   // Auth JWT — l'appelant lit son PROPRE solde.
   const authHeader = event.headers['authorization'] || event.headers['Authorization']
