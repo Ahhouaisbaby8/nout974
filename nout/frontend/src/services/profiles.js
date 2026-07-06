@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { validateImageFile } from '../utils/image'
 
 // Profil OWN/affichage — colonnes non sensibles uniquement (email/iban/stripe/phone
 // ne sont jamais exposés via la table ; le propriétaire les lit via la RPC get_my_account).
@@ -81,10 +82,11 @@ export const updateMyShippingAddress = async (userId, addr) => {
 }
 
 export const uploadAvatar = async (userId, file) => {
-  const name = file.name ?? 'avatar.jpg'
-  const ext  = name.includes('.') ? name.split('.').pop() : 'jpg'
+  // Sécurité : valide le TYPE MIME réel + la taille ; extension dérivée du type, pas du nom client.
+  const ext = validateImageFile(file)
   const path = `${userId}/avatar.${ext}`
-  const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+  const { error } = await supabase.storage.from('avatars')
+    .upload(path, file, { contentType: file.type, upsert: true })
   if (error) throw error
   const url = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl
   await updateProfile(userId, { avatar_url: path })

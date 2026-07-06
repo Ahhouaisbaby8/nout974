@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { validateImageFile } from '../utils/image'
 
 export const getListings = async ({ category, subcategory, city, condition, brand, size, color, material, minPrice, maxPrice, search, sortBy = 'recent', page = 1, limit = 20 } = {}) => {
   let query = supabase
@@ -100,10 +101,12 @@ export const deleteListing = async (id) => {
 }
 
 export const uploadListingImage = async (file, userId) => {
-  const name = file.name ?? 'image.jpg'
-  const ext  = name.includes('.') ? name.split('.').pop() : 'jpg'
-  const path = `${userId}/${Date.now()}.${ext}`
-  const { error } = await supabase.storage.from('listings').upload(path, file)
+  // Sécurité : valide le TYPE MIME réel + la taille ; l'extension vient du type, jamais du nom client.
+  const ext = validateImageFile(file)
+  const rand = (crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2))
+  const path = `${userId}/${Date.now()}-${rand}.${ext}`
+  const { error } = await supabase.storage.from('listings')
+    .upload(path, file, { contentType: file.type, upsert: false })
   if (error) throw new Error(`Upload photo échoué : ${error.message}`)
   return supabase.storage.from('listings').getPublicUrl(path).data.publicUrl
 }
