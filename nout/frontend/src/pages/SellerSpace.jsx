@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../services/supabase'
 import { getSellerDashboard } from '../services/sellerStats'
 import { formatPrice, formatDate } from '../utils/formatters'
 import { SHIPPING_METHODS } from '../utils/shipping'
@@ -72,6 +73,10 @@ export default function SellerSpace() {
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
+  // Statut de paiement LIVE (Stripe), source de vérité comme « Mon argent » — évite l'incohérence
+  // où l'Espace Vendeur affichait « Active tes paiements » alors que le compte est déjà activé
+  // (le drapeau `is_verified` en base pouvait être périmé). null = pas encore chargé.
+  const [livePayActive, setLivePayActive] = useState(null)
 
   useEffect(() => {
     document.title = 'Espace Vendeur | NOUT 974'
@@ -81,6 +86,22 @@ export default function SellerSpace() {
       .finally(() => setLoading(false))
     return () => { document.title = 'NOUT — Marketplace seconde main La Réunion 974' }
   }, [user.id])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch('/.netlify/functions/wallet-balance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token ?? ''}` },
+        })
+        const d = await res.json()
+        if (!cancelled && res.ok) setLivePayActive(!!d.payoutsEnabled)
+      } catch { /* on retombe sur le drapeau is_verified (paiementsActifs) */ }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   if (loading) return <div className="py-24"><Spinner /></div>
   if (error || !data) return (
@@ -92,6 +113,8 @@ export default function SellerSpace() {
 
   const { solde, stats, chart, topListings, virements, paiementsActifs, sales, activeListings } = data
   const ventes = sales.filter(o => ['paid', 'payout_pending', 'completed', 'shipped'].includes(o.status))
+  // Statut live prioritaire ; repli sur le drapeau base tant que Stripe n'a pas répondu.
+  const paiementsOk = livePayActive === null ? paiementsActifs : livePayActive
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -108,16 +131,16 @@ export default function SellerSpace() {
         </Link>
       </div>
 
-      {/* ── ALERTE : activer les paiements (si pas configuré) ── */}
-      {!paiementsActifs && (
+      {/* ── ALERTE : activer les paiements (si pas encore activé chez Stripe) ── */}
+      {!paiementsOk && (
         <Link
-          to="/parametres"
+          to="/compte/paiements/verifier"
           className="flex items-center gap-3 bg-[#FFF4F0] border border-[#FFD9CC] rounded-xl p-4 mb-6 hover:border-[#FF6B4A] transition-colors"
         >
           <AlertCircle className="w-5 h-5 text-[#FF6B4A] flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-nout-dark">Active tes paiements pour recevoir ton argent</p>
-            <p className="text-xs text-gray-500">Ajoute ton IBAN ou ton compte Stripe dans les paramètres.</p>
+            <p className="text-xs text-gray-500">Vérifie ton identité en 2 minutes, directement sur NOUT.</p>
           </div>
           <ChevronRight className="w-4 h-4 text-gray-400" />
         </Link>
