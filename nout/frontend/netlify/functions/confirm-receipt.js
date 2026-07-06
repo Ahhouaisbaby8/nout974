@@ -5,6 +5,7 @@
 //     vendeur — elle ne fait que gérer le signalement de problème.
 // Le face-à-face garde son code via confirm-escrow.js.
 const { createClient } = require('@supabase/supabase-js')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -46,6 +47,11 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST')    return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 10 signalements/min par IP
+  if (rateLimit(getClientIp(event), 'confirm-receipt', 10)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   const token = (event.headers['authorization'] || event.headers['Authorization'] || '').replace('Bearer ', '').trim()
   if (!token) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Non authentifié.' }) }

@@ -3,6 +3,7 @@
 // « Accepter » ne déplace AUCUN argent — il autorise juste l'acheteur à payer au prix convenu
 // (le paiement réel est validé dans create-checkout-session via offer_id).
 const { createClient } = require('@supabase/supabase-js')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
@@ -26,6 +27,11 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders, body: '' }
   if (event.httpMethod !== 'POST')    return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 15 réponses d'offre/min par IP
+  if (rateLimit(getClientIp(event), 'respond-offer', 15)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   const token = (event.headers['authorization'] || event.headers['Authorization'] || '').replace('Bearer ', '').trim()
   if (!token) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Non authentifié.' }) }

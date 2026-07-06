@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const { rateLimit, getClientIp, TOO_MANY } = require('./_rate-limit')
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -44,6 +45,11 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST')    return { statusCode: 405, headers: corsHeaders, body: 'Method Not Allowed' }
 
   const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
+
+  // Anti-flooding : max 5 avis/min par IP (spam d'avis)
+  if (rateLimit(getClientIp(event), 'submit-review', 5)) {
+    return { statusCode: 429, headers, body: JSON.stringify({ error: TOO_MANY }) }
+  }
 
   const token = (event.headers['authorization'] || event.headers['Authorization'] || '').replace('Bearer ', '').trim()
   if (!token) return { statusCode: 401, headers, body: JSON.stringify({ error: 'Non authentifié.' }) }
