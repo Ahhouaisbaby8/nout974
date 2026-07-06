@@ -115,6 +115,11 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               className="input-field"
             />
+            <div className="text-right mt-1.5">
+              <Link to="/mot-de-passe-oublie" className="text-xs text-nout-primary hover:underline">
+                Mot de passe oublié ?
+              </Link>
+            </div>
           </div>
 
           <button

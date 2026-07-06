@@ -93,6 +93,8 @@ const InstallApp    = lazy(() => import('./pages/InstallApp'))
 // Auth
 const Login          = lazy(() => import('./pages/Login'))
 const Register       = lazy(() => import('./pages/Register'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword  = lazy(() => import('./pages/ResetPassword'))
 const CompteActive   = lazy(() => import('./pages/CompteActive'))
 const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'))
 
@@ -190,6 +192,8 @@ function AppShell() {
           {/* Auth */}
           <Route path="/connexion"      element={<Login />} />
           <Route path="/inscription"    element={<Register />} />
+          <Route path="/mot-de-passe-oublie"        element={<ForgotPassword />} />
+          <Route path="/reinitialiser-mot-de-passe" element={<ResetPassword />} />
           <Route path="/compte-active"  element={<CompteActive />} />
           <Route path="/paiement-succes" element={<PaymentSuccess />} />
 

@@ -125,6 +125,23 @@ export function AuthProvider({ children }) {
     if (error) throw error
   }
 
+  // Mot de passe oublié — envoie un e-mail avec un lien de récupération. Le lien ramène l'utilisateur
+  // sur /reinitialiser-mot-de-passe avec une session de récupération (event PASSWORD_RECOVERY), où il
+  // définit un nouveau mot de passe via updatePassword ci-dessous.
+  const requestPasswordReset = async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+    })
+    if (error) throw error
+  }
+
+  // Définit un nouveau mot de passe (nécessite une session active : de récupération après clic sur le
+  // lien e-mail, ou une session normale déjà connectée).
+  const updatePassword = async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+  }
+
   // Connexion Google — redirige vers Google puis revient sur le site
   const loginWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -167,6 +184,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user, profile, loading,
       register, login, loginWithGoogle, logout, updateProfile,
+      requestPasswordReset, updatePassword,
       isAdmin, isModerator, unreadCount, refreshUnreadCount,
     }}>
       {!loading && children}

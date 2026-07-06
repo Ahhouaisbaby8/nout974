@@ -29,6 +29,9 @@ export default function AdminFinances() {
         return s + (Number(o.total_price) - payout - port)
       }, 0)
       setStats({ paidTotal, commission, deliveredTotal, totalOrders: total.count ?? 0 })
+    }).catch((err) => {
+      console.error('[admin] chargement des finances échoué :', err?.message)
+      setStats({ paidTotal: 0, commission: 0, deliveredTotal: 0, totalOrders: 0 })
     })
   }, [])
 
