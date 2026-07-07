@@ -101,7 +101,7 @@ exports.handler = async (event) => {
     const { error: insertError } = await supabase
       .from('reviews')
       .insert({
-        reviewer_id: authUser.id,
+        buyer_id:    authUser.id,
         seller_id:   order.seller_id,
         order_id,
         rating:      Number(rating),

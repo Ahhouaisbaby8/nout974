@@ -96,7 +96,7 @@ export const uploadAvatar = async (userId, file) => {
 export const getProfileReviews = async (userId) => {
   const { data, error } = await supabase
     .from('reviews')
-    .select(`*, buyer:profiles!reviews_reviewer_id_fkey(username, avatar_url)`)
+    .select(`*, buyer:profiles!reviews_buyer_id_fkey(username, avatar_url)`)
     .eq('seller_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
