@@ -22,14 +22,22 @@ export default function Register() {
 
     setLoading(true)
     try {
-      await register({ email, password })
-      setSuccess(true)
-      // Email de bienvenue — non bloquant, silencieux si erreur
+      const data = await register({ email, password })
+      // Email de bienvenue (contient le lien de vérification) — non bloquant, silencieux si erreur
       fetch('/.netlify/functions/send-welcome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       }).catch(() => {})
+      if (data?.session) {
+        // Validation e-mail DIFFÉRÉE (réglage Supabase « Confirm email » désactivé) : session
+        // immédiate → on entre directement. La vérification sera demandée au moment d'agir
+        // (publier / écrire / acheter), pas ici.
+        navigate('/')
+      } else {
+        // Ancien réglage (confirmation obligatoire avant connexion) : écran boîte mail.
+        setSuccess(true)
+      }
     } catch (err) {
       if (err.message?.includes('already registered')) {
         setError('Cette adresse e-mail est déjà utilisée.')

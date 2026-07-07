@@ -17,6 +17,8 @@ import CropModal from '../components/ui/CropModal'
 import CategoryPicker from '../components/ui/CategoryPicker'
 import ColorPicker from '../components/ui/ColorPicker'
 import SizeGuideModal from '../components/ui/SizeGuideModal'
+import VerifyEmailBanner from '../components/VerifyEmailBanner'
+import { isEmailVerified } from '../utils/emailVerified'
 import { Sparkles } from 'lucide-react'
 
 // Phrases-types pour aider à rédiger la description (un clic = ajout)
@@ -50,7 +52,7 @@ const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', 
 const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
 
 export default function CreateListing() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
   const titleRef = useRef(null)
@@ -240,6 +242,18 @@ export default function CreateListing() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Validation e-mail différée : publier exige une adresse vérifiée (le trigger SQL
+  // trg_require_verified_email_listings est le verrou ; cet écran évite l'erreur brute).
+  if (profile && !isEmailVerified(user, profile)) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <BackButton />
+        <h1 className="text-2xl font-extrabold text-nout-dark mb-6 mt-4">Publier une annonce</h1>
+        <VerifyEmailBanner context="publier ton annonce" />
+      </div>
+    )
   }
 
   return (

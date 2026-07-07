@@ -15,6 +15,8 @@ import { thumbUrl } from '../utils/image'
 import Spinner from '../components/ui/Spinner'
 import ProtectionInfoModal from '../components/ui/ProtectionInfoModal'
 import RelayMapPicker from '../components/ui/RelayMapPicker'
+import VerifyEmailBanner from '../components/VerifyEmailBanner'
+import { isEmailVerified } from '../utils/emailVerified'
 
 const OPTION_ICON = { hand: Store, ubn_relay: MapPin, chrono_relay: MapPin, ubn_home: HomeIcon, chrono_home: Truck }
 
@@ -130,6 +132,18 @@ export default function Checkout() {
       </p>
       <button onClick={() => navigate(`/annonce/${id}`)} className="btn-primary mt-6 px-8">
         Voir l'annonce et contacter le vendeur
+      </button>
+    </div>
+  )
+
+  // Validation e-mail différée : acheter exige une adresse vérifiée. Écran préventif avec renvoi
+  // du lien ; la fonction create-checkout-session refuse de toute façon côté serveur (backstop).
+  if (profile && !isEmailVerified(user, profile)) return (
+    <div className="max-w-xl mx-auto px-4 py-16">
+      <h1 className="text-xl font-bold text-nout-dark mb-4">Encore une étape avant d'acheter</h1>
+      <VerifyEmailBanner context="acheter en toute sécurité" />
+      <button onClick={() => navigate(`/annonce/${id}`)} className="text-sm text-nout-primary font-semibold hover:underline mt-5">
+        Retour à l'annonce
       </button>
     </div>
   )

@@ -323,8 +323,13 @@ export default function ListingDetail() {
       setShowOffer(false)
       setOfferAmount('')
       navigate(`/messages/${seller.id}?annonce=${id}`)
-    } catch {
-      setOfferError("Erreur lors de l'envoi de l'offre.")
+    } catch (err) {
+      // Verrou SQL « e-mail vérifié requis » (validation différée) → message actionnable.
+      if (String(err?.message ?? '').includes('NOUT_UNVERIFIED_EMAIL')) {
+        setOfferError('Vérifie ton adresse e-mail pour faire une offre : clique sur le lien reçu par e-mail à ton inscription (renvoi possible depuis la messagerie).')
+      } else {
+        setOfferError("Erreur lors de l'envoi de l'offre.")
+      }
     } finally {
       setOfferSending(false)
     }

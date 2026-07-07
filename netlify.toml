@@ -110,6 +110,18 @@
   for = "/inscription"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/mot-de-passe-oublie"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/reinitialiser-mot-de-passe"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+[[headers]]
+  for = "/verifier-email"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
 
 # SPA fallback — DOIT rester en dernier
 [[redirects]]

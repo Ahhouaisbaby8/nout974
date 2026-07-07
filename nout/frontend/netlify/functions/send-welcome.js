@@ -1,6 +1,9 @@
+const crypto = require('crypto')
 const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+
+const SITE_URL = process.env.URL || 'https://nout.re'
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -42,11 +45,29 @@ exports.handler = async (event) => {
   // elle existe déjà ici. Sans ce garde, l'endpoint (sans session au signup) permettait d'envoyer un mail
   // signé contact@nout.re à N'IMPORTE quelle adresse (spam/phishing, atteinte à la réputation du domaine).
   const { data: prof } = await supabase
-    .from('profiles').select('created_at').eq('email', email).maybeSingle()
+    .from('profiles').select('id, created_at').eq('email', email).maybeSingle()
   if (!prof) return { statusCode: 403, body: 'Compte introuvable.' }
   if (Date.now() - new Date(prof.created_at).getTime() > 30 * 60 * 1000) {
     return { statusCode: 403, body: 'Bienvenue non applicable.' }
   }
+
+  // VALIDATION E-MAIL DIFFÉRÉE : le lien de vérification part DANS l'e-mail de bienvenue
+  // (un seul e-mail = quota Resend préservé). Best-effort : si la migration
+  // 20260707_email_verified n'est pas encore passée (colonnes absentes) ou si le compte
+  // est déjà vérifié (Google, backfill), on envoie le bienvenue classique sans lien.
+  let verifyUrl = null
+  try {
+    const { data: verif, error: verifErr } = await supabase
+      .from('profiles').select('email_verified_at').eq('id', prof.id).single()
+    if (!verifErr && verif && !verif.email_verified_at) {
+      const verifyToken = crypto.randomBytes(24).toString('hex')
+      const { error: tokErr } = await supabase.from('profiles').update({
+        email_verify_token:   verifyToken,
+        email_verify_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }).eq('id', prof.id)
+      if (!tokErr) verifyUrl = `${SITE_URL}/verifier-email?uid=${prof.id}&token=${verifyToken}`
+    }
+  } catch { /* colonnes absentes → bienvenue simple, rien ne casse */ }
 
   // Prénom = préfixe de l'email UNIQUEMENT (jamais de contenu libre du body) + échappement HTML anti-injection.
   const prefix = email.split('@')[0]
@@ -88,6 +109,27 @@ exports.handler = async (event) => {
               Tu fais maintenant partie de la marketplace 100&nbsp;% réunionnaise.<br>
               Commence à vendre ou acheter dès maintenant&nbsp;!
             </p>
+
+            ${verifyUrl ? `
+            <!-- VÉRIFICATION E-MAIL (validation différée) -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#EDFAF7;border:1px solid #00C4B4;border-radius:12px;margin:0 0 24px;">
+              <tr><td style="padding:18px 20px;">
+                <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:#0A0F2C;">Une dernière étape : confirme ton adresse</p>
+                <p style="margin:0 0 14px;font-size:13px;color:#4B5563;line-height:1.6;">
+                  Tu peux déjà explorer NOUT librement. Pour publier une annonce, écrire aux membres
+                  ou acheter, confirme simplement ton adresse e-mail :
+                </p>
+                <table cellpadding="0" cellspacing="0"><tr>
+                  <td style="background:#007A6E;border-radius:50px;padding:12px 28px;">
+                    <a href="${verifyUrl}" style="color:#FFFFFF;font-size:14px;font-weight:700;text-decoration:none;display:block;">
+                      Confirmer mon adresse
+                    </a>
+                  </td>
+                </tr></table>
+                <p style="margin:12px 0 0;font-size:11px;color:#9CA3AF;">Lien valable 24 h.</p>
+              </td></tr>
+            </table>
+            ` : ''}
 
             <!-- BOUTON CTA -->
             <table cellpadding="0" cellspacing="0" style="margin:0 0 36px;">

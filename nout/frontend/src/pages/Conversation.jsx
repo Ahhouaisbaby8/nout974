@@ -9,9 +9,18 @@ import { getProfile } from '../services/profiles'
 import { supabase } from '../services/supabase'
 import { getAvatarUrl } from '../utils/avatar'
 import { formatRelativeDate, formatPrice } from '../utils/formatters'
+import { Send } from 'lucide-react'
 import BackButton from '../components/ui/BackButton'
 import Spinner from '../components/ui/Spinner'
 import { resolveFounder } from '../components/ui/FounderBadge'
+import VerifyEmailBanner from '../components/VerifyEmailBanner'
+import { isEmailVerified } from '../utils/emailVerified'
+
+// Messages pédagogiques des verrous SQL de la messagerie (marqueurs levés par les triggers —
+// migrations 20260707_message_contact_filter + 20260707_email_verified).
+const CONTACT_BLOCK_MSG =
+  'Pour ta sécurité, les numéros de téléphone et e-mails ne peuvent pas être échangés avant un achat. '
+  + 'Une fois l\'achat effectué, tu pourras organiser la remise ici même. Les paiements hors NOUT ne sont pas protégés.'
 
 // Carte d'offre — sombre & minimaliste (le turquoise n'est qu'une touche sur « acceptée »).
 function OfferBubble({ offer, userId, busy, onRespond, onPay }) {
@@ -251,8 +260,17 @@ export default function Conversation() {
       })
       setMessages(prev => [...prev, msg])
       requestAnimationFrame(() => scrollToBottom('smooth'))
-    } catch {
-      setContent(text)
+    } catch (err) {
+      setContent(text)   // le texte n'est jamais perdu
+      const raw = String(err?.message ?? '')
+      if (raw.includes('NOUT_CONTACT_BLOCK')) {
+        // Verrou SQL anti-coordonnées : téléphone/e-mail détecté avant tout achat entre les deux membres.
+        setMsgError(CONTACT_BLOCK_MSG)
+      } else if (raw.includes('NOUT_UNVERIFIED_EMAIL')) {
+        setMsgError('Vérifie ton adresse e-mail pour pouvoir écrire (bouton « Renvoyer l\'e-mail » sous la zone de saisie).')
+      } else {
+        setMsgError('Message non envoyé. Vérifie ta connexion et réessaie.')
+      }
     } finally {
       setSending(false)
     }
@@ -424,6 +442,12 @@ export default function Conversation() {
           {msgError}
         </div>
       )}
+      {/* Validation e-mail différée : écrire exige une adresse vérifiée (verrou SQL en backstop). */}
+      {!isEmailVerified(user, profile) ? (
+        <div className="bg-white border-t border-nout-border px-4 py-3 flex-shrink-0">
+          <VerifyEmailBanner context="écrire un message" />
+        </div>
+      ) : (
       <form
         onSubmit={handleSend}
         className="bg-white border-t border-nout-border px-4 py-3 flex gap-3 items-end flex-shrink-0"
@@ -441,11 +465,14 @@ export default function Conversation() {
         <button
           type="submit"
           disabled={!content.trim() || sending}
+          aria-label="Envoyer le message"
           className="btn-primary px-5 py-2.5 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          
+          {/* Icône explicite : le bouton était VIDE (emoji retiré sans remplacement) — bouton mort visuellement. */}
+          <Send size={18} aria-hidden />
         </button>
       </form>
+      )}
 
     </div>
   )

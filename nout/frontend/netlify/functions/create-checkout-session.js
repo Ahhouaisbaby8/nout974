@@ -67,6 +67,28 @@ exports.handler = async (event) => {
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
     }
 
+    // VALIDATION E-MAIL DIFFÉRÉE : acheter exige une adresse vérifiée (migration
+    // 20260707_email_verified). Comptes Google = vérifiés d'office (Google fait foi).
+    // FAIL-OPEN assumé : si la colonne n'existe pas encore (migration pas passée) ou si la
+    // lecture échoue, on N'EMPÊCHE PAS l'achat (aucun client légitime bloqué à tort ; le
+    // risque « acheteur non vérifié » = il paie de l'argent réel, pas un vecteur de spam).
+    // AUCUN impact sur les montants : simple refus AVANT toute création de commande.
+    const isGoogle = authUser.app_metadata?.provider === 'google'
+      || (authUser.app_metadata?.providers ?? []).includes('google')
+    if (!isGoogle) {
+      const { data: buyerProf, error: buyerProfErr } = await supabase
+        .from('profiles')
+        .select('email_verified_at')
+        .eq('id', buyerId)
+        .single()
+      if (!buyerProfErr && buyerProf && buyerProf.email_verified_at == null) {
+        return { statusCode: 403, headers, body: JSON.stringify({
+          error: 'Vérifie ton adresse e-mail pour acheter : clique sur le lien reçu par e-mail à ton inscription.',
+          code: 'email_unverified',
+        }) }
+      }
+    }
+
     // Option de livraison : id validé contre la table serveur (défaut main propre). Le transporteur et
     // le mode sont DÉDUITS de l'option ici (jamais crus du client), pour éviter toute incohérence prix.
     const optionId = SHIPPING_FEES[deliveryId] !== undefined ? deliveryId : 'hand'

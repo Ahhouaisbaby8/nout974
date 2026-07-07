@@ -110,14 +110,18 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Inscription email — le trigger Supabase crée le profil automatiquement
+  // Inscription email — le trigger Supabase crée le profil automatiquement.
+  // Renvoie data : si « Confirm email » est DÉSACTIVÉ côté Supabase (validation différée),
+  // data.session existe → l'utilisateur entre directement ; sinon (ancien réglage),
+  // data.session est null → Register affiche l'écran « Vérifie ta boîte mail ».
   const register = async ({ email, password }) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/compte-active` },
     })
     if (error) throw error
+    return data
   }
 
   const login = async ({ email, password }) => {
