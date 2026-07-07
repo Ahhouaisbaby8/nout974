@@ -419,7 +419,7 @@ export default function Orders() {
     supabase
       .from('reviews')
       .select('order_id')
-      .eq('reviewer_id', user.id)
+      .eq('buyer_id', user.id)
       .then(({ data }) => setReviewedOrderIds(new Set((data ?? []).map(r => r.order_id))))
   }, [user.id])
 
