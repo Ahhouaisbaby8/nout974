@@ -178,14 +178,32 @@ exports.handler = async (event) => {
     // Poids : par défaut 1 kg si non précisé (vêtements légers), borné à 30 kg/ligne
     const weight = Math.min(30, Math.max(0.1, Number(weight_kg) || 1))
 
-    // ── Payload canonique (doc v4.5, page 3) ──
+    // ── Payload : noms CANONIQUES v4.6 (§7) + anciens alias wpcargo_* (v4.5) en secours ──
+    // Le guide v4.6 §5/§7 impose les noms « plats » (shipper_company, receiver_postcode…) ; les alias
+    // wpcargo_* « peuvent exister pour compatibilité » mais ne sont pas garantis. On envoie LES DEUX,
+    // valeurs identiques → conforme v4.6 ET rétro-compatible si le HUB lit encore les anciens (aucun
+    // conflit possible). Champs unknown = ignorés par le HUB.
+    const addr = service === 'relais' ? '' : (order.shipping_address || '')
     const payload = {
       id_api_connect:     Number(process.env.UBN_API_CONNECT_ID) || undefined,
       ubn_sr_source_site: process.env.UBN_SOURCE_SITE || process.env.URL || 'https://nout.re',
       ref_commande:       refCommande,
       service_id:         service,
+      wpcargo_comments:   `Commande NOUT ${refCommande}`,   // §7 : commentaire lié à la commande marchand
+      // §7 : PAS d'encaissement à la livraison (le paiement est déjà fait sur NOUT). Sans ça, un défaut
+      // « paiement à la livraison » ferait réclamer de l'argent au client par le livreur.
+      payment_wpcargo_mode_field:        'SANS PAIEMENT',
+      rising_payment_wpcargo_mode_field: 0,
+      preuve_livraison:                  'Sans Preuve',
 
-      // Expéditeur (NOUT / vendeur)
+      // Expéditeur (le vendeur, repli NOUT) — noms canoniques §7
+      shipper_company:  s.company,
+      shipper_name:     s.name,
+      shipper_phone:    s.phone,
+      shipper_address:  s.address,
+      shipper_postcode: s.cp,
+      shipper_city:     s.ville,
+      // Alias v4.5 (secours)
       wpcargo_shipper_company_name: s.company,
       wpcargo_shipper_name:         s.name,
       wpcargo_shipper_firstname:    '',
@@ -196,14 +214,22 @@ exports.handler = async (event) => {
       wpcargo_shipper_phone:        s.phone,
       wpcargo_shipper_email:        s.email,
 
-      // Destinataire (acheteur)
+      // Destinataire (l'acheteur) — noms canoniques §7
+      receiver_name:     buyerName,
+      receiver_firstname:'',
+      receiver_phone:    order.shipping_phone || '',
+      receiver_email:    order.buyer?.email || '',
+      receiver_address:  addr,
+      receiver_postcode: cp || '',
+      receiver_city:     city || '',
+      // Alias v4.5 (secours)
       wpcargo_receiver_company_name: '',
       wpcargo_receiver_name:         buyerName,
       wpcargo_receiver_firstname:    '',
       wpcargo_receiver_addressp:     'La Réunion',
       wpcargo_receiver_addresscp:    cp || '',
       wpcargo_receiver_addressv:     city || '',
-      wpcargo_receiver_address:      service === 'relais' ? '' : (order.shipping_address || ''),
+      wpcargo_receiver_address:      addr,
       wpcargo_receiver_phone:        order.shipping_phone || '',
       wpcargo_receiver_email:        order.buyer?.email || '',
 
