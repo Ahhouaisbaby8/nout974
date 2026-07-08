@@ -155,6 +155,25 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette annonce n\'est plus disponible.' }) }
     }
 
+    // ── Ré-achat immédiat : on annule le pending ABANDONNÉ du MÊME acheteur pour CETTE annonce ──
+    // Cas réel : l'acheteur ouvre le checkout (commande 'pending' créée) puis ferme la fenêtre sans payer
+    // (ex. le vendeur a changé le prix). Sans ça, ce pending <1h le bloquait à tort (« déjà en cours
+    // d'achat ») pendant 1h. Un pending = AUCUN paiement encaissé → l'annuler est SÛR. On ne touche QU'AUX
+    // pending de CET acheteur (jamais ceux d'un autre, ni une commande payée). Filet de sécurité : si son
+    // ancienne session Stripe était malgré tout réglée plus tard, stripe-webhook.js la détecte comme
+    // paiement orphelin (commande annulée) et rembourse automatiquement l'acheteur.
+    const { data: myStale } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled' })
+      .eq('listing_id', listingId)
+      .eq('buyer_id', buyerId)
+      .eq('status', 'pending')
+      .select('id')
+    if (myStale && myStale.length) {
+      await supabase.from('escrow_codes').delete().in('order_id', myStale.map(o => o.id))
+      console.log(`[checkout] ${myStale.length} pending abandonné(s) annulé(s) → ré-achat (buyer ${buyerId}, listing ${listingId})`)
+    }
+
     // Vérification anti double-paiement — ignore les commandes pending > 1h (paiement abandonné)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { data: existingOrder } = await supabase
