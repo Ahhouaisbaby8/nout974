@@ -17,7 +17,7 @@ export default function CGV() {
       <Section title="3. Paiement">
         <P>Les paiements sont sécurisés et gérés par un prestataire de paiement agréé, certifié PCI-DSS. NOUT ne stocke aucune donnée bancaire.</P>
         <P>Les moyens de paiement acceptés sont : carte bancaire (Visa, Mastercard, American Express).</P>
-        <P>Le vendeur reçoit l'intégralité du prix de la vente directement sur son compte bancaire, dans les délais habituels de virement (les frais de protection acheteur sont payés par l'acheteur, en sus du prix).</P>
+        <P>Le vendeur perçoit l'intégralité du prix de la vente qu'il a fixé (les frais de protection acheteur sont payés par l'acheteur, en sus du prix). Une fois la transaction confirmée, ces fonds sont crédités sur son porte-monnaie NOUT (« Mon argent ») ; il les vire ensuite sur son compte bancaire quand il le souhaite, après vérification de son identité auprès de notre prestataire de paiement (voir article 4).</P>
       </Section>
 
       <Section title="4. Remise de l'article">

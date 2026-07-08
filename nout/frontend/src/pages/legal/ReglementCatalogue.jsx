@@ -5,11 +5,13 @@ export default function ReglementCatalogue() {
     <LegalLayout title="Règlement du catalogue" lastUpdate="juin 2026">
 
       <Section title="1. Présentation">
-        <P>NOUT est une marketplace de mode et de seconde main dédiée à La Réunion (974). Pour garantir la qualité et la cohérence du catalogue, seuls certains types d'articles sont autorisés à la vente.</P>
+        <P>NOUT est une marketplace de seconde main dédiée à La Réunion (974) : mode, mais aussi électronique, livres et médias, loisirs et collections, accessoires pour animaux et créations locales. Pour garantir la qualité et la sécurité du catalogue, certains articles restent interdits (voir article 3).</P>
         <P>Toute annonce publiée sur NOUT doit respecter le présent règlement. Les annonces non conformes seront supprimées sans préavis.</P>
       </Section>
 
       <Section title="2. Catégories autorisées">
+
+        <P>NOUT accepte la mode (vêtements femme, homme, enfant et mixte, chaussures, accessoires, sacs), la beauté et le bien-être, l'électronique, les livres et médias, les loisirs et collections, les accessoires pour animaux, et les créations de créateurs 974 (fait main, y compris gourmandises et épicerie artisanales — étiquetage et date de consommation à respecter). Les principales catégories :</P>
 
         <Section title="Vêtements femme, homme et enfant">
           <Ul items={[
@@ -70,7 +72,6 @@ export default function ReglementCatalogue() {
           'Médicaments, produits pharmaceutiques ou parapharmaceutiques',
           'Armes, objets dangereux ou illicites',
           'Animaux vivants ou produits issus d\'espèces protégées',
-          'Tout article non relié à la mode ou à la beauté',
         ]} />
       </Section>
 

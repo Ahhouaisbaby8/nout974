@@ -37,7 +37,7 @@ const QA = [
   },
   {
     id: 'ship', label: 'Livraison ou main propre ?',
-    answer: "Les deux : remise en main propre gratuite partout à La Réunion, ou livraison Chronopost si tu préfères.",
+    answer: "Les deux : remise en main propre gratuite partout à La Réunion, ou livraison en point relais / à domicile (UBN dès 4 €, ou Chronopost) si tu préfères.",
   },
   {
     id: 'problem', label: "Et si j'ai un problème ?",

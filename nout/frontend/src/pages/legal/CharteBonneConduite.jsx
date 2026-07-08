@@ -5,7 +5,7 @@ export default function CharteBonneConduite() {
     <LegalLayout title="Charte de bonne conduite" lastUpdate="juin 2026">
 
       <Section title="1. Nos valeurs">
-        <P>NOUT est une marketplace de mode et de seconde main dédiée à La Réunion (974). Notre communauté repose sur la confiance, le respect et la transparence entre acheteurs et vendeurs.</P>
+        <P>NOUT est une marketplace de seconde main dédiée à La Réunion (974). Notre communauté repose sur la confiance, le respect et la transparence entre acheteurs et vendeurs.</P>
         <P>En utilisant NOUT, vous vous engagez à respecter la présente charte et à contribuer à une expérience positive pour tous les membres de la communauté.</P>
       </Section>
 
@@ -46,12 +46,11 @@ export default function CharteBonneConduite() {
       </Section>
 
       <Section title="5. Annonces interdites sur NOUT">
-        <P>NOUT est exclusivement dédié à la mode (vêtements, chaussures, accessoires, beauté). Les annonces suivantes sont strictement interdites :</P>
+        <P>Certaines annonces sont strictement interdites sur NOUT, quelle que soit la catégorie :</P>
         <Ul items={[
           'Contrefaçons de marques de luxe ou de toute autre marque',
           'Lingerie usagée (slip, culotte, soutien-gorge, collants portés)',
           'Produits cosmétiques ouverts ou sans emballage d\'origine',
-          'Articles hors mode et beauté (électronique, mobilier, alimentaire...)',
           'Articles volés ou dont l\'origine légale ne peut être justifiée',
           'Articles faisant l\'objet d\'un rappel de sécurité ou retirés du marché',
           'Médicaments, produits pharmaceutiques ou parapharmaceutiques',
