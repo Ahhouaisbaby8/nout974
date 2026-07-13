@@ -25,7 +25,7 @@ const FAQ = [
   },
   {
     q: "Comment se passe la livraison, côté vendeur ?",
-    a: "Quand l'acheteur choisit la livraison, il paie l'article ET les frais de port au moment de la commande. Le vendeur reçoit l'adresse, emballe l'article, l'expédie via le transporteur puis renseigne le numéro de suivi. Bientôt, NOUT générera l'étiquette d'envoi automatiquement : tu n'auras qu'à déposer ton colis en point relais, sans contacter personne, et le paiement se libérera automatiquement à la livraison. Garde toujours ta preuve d'envoi.",
+    a: "Quand l'acheteur choisit la livraison, il paie l'article ET les frais de port au moment de la commande. Tu reçois l'adresse, puis, depuis « Mes ventes », tu cliques sur « Générer l'étiquette » : NOUT la crée automatiquement (UBN ou Chronopost, selon le choix de l'acheteur). Tu l'imprimes, tu la colles sur ton colis et tu le déposes en point relais — sans contacter personne. Le paiement se libère automatiquement après la livraison. Garde toujours ta preuve d'envoi.",
   },
   {
     q: "Que se passe-t-il si la remise n'est pas confirmée ?",
@@ -53,7 +53,7 @@ const FAQ = [
   },
   {
     q: "Comment supprimer mon compte ?",
-    a: "Pour supprimer ton compte, contacte-nous à contact@nout.re avec ton adresse email. Nous traiterons ta demande sous 48h conformément au RGPD.",
+    a: "Tu peux supprimer ton compte toi-même, à tout moment : va dans Réglages, section « Confidentialité et compte », puis « Supprimer mon compte » et confirme en tapant SUPPRIMER. La suppression est immédiate, définitive et conforme au RGPD (tes annonces, messages et données sont effacés). Si une transaction est en cours, termine-la d'abord.",
   },
   {
     q: "NOUT est-il gratuit ?",

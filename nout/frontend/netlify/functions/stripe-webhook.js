@@ -81,8 +81,33 @@ exports.handler = async (event) => {
       firstTime = !!(updated && updated.length > 0)
     }
 
-    // Événement déjà traité (re-livraison Stripe) → on s'arrête, pas de doublon.
+    // Événement déjà traité (re-livraison Stripe) OU commande annulée entre-temps → on s'arrête.
     if (!firstTime) {
+      // FILET ANTI-ORPHELIN : le paiement a réussi (payment_status='paid', vérifié en C1) mais l'update
+      // n'a touché aucune ligne. Si la commande a été ANNULÉE (achat abandonné/remplacé : une ancienne
+      // session Stripe périmée a été réglée malgré tout), l'acheteur a été débité SANS contrepartie → on le
+      // REMBOURSE. Sûr par construction : une commande ne devient 'cancelled' QUE depuis 'pending' (jamais
+      // depuis 'paid') → jamais de remboursement d'un paiement légitime. Une re-livraison d'une commande déjà
+      // 'paid' passe aussi ici mais son statut ≠ 'cancelled' → aucun remboursement. Idempotent (clé Stripe).
+      if (orderId && session.payment_intent) {
+        const { data: ord } = await supabase.from('orders').select('status').eq('id', orderId).maybeSingle()
+        if (ord?.status === 'cancelled') {
+          try {
+            await stripe.refunds.create(
+              { payment_intent: session.payment_intent },
+              { idempotencyKey: `orphanrefund_${orderId}` },
+            )
+            console.warn(`[webhook] paiement orphelin (commande ${orderId} annulée) → remboursé`)
+          } catch (e) {
+            console.error(`[webhook] remboursement orphelin ${orderId} échoué :`, e.message)
+            await sendEmail(
+              'contact@nout.re',
+              `Paiement orphelin à rembourser — commande ${orderId}`,
+              `<p>Un paiement a été encaissé sur la commande <strong>${orderId}</strong> qui était annulée (achat abandonné ou remplacé). Le remboursement automatique a ÉCHOUÉ (${escHtml(e.message)}) — à rembourser à la main dans Stripe.</p>`,
+            )
+          }
+        }
+      }
       return { statusCode: 200, body: 'Déjà traité' }
     }
 

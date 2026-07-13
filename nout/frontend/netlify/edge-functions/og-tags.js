@@ -7,6 +7,18 @@ const esc = (s) => String(s)
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
 
+// Allège les images OG (aperçus WhatsApp/Facebook, souvent ~470 Ko en pleine taille) : bascule sur
+// l'endpoint de transformation Supabase (/render/image/public/) avec width + quality (WebP négocié).
+// Renvoie l'URL inchangée si ce n'est pas une image Supabase Storage (ex. /og-image.png de marque).
+const ogImage = (url, { width = 1200, height, quality = 70, resize = 'cover' } = {}) => {
+  if (!url || typeof url !== 'string' || !url.includes('supabase.co/storage')) return url
+  const base = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
+  const p = new URLSearchParams({ width: String(width), quality: String(quality), resize })
+  if (height) p.set('height', String(height))
+  const sep = base.includes('?') ? '&' : '?'
+  return `${base}${sep}${p.toString()}`
+}
+
 // Retire les balises og/twitter/canonical + meta description STATIQUES (peu importe les commentaires
 // HTML autour), puis insère le bloc dynamique juste avant </head>.
 function injectHead(html, title, description, dynamicTags) {
@@ -62,7 +74,7 @@ export default async (request, context) => {
       const description = listing.description
         ? listing.description.replace(/\s+/g, ' ').trim().slice(0, 160)
         : 'Disponible sur NOUT, le marketplace 100% réunionnais entre particuliers.'
-      const image = listing.images?.[0] ?? ''
+      const image = ogImage(listing.images?.[0] ?? '', { width: 1200, height: 1200, resize: 'contain' })
 
       const CONDITION_SCHEMA = {
         neuf_avec_etiquette: 'https://schema.org/NewCondition',
@@ -139,7 +151,7 @@ export default async (request, context) => {
         : `Découvre la boutique de ${username} sur NOUT, le marketplace seconde main de La Réunion (974) : articles d'occasion, remise en main propre ou livraison, paiement sécurisé.`
       // avatar_url = chemin de stockage → URL publique Supabase. Sinon, og-image de marque (1200x630).
       const image = profile.avatar_url
-        ? `${supabaseUrl}/storage/v1/object/public/avatars/${profile.avatar_url}`
+        ? ogImage(`${supabaseUrl}/storage/v1/object/public/avatars/${profile.avatar_url}`, { width: 600, height: 600, resize: 'cover', quality: 75 })
         : `${url.origin}/og-image.png`
       const hasAvatar = !!profile.avatar_url
 
