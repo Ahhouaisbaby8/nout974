@@ -51,6 +51,24 @@ export const updateProfile = async (userId, updates) => {
   return data
 }
 
+// Le pseudo est-il DISPONIBLE ? (insensible à la casse). On exclut le compte courant
+// (excludeId) pour que l'utilisateur puisse ré-enregistrer SON propre pseudo sans « déjà pris ».
+// Renvoie true si libre, false si déjà utilisé par quelqu'un d'autre. Le vrai verrou reste
+// la contrainte UNIQUE en base (uniq_profiles_username_lower) ; ceci n'est qu'un confort d'affichage.
+export const isUsernameAvailable = async (username, excludeId) => {
+  const clean = (username ?? '').trim()
+  if (clean.length < 3) return false
+  let query = supabase
+    .from('profiles')
+    .select('id')
+    .ilike('username', clean)   // ilike = comparaison insensible à la casse
+    .limit(1)
+  if (excludeId) query = query.neq('id', excludeId)
+  const { data, error } = await query
+  if (error) { console.error('isUsernameAvailable:', error.message); return true } // en cas de doute, ne bloque pas
+  return (data?.length ?? 0) === 0
+}
+
 // Adresse d'EXPÉDITION du vendeur (données perso → lues via la RPC sécurisée
 // get_my_account, jamais via un SELECT public). Sert d'expéditeur sur les étiquettes
 // transporteur. NE PAS confondre avec l'adresse de livraison de l'acheteur (sur la commande).

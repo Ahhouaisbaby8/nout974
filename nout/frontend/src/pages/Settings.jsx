@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import DOMPurify from 'dompurify'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabase'
-import { uploadAvatar } from '../services/profiles'
+import { uploadAvatar, isUsernameAvailable } from '../services/profiles'
 import { getAvatarUrl } from '../utils/avatar'
 import { REUNION_CITIES } from '../utils/cities'
 import CropModal from '../components/ui/CropModal'
@@ -13,6 +13,8 @@ export default function Settings() {
   const { user, profile, updateProfile, logout } = useAuth()
 
   const [username, setUsername] = useState(profile?.username ?? '')
+  // Vérification EN DIRECT de la disponibilité du pseudo : 'idle' | 'checking' | 'ok' | 'taken' | 'short'
+  const [pseudoStatus, setPseudoStatus] = useState('idle')
   const [bio, setBio]           = useState(profile?.bio ?? '')
   const [phone, setPhone]       = useState(profile?.phone ?? '')
   const [city, setCity]         = useState(profile?.city ?? '')
@@ -44,6 +46,20 @@ export default function Settings() {
 
   const currentAvatarUrl = getAvatarUrl(profile?.avatar_url)
 
+  // Vérifie EN DIRECT si le pseudo est libre, 500 ms après la dernière frappe (anti-spam requêtes).
+  // On ne vérifie pas si le pseudo n'a pas changé (= le sien) → pas de faux « déjà pris ».
+  useEffect(() => {
+    const val = username.trim()
+    if (val === (profile?.username ?? '')) { setPseudoStatus('idle'); return }
+    if (val.length < 3) { setPseudoStatus('short'); return }
+    setPseudoStatus('checking')
+    const t = setTimeout(async () => {
+      const libre = await isUsernameAvailable(val, user?.id)
+      setPseudoStatus(libre ? 'ok' : 'taken')
+    }, 500)
+    return () => clearTimeout(t)
+  }, [username, profile?.username, user?.id])
+
   const handleAvatarChange = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -72,6 +88,7 @@ export default function Settings() {
     const clean = (str) => DOMPurify.sanitize(str, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
 
     if (username.trim().length < 3) return setError('Le pseudo doit faire au moins 3 caractères.')
+    if (pseudoStatus === 'taken')   return setError('Ce pseudo est déjà pris, choisis-en un autre.')
 
     setSaving(true)
     try {
@@ -211,8 +228,18 @@ export default function Settings() {
               maxLength={30}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="input-field"
+              className={`input-field ${
+                pseudoStatus === 'taken' || pseudoStatus === 'short'
+                  ? 'border-red-400 ring-2 ring-red-200'
+                  : pseudoStatus === 'ok'
+                    ? 'border-green-400 ring-2 ring-green-200'
+                    : ''
+              }`}
             />
+            {pseudoStatus === 'checking' && <p className="text-xs text-gray-400 mt-1">Vérification…</p>}
+            {pseudoStatus === 'ok'       && <p className="text-xs text-green-600 mt-1">Ce pseudo est disponible.</p>}
+            {pseudoStatus === 'taken'    && <p className="text-xs text-red-500 mt-1">Ce pseudo est déjà pris / utilisé, choisis-en un autre.</p>}
+            {pseudoStatus === 'short'    && <p className="text-xs text-red-500 mt-1">Le pseudo doit faire au moins 3 caractères.</p>}
           </div>
 
           <div>
