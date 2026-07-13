@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMyOrders } from '../services/orders'
 import { formatPrice, formatDate } from '../utils/formatters'
-import { SHIPPING_METHODS } from '../utils/shipping'
+import { SHIPPING_METHODS, trackingUrl } from '../utils/shipping'
 import Spinner from '../components/ui/Spinner'
 import EscrowConfirm from '../components/EscrowConfirm'
 import { supabase } from '../services/supabase'
@@ -251,12 +251,24 @@ function SellerShippingPanel({ order, onShipped }) {
     return (
       <div className="mt-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
         <p className="text-sm font-semibold text-green-700">Commande expédiée</p>
-        {labelUrl && (
-          <a href={labelUrl} download={`etiquette-${order.id}.pdf`}
-             className="inline-block mt-2 text-sm font-semibold text-[#0E7FAB] underline">
-            Télécharger l'étiquette (PDF)
-          </a>
-        )}
+        <div className="flex flex-wrap items-center gap-4 mt-2">
+          {labelUrl && (
+            <a href={labelUrl} download={`etiquette-${order.id}.pdf`}
+               className="text-sm font-semibold text-[#0E7FAB] underline">
+              Télécharger l'étiquette (PDF)
+            </a>
+          )}
+          {trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number) && (
+            <a
+              href={trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-[#0E7FAB] underline"
+            >
+              Suivre le colis
+            </a>
+          )}
+        </div>
       </div>
     )
   }
@@ -369,6 +381,16 @@ function BuyerTrackingPanel({ order, onConfirmed }) {
           <p className="text-sm font-semibold text-nout-dark mb-2">Ton colis est en route</p>
           <p className="text-xs text-gray-500 mb-1">Numéro de suivi</p>
           <p className="text-sm font-mono font-bold text-[#0E7FAB] break-all">{order.tracking_number}</p>
+          {trackingUrl(order.carrier, order.tracking_number) && (
+            <a
+              href={trackingUrl(order.carrier, order.tracking_number)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2.5 text-sm font-semibold text-white bg-[#0E7FAB] hover:bg-[#0A6A8F] rounded-lg px-4 py-2 transition-colors"
+            >
+              Suivre mon colis
+            </a>
+          )}
         </div>
       )}
 

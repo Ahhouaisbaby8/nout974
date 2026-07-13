@@ -108,3 +108,19 @@ export const computeBuyerTotal = (price, methodId = 'hand') => {
   const total = Number(price) + computeProtectionFee(price) + getDeliveryFee(methodId)
   return Math.round(total * 100) / 100
 }
+
+// URL de suivi public du transporteur pour un numéro de suivi donné.
+// Ouvre la page de suivi officielle (Chronopost / UBN) pré-remplie avec le n° de colis.
+// Renvoie null si transporteur inconnu ou pas de numéro (→ on n'affiche pas de lien).
+export const trackingUrl = (carrier, trackingNumber) => {
+  const n = (trackingNumber ?? '').trim()
+  if (!n) return null
+  if (carrier === 'chronopost') {
+    return `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${encodeURIComponent(n)}`
+  }
+  if (carrier === 'ubn') {
+    // Suivi UBN — à ajuster si UBN fournit une URL dédiée ; repli sur une recherche générique.
+    return `https://www.ubn.re/suivi?tracking=${encodeURIComponent(n)}`
+  }
+  return null
+}
