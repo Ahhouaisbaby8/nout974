@@ -2,11 +2,24 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapPin, Search, LocateFixed } from 'lucide-react'
+import { UBN_CITY_CP } from '../utils/ubn'
 
 // Page publique « Points relais » — consultation SANS achat. Liste + carte OpenStreetMap côte à côte.
 // Réutilise l'API points relais (chronopost-points-relais / ubn-points-relais) déjà branchée au checkout.
 
 const REUNION_CENTER = [-21.115, 55.536]
+
+// Correspondance CP → ville (974). Chronopost EXIGE cp + ville ; UBN se contente du CP.
+// On dérive donc la ville à partir du CP saisi pour que Chronopost réponde aussi.
+const CP_TO_VILLE = Object.fromEntries(Object.entries(UBN_CITY_CP).map(([ville, cp]) => [cp, ville]))
+
+// Distance approximative (km) entre deux points géo — pour trier les relais par proximité.
+function distanceKm(a, b) {
+  const R = 6371, toRad = (d) => (d * Math.PI) / 180
+  const dLat = toRad(b[0] - a[0]), dLng = toRad(b[1] - a[1])
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(s))
+}
 
 function pinIcon() {
   return L.divIcon({
@@ -42,7 +55,6 @@ async function fetchRelays(carrier, cp, ville) {
 
 export default function PointsRelais() {
   const [cp, setCp]         = useState('')
-  const [ville, setVille]   = useState('')
   const [relais, setRelais] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
@@ -77,15 +89,42 @@ export default function PointsRelais() {
   const search = async (e) => {
     e?.preventDefault()
     setError('')
-    const cpTrim = cp.trim()
-    if (cpTrim.length < 5 && !ville.trim()) { setError('Indique un code postal (5 chiffres) ou une ville.'); return }
+    const q = cp.trim()
+    if (!q) { setError('Indique un code postal (5 chiffres) ou une ville.'); return }
+
+    // Un seul champ : soit un CP (5 chiffres), soit un nom de ville. Chronopost EXIGE cp + ville,
+    // donc on complète l'autre via la table 974. Sinon Chronopost renvoie 400 et on ne verrait qu'UBN.
+    const looksLikeCp = /^\d{5}$/.test(q)
+    let cpFinal   = looksLikeCp ? q : ''
+    let villeFinal = looksLikeCp ? '' : q
+    if (cpFinal && !villeFinal && CP_TO_VILLE[cpFinal]) villeFinal = CP_TO_VILLE[cpFinal]
+    if (villeFinal && !cpFinal) {
+      // Retrouve le CP à partir de la ville, insensible à la casse / accents approximatifs.
+      const match = Object.keys(UBN_CITY_CP).find((v) => v.toLowerCase() === villeFinal.toLowerCase())
+      if (match) { cpFinal = UBN_CITY_CP[match]; villeFinal = match }
+    }
+
     setLoading(true)
     try {
       const [chrono, ubn] = await Promise.all([
-        fetchRelays('chronopost', cpTrim, ville.trim()).catch(() => []),
-        fetchRelays('ubn', cpTrim, ville.trim()).catch(() => []),
+        fetchRelays('chronopost', cpFinal, villeFinal).catch(() => []),
+        fetchRelays('ubn', cpFinal, villeFinal).catch(() => []),
       ])
-      const all = [...chrono, ...ubn]
+      let all = [...chrono, ...ubn]
+
+      // UBN renvoie souvent tous ses relais de l'île sans filtrer le CP → on trie par proximité
+      // du point recherché (Chronopost donne déjà des coordonnées ; on prend le 1er relais géolocalisé
+      // comme point d'ancrage de la zone) pour montrer les plus proches en premier.
+      const anchor = all.find((p) => p.lat != null && p.lng != null)
+      if (anchor) {
+        const ref = [anchor.lat, anchor.lng]
+        all = all.sort((a, b) => {
+          const da = a.lat != null ? distanceKm(ref, [a.lat, a.lng]) : Infinity
+          const db = b.lat != null ? distanceKm(ref, [b.lat, b.lng]) : Infinity
+          return da - db
+        })
+      }
+
       setRelais(all)
       if (!all.length) setError('Aucun point relais trouvé pour cette zone. Essaie une ville proche.')
     } catch {
@@ -134,7 +173,7 @@ export default function PointsRelais() {
               type="text"
               placeholder="Filtrer par ville, nom, code postal"
               value={cp}
-              onChange={(e) => { const v = e.target.value; setCp(v); setVille(/\d/.test(v) ? '' : v) }}
+              onChange={(e) => setCp(e.target.value)}
               className="input-field w-full pl-11"
             />
           </div>
