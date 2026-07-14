@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapPin, Search, LocateFixed } from 'lucide-react'
-import { REUNION_CITIES } from '../utils/cities'
 
 // Page publique « Points relais » — consultation SANS achat. Liste + carte OpenStreetMap côte à côte.
 // Réutilise l'API points relais (chronopost-points-relais / ubn-points-relais) déjà branchée au checkout.
@@ -126,52 +125,60 @@ export default function PointsRelais() {
         relais près de chez toi — avant même d'acheter.
       </p>
 
-      <form onSubmit={search} className="bg-white rounded-xl shadow-sm p-5 flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          type="text" inputMode="numeric" maxLength={5} placeholder="Code postal (ex : 97400)"
-          value={cp} onChange={(e) => setCp(e.target.value.replace(/\D/g, ''))}
-          className="input-field flex-1"
-        />
-        <select value={ville} onChange={(e) => setVille(e.target.value)} className="input-field flex-1 cursor-pointer">
-          <option value="">Ou choisis ta ville…</option>
-          {REUNION_CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <button type="submit" disabled={loading}
-          className="py-3 px-5 rounded-xl text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2 whitespace-nowrap"
-          style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}>
-          <Search className="w-4 h-4" />{loading ? 'Recherche…' : 'Rechercher'}
-        </button>
-        <button type="button" onClick={locateMe}
-          className="py-3 px-4 rounded-xl border border-[#00C4B4] text-[#0E7FAB] text-sm font-semibold flex items-center justify-center gap-2 whitespace-nowrap hover:bg-[#00C4B4]/5">
-          <LocateFixed className="w-4 h-4" />Près de moi
-        </button>
-      </form>
+      {/* Un seul cadre blanc englobant, comme la maquette : recherche en haut + liste/carte côte à côte */}
+      <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-6">
+        <form onSubmit={search} className="flex flex-col sm:flex-row gap-3 mb-5">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Filtrer par ville, nom, code postal"
+              value={cp}
+              onChange={(e) => { const v = e.target.value; setCp(v); setVille(/\d/.test(v) ? '' : v) }}
+              className="input-field w-full pl-11"
+            />
+          </div>
+          <button type="submit" disabled={loading}
+            className="py-3 px-6 rounded-xl text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2 whitespace-nowrap"
+            style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}>
+            {loading ? 'Recherche…' : 'Rechercher'}
+          </button>
+          <button type="button" onClick={locateMe}
+            className="py-3 px-5 rounded-xl border border-[#00C4B4] text-[#0E7FAB] text-sm font-semibold flex items-center justify-center gap-2 whitespace-nowrap hover:bg-[#00C4B4]/5">
+            <LocateFixed className="w-4 h-4" />Près de moi
+          </button>
+        </form>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
-      {/* Liste + carte côte à côte (empilées sur mobile) */}
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="order-2 md:order-1 space-y-2 max-h-[520px] overflow-y-auto pr-1">
-          {relais === null && <p className="text-sm text-gray-400">Lance une recherche pour voir les points relais.</p>}
-          {relais && relais.length > 0 && (
-            <>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-                {relais.length} point{relais.length > 1 ? 's' : ''} relais
-              </p>
-              {relais.map((r) => (
-                <div key={`${r.carrier}-${r.id}`} className="bg-white rounded-xl shadow-sm px-4 py-3 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-nout-dark text-sm">{r.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{r.address}{r.city ? ` · ${r.postcode} ${r.city}` : ''}</p>
+        <div className="grid md:grid-cols-2 gap-5">
+          {/* Liste */}
+          <div className="order-2 md:order-1 space-y-2 max-h-[460px] overflow-y-auto pr-1">
+            {relais === null && <p className="text-sm text-gray-400 py-4">Tape ta ville ou ton code postal pour voir les points relais.</p>}
+            {relais && relais.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                  {relais.length} point{relais.length > 1 ? 's' : ''} relais
+                </p>
+                {relais.map((r) => (
+                  <div key={`${r.carrier}-${r.id}`} className="border border-gray-100 rounded-xl px-4 py-3 flex items-start justify-between gap-3 hover:border-[#00C4B4]/40 transition-colors">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-semibold text-nout-dark text-sm">{r.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{r.address}{r.city ? ` · ${r.postcode} ${r.city}` : ''}</p>
+                      </div>
+                    </div>
+                    {carrierBadge(r.carrier)}
                   </div>
-                  {carrierBadge(r.carrier)}
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-        <div className="order-1 md:order-2">
-          <div ref={mapEl} className="w-full h-[300px] md:h-[520px] rounded-xl overflow-hidden shadow-sm z-0" />
+                ))}
+              </>
+            )}
+          </div>
+          {/* Carte */}
+          <div className="order-1 md:order-2">
+            <div ref={mapEl} className="w-full h-[280px] md:h-[460px] rounded-xl overflow-hidden z-0" />
+          </div>
         </div>
       </div>
 
