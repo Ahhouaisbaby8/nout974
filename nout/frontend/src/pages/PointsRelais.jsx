@@ -21,11 +21,20 @@ function distanceKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(s))
 }
 
-function pinIcon() {
+// Couleur par transporteur (cohérent avec les badges de la liste) : Chronopost bleu, UBN orange.
+const CARRIER_COLOR = { chronopost: '#0E7FAB', ubn: '#B7791F' }
+
+// Épingle colorée selon le transporteur. `active` = relais sélectionné (plus grand + halo) pour le repérer.
+function pinIcon(carrier, active = false) {
+  const color = CARRIER_COLOR[carrier] || '#0E7FAB'
+  const size = active ? 40 : 26
+  const halo = active
+    ? `<circle cx="12" cy="12" r="11" fill="${color}" opacity="0.25"/>`
+    : ''
   return L.divIcon({
     className: '',
-    html: `<svg width="26" height="34" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 8 12 20 12 20s12-12 12-20C24 5.4 18.6 0 12 0z" fill="#0E7FAB"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>`,
-    iconSize: [26, 34], iconAnchor: [13, 34],
+    html: `<svg width="${size}" height="${size * 34 / 26}" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">${halo}<path d="M12 0C5.4 0 0 5.4 0 12c0 8 12 20 12 20s12-12 12-20C24 5.4 18.6 0 12 0z" fill="${color}"/><circle cx="12" cy="12" r="5" fill="#fff"/></svg>`,
+    iconSize: [size, size * 34 / 26], iconAnchor: [size / 2, size * 34 / 26],
   })
 }
 
@@ -58,12 +67,16 @@ export default function PointsRelais() {
   const [relais, setRelais] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
+  const [selectedId, setSelectedId] = useState(null)   // relais mis en évidence (clic dans la liste)
 
   const mapEl      = useRef(null)
   const mapRef     = useRef(null)
   const meMarker   = useRef(null)
+  const markers    = useRef(new Map())   // key `${carrier}-${id}` → L.marker (pour retrouver au clic)
 
   const withCoords = useMemo(() => (relais ?? []).filter((p) => p.lat != null && p.lng != null), [relais])
+
+  const keyOf = (p) => `${p.carrier}-${p.id}`
 
   // Init / mise à jour de la carte quand les résultats changent.
   useEffect(() => {
@@ -77,12 +90,44 @@ export default function PointsRelais() {
     const map = mapRef.current
     // Retire les anciens marqueurs de relais (garde le fond + le marqueur "moi").
     map.eachLayer((layer) => { if (layer instanceof L.Marker && layer !== meMarker.current) map.removeLayer(layer) })
-    withCoords.forEach((p) => { L.marker([p.lat, p.lng], { icon: pinIcon() }).addTo(map).bindPopup(`<strong>${p.name}</strong><br>${p.address}`) })
+    markers.current.clear()
+    withCoords.forEach((p) => {
+      const carrierName = p.carrier === 'ubn' ? 'UBN' : 'Chronopost'
+      const m = L.marker([p.lat, p.lng], { icon: pinIcon(p.carrier) })
+        .addTo(map)
+        .bindPopup(`<strong>${p.name}</strong><br>${p.address}<br><span style="color:${CARRIER_COLOR[p.carrier]};font-weight:700">${carrierName}</span>`)
+      // Cliquer un marqueur met aussi en évidence la carte correspondante dans la liste.
+      m.on('click', () => setSelectedId(keyOf(p)))
+      markers.current.set(keyOf(p), m)
+    })
+    setSelectedId(null)
     setTimeout(() => {
       map.invalidateSize()
       if (withCoords.length) map.fitBounds(L.latLngBounds(withCoords.map((p) => [p.lat, p.lng])).pad(0.3), { maxZoom: 14 })
     }, 100)
   }, [withCoords])
+
+  // Met en évidence le relais sélectionné : agrandit son épingle, centre la carte, ouvre sa bulle.
+  useEffect(() => {
+    if (!mapRef.current || !selectedId) return
+    const p = withCoords.find((x) => keyOf(x) === selectedId)
+    const m = markers.current.get(selectedId)
+    if (!p || !m) return
+    // Rétablit toutes les épingles à leur taille normale, puis agrandit la sélectionnée.
+    markers.current.forEach((mk, key) => {
+      const rp = withCoords.find((x) => keyOf(x) === key)
+      if (rp) mk.setIcon(pinIcon(rp.carrier, key === selectedId))
+    })
+    m.setZIndexOffset(1000)
+    mapRef.current.setView([p.lat, p.lng], 15, { animate: true })
+    m.openPopup()
+  }, [selectedId, withCoords])
+
+  // Clic sur une carte de la liste → sélectionne (ou déselectionne si déjà actif).
+  const selectRelais = (p) => {
+    const k = keyOf(p)
+    setSelectedId((cur) => (cur === k ? null : k))
+  }
 
   useEffect(() => () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null } }, [])
 
@@ -199,18 +244,33 @@ export default function PointsRelais() {
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
                   {relais.length} point{relais.length > 1 ? 's' : ''} relais
                 </p>
-                {relais.map((r) => (
-                  <div key={`${r.carrier}-${r.id}`} className="border border-gray-100 rounded-xl px-4 py-3 flex items-start justify-between gap-3 hover:border-[#00C4B4]/40 transition-colors">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-semibold text-nout-dark text-sm">{r.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{r.address}{r.city ? ` · ${r.postcode} ${r.city}` : ''}</p>
+                {relais.map((r) => {
+                  const k = `${r.carrier}-${r.id}`
+                  const isSel = selectedId === k
+                  const locatable = r.lat != null && r.lng != null
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => selectRelais(r)}
+                      disabled={!locatable}
+                      className={`w-full text-left border rounded-xl px-4 py-3 flex items-start justify-between gap-3 transition-colors ${
+                        isSel
+                          ? 'border-[#00C4B4] bg-[#00C4B4]/5 ring-1 ring-[#00C4B4]'
+                          : 'border-gray-100 hover:border-[#00C4B4]/40'
+                      } ${locatable ? 'cursor-pointer' : 'cursor-default'}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isSel ? 'text-[#00C4B4]' : 'text-gray-300'}`} />
+                        <div>
+                          <p className="font-semibold text-nout-dark text-sm">{r.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{r.address}{r.city ? ` · ${r.postcode} ${r.city}` : ''}</p>
+                        </div>
                       </div>
-                    </div>
-                    {carrierBadge(r.carrier)}
-                  </div>
-                ))}
+                      {carrierBadge(r.carrier)}
+                    </button>
+                  )
+                })}
               </>
             )}
           </div>
