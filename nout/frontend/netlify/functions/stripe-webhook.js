@@ -150,8 +150,53 @@ exports.handler = async (event) => {
                            : order.shipping_method === 'home'  ? 'Livraison à domicile'
                            : 'Remise en main propre'
 
-        // Email acheteur — code de remise
-        if (buyer?.email && escrow?.code) {
+        // Email acheteur — LIVRAISON : pas de code, la réception est validée par le suivi transporteur.
+        if (buyer?.email && isLivraison) {
+          await sendEmail(
+            buyer.email,
+            `Ton paiement est sécurisé — ${annonce?.title ?? 'NOUT 974'}`,
+            `
+              <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px 24px;background:#F8FAFF">
+                <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+                  <div style="text-align:center;margin-bottom:24px">
+                    <span style="font-size:48px">📦</span>
+                    <h1 style="color:#1A3A8F;font-size:22px;margin:12px 0 4px">Ton paiement est sécurisé !</h1>
+                    <p style="color:#6B7A99;margin:0">Bonjour ${escHtml(buyer.username)}, ta commande est bien enregistrée.</p>
+                  </div>
+                  <div style="background:#F5F0E8;border-radius:12px;padding:20px;margin:20px 0">
+                    <p style="margin:0 0 8px;color:#6B7A99;font-size:13px">Article acheté</p>
+                    <p style="margin:0 0 4px;font-weight:bold;color:#1A1A2E;font-size:16px">${titreAnnonce}</p>
+                    <p style="margin:0;font-size:20px;font-weight:800;color:#1A3A8F">${Number(total_price).toFixed(2)} €</p>
+                  </div>
+                  <div style="border-left:4px solid #00C4B4;padding:12px 16px;background:#F0FFFE;border-radius:0 8px 8px 0;margin:20px 0">
+                    <p style="margin:0 0 6px;color:#6B7A99;font-size:13px"><strong>Mode choisi :</strong> ${escHtml(modeLabel)}</p>
+                    <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
+                      <strong>Comment ça marche&nbsp;?</strong><br>
+                      Le vendeur prépare et expédie ton colis. Tu pourras suivre son acheminement depuis
+                      « Mes commandes ». <strong>Aucun code à donner</strong> : à la livraison, ton paiement se
+                      débloque automatiquement pour le vendeur après un délai de vérification de 48 h. Tu n'as rien à faire.
+                    </p>
+                  </div>
+                  <p style="color:#6B7A99;font-size:13px;line-height:1.6;margin:16px 0 0">
+                    Un souci à la réception&nbsp;? Tu as 48 h après la livraison pour « Signaler un problème » depuis ton espace.
+                  </p>
+                  <div style="text-align:center;margin-top:28px">
+                    <a href="${SITE_URL}/commandes"
+                       style="display:inline-block;background:linear-gradient(135deg,#0E7FAB,#00C4B4);color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px">
+                      Suivre ma commande
+                    </a>
+                  </div>
+                  <p style="color:#6B7A99;font-size:12px;text-align:center;margin-top:32px;border-top:1px solid #E8F0FF;padding-top:16px">
+                    L'équipe NOUT 974 — Le marketplace 100 % réunionnais 🌴
+                  </p>
+                </div>
+              </div>
+            `
+          )
+        }
+
+        // Email acheteur — MAIN PROPRE : code de remise (uniquement si un code existe = pas livraison).
+        if (buyer?.email && escrow?.code && !isLivraison) {
           const expiresDate = new Date(escrow.expires_at).toLocaleDateString('fr-FR', {
             day: 'numeric', month: 'long', year: 'numeric',
           })
@@ -183,9 +228,7 @@ exports.handler = async (event) => {
                     <p style="margin:0 0 6px;color:#6B7A99;font-size:13px"><strong>Mode choisi :</strong> ${escHtml(modeLabel)}</p>
                     <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
                       <strong>Comment ça marche&nbsp;?</strong><br>
-                      ${isLivraison
-                        ? `À la réception de ton colis, donne ce code au vendeur (par message NOUT) une fois l'article vérifié et conforme. Il le saisira pour débloquer son paiement.`
-                        : `Lors de la remise en main propre, donne ce code au vendeur. Il le saisira sur NOUT pour confirmer la transaction et débloquer son paiement.`}
+                      Lors de la remise en main propre, donne ce code au vendeur. Il le saisira sur NOUT pour confirmer la transaction et débloquer son paiement.
                     </p>
                   </div>
 
@@ -235,7 +278,7 @@ exports.handler = async (event) => {
                     <p style="margin:0;color:#1A1A2E;font-size:14px;line-height:1.6">
                       <strong>Prochaine étape&nbsp;:</strong><br>
                       ${isLivraison
-                        ? `Prépare ton colis et expédie-le via ${escHtml(modeLabel)}. Indique le numéro de suivi sur NOUT depuis « Mes commandes ». À la réception, l'acheteur te donnera un code à 6 chiffres — saisis-le pour recevoir ton paiement.`
+                        ? `Depuis « Mes commandes », génère l'étiquette, imprime-la, colle-la sur ton colis et dépose-le au point relais. <strong>Aucun code à saisir</strong> : ton paiement se débloque automatiquement une fois le colis livré (délai de vérification de 48 h).`
                         : `L'acheteur te contactera via la messagerie NOUT pour organiser la remise en main propre. Il te donnera un code à 6 chiffres lors de la remise — saisis-le sur NOUT pour recevoir ton paiement.`}
                     </p>
                   </div>
@@ -260,15 +303,17 @@ exports.handler = async (event) => {
           )
         }
 
-        // Push navigateur acheteur
+        // Push navigateur acheteur — texte adapté au mode (livraison = pas de code)
         if (order.buyer_id) {
           fetch(`${SITE_URL}/.netlify/functions/send-push`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-internal-secret': process.env.CRON_SECRET },
             body: JSON.stringify({
               receiver_id: order.buyer_id,
-              title: '🔑 Ton code de remise — NOUT 974',
-              body: `Ton paiement est sécurisé. Tu recevras ton code par email.`,
+              title: isLivraison ? '📦 Commande confirmée — NOUT 974' : '🔑 Ton code de remise — NOUT 974',
+              body: isLivraison
+                ? `Ton paiement est sécurisé. Le vendeur va expédier ton colis, tu pourras le suivre.`
+                : `Ton paiement est sécurisé. Tu recevras ton code par email.`,
               url: '/commandes',
             }),
           }).catch(err => console.error('send-push acheteur:', err.message))

@@ -250,20 +250,24 @@ exports.handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la création de la commande.' }) }
     }
 
-    // Générer le code escrow à 6 chiffres et le stocker AVANT la session Stripe
-    // (si Stripe échoue ensuite, la commande reste pending et le code expire naturellement)
-    const escrowCode = String(randomInt(100000, 1000000))
-    const expiresAt  = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-
-    const { error: escrowError } = await supabase.from('escrow_codes').insert({
-      order_id:   order.id,
-      code:       escrowCode,
-      expires_at: expiresAt,
-    })
-
-    if (escrowError) {
-      console.error('Escrow insert error:', escrowError.message)
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la création du code de remise.' }) }
+    // Code escrow à 6 chiffres : UNIQUEMENT pour la REMISE EN MAIN PROPRE (isDelivery === false).
+    // En LIVRAISON (relais/domicile), il n'y a PAS de code : la réception est validée par le suivi
+    // transporteur (cron chronopost-tracking → delivered → release-delivered verse à +48h). Générer un
+    // code en livraison mélangeait les deux flux (l'acheteur validait le code → versement avant même
+    // l'expédition → commande bloquée). On ne le crée donc qu'en main propre.
+    let escrowCode = null
+    if (!isDelivery) {
+      escrowCode = String(randomInt(100000, 1000000))
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      const { error: escrowError } = await supabase.from('escrow_codes').insert({
+        order_id:   order.id,
+        code:       escrowCode,
+        expires_at: expiresAt,
+      })
+      if (escrowError) {
+        console.error('Escrow insert error:', escrowError.message)
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur lors de la création du code de remise.' }) }
+      }
     }
 
     // Créer la session Stripe Checkout — argent capturé sur le compte NOUT, pas de transfert vendeur

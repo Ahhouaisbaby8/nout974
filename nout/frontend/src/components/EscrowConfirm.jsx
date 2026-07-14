@@ -13,8 +13,10 @@ export default function EscrowConfirm({ order, onConfirmed }) {
   const [result, setResult]           = useState(null) // { type: 'success'|'error'|'locked'|'expired', msg }
   const inputRefs = useRef([])
 
-  // Guard : visible uniquement pour le vendeur avec statut 'paid'
-  const isEligible = user && order.seller_id === user.id && order.status === 'paid'
+  // Guard : visible uniquement pour le vendeur, statut 'paid', ET remise EN MAIN PROPRE.
+  // En livraison (relais/domicile), aucun code : la réception est validée par le suivi transporteur.
+  const isMainPropre = order.shipping_method !== 'relay' && order.shipping_method !== 'home'
+  const isEligible = user && order.seller_id === user.id && order.status === 'paid' && isMainPropre
 
   useEffect(() => {
     if (!isEligible) return

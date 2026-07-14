@@ -92,6 +92,7 @@ exports.handler = async (event) => {
       .select(`
         id,
         status,
+        shipping_method,
         seller_id,
         buyer_id,
         total_price,
@@ -113,6 +114,15 @@ exports.handler = async (event) => {
     if (order.seller_id !== authUser.id) {
       console.warn(`[confirm-escrow] Accès refusé — user_id: ${authUser.id} n'est pas le vendeur de la commande ${order_id} (vendeur attendu: ${order.seller_id})`)
       return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès refusé.' }) }
+    }
+
+    // GARDE-FOU : le code escrow ne concerne QUE la remise en main propre. Une commande en LIVRAISON
+    // (relais/domicile) se valide par le suivi transporteur, jamais par un code. On refuse donc toute
+    // validation de code sur une livraison (défense en profondeur : évite qu'un ancien code ou un code
+    // saisi par erreur ne déclenche le versement avant même l'expédition). Cf. bug du 14/07.
+    if (order.shipping_method === 'relay' || order.shipping_method === 'home') {
+      console.warn(`[confirm-escrow] Tentative de validation de code sur une LIVRAISON (order ${order_id}) — refusée.`)
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cette commande est en livraison : la réception est validée automatiquement par le suivi du transporteur, aucun code n\'est nécessaire.' }) }
     }
 
     // Le code escrow ne sert qu'au FACE-À-FACE (remise en main propre, statut 'paid'). Une LIVRAISON
