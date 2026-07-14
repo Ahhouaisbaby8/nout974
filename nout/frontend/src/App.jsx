@@ -89,6 +89,7 @@ const Help          = lazy(() => import('./pages/Help'))
 const HowItWorks    = lazy(() => import('./pages/HowItWorks'))
 const Creators      = lazy(() => import('./pages/Creators'))
 const InstallApp    = lazy(() => import('./pages/InstallApp'))
+const PointsRelais  = lazy(() => import('./pages/PointsRelais'))
 
 // Auth
 const Login          = lazy(() => import('./pages/Login'))
@@ -189,6 +190,7 @@ function AppShell() {
           <Route path="/comment-ca-marche" element={<HowItWorks />} />
           <Route path="/createurs"         element={<Creators />} />
           <Route path="/installer-app"    element={<InstallApp />} />
+          <Route path="/points-relais"    element={<PointsRelais />} />
 
           {/* Auth */}
           <Route path="/connexion"      element={<Login />} />

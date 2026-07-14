@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { CATEGORIES } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
@@ -10,7 +10,7 @@ import PriceRangeSection from '../components/PriceRangeSection'
 import CategoryMenu from '../components/CategoryMenu'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
-import { Sparkles, PackageOpen } from 'lucide-react'
+import { Sparkles, PackageOpen, MapPin } from 'lucide-react'
 import { useHeroRef } from '../context/HeroContext'
 
 // Exemples qui défilent lettre par lettre dans la barre de recherche
@@ -261,6 +261,22 @@ export default function Home() {
 
         </div>
       </section>
+
+      {/* ── BANDEAU POINTS RELAIS (ajout non-intrusif : renvoie vers la page de consultation) ── */}
+      <div className="max-w-7xl mx-auto px-4 pt-8">
+        <Link
+          to="/points-relais"
+          className="relative flex items-center gap-3 rounded-2xl px-5 py-4 text-white shadow-sm hover:shadow-md transition-shadow"
+          style={{ background: 'linear-gradient(135deg, #0A0F2C, #132141)' }}
+        >
+          <span className="absolute -top-2.5 left-5 bg-[#00C4B4] text-[#0A0F2C] text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide">Nouveau</span>
+          <MapPin className="w-6 h-6 text-[#00C4B4] flex-shrink-0" />
+          <span className="flex-1 text-sm sm:text-[15px] font-semibold leading-snug">
+            Un point relais <span className="text-[#00C4B4]">près de chez toi</span>, partout à La Réunion.
+          </span>
+          <span className="text-[#00C4B4] font-extrabold text-sm whitespace-nowrap">Voir les relais →</span>
+        </Link>
+      </div>
 
       {/* ── CATÉGORIES (mobile uniquement : sur desktop la barre du header suffit, pas de doublon) ── */}
       <section className="lg:hidden max-w-7xl mx-auto px-4 pt-12 pb-4">
