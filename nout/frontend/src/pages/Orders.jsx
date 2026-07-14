@@ -569,6 +569,40 @@ export default function Orders() {
                     onShipped={() => getMyOrders(user.id).then(setOrders).catch(() => {})}
                   />
 
+                  {/* Vendeur : accès PERMANENT à l'étiquette (persistée en base) + suivi, dès qu'elle
+                      existe et tant que la commande n'est pas annulée/remboursée. Corrige le bug où
+                      l'étiquette n'était accessible qu'au 1er clic (perdue au refresh) → colis bloqué. */}
+                  {tab === 'ventes'
+                    && ['shipped', 'delivered', 'completed', 'payout_pending'].includes(order.status)
+                    && (order.chronopost_label_url || order.tracking_number) && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                        <p className="text-sm font-semibold text-nout-dark mb-1">Colis expédié</p>
+                        {order.tracking_number && (
+                          <>
+                            <p className="text-xs text-gray-500 mb-1">Numéro de suivi</p>
+                            <p className="text-sm font-mono font-bold text-[#0E7FAB] break-all mb-2">{order.tracking_number}</p>
+                          </>
+                        )}
+                        <div className="flex flex-wrap items-center gap-4">
+                          {order.chronopost_label_url && (
+                            <a href={order.chronopost_label_url} download={`etiquette-${order.id}.pdf`}
+                               className="text-sm font-semibold text-white bg-[#0E7FAB] hover:bg-[#0A6A8F] rounded-lg px-4 py-2 transition-colors">
+                              Télécharger l'étiquette (PDF)
+                            </a>
+                          )}
+                          {trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number) && (
+                            <a href={trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number)}
+                               target="_blank" rel="noopener noreferrer"
+                               className="text-sm font-semibold text-[#0E7FAB] underline">
+                              Suivre le colis
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Code de remise — acheteur, statut paid */}
                   {tab === 'achats' && order.status === 'paid' && (
                     <BuyerEscrowCode orderId={order.id} />
