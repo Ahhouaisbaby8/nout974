@@ -179,6 +179,19 @@ export const CATEGORIES = [
     ],
   },
   {
+    id: 'sport-plein-air', label: 'Sport & plein air', navLabel: 'Sport',
+    sub: [
+      { id: 'sport-velos',        label: 'Vélos' },
+      { id: 'sport-trottinettes', label: 'Trottinettes' },
+      { id: 'sport-fitness',      label: 'Fitness & musculation' },
+      { id: 'sport-rando',        label: 'Randonnée & camping' },
+      { id: 'sport-eau',          label: "Surf & sports d'eau" },
+      { id: 'sport-collectifs',   label: 'Sports collectifs' },
+      { id: 'sport-accessoires',  label: 'Accessoires & équipement' },
+      { id: 'sport-autres',       label: 'Autres' },
+    ],
+  },
+  {
     id: 'loisirs-collections', label: 'Loisirs & collections', navLabel: 'Loisirs',
     sub: [
       { id: 'loisirs-cartes',       label: 'Cartes à collectionner' },

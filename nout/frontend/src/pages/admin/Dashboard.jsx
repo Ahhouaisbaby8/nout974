@@ -23,7 +23,9 @@ export default function AdminDashboard() {
       supabase.from('listings').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_sold', false),
       supabase.from('orders').select('*', { count: 'exact', head: true }),
       supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('listings').select('*', { count: 'exact', head: true }).eq('is_sold', true),
+      // Ventes VRAIMENT conclues = commandes finalisées (vendeur payé), pas les annonces marquées vendues.
+      // Exclut donc automatiquement les tests annulés et les annonces "is_sold" sans transaction terminée.
+      supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['completed', 'payout_pending']),
     ]).then(([users, listings, orders, reports, sold]) => {
       setStats({
         users:    users.count    ?? 0,

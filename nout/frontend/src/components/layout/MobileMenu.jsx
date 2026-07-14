@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { to: '/',                  label: 'Accueil' },
   { to: '/comment-ca-marche', label: 'Comment ça marche' },
   { to: '/a-propos',          label: 'À propos' },
+  { to: '/points-relais',     label: 'Points relais' },
   { to: '/aide',              label: 'Aide' },
 ]
 

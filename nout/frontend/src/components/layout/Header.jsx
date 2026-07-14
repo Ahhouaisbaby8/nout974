@@ -115,6 +115,7 @@ export default function Header() {
           <Link to="/"                  className="hover:text-nout-turquoise transition-colors font-medium">Accueil</Link>
           <Link to="/comment-ca-marche" className="hover:text-nout-turquoise transition-colors font-medium">Comment ça marche</Link>
           <Link to="/a-propos"          className="hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
+          <Link to="/points-relais"     className="hover:text-nout-turquoise transition-colors font-medium">Points relais</Link>
           <Link to="/aide"              className="hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
           {isAdmin && (
             <Link to="/admin" className={`font-semibold hover:text-nout-lagon transition-colors ${light ? '!text-white' : 'text-nout-roi'}`}>

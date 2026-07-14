@@ -1,4 +1,4 @@
-import { Shirt, Baby, Footprints, Gem, ShoppingBag, Sparkles, Smartphone, PawPrint, Palette, Tag } from 'lucide-react'
+import { Shirt, Baby, Footprints, Gem, ShoppingBag, Sparkles, Smartphone, PawPrint, Palette, Bike, Tag } from 'lucide-react'
 
 const ICONS = {
   'vetements-femme':  Shirt,
@@ -10,6 +10,7 @@ const ICONS = {
   'beaute':           Sparkles,
   'electronique':     Smartphone,
   'animaux':          PawPrint,
+  'sport-plein-air':  Bike,
   'createurs':        Palette,
 }
 
