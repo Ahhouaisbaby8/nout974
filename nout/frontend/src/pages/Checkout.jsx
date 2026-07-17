@@ -9,6 +9,7 @@ import {
   DELIVERY_OPTIONS, DELIVERY_ORDER, getDeliveryOption, getDeliveryFee,
   computeBuyerTotal, computeBuyerProtection,
 } from '../utils/shipping'
+import { REUNION_COMMUNES, REUNION_CP, sortRelaysByProximity } from '../utils/communes974'
 import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck, Info } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { thumbUrl } from '../utils/image'
@@ -67,8 +68,9 @@ export default function Checkout() {
   const [deliveryId, setDeliveryId] = useState('hand')
   const [shipPhone, setShipPhone]       = useState(profile?.phone ?? '')
   const [shipAddress, setShipAddress]   = useState('')
-  const [shipCity, setShipCity]         = useState(profile?.city ?? '')
-  const [shipPostcode, setShipPostcode] = useState('')
+  // Pré-remplit la commune ET le CP depuis le profil (si commune 974 connue) → les relais se chargent direct.
+  const [shipCity, setShipCity]         = useState(REUNION_CP[profile?.city] ? profile.city : '')
+  const [shipPostcode, setShipPostcode] = useState(REUNION_CP[profile?.city] ?? '')
 
   const [relays, setRelays]             = useState([])
   const [relaysLoading, setRelaysLoading] = useState(false)
@@ -108,7 +110,7 @@ export default function Checkout() {
         if (cancelled) return
         if (!r.ok) { setRelays([]); setRelaysError(r.reason); return }
         if (!r.points.length) { setRelays([]); setRelaysError('Aucun point relais trouvé pour ce code postal.'); return }
-        setRelays(r.points)
+        setRelays(sortRelaysByProximity(r.points, shipPostcode.trim()))   // le relais de ta commune en premier
       })
       .catch(() => { if (!cancelled) { setRelays([]); setRelaysError('Impossible de charger les points relais.') } })
       .finally(() => { if (!cancelled) setRelaysLoading(false) })
@@ -263,12 +265,12 @@ export default function Checkout() {
               <p className="flex items-center gap-2 font-semibold text-nout-texte">
                 <MapPin className="w-4 h-4 text-nout-primary" /> Choisis ton point relais
               </p>
-              <div className="flex gap-3">
-                <input type="text" value={shipPostcode} onChange={(e) => setShipPostcode(e.target.value)}
-                       placeholder="Code postal *" className="input-field w-32" inputMode="numeric" />
-                <input type="text" value={shipCity} onChange={(e) => setShipCity(e.target.value)}
-                       placeholder="Ville *" className="input-field flex-1" />
-              </div>
+              <select value={shipCity}
+                      onChange={(e) => { const v = e.target.value; setShipCity(v); setShipPostcode(REUNION_CP[v] ?? '') }}
+                      className="input-field w-full">
+                <option value="">Choisis ta commune *</option>
+                {REUNION_COMMUNES.map((c) => <option key={c} value={c}>{c} ({REUNION_CP[c]})</option>)}
+              </select>
               <input type="tel" value={shipPhone} onChange={(e) => setShipPhone(e.target.value)}
                      placeholder="Téléphone (pour le retrait) *" className="input-field" />
 
@@ -316,12 +318,12 @@ export default function Checkout() {
                      placeholder="Téléphone (pour le transporteur) *" className="input-field" />
               <input type="text" value={shipAddress} onChange={(e) => setShipAddress(e.target.value)}
                      placeholder="Adresse (rue, numéro, complément) *" className="input-field" />
-              <div className="flex gap-3">
-                <input type="text" value={shipPostcode} onChange={(e) => setShipPostcode(e.target.value)}
-                       placeholder="Code postal *" className="input-field w-32" inputMode="numeric" />
-                <input type="text" value={shipCity} onChange={(e) => setShipCity(e.target.value)}
-                       placeholder="Ville *" className="input-field flex-1" />
-              </div>
+              <select value={shipCity}
+                      onChange={(e) => { const v = e.target.value; setShipCity(v); setShipPostcode(REUNION_CP[v] ?? '') }}
+                      className="input-field w-full">
+                <option value="">Choisis ta commune *</option>
+                {REUNION_COMMUNES.map((c) => <option key={c} value={c}>{c} ({REUNION_CP[c]})</option>)}
+              </select>
               <p className="text-[11px] text-gray-400">Ton téléphone est transmis au transporteur uniquement pour la livraison.</p>
             </div>
           )}
