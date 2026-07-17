@@ -17,15 +17,29 @@ const SHIPPING_FEES    = {
 const COMMISSION_RATE  = 0.10   // 10 % du prix — protection acheteur (payée par l'acheteur)
 const COMMISSION_FIXED = 0.25   // + 0,25 € fixe
 
+// TAMPON FRAIS STRIPE SUR LE PORT. Stripe prélève ~1,5 % + 0,25 € sur le TOTAL (port compris), or la
+// protection (10 % + 0,25 €) est calculée sur le seul prix de l'article → sans ce tampon, NOUT mange le
+// ~1,5 % du port et peut perdre quelques centimes sur un article très bon marché EXPÉDIÉ. On ajoute donc
+// 2 % du port à la protection payée par l'acheteur (couvre le 1,5 % Stripe avec une petite marge ;
+// break-even exact ≈ 1,523 %). Nul en main propre (port 0). Miroir front : src/utils/shipping.js.
+const SHIPPING_FEE_BUFFER_RATE = 0.02
+
 // Frais de protection acheteur = 10 % + 0,25 €, AJOUTÉS au prix payé par l'acheteur.
 function computeProtectionFee(price) {
   return Math.round((Number(price) * COMMISSION_RATE + COMMISSION_FIXED) * 100) / 100
 }
 
-// Total ACHETEUR = prix + protection acheteur + port. (Recalcul serveur : ne jamais croire le client.)
+// Tampon (en euros) couvrant les frais Stripe sur le port, pour un port donné. 0 si port nul (main propre).
+function computeShippingFeeBuffer(port) {
+  const p = Number(port) || 0
+  return p > 0 ? Math.round(p * SHIPPING_FEE_BUFFER_RATE * 100) / 100 : 0
+}
+
+// Total ACHETEUR = prix + protection acheteur + port + tampon frais Stripe. (Recalcul serveur : ne jamais
+// croire le client.) Le tampon est intégré à la protection (voir create-checkout-session.js).
 function computeTotals(price, methodId) {
   const port = SHIPPING_FEES[methodId] ?? 0
-  return Math.round((Number(price) + computeProtectionFee(price) + port) * 100) / 100
+  return Math.round((Number(price) + computeProtectionFee(price) + port + computeShippingFeeBuffer(port)) * 100) / 100
 }
 
 // Versement vendeur = le PRIX AFFICHÉ, intégralement (les frais sont payés par l'acheteur).
@@ -54,10 +68,17 @@ function computeRefundAmount(order) {
 
   if (payout != null && payout > 0 && total > 0 && shippingFee != null) {
     const protectionFee = computeProtectionFee(payout)
-    const expectedTotal = payout + protectionFee + shippingFee
-    if (Math.abs(expectedTotal - total) < 0.02) {
-      const refund = Math.round((total - protectionFee) * 100) / 100   // = payout + port : on garde la protection
-      return { amountCents: Math.max(0, Math.round(refund * 100)), keptProtection: protectionFee, model: 'new' }
+    const buffer        = computeShippingFeeBuffer(shippingFee)
+    // Réconciliation avec le modèle en vigueur à la commande : AVEC tampon (commandes récentes) OU SANS
+    // (commandes créées avant l'ajout du tampon +2 %). Dans les deux cas, l'acheteur récupère prix + port
+    // et NOUT garde ses frais (protection [+ tampon]). On ne retient QUE si le total colle à un modèle connu
+    // — sinon repli sur remboursement plein (sûr : on ne sous-rembourse jamais l'acheteur par erreur).
+    const expectedWithBuffer    = payout + protectionFee + shippingFee + buffer
+    const expectedWithoutBuffer = payout + protectionFee + shippingFee
+    if (Math.abs(expectedWithBuffer - total) < 0.02 || Math.abs(expectedWithoutBuffer - total) < 0.02) {
+      const refund = Math.round((payout + shippingFee) * 100) / 100   // prix + port : NOUT garde protection [+ tampon]
+      const kept   = Math.round((total - refund) * 100) / 100
+      return { amountCents: Math.max(0, Math.round(refund * 100)), keptProtection: kept, model: 'new' }
     }
   }
   // Ancien modèle / port non figé / incertitude → remboursement plein (sûr).
@@ -65,6 +86,6 @@ function computeRefundAmount(order) {
 }
 
 module.exports = {
-  SHIPPING_FEES, COMMISSION_RATE, COMMISSION_FIXED,
-  computeProtectionFee, computeTotals, computeSellerPayout, computeRefundAmount,
+  SHIPPING_FEES, COMMISSION_RATE, COMMISSION_FIXED, SHIPPING_FEE_BUFFER_RATE,
+  computeProtectionFee, computeShippingFeeBuffer, computeTotals, computeSellerPayout, computeRefundAmount,
 }

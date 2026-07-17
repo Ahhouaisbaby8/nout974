@@ -7,7 +7,7 @@ import { supabase } from '../services/supabase'
 import { formatPrice } from '../utils/formatters'
 import {
   DELIVERY_OPTIONS, DELIVERY_ORDER, getDeliveryOption, getDeliveryFee,
-  computeBuyerTotal, computeProtectionFee,
+  computeBuyerTotal, computeBuyerProtection,
 } from '../utils/shipping'
 import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck, Info } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
@@ -151,7 +151,9 @@ export default function Checkout() {
   const offerValid    = offer && offer.status === 'accepted' && offer.listing_id === id && offer.buyer_id === user.id
   const prix          = offerValid ? Number(offer.amount) : Number(listing.price)
   const portFee       = getDeliveryFee(deliveryId)
-  const protectionFee = computeProtectionFee(prix)
+  // Protection affichée = protection (10%+0,25€) + tampon frais Stripe sur le port (couvre le ~1,5% que
+  // Stripe prélève sur le port). Le tampon varie donc légèrement selon le transporteur choisi.
+  const protectionFee = computeBuyerProtection(prix, deliveryId)
   const totalAcheteur = computeBuyerTotal(prix, deliveryId)
   const imageUrl      = thumbUrl(listing.images?.[0] ?? null)
 

@@ -84,6 +84,15 @@ export const MIN_SHIPPING_FEE = Math.min(
 export const COMMISSION_RATE = 0.10   // 10 % du prix
 export const COMMISSION_FIXED = 0.25  // + 0,25 € fixe
 
+// Tampon frais Stripe sur le PORT (miroir de netlify/functions/_fees.js — DOIT rester synchronisé).
+// Stripe prélève ~1,5 % sur le port, non couvert par la protection (calculée sur le prix seul). On ajoute
+// 2 % du port à la protection payée par l'acheteur. Nul en main propre (port 0).
+export const SHIPPING_FEE_BUFFER_RATE = 0.02
+export const computeShippingFeeBuffer = (port) => {
+  const p = Number(port) || 0
+  return p > 0 ? Math.round(p * SHIPPING_FEE_BUFFER_RATE * 100) / 100 : 0
+}
+
 // Liste ordonnée pour l'affichage (ancien modèle — conservé pour compat)
 export const SHIPPING_ORDER = ['hand', 'relay', 'home']
 
@@ -102,12 +111,18 @@ export const computeProtectionFee = (price) =>
 export const computeSellerPayout = (price) =>
   Math.round(Number(price) * 100) / 100
 
-// Total payé par l'ACHETEUR = prix + protection acheteur (10 % + 0,25 €) + port éventuel.
+// Total payé par l'ACHETEUR = prix + protection acheteur (10 % + 0,25 €) + port + tampon frais Stripe.
 // Accepte aussi bien un id d'option de livraison ('ubn_relay'…) qu'un ancien mode ('relay').
 export const computeBuyerTotal = (price, methodId = 'hand') => {
-  const total = Number(price) + computeProtectionFee(price) + getDeliveryFee(methodId)
+  const port  = getDeliveryFee(methodId)
+  const total = Number(price) + computeProtectionFee(price) + port + computeShippingFeeBuffer(port)
   return Math.round(total * 100) / 100
 }
+
+// Protection AFFICHÉE à l'acheteur au checkout = protection (10 % + 0,25 €) + tampon port. Le tampon est
+// intégré à la ligne « protection » (il finance le ~1,5 % Stripe sur le port). Nul en main propre.
+export const computeBuyerProtection = (price, methodId = 'hand') =>
+  Math.round((computeProtectionFee(price) + computeShippingFeeBuffer(getDeliveryFee(methodId))) * 100) / 100
 
 // URL de suivi public du transporteur pour un numéro de suivi donné.
 // Ouvre la page de suivi officielle (Chronopost / UBN) pré-remplie avec le n° de colis.
@@ -119,8 +134,9 @@ export const trackingUrl = (carrier, trackingNumber) => {
     return `https://www.chronopost.fr/tracking-no-cms/suivi-page?listeNumerosLT=${encodeURIComponent(n)}`
   }
   if (carrier === 'ubn') {
-    // Suivi UBN — à ajuster si UBN fournit une URL dédiée ; repli sur une recherche générique.
-    return `https://www.ubn.re/suivi?tracking=${encodeURIComponent(n)}`
+    // Page de suivi publique UBN SPEED (domaine .fr, param `ubn_tracking`). Le lien profond
+    // pré-remplit le n° ET affiche le statut en un clic. NB : www.ubn.re n'existe pas (NXDOMAIN).
+    return `https://ubn-speed.fr/suivi-colis/?ubn_tracking=${encodeURIComponent(n)}`
   }
   return null
 }

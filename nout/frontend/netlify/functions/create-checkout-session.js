@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 const { randomInt } = require('crypto')
 // Frais NOUT : source unique partagée (voir _fees.js) — DOIT rester synchronisée avec src/utils/shipping.js.
 // Modèle « protection acheteur » : le vendeur reçoit son prix plein, les frais sont ajoutés à l'acheteur.
-const { SHIPPING_FEES, computeProtectionFee, computeTotals, computeSellerPayout } = require('./_fees')
+const { SHIPPING_FEES, computeProtectionFee, computeShippingFeeBuffer, computeTotals, computeSellerPayout } = require('./_fees')
 const { isUbnCovered } = require('./_ubn-cities')
 
 const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -214,10 +214,15 @@ exports.handler = async (event) => {
     if (Number(prixArticle) < 1) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article ne s\'achète pas en ligne (offert ou prix sous 1 €). Contacte le vendeur pour organiser la remise.' }) }
     }
-    // Modèle protection acheteur : total acheteur = prix + protection (10%+0,25€) + port.
-    // Versement vendeur = le PRIX PLEIN (les frais sont payés par l'acheteur).
+    // Modèle protection acheteur : total acheteur = prix + protection (10%+0,25€) + port + tampon frais
+    // Stripe sur le port. Versement vendeur = le PRIX PLEIN (les frais sont payés par l'acheteur).
+    // Le tampon (2 % du port) est INTÉGRÉ à la ligne « protection » (voir buyerProtection ci-dessous) :
+    // il couvre le ~1,5 % que Stripe prélève sur le port, que la protection (calculée sur le prix) ne
+    // couvrait pas. Le port stocké (shipping_fee) reste le VRAI tarif transporteur (sert au remboursement).
     const protectionFee  = computeProtectionFee(prixArticle)
     const port           = SHIPPING_FEES[optionId] ?? 0
+    const shippingBuffer = computeShippingFeeBuffer(port)
+    const buyerProtection = Math.round((protectionFee + shippingBuffer) * 100) / 100
     const totalAcheteur  = computeTotals(prixArticle, optionId)
     const sellerPayout   = computeSellerPayout(prixArticle)
 
@@ -290,8 +295,10 @@ exports.handler = async (event) => {
         {
           price_data: {
             currency: 'eur',
-            product_data: { name: 'Frais de protection acheteur (10 % + 0,25 €)' },
-            unit_amount: Math.round(protectionFee * 100),
+            // Protection acheteur (10 % + 0,25 €) + tampon frais Stripe sur le port. Libellé générique
+            // car le tampon (nul en main propre) dépend du port choisi.
+            product_data: { name: 'Frais de protection acheteur' },
+            unit_amount: Math.round(buyerProtection * 100),
           },
           quantity: 1,
         },
