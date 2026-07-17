@@ -112,10 +112,16 @@ exports.handler = async (event) => {
 
   } catch (err) {
     if (err instanceof UbnError) {
-      // [diag] TEMPORAIRE : on remonte la réponse EXACTE d'UBN (statut + code + message) pour
-      // diagnostiquer pourquoi le bordereau ne sort pas. À REMETTRE en message propre après.
-      const diag = `[diag] UBN ${err.status} · ${err.code || 'sans-code'} · ${String(err.message || '').slice(0, 200)}`
-      return { statusCode: err.status, headers: jsonHeaders, body: JSON.stringify({ error: diag, code: err.code }) }
+      // L'étiquette est générée par UBN en différé (après synchronisation FR). Tant qu'elle n'est
+      // pas prête, le HUB répond 404 (bordereau_unavailable / tracking_pending / receiver_lookup_failed)
+      // → on invite simplement à réessayer. Les autres erreurs restent génériques.
+      const retryMsg = 'L\'étiquette se prépare encore chez UBN. Réessaie dans quelques minutes.'
+      const friendly = {
+        tracking_pending:       retryMsg,
+        bordereau_unavailable:  retryMsg,
+        receiver_lookup_failed: retryMsg,
+      }[err.code] || (err.status === 404 ? retryMsg : 'Bordereau indisponible pour le moment. Réessaie plus tard.')
+      return { statusCode: err.status, headers: jsonHeaders, body: JSON.stringify({ error: friendly, code: err.code }) }
     }
     console.error('ubn-bordereau error:', err.message)
     return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Erreur serveur.' }) }
