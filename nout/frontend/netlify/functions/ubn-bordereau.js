@@ -92,11 +92,10 @@ exports.handler = async (event) => {
 
   } catch (err) {
     if (err instanceof UbnError) {
-      const friendly = {
-        tracking_pending:      'Le suivi n\'est pas encore disponible. Réessaie dans quelques minutes.',
-        bordereau_unavailable: 'Le bordereau n\'est pas encore généré. Réessaie plus tard.',
-      }[err.code] || 'Bordereau indisponible pour le moment.'
-      return { statusCode: err.status, headers: jsonHeaders, body: JSON.stringify({ error: friendly, code: err.code }) }
+      // [diag] TEMPORAIRE : on remonte la réponse EXACTE d'UBN (statut + code + message) pour
+      // diagnostiquer pourquoi le bordereau ne sort pas. À REMETTRE en message propre après.
+      const diag = `[diag] UBN ${err.status} · ${err.code || 'sans-code'} · ${String(err.message || '').slice(0, 200)}`
+      return { statusCode: err.status, headers: jsonHeaders, body: JSON.stringify({ error: diag, code: err.code }) }
     }
     console.error('ubn-bordereau error:', err.message)
     return { statusCode: 500, headers: jsonHeaders, body: JSON.stringify({ error: 'Erreur serveur.' }) }
