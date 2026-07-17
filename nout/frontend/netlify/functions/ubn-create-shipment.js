@@ -203,6 +203,7 @@ exports.handler = async (event) => {
       shipper_address:  s.address,
       shipper_postcode: s.cp,
       shipper_city:     s.ville,
+      shipper_email:    s.email,   // §7 canonique (avant : seulement l'alias wpcargo_shipper_email)
       // Alias v4.5 (secours)
       wpcargo_shipper_company_name: s.company,
       wpcargo_shipper_name:         s.name,

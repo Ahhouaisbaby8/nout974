@@ -173,6 +173,69 @@ function BuyerEscrowCode({ orderId }) {
   )
 }
 
+// ── Bordereau UBN ────────────────────────────────────────────────────────────────
+// Chronopost renvoie son étiquette en data URI persisté sur la commande (chronopost_label_url)
+// → un simple <a href> suffit. UBN, lui, expose le bordereau derrière un endpoint AUTHENTIFIÉ
+// (ubn-bordereau vérifie le JWT + que l'appelant est bien le VENDEUR, puis proxifie le HUB) :
+// on ne peut donc pas y pointer un lien. Il faut fetch avec le token, puis déclencher le
+// téléchargement du blob. Sans ça, le vendeur en livraison UBN n'a AUCUN moyen de récupérer
+// son étiquette → colis bloqué (même symptôme que le bug étiquette Chronopost du 13/07).
+async function downloadUbnBordereau(orderId) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch(`/.netlify/functions/ubn-bordereau?order_id=${orderId}`, {
+    headers: { Authorization: `Bearer ${session?.access_token ?? ''}` },
+  })
+  if (!res.ok) {
+    const msg = await res.json().catch(() => ({}))
+    throw new Error(msg.error ?? 'Bordereau indisponible pour le moment.')
+  }
+  const blob = await res.blob()
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `bordereau-${orderId}.${blob.type.includes('zip') ? 'zip' : 'pdf'}`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+// Bouton de téléchargement du bordereau UBN. Le HUB peut répondre « pas encore généré »
+// (bordereau_unavailable) juste après la création : on affiche le message et le vendeur
+// retente — le bouton reste disponible en permanence dans le bloc « Colis expédié ».
+function UbnBordereauButton({ orderId }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState('')
+
+  const handleDownload = async () => {
+    setError('')
+    setLoading(true)
+    try {
+      await downloadUbnBordereau(orderId)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={loading}
+        className={`text-sm font-semibold rounded-lg px-4 py-2 transition-colors ${
+          loading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-[#0E7FAB] text-white hover:bg-[#0A6A8F]'
+        }`}
+      >
+        {loading ? 'Récupération…' : 'Télécharger le bordereau (PDF)'}
+      </button>
+      {error && <p className="w-full text-xs text-red-600 mt-1">{error}</p>}
+    </>
+  )
+}
+
 function SellerShippingPanel({ order, onShipped }) {
   const { user } = useAuth()
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -258,6 +321,8 @@ function SellerShippingPanel({ order, onShipped }) {
               Télécharger l'étiquette (PDF)
             </a>
           )}
+          {/* UBN ne renvoie pas d'étiquette à la création : elle se récupère via le HUB. */}
+          {carrier === 'ubn' && <UbnBordereauButton orderId={order.id} />}
           {trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number) && (
             <a
               href={trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number)}
@@ -591,6 +656,9 @@ export default function Orders() {
                               Télécharger l'étiquette (PDF)
                             </a>
                           )}
+                          {/* UBN : le bordereau vit chez le HUB → bouton (fetch authentifié),
+                              disponible en permanence pour survivre au refresh. */}
+                          {order.carrier === 'ubn' && <UbnBordereauButton orderId={order.id} />}
                           {trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number) && (
                             <a href={trackingUrl(order.carrier, order.chronopost_tracking_number || order.tracking_number)}
                                target="_blank" rel="noopener noreferrer"
