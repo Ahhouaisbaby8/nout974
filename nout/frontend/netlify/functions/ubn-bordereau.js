@@ -54,10 +54,10 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: 'Commande manquante.' }) }
     }
 
-    // Vérifier que l'appelant est le vendeur de la commande, et récupérer la ref UBN
+    // Vérifier que l'appelant est le vendeur, récupérer les identifiants UBN de la commande.
     const { data: order, error: orderError } = await supabase
       .from('orders')
-      .select('id, seller_id, ubn_ref_commande')
+      .select('id, seller_id, ubn_ref_commande, ubn_tracking_number, tracking_number')
       .eq('id', orderId)
       .single()
 
@@ -71,22 +71,42 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers: jsonHeaders, body: JSON.stringify({ error: 'Aucune expédition UBN pour cette commande.' }) }
     }
 
-    // Récupérer le bordereau (PDF/ZIP) auprès du HUB
-    const { binary, contentType } = await ubnGet('/bordereau', {
-      query: { ref_commande: order.ubn_ref_commande },
-      accept: 'application/pdf, application/zip, application/json',
-    })
+    // Le HUB indexe le bordereau côté « receiver » (UBN FR). Diagnostic terrain (17/07) :
+    // l'appel par NOTRE ref_commande (NOUT-<id>) renvoie `receiver_lookup_failed` alors que le
+    // colis EXISTE — le récepteur le retrouve par le NUMÉRO DE SUIVI (USR….-RE, l'« ID » imprimé
+    // sur l'étiquette), pas par notre ref. On tente donc les deux clés : ref d'abord (documentée),
+    // suivi en secours. La première qui renvoie un PDF/ZIP gagne.
+    const lookupKeys = [...new Set([
+      order.ubn_ref_commande,
+      order.ubn_tracking_number,
+      order.tracking_number,
+    ].filter(Boolean))]
 
-    const isPdf = contentType.includes('pdf')
+    let result = null
+    let lastErr = null
+    for (const key of lookupKeys) {
+      try {
+        result = await ubnGet('/bordereau', {
+          query: { ref_commande: key },
+          accept: 'application/pdf, application/zip, application/json',
+        })
+        break
+      } catch (e) {
+        lastErr = e
+      }
+    }
+    if (!result) throw lastErr
+
+    const isPdf = result.contentType.includes('pdf')
     const ext   = isPdf ? 'pdf' : 'zip'
     return {
       statusCode: 200,
       headers: {
         ...corsHeaders,
-        'Content-Type': contentType,
+        'Content-Type': result.contentType,
         'Content-Disposition': `attachment; filename="bordereau-${order.ubn_ref_commande}.${ext}"`,
       },
-      body: binary.toString('base64'),
+      body: result.binary.toString('base64'),
       isBase64Encoded: true,
     }
 
