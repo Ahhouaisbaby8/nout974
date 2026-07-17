@@ -14,18 +14,12 @@
 
 const { createClient } = require('@supabase/supabase-js')
 const { rateLimit, getClientIp } = require('./_rate-limit')
+// Libellés « livré/échec » + normalisation : SOURCE UNIQUE partagée avec le poll ubn-tracking.js.
+const { norm, DELIVERED, FAILED } = require('./_ubn-status')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 
 const escHtml = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-
-// Normalise un statut pour comparaison robuste (casse / accents / espaces) — les libellés viennent d'UBN.
-const norm = (s) => String(s ?? '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ')
-
-// Statuts UBN « livré » (doc v4.6 §12 → mapping WooCommerce 'completed') : ouvrent la fenêtre de versement.
-const DELIVERED = new Set(['colis remis en point relais', 'livraison colis terminee'].map(norm))
-// Statuts d'échec / annulation : le colis n'arrivera pas → on gèle pour examen admin (aucun mouvement d'argent).
-const FAILED = new Set(['livraison colis annulee', 'livraison colis en echec'].map(norm))
 
 const sendEmail = async (to, subject, html) => {
   if (!process.env.RESEND_API_KEY || !to) return

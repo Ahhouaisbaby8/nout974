@@ -36,6 +36,12 @@
 [functions."release-delivered"]
   schedule = "45 * * * *"
 
+# Cron : suivi transporteur UBN (PULL). Lit la page de suivi publique ubn-speed.fr (statut rendu cote
+# serveur) et passe la commande en 'delivered' + delivered_at a la livraison. Independant du callback
+# push UBN. Ne verse RIEN (release-delivered verse 48h apres). Toutes les heures a :30 (decale des crons argent).
+[functions."ubn-tracking"]
+  schedule = "30 * * * *"
+
 # Callback statut UBN (doc API Distant v4.6 §11-14) : le HUB UBN POST le changement de statut d'une
 # livraison sur le chemin canonique du doc. On le route vers la fonction ubn-status-sync (statut 200 =
 # rewrite transparent, l'URL reste /wp-json/...). Le HUB peut donc utiliser soit ce chemin, soit l'URL
