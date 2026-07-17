@@ -71,23 +71,23 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers: jsonHeaders, body: JSON.stringify({ error: 'Aucune expédition UBN pour cette commande.' }) }
     }
 
-    // Le HUB indexe le bordereau côté « receiver » (UBN FR). Diagnostic terrain (17/07) :
-    // l'appel par NOTRE ref_commande (NOUT-<id>) renvoie `receiver_lookup_failed` alors que le
-    // colis EXISTE — le récepteur le retrouve par le NUMÉRO DE SUIVI (USR….-RE, l'« ID » imprimé
-    // sur l'étiquette), pas par notre ref. On tente donc les deux clés : ref d'abord (documentée),
-    // suivi en secours. La première qui renvoie un PDF/ZIP gagne.
-    const lookupKeys = [...new Set([
-      order.ubn_ref_commande,
-      order.ubn_tracking_number,
-      order.tracking_number,
-    ].filter(Boolean))]
+    // Doc UBN v4.7 : /bordereau accepte ?ref_commande= OU ?tracking= (paramètres DISTINCTS).
+    // Diagnostic terrain (17/07) : l'appel par NOTRE ref_commande (NOUT-<id>) renvoie
+    // `receiver_lookup_failed` alors que le colis EXISTE — le récepteur UBN FR le retrouve par
+    // le NUMÉRO DE SUIVI (USR….-RE, l'« ID » imprimé sur l'étiquette). On tente donc ref d'abord
+    // (lien naturel préconisé par la doc), puis le suivi via le param `tracking` en secours.
+    const trackingValue = order.ubn_tracking_number || order.tracking_number || null
+    const attempts = [
+      { ref_commande: order.ubn_ref_commande },
+      ...(trackingValue ? [{ tracking: trackingValue }] : []),
+    ]
 
     let result = null
     let lastErr = null
-    for (const key of lookupKeys) {
+    for (const query of attempts) {
       try {
         result = await ubnGet('/bordereau', {
-          query: { ref_commande: key },
+          query,
           accept: 'application/pdf, application/zip, application/json',
         })
         break
