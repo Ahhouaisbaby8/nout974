@@ -146,6 +146,27 @@ export default function SellerSpace() {
         </Link>
       )}
 
+      {/* ── À EXPÉDIER : raccourci direct vers la génération d'étiquette ── */}
+      {(() => {
+        const aExpedier = ventes.filter(o => o.status === 'paid' && o.shipping_method && o.shipping_method !== 'hand')
+        if (aExpedier.length === 0) return null
+        return (
+          <Link
+            to="/commandes?tab=ventes"
+            className="flex items-center gap-3 bg-[#EAF6F5] border border-[#B9E5E1] rounded-xl p-4 mb-6 hover:border-nout-primary transition-colors"
+          >
+            <Truck className="w-5 h-5 text-nout-primary flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-nout-dark">
+                {aExpedier.length} commande{aExpedier.length > 1 ? 's' : ''} à expédier
+              </p>
+              <p className="text-xs text-gray-500">Génère et imprime l'étiquette, puis dépose ton colis.</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+          </Link>
+        )
+      })()}
+
       {/* ── RACCOURCIS RAPIDES ── */}
       <div className="grid grid-cols-2 gap-3 mb-8">
         <Link to="/publier" className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white"

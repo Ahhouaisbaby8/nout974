@@ -83,9 +83,10 @@ function OfferBubble({ offer, userId, busy, onRespond, onPay }) {
 
 // Carte « Achat effectué » — message système posé par le webhook Stripe à l'achat.
 // Centrée & sobre (accent teal discret), visible côté acheteur ET vendeur pour organiser la remise.
-function OrderCard({ msg }) {
+function OrderCard({ msg, toVentes }) {
   const listing = msg.listing
   const img = listing?.images?.[0]
+  const orderLink = toVentes ? '/commandes?tab=ventes' : '/commandes?tab=achats'
   return (
     <div className="flex justify-center my-1">
       <div className="w-full max-w-[88%] rounded-2xl border border-nout-primary/25 bg-white shadow-sm overflow-hidden">
@@ -105,6 +106,9 @@ function OrderCard({ msg }) {
             <p className="text-xs text-gray-500 mt-0.5 leading-snug">
               Paiement sécurisé. Organisez la remise ici.
             </p>
+            <Link to={orderLink} className="text-[11px] font-semibold text-nout-primary hover:underline mt-1 inline-block">
+              {toVentes ? 'Gérer ma vente' : 'Voir ma commande'} →
+            </Link>
           </div>
         </div>
       </div>
@@ -404,7 +408,7 @@ export default function Conversation() {
               )
             }
             const msg    = item.data
-            if (msg.type === 'order') return <OrderCard key={`m-${msg.id}`} msg={msg} />
+            if (msg.type === 'order') return <OrderCard key={`m-${msg.id}`} msg={msg} toVentes={user.id === msg.receiver_id} />
             const isMine = msg.sender_id === user.id
             return (
               <div key={`m-${msg.id}`} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>

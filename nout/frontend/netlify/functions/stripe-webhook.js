@@ -288,9 +288,9 @@ exports.handler = async (event) => {
                   </p>
 
                   <div style="text-align:center;margin-top:28px">
-                    <a href="${SITE_URL}/messages"
+                    <a href="${SITE_URL}/commandes?tab=ventes"
                        style="display:inline-block;background:linear-gradient(135deg,#0E7FAB,#00C4B4);color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px">
-                      Voir mes messages
+                      ${isLivraison ? 'Générer mon étiquette' : 'Voir ma vente'}
                     </a>
                   </div>
 
@@ -327,8 +327,10 @@ exports.handler = async (event) => {
             body: JSON.stringify({
               receiver_id: order.seller_id,
               title: '🎉 Tu as fait une vente — NOUT 974',
-              body: `Tu viens de vendre ${annonce?.title ?? 'un article'} pour ${prixVendeur} €`,
-              url: '/messages',
+              body: isLivraison
+                ? `Tu as vendu ${annonce?.title ?? 'un article'} pour ${prixVendeur} €. Génère ton étiquette dans « Mes ventes ».`
+                : `Tu viens de vendre ${annonce?.title ?? 'un article'} pour ${prixVendeur} €`,
+              url: '/commandes?tab=ventes',
             }),
           }).catch(err => console.error('send-push vendeur:', err.message))
         }
@@ -344,7 +346,9 @@ exports.handler = async (event) => {
         if (order.buyer_id) notifs.push({
           user_id: order.buyer_id, type: 'escrow_code',
           title: 'Paiement confirmé',
-          body: `Ton code de remise pour "${annonce?.title ?? 'ton article'}" t'a été envoyé par email`,
+          body: isLivraison
+            ? `Ton paiement pour "${annonce?.title ?? 'ton article'}" est sécurisé. Le vendeur va expédier ton colis.`
+            : `Ton code de remise pour "${annonce?.title ?? 'ton article'}" t'a été envoyé par email`,
           link: '/commandes?tab=achats',
         })
         if (notifs.length) {
