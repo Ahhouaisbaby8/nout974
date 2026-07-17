@@ -131,7 +131,7 @@ export default function AdminFinances() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { label: 'Volume total payé',              value: formatPrice(stats.paidTotal) },
-            { label: 'Commission NOUT (10% + 0,25€)',  value: formatPrice(stats.commission), color: 'text-green-600' },
+            { label: 'Commission NOUT (protection acheteur)',  value: formatPrice(stats.commission), color: 'text-green-600' },
             { label: 'Volume livré',                   value: formatPrice(stats.deliveredTotal) },
             { label: 'Ventes abouties',                value: stats.totalOrders },
           ].map(({ label, value, color }) => (

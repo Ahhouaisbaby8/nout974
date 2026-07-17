@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMyOrders } from '../services/orders'
 import { formatPrice, formatDate } from '../utils/formatters'
-import { SHIPPING_METHODS, trackingUrl } from '../utils/shipping'
+import { trackingUrl, orderDeliveryLabel } from '../utils/shipping'
 import Spinner from '../components/ui/Spinner'
 import EscrowConfirm from '../components/EscrowConfirm'
 import { supabase } from '../services/supabase'
@@ -614,9 +614,9 @@ export default function Orders() {
                         </p>
                       )}
                       <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
-                      {order.shipping_method && SHIPPING_METHODS[order.shipping_method] && (
+                      {orderDeliveryLabel(order) && (
                         <span className="inline-block mt-1 text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                          {order.shipping_method === 'hand' ? '' : ''} {SHIPPING_METHODS[order.shipping_method].label}
+                          {orderDeliveryLabel(order)}
                         </span>
                       )}
                     </div>

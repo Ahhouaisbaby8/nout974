@@ -74,6 +74,17 @@ export const getDeliveryFee = (id) => {
   return SHIPPING_METHODS[id]?.fee ?? 0
 }
 
+// Libellé de livraison EXACT d'une commande (bon transporteur). On lit d'abord `delivery_option`
+// (ex. 'ubn_relay' → « Point relais — UBN »). Sinon repli sur le mode générique `shipping_method`
+// (relay/home/hand) — MAIS ce repli mappe 'relay'/'home' sur les libellés Chronopost historiques :
+// à n'utiliser que pour les vieilles commandes sans delivery_option.
+export const orderDeliveryLabel = (order) => {
+  if (!order) return ''
+  const opt = order.delivery_option ? DELIVERY_OPTIONS.find((o) => o.id === order.delivery_option) : null
+  if (opt) return opt.label
+  return SHIPPING_METHODS[order.shipping_method]?.label ?? ''
+}
+
 // Port de livraison LE MOINS CHER (hors main propre gratuite) — pour l'affichage
 // « livraison à partir de X € ». Aujourd'hui : UBN point relais à 4 €.
 export const MIN_SHIPPING_FEE = Math.min(
