@@ -68,13 +68,15 @@ export default function Header() {
   return (
     <>
     <header
-      /* transition-colors (PAS transition-all) : animer backdrop-filter re-floute tout l'arrière-plan
-         à chaque frame pendant 300ms → micro-freeze au franchissement du hero (surtout à l'inversion
-         du scroll sur mobile). Le blur s'applique d'un coup, seules les couleurs sont animées (150ms). */
+      /* MOBILE = fond opaque, AUCUN backdrop-filter : un blur sur un élément fixed re-floute la bande
+         de contenu qui défile derrière lui à CHAQUE frame (primitive de scroll très coûteuse sur GPU
+         mobile) → c'était le micro-freeze résiduel, surtout à l'inversion du scroll. Le verre dépoli
+         (bg-white/70 + backdrop-blur) est réservé au DESKTOP via lg: (GPU costaud, pas de barre d'URL).
+         transition-colors (PAS transition-all) : on n'anime que les couleurs, jamais un filtre. */
       className={`fixed top-0 inset-x-0 z-50 transition-colors duration-150 ${
         light
           ? 'bg-transparent'
-          : 'bg-white/70 backdrop-blur-lg border-b border-white/40 shadow-nout-sm'
+          : 'bg-white/95 border-b border-gray-200/70 shadow-nout-sm lg:bg-white/70 lg:backdrop-blur-lg lg:border-white/40'
       }`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-3">

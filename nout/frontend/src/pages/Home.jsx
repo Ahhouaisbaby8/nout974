@@ -134,7 +134,7 @@ export default function Home() {
       {/* Plein écran immersif : la navbar fixe flotte par-dessus (padding-top réserve sa hauteur) */}
       <section
         ref={heroRef}
-        className="hero-sunset relative overflow-hidden flex items-center justify-center px-4 min-h-[100dvh] pt-16 pb-20 sm:pt-[calc(64px+env(safe-area-inset-top))] sm:pb-12"
+        className="hero-sunset relative overflow-hidden flex items-center justify-center px-4 min-h-[100svh] pt-16 pb-20 sm:pt-[calc(64px+env(safe-area-inset-top))] sm:pb-12"
       >
 
         {/* Lueur basse coucher de soleil */}
