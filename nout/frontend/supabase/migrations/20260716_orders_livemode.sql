@@ -1,0 +1,22 @@
+-- ================================================================
+-- NOUT — Marqueur test/réel sur les commandes (juillet 2026)
+-- À exécuter dans Supabase > SQL Editor. Idempotente — AUCUN risque.
+--
+-- Les paiements carte de TEST (4242) et les VRAIES ventes vivent dans la MÊME table orders
+-- → Admin/Finances compte les tests comme du réel. La distinction se fait à la main.
+-- stripe-webhook.js écrira désormais orders.livemode = stripeEvent.livemode au passage en
+-- 'paid' (false = mode test, true = paiement réel) : c'est Stripe qui fait autorité.
+--
+-- NULLABLE et SANS DEFAULT — VOLONTAIRE, ne pas « améliorer » :
+--   • DEFAULT false ferait passer les VRAIES ventes (CA juin/URSSAF, les 4 du 15/07 retirées
+--     en banque) pour des tests → elles disparaîtraient du CA ;
+--   • DEFAULT true ferait passer les tests carte 4242 pour du réel = le bug qu'on corrige.
+-- NULL = « mode inconnu ». L'historique se traite par un backfill EXPLICITE recoupé avec
+-- Stripe, jamais par un défaut.
+--
+-- Aucun GRANT ni policy à ajouter : le REVOKE UPDATE ON public.orders FROM anon,authenticated
+-- (20260705) est TABLE-level → il couvre les colonnes futures. Ne touche PAS
+-- orders_status_check (colonne booléenne, aucun rapport avec le statut).
+-- ================================================================
+
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS livemode boolean;
