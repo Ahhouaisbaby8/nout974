@@ -113,7 +113,10 @@ export default function CategoryPicker({ category, subcategory, onSelect, placeh
               </button>
             )}
 
-            <div className="overflow-y-auto overscroll-contain divide-y divide-gray-50">
+            {/* flex-1 + min-h-0 : occupe la hauteur restante du panneau et active vraiment le scroll
+                interne. Sans ça, sur mobile le bas d'une longue liste (ex. Mixte) dépasse hors écran
+                et le dernier item devient inatteignable. */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain divide-y divide-gray-50">
               {/* Résultats de recherche (aplatis) */}
               {results && (
                 results.length === 0 ? (
