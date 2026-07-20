@@ -32,12 +32,28 @@ const DESC_TEMPLATES = [
   'Remise en main propre possible',
 ]
 
+// Libellés lisibles pour les colonnes de `listings` (utilisé quand la base rejette un NOT NULL :
+// on nomme le champ concerné au lieu du message générique « champs obligatoires »).
+const COLONNE_LABEL = {
+  title: 'le titre', description: 'la description', category: 'la catégorie',
+  price: 'le prix', city: 'la ville', images: 'au moins une photo',
+  condition: "l'état de l'article", user_id: 'ta session (reconnecte-toi)',
+}
+
 const traduireErreur = (error) => {
   if (!error) return 'Une erreur est survenue.'
-  const msg = (error.message || error.toString()).toLowerCase()
+  const raw = error.message || error.toString()
+  const msg = raw.toLowerCase()
   if (msg.includes('listings_condition_check'))      return "L'état de l'article n'est pas valide."
   if (msg.includes('violates check constraint'))     return "Une valeur saisie n'est pas acceptée."
-  if (msg.includes('violates not-null constraint'))  return 'Merci de remplir tous les champs obligatoires.'
+  if (msg.includes('violates not-null constraint')) {
+    // Postgres précise la colonne : null value in column "xxx" violates not-null constraint
+    const col = raw.match(/column "([^"]+)"/i)?.[1]
+    const label = col && COLONNE_LABEL[col]
+    return label
+      ? `Il manque ${label}. Merci de le remplir avant de publier.`
+      : 'Merci de remplir tous les champs obligatoires.'
+  }
   if (msg.includes('duplicate key'))                 return 'Cette annonce existe déjà.'
   if (msg.includes('jwt expired') || msg.includes('not authenticated')) return 'Session expirée, merci de te reconnecter.'
   if (msg.includes('storage') || msg.includes('upload') || msg.includes('délai')) return "Erreur lors de l'upload photo. Réessaie."
@@ -198,23 +214,43 @@ export default function CreateListing() {
       const uploadTimeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Délai dépassé. Vérifie ta connexion et réessaie.')), 45_000)
       )
-      const imageUrls = await Promise.race([
+      // Upload résilient : une photo qui échoue (ex. capture d'écran dans un format que la
+      // compression n'a pas pu convertir → rejet de validateImageFile) ne doit PAS faire
+      // planter tout Promise.all avec un message trompeur. On capture l'échec par photo.
+      const results = await Promise.race([
         Promise.all(
           photos.map(async p => {
-            const compressed = await compressImage(p.file)
-            return uploadListingImage(compressed, user.id)
+            try {
+              const compressed = await compressImage(p.file)
+              return await uploadListingImage(compressed, user.id)
+            } catch (e) {
+              console.error('Upload photo échoué :', p.file?.name, p.file?.type, e?.message)
+              return null
+            }
           })
         ),
         uploadTimeout,
       ])
+      const imageUrls = results.filter(Boolean)
+
+      // Garde-fou : si AUCUNE photo n'a pu être envoyée, on arrête ici avec un message clair
+      // (sinon l'insert partirait avec images vides → la base rejette → « champs obligatoires »
+      // trompeur alors que le vrai souci, ce sont les photos, souvent des captures d'écran).
+      if (imageUrls.length === 0) {
+        setError("Tes photos n'ont pas pu être ajoutées (souvent le cas des captures d'écran). Réessaie avec une photo prise depuis l'appareil, ou une image JPEG/PNG.")
+        return
+      }
 
       const listing = await createListing({
         user_id:     user.id,
         title:       clean(title.trim()),
+        // description est NOT NULL en base ; on ne bloque pas dessus (facultatif côté UX) → chaîne vide si absente.
         description: clean(description.trim()),
         category,
         subcategory: subcategory || null,
-        condition:   condition || null,
+        // condition est NOT NULL en base. La Beauté ne demande pas d'état au vendeur (un cosmétique
+        // ne se décrit pas en neuf/porté) → on pose 'bon_etat' par défaut pour ne pas rejeter l'insert.
+        condition:   condition || 'bon_etat',
         price:       Number(price),
         city,
         images:      imageUrls,
@@ -237,7 +273,15 @@ export default function CreateListing() {
 
       navigate(`/annonce/${listing.id}`)
     } catch (err) {
-      console.error('CreateListing error:', err)
+      // Log détaillé pour diagnostiquer un rejet base (ex. NOT NULL) : quel champ part vide ?
+      // Aucune donnée sensible (juste la présence/absence des champs), visible en console.
+      console.error('CreateListing error:', err, {
+        champs: {
+          title: title.trim().length, description: description.trim().length,
+          category, subcategory, condition, price, city, photos: photos.length,
+          isFashion,
+        },
+      })
       setError(traduireErreur(err))
     } finally {
       setLoading(false)

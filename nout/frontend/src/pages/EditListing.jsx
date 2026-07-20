@@ -153,7 +153,8 @@ export default function EditListing() {
         description: clean(description.trim()),
         category,
         subcategory: subcategory || null,
-        condition:   condition || null,
+        // condition NOT NULL en base ; la Beauté n'a pas de sélecteur d'état → défaut 'bon_etat'.
+        condition:   condition || 'bon_etat',
         price:       Number(price),
         city,
         images:      imageUrls,
