@@ -24,7 +24,10 @@ const SITE_URL = process.env.URL || 'https://nout.re'
 
 // Codes événements Chronopost signifiant « livré » (doc §4.1). D = livraison effectuée ;
 // D1/D2/D6/D7 = variantes (boîte, pas de porte, QR, PIN) ; RG/RI = remis (gardien / au relais).
-const DELIVERED_CODES = new Set(['D', 'D1', 'D2', 'D6', 'D7', 'RG', 'RI', 'U', 'Y'])
+// DC = colis remis en point relais / consigne (code réellement renvoyé par le contrat Relais DOM
+//      974 : constaté sur un vrai colis reçu par le client, code XF522939473FR le 18/07). Sans lui,
+//      les livraisons en point relais restaient bloquées en 'shipped' → paiement vendeur jamais versé.
+const DELIVERED_CODES = new Set(['D', 'D1', 'D2', 'D6', 'D7', 'DC', 'RG', 'RI', 'U', 'Y'])
 
 // Interroge le suivi d'un colis. Renvoie le dernier code événement, ou null si indisponible.
 async function fetchLastEvent(trackingNumber) {
