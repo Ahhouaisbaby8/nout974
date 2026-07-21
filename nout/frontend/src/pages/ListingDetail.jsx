@@ -6,7 +6,7 @@ import { supabase } from '../services/supabase'
 import { sendMessage } from '../services/messages'
 import { createOffer } from '../services/offers'
 import { formatPrice, formatRelativeDate } from '../utils/formatters'
-import { CATEGORIES, CONDITIONS } from '../utils/categories'
+import { CATEGORIES, CONDITIONS, isContactCategory } from '../utils/categories'
 import { getAvatarUrl } from '../utils/avatar'
 import { Share2, Heart, MapPin, Eye, Ruler, Palette, Tag, Layers, Pencil, Trash2, CheckCircle2, CreditCard, MessageCircle, Link2, Flag, Search, Camera as CameraIcon, X, ChevronLeft, ChevronRight, Info } from 'lucide-react'
 import { isFavorite, addFavorite, removeFavorite } from '../services/favorites'
@@ -636,6 +636,29 @@ export default function ListingDetail() {
           ) : listing.is_sold ? (
             <div className="bg-gray-100 text-gray-500 text-center rounded-xl py-4 font-semibold">
               Cet article a déjà été vendu
+            </div>
+
+          /* Boutons — MISE EN RELATION (véhicule : pas de paiement NOUT, remise/contact en direct) */
+          ) : (listing.sale_mode === 'contact' || isContactCategory(listing.category, listing.subcategory)) ? (
+            <div className="flex flex-col gap-3 mt-2">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3">
+                <span className="font-semibold">Paiement et remise en direct avec le vendeur.</span> NOUT met en relation, mais ne gère pas le paiement en ligne pour cette annonce (véhicule).
+              </div>
+              {user ? (
+                <button
+                  onClick={() => navigate(`/messages/${seller?.id}?annonce=${id}`)}
+                  className="btn-primary w-full py-4 text-base"
+                >
+                  Contacter le vendeur
+                </button>
+              ) : (
+                <Link
+                  to={`/connexion?redirect=/annonce/${id}`}
+                  className="btn-primary w-full py-4 text-base text-center block"
+                >
+                  Contacter le vendeur
+                </Link>
+              )}
             </div>
 
           /* Boutons — VISITEUR */

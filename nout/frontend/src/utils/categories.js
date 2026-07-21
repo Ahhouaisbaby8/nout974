@@ -209,6 +209,35 @@ export const CATEGORIES = [
     ],
   },
   {
+    id: 'vehicules', label: 'Véhicules', navLabel: 'Véhicules',
+    // MISE EN RELATION uniquement : PAS de paiement NOUT (voir migration 20260721_listings_sale_mode).
+    // Le paiement + la remise se font en direct entre acheteur et vendeur (comme Leboncoin/LaCentrale).
+    // Le flag ci-dessous n'est qu'indicatif côté front : la source de vérité est listings.sale_mode
+    // (imposé par un trigger base) + la garde serveur dans create-checkout-session.js.
+    saleMode: 'contact',
+    sub: [
+      { id: 'vehic-voitures',    label: 'Voitures' },
+      { id: 'vehic-motos',       label: 'Motos & scooters' },
+      { id: 'vehic-utilitaires', label: 'Utilitaires & camions' },
+      { id: 'vehic-quads',       label: 'Quads & buggys' },
+      { id: 'vehic-nautisme',    label: 'Bateaux & jet-skis' },
+      { id: 'vehic-remorques',   label: 'Remorques' },
+      { id: 'vehic-autres',      label: 'Autres véhicules' },
+    ],
+  },
+  {
+    id: 'pieces-auto', label: 'Pièces & accessoires auto', navLabel: 'Pièces auto',
+    sub: [
+      { id: 'piece-jantes',      label: 'Jantes & pneus' },
+      { id: 'piece-interieur',   label: 'Sièges & intérieur' },
+      { id: 'piece-moteur',      label: 'Moteur & mécanique' },
+      { id: 'piece-carrosserie', label: 'Carrosserie & optiques' },
+      { id: 'piece-audio',       label: 'Audio & électronique' },
+      { id: 'piece-accessoires', label: 'Accessoires & équipement' },
+      { id: 'piece-autres',      label: 'Autres pièces' },
+    ],
+  },
+  {
     id: 'createurs', label: 'Fait main · Créateurs 974', navLabel: 'Créateurs',
     sub: [
       { id: 'crea-bijoux',       label: 'Bijoux & accessoires' },
@@ -380,3 +409,14 @@ export const findCategoryBySlug = (slug) => {
 
 // Tous les slugs racines (pour le sitemap / liens internes).
 export const ROOT_CATEGORY_SLUGS = CATEGORIES.map(c => c.id)
+
+// Annonce en « mise en relation » (PAS de paiement NOUT) = un VÉHICULE. Détection robuste : catégorie
+// racine 'vehicules', ou tout id véhicule 'vehic-*' (sous-catégorie / typo / casse). DOIT rester cohérent
+// avec le trigger SQL (20260721_listings_sale_mode) ET la garde serveur create-checkout-session.js.
+// NB : la source de vérité argent reste `listings.sale_mode` (base) + la garde serveur ; ce helper ne
+// sert qu'à l'affichage/redirection côté front.
+export const isContactCategory = (category, subcategory) => {
+  const norm = (s) => String(s ?? '').trim().toLowerCase()
+  const c = norm(category), s = norm(subcategory)
+  return c === 'vehicules' || c.startsWith('vehic-') || s.startsWith('vehic-')
+}

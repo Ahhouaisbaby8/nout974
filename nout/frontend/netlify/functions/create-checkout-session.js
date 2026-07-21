@@ -131,6 +131,22 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers, body: JSON.stringify({ error: 'Annonce introuvable.' }) }
     }
 
+    // ── GARDE « MISE EN RELATION » ── : les annonces véhicule ne passent JAMAIS par le paiement NOUT
+    // (frais Stripe démesurés + risque juridique d'intermédiaire de paiement régulé sur gros montants).
+    // sale_mode est imposé côté base par un trigger dérivé de la catégorie ; on re-teste ICI la catégorie
+    // NORMALISÉE (trim/lowercase) + la SOUS-catégorie 'vehic-*' → sûr même si la migration n'a pas encore
+    // tourné, et robuste à une casse/typo. Le plafond de montant plus bas est le filet INDÉPENDANT de la
+    // catégorie (contre une voiture mal catégorisée). Aucune commande / aucun code escrow créé ici.
+    const _norm = (s) => String(s ?? '').trim().toLowerCase()
+    const _cat = _norm(listing.category), _sub = _norm(listing.subcategory)
+    const isVehicleListing = _cat === 'vehicules' || _cat.startsWith('vehic-') || _sub.startsWith('vehic-')
+    if (listing.sale_mode === 'contact' || isVehicleListing) {
+      return { statusCode: 400, headers, body: JSON.stringify({
+        error: 'Cette annonce se règle en direct avec le vendeur (mise en relation). Contacte-le via la messagerie.',
+        code: 'contact_only',
+      }) }
+    }
+
     // Un vendeur ne peut pas acheter sa propre annonce
     if (listing.user_id === buyerId) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Tu ne peux pas acheter ta propre annonce.' }) }
@@ -213,6 +229,19 @@ exports.handler = async (event) => {
     // AVANT de créer la commande/le code escrow pour ne pas laisser de commande orpheline.
     if (Number(prixArticle) < 1) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Cet article ne s\'achète pas en ligne (offert ou prix sous 1 €). Contacte le vendeur pour organiser la remise.' }) }
+    }
+    // ── PLAFOND DE PAIEMENT EN LIGNE (filet INDÉPENDANT de la catégorie) ── : borne l'exposition NOUT
+    // sur les gros montants (risque juridique « intermédiaire de paiement régulé » + gel Stripe). C'est
+    // le vrai garde-fou contre une VOITURE mal catégorisée : le cap client (50 000 €) est contournable
+    // par un insert brut, celui-ci est SERVEUR. Au-delà → remise/paiement en direct avec le vendeur.
+    // Montant fixé par le user (21/07) : borne l'exposition NOUT par transaction, sans bloquer les ventes
+    // légit haut de gamme. Le relever/baisser = 1 seule ligne ici.
+    const MAX_ONLINE_PAYMENT_EUR = 10000
+    if (Number(prixArticle) > MAX_ONLINE_PAYMENT_EUR) {
+      return { statusCode: 400, headers, body: JSON.stringify({
+        error: `Le paiement en ligne NOUT est plafonné à ${MAX_ONLINE_PAYMENT_EUR} €. Pour un montant supérieur, contacte le vendeur pour organiser la remise en direct.`,
+        code: 'amount_too_high',
+      }) }
     }
     // Modèle protection acheteur : total acheteur = prix + protection (10%+0,25€) + port + tampon frais
     // Stripe sur le port. Versement vendeur = le PRIX PLEIN (les frais sont payés par l'acheteur).

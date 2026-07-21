@@ -10,6 +10,7 @@ import {
   computeBuyerTotal, computeBuyerProtection,
 } from '../utils/shipping'
 import { REUNION_COMMUNES, REUNION_CP, sortRelaysByProximity } from '../utils/communes974'
+import { isContactCategory } from '../utils/categories'
 import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck, Info } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { thumbUrl } from '../utils/image'
@@ -87,6 +88,9 @@ export default function Checkout() {
     getListingById(id)
       .then((l) => {
         if (!l || l.is_sold) { setNotFound(true); return }
+        // Véhicule = mise en relation (pas de paiement NOUT) → pas de page commande. On renvoie sur la
+        // fiche (où le bouton « Contacter le vendeur » s'affiche). La garde serveur refuse de toute façon.
+        if (l.sale_mode === 'contact' || isContactCategory(l.category, l.subcategory)) { navigate(`/annonce/${id}`); return }
         setListing(l)
       })
       .catch(() => setNotFound(true))
