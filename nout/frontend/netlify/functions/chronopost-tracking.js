@@ -29,7 +29,11 @@ const SITE_URL = process.env.URL || 'https://nout.re'
 //      les livraisons en point relais restaient bloquées en 'shipped' → paiement vendeur jamais versé.
 const DELIVERED_CODES = new Set(['D', 'D1', 'D2', 'D6', 'D7', 'DC', 'RG', 'RI', 'U', 'Y'])
 
-// Interroge le suivi d'un colis. Renvoie le dernier code événement, ou null si indisponible.
+// Interroge le suivi d'un colis. Renvoie { code (courant), date, deliveredEvent } — ou null si indispo.
+// deliveredEvent = un événement de LIVRAISON trouvé N'IMPORTE OÙ dans l'historique (pas seulement le
+// dernier). Crucial : après la remise (ex. DC en point relais), Chronopost peut ajouter un événement
+// plus récent NON livré → l'événement « courant » ne serait plus DC et la livraison passerait inaperçue,
+// bloquant le paiement du vendeur (bug constaté sur XF522939473FR / commande d'Evin, restée shipped).
 async function fetchLastEvent(trackingNumber) {
   const inner = buildTags({ language: 'fr_FR', skybillNumber: trackingNumber })
   const xml = await soapCall('tracking', 'trackSkybillV2', inner)
@@ -42,7 +46,9 @@ async function fetchLastEvent(trackingNumber) {
   if (!events.length) return null
   // On retient l'événement « courant » (highPriority) sinon le dernier lu.
   const current = events.find((e) => e.high) || events[events.length - 1]
-  return current
+  // … MAIS on scanne TOUT l'historique pour un code de livraison (le 1er trouvé fait foi).
+  const deliveredEvent = events.find((e) => DELIVERED_CODES.has(e.code)) || null
+  return { code: current.code, date: current.date, deliveredEvent }
 }
 
 exports.handler = async (event) => {
@@ -91,11 +97,14 @@ exports.handler = async (event) => {
         await supabase.from('orders').update({ chronopost_status: last.code }).eq('id', order.id)
       }
 
-      if (!DELIVERED_CODES.has(last.code)) continue
+      // Livraison = un code livré trouvé N'IMPORTE OÙ dans l'historique (pas seulement l'événement
+      // courant) → on ne rate plus une remise « enterrée » sous un événement plus récent.
+      const delivEvent = last.deliveredEvent
+      if (!delivEvent) continue
 
       // ── LIVRÉ ── : shipped → delivered + delivered_at. Transition atomique (rowcount).
       // On ne verse RIEN ici : le cron paiement libère après la fenêtre de 48h.
-      const deliveredAt = last.date ? new Date(last.date).toISOString() : new Date().toISOString()
+      const deliveredAt = delivEvent.date ? new Date(delivEvent.date).toISOString() : new Date().toISOString()
       const { data: updated, error: updErr } = await supabase
         .from('orders')
         .update({ status: 'delivered', delivered_at: deliveredAt })
