@@ -44,10 +44,14 @@ export default function CategoryPicker({ category, subcategory, onSelect, placeh
     if (!open) return
     const onKey = (e) => { if (e.key === 'Escape') close() }
     window.addEventListener('keydown', onKey)
+    // Sauver puis RESTAURER la valeur précédente (au lieu de forcer ''), sinon un mauvais
+    // ordre de démontage peut laisser body.overflow = 'hidden' → toute la page reste figée
+    // (les champs du bas du formulaire deviennent inatteignables sur mobile). Cf. MobileMenu.
+    const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      document.body.style.overflow = prevOverflow
     }
   }, [open])
 

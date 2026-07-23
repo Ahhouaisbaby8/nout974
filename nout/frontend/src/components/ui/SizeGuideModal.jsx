@@ -27,7 +27,7 @@ export default function SizeGuideModal({ open, onClose }) {
           </button>
         </div>
 
-        <div className="px-5 py-4 overflow-y-auto">
+        <div className="flex-1 min-h-0 px-5 py-4 overflow-y-auto">
           <p className="text-[13px] text-gray-500 leading-relaxed mb-4">
             Les tailles ne sont pas standardisées d'une marque à l'autre. Sers-toi de ce guide comme repère —
             en cas de doute, fie-toi à l'étiquette de l'article.
