@@ -35,6 +35,13 @@ Vérifié dans Netlify > Logs & metrics > Functions : `chronopost-tracking`, `re
 
 ---
 
+## 6. SCROLL INFINI sur /recherche (commit 2532d05) — mobile-first
+- Objectif : rendre le scroll addictif (les gens seront surtout sur mobile) façon Vinted/Insta/TikTok.
+- Le bouton « Voir plus d'annonces » de Search.jsx est remplacé par un **chargement automatique** via `IntersectionObserver` : une sentinelle (`sentinelRef`) en bas de liste + `rootMargin: '600px'` → on précharge la page suivante AVANT d'atteindre le bas (flux fluide, jamais de trou). Garde `!loading && !loadingMore` + `hasMore` (listings.length < total) pour ne pas boucler.
+- Indicateur « Chargement de nouvelles annonces… » (Spinner) + message de fin « Tu as vu toutes les annonces. Reviens vite, ça bouge tous les jours ! » + lien de secours « Voir plus » (si observer indispo).
+- **Décision produit** : l'ACCUEIL reste une VITRINE — les 30 nouveautés + « Acheter par prix » + « Comment ça marche » sont GARDÉS, le bouton « Voir tout » mène à /recherche. SEULE /recherche a le scroll infini. Ne touche pas l'accueil, ni l'argent, ni les données.
+- ⚠️ Effet de bord mineur connu : sur mobile avec scroll infini, le footer devient dur à atteindre → les liens légaux restent accessibles via le menu burger (ok).
+
 ## Rappels critiques (inchangés)
 - Money-sensitive : diff + revue + OK explicite avant push. `node --check` / build avant push sensible.
 - Le versement vendeur reste conditionné à l'activation des paiements (identité + IBAN). Sinon → payout_pending.
