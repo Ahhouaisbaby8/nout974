@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getListings } from '../services/listings'
@@ -38,6 +38,7 @@ export default function Search() {
   const [loading,   setLoading]   = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [favIds,    setFavIds]    = useState(new Set())
+  const sentinelRef = useRef(null)   // repère en bas de liste : déclenche le chargement auto (scroll infini)
 
   const buildParams = useCallback(() => ({
     search:   query    || undefined,
@@ -81,6 +82,22 @@ export default function Search() {
       setLoadingMore(false)
     }
   }, [buildParams, page])
+
+  // Scroll infini : dès que la sentinelle (fin de liste) entre dans le viewport, on charge la suite.
+  // rootMargin 600px → on précharge AVANT d'atteindre le bas (flux fluide, jamais de « trou »).
+  const hasMore = listings.length < total
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasMore) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && !loading) runSearch(false)
+      },
+      { rootMargin: '600px 0px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [hasMore, loadingMore, loading, runSearch])
 
   useEffect(() => {
     if (!user) { setFavIds(new Set()); return }
@@ -327,16 +344,31 @@ export default function Search() {
             {listings.map(l => <ListingCard key={l.id} listing={l} isFavorited={favIds.has(l.id)} />)}
           </div>
 
-          {listings.length < total && (
-            <div className="text-center mt-8">
-              <button
-                onClick={() => runSearch(false)}
-                disabled={loadingMore}
-                className="btn-secondary px-10"
-              >
-                {loadingMore ? 'Chargement…' : 'Voir plus d\'annonces'}
-              </button>
+          {/* Sentinelle du scroll infini : l'IntersectionObserver la surveille pour charger la suite
+              automatiquement quand on approche du bas. On montre le chargement, ou un bouton de secours
+              (rare : observer indisponible / très vieux navigateur) pour ne jamais bloquer l'accès. */}
+          {hasMore && (
+            <div ref={sentinelRef} className="mt-8 flex flex-col items-center gap-3">
+              {loadingMore ? (
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Spinner /> Chargement de nouvelles annonces…
+                </div>
+              ) : (
+                <button
+                  onClick={() => runSearch(false)}
+                  className="text-sm text-gray-400 hover:text-nout-primary transition-colors"
+                >
+                  Voir plus d'annonces
+                </button>
+              )}
             </div>
+          )}
+
+          {/* Fin du flux : petit repère quand on a tout vu (évite l'impression de « bug ») */}
+          {!hasMore && listings.length > PER_PAGE && (
+            <p className="text-center text-sm text-gray-400 mt-10 mb-2">
+              Tu as vu toutes les annonces. Reviens vite, ça bouge tous les jours&nbsp;!
+            </p>
           )}
         </>
       )}
