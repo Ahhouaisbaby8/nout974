@@ -15,7 +15,7 @@ import BackButton from '../components/ui/BackButton'
 import ReportModal from '../components/ui/ReportModal'
 import { resolveFounder, FounderRing } from '../components/ui/FounderBadge'
 import CreatorBadge from '../components/ui/CreatorBadge'
-import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCounts } from '../services/follow'
+import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCounts, getFollowers, getFollowing } from '../services/follow'
 import { getPublicSellerStats } from '../services/sellerStats'
 import { blockUser, unblockUser, isBlocked } from '../services/blocks'
 import ConfirmModal from '../components/ui/ConfirmModal'
@@ -37,6 +37,18 @@ export default function Profile() {
   const [followBusy, setFollowBusy] = useState(false)   // requête en cours
   const [counts, setCounts] = useState({ followers: 0, following: 0 })
   const [nbVentes, setNbVentes] = useState(0)
+  // Modal liste abonnés/abonnements : { type: 'followers'|'following', loading, users } ou null
+  const [followList, setFollowList] = useState(null)
+
+  const openFollowList = async (type) => {
+    setFollowList({ type, loading: true, users: [] })
+    try {
+      const users = type === 'followers' ? await getFollowers(id) : await getFollowing(id)
+      setFollowList({ type, loading: false, users })
+    } catch {
+      setFollowList({ type, loading: false, users: [] })
+    }
+  }
   const [blocked, setBlocked]           = useState(false)   // j'ai bloqué ce membre ?
   const [blockBusy, setBlockBusy]       = useState(false)
   const [showBlockConfirm, setShowBlockConfirm] = useState(false)
@@ -371,16 +383,28 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* ── MINI-STATS ── */}
-      <div className="grid grid-cols-4 gap-3 mt-4">
+      {/* ── MINI-STATS ── (abonnés & abonnements cliquables → liste des vitrines) */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{nbVentes}</p>
           <p className="text-[11px] text-nout-muted mt-1">vente{nbVentes !== 1 ? 's' : ''}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+        <button
+          type="button"
+          onClick={() => openFollowList('followers')}
+          className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition-shadow"
+        >
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.followers}</p>
           <p className="text-[11px] text-nout-muted mt-1">abonné{counts.followers !== 1 ? 's' : ''}</p>
-        </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => openFollowList('following')}
+          className="bg-white rounded-xl p-4 shadow-sm text-center hover:shadow-md transition-shadow"
+        >
+          <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{counts.following}</p>
+          <p className="text-[11px] text-nout-muted mt-1">abonnement{counts.following !== 1 ? 's' : ''}</p>
+        </button>
         <div className="bg-white rounded-xl p-4 shadow-sm text-center">
           <p className="text-lg sm:text-2xl font-extrabold text-[#1A3A8F]">{listings.length}</p>
           <p className="text-[11px] text-nout-muted mt-1">annonce{listings.length !== 1 ? 's' : ''}</p>
@@ -480,6 +504,50 @@ export default function Profile() {
       {blockErr && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] bg-red-500 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-xl pointer-events-none">
           Action impossible pour le moment. Réessaie.
+        </div>
+      )}
+
+      {/* Modal liste des abonnés / abonnements */}
+      {followList && (
+        <div className="fixed inset-0 z-[70] bg-black/50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setFollowList(null)}>
+          <div
+            className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[80dvh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <h3 className="font-title font-bold text-nout-texte">
+                {followList.type === 'followers' ? 'Abonnés' : 'Abonnements'}
+              </h3>
+              <button type="button" onClick={() => setFollowList(null)} aria-label="Fermer" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-50 text-2xl leading-none">×</button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2">
+              {followList.loading ? (
+                <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>
+              ) : followList.users.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  {followList.type === 'followers' ? 'Aucun abonné pour le moment.' : 'Aucun abonnement pour le moment.'}
+                </p>
+              ) : (
+                followList.users.map((u) => (
+                  <Link
+                    key={u.id}
+                    to={`/profil/${u.id}`}
+                    onClick={() => setFollowList(null)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#F5F8FF] transition-colors"
+                  >
+                    {u.avatar_url ? (
+                      <img src={u.avatar_url} alt={u.username} className="w-10 h-10 rounded-full object-cover border border-gray-100" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-nout-roi text-white flex items-center justify-center text-sm font-bold">
+                        {u.username?.[0]?.toUpperCase() ?? '?'}
+                      </div>
+                    )}
+                    <span className="font-semibold text-sm text-nout-dark">{u.username ?? 'Utilisateur'}</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -66,3 +66,27 @@ export const getFollowCounts = async (userId) => {
     following: followingRes.count ?? 0,
   }
 }
+
+// LISTE des abonnés de ce profil (les personnes qui LE suivent) — avec pseudo + avatar.
+export const getFollowers = async (userId) => {
+  if (!userId) return []
+  const { data, error } = await supabase
+    .from('follows')
+    .select('follower:profiles!follower_id(id, username, avatar_url)')
+    .eq('following_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []).map((r) => r.follower).filter(Boolean)
+}
+
+// LISTE des abonnements de ce profil (les personnes qu'IL suit) — avec pseudo + avatar.
+export const getFollowing = async (userId) => {
+  if (!userId) return []
+  const { data, error } = await supabase
+    .from('follows')
+    .select('following:profiles!following_id(id, username, avatar_url)')
+    .eq('follower_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []).map((r) => r.following).filter(Boolean)
+}
