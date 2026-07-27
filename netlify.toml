@@ -42,6 +42,12 @@
 [functions."ubn-tracking"]
   schedule = "30 * * * *"
 
+# Cron : veille sante NOUT (alerte admin). 1x/jour a 8h. Detecte vendeurs bloques (livre > 3j non verse),
+# comptes de paiement non actives, colis coinces (> 10j non livres) et envoie UN mail recap a contact@nout.re
+# s'il y a quelque chose a regarder (aucun mail sinon). Lecture seule, ne modifie rien, ne touche pas l'argent.
+[functions."admin-health-check"]
+  schedule = "0 8 * * *"
+
 # Callback statut UBN (doc API Distant v4.6 §11-14) : le HUB UBN POST le changement de statut d'une
 # livraison sur le chemin canonique du doc. On le route vers la fonction ubn-status-sync (statut 200 =
 # rewrite transparent, l'URL reste /wp-json/...). Le HUB peut donc utiliser soit ce chemin, soit l'URL
