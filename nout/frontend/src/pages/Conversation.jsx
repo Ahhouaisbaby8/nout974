@@ -125,6 +125,7 @@ export default function Conversation() {
   const navigate = useNavigate()
   const scrollContainerRef = useRef(null)
   const isInitialLoad = useRef(true)
+  const textareaRef = useRef(null)   // zone de saisie : s'agrandit avec le contenu (façon WhatsApp)
 
   const [otherUser, setOtherUser]       = useState(null)
   const [messages, setMessages]         = useState([])
@@ -137,6 +138,14 @@ export default function Conversation() {
   const [msgError, setMsgError] = useState('')
   const [offers, setOffers]       = useState([])
   const [offerBusy, setOfferBusy] = useState(null)   // id de l'offre en cours de traitement
+
+  // Auto-agrandissement de la zone de saisie : la hauteur suit le contenu (jusqu'à max-h, puis scroll).
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    ta.style.height = 'auto'                       // reset pour mesurer le vrai contenu
+    ta.style.height = `${ta.scrollHeight}px`       // puis on colle à la hauteur du texte
+  }, [content])
 
   // ── Bug 1 fix : scroll limité au conteneur, jamais sur le body ──
   const scrollToBottom = useCallback((behavior = 'instant') => {
@@ -457,6 +466,7 @@ export default function Conversation() {
         className="bg-white border-t border-nout-border px-4 py-3 flex gap-3 items-end flex-shrink-0"
       >
         <textarea
+          ref={textareaRef}
           rows={1}
           placeholder="Écris ton message..."
           value={content}
@@ -464,7 +474,7 @@ export default function Conversation() {
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e) }
           }}
-          className="flex-1 input-field resize-none py-2.5 max-h-32"
+          className="flex-1 input-field resize-none py-2.5 max-h-40 overflow-y-auto"
         />
         <button
           type="submit"
