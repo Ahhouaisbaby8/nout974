@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
-import { releasePayouts } from '../../lib/adminApi'
+import { listPendingPayouts, payPendingPayouts } from '../../lib/adminApi'
+
+const formatPrice = (n) => `${Number(n ?? 0).toFixed(2)} €`
 
 const StatCard = ({ icon, label, value, to, color = 'text-nout-primary' }) => (
   <Link to={to} className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow block">
@@ -17,19 +19,53 @@ const StatCard = ({ icon, label, value, to, color = 'text-nout-primary' }) => (
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({})
-  const [payout, setPayout] = useState({ loading: false, msg: '', error: '', details: [] })
+  // Paiements vendeurs en attente : liste + sélection (cases à cochées) + résultat.
+  const [pending, setPending]   = useState([])          // commandes à verser
+  const [selected, setSelected] = useState(new Set())    // orderIds cochés
+  const [loadingList, setLoadingList] = useState(true)
+  const [paying, setPaying]     = useState(false)
+  const [result, setResult]     = useState({ msg: '', error: '', details: [] })
 
-  const handleReleasePayouts = async () => {
-    if (payout.loading) return
-    setPayout({ loading: true, msg: '', error: '', details: [] })
+  const loadPending = useCallback(async () => {
+    setLoadingList(true)
+    setResult({ msg: '', error: '', details: [] })
     try {
-      const res = await releasePayouts()
-      const msg = res.released > 0
-        ? `${res.released} vendeur(s) payé(s) ✅${res.skipped ? ` · ${res.skipped} ignoré(s)` : ''}${res.errors ? ` · ${res.errors} erreur(s)` : ''}`
-        : (res.message || 'Aucun paiement en attente à verser.')
-      setPayout({ loading: false, msg, error: '', details: res.details ?? [] })
+      const items = await listPendingPayouts()
+      setPending(items)
+      // Par défaut, on coche uniquement les vendeurs qui ONT un compte (versables).
+      setSelected(new Set(items.filter(i => i.compte).map(i => i.orderId)))
     } catch (e) {
-      setPayout({ loading: false, msg: '', error: e.message || 'Erreur lors du versement.', details: [] })
+      setResult({ msg: '', error: e.message || 'Impossible de charger les paiements.', details: [] })
+    } finally {
+      setLoadingList(false)
+    }
+  }, [])
+
+  useEffect(() => { loadPending() }, [loadPending])
+
+  const toggle = (orderId) => setSelected((cur) => {
+    const next = new Set(cur)
+    next.has(orderId) ? next.delete(orderId) : next.add(orderId)
+    return next
+  })
+
+  const totalSelectionne = pending
+    .filter(i => selected.has(i.orderId))
+    .reduce((s, i) => s + Number(i.montant ?? 0), 0)
+
+  const handlePaySelected = async () => {
+    if (paying || selected.size === 0) return
+    setPaying(true)
+    setResult({ msg: '', error: '', details: [] })
+    try {
+      const res = await payPendingPayouts([...selected])
+      const msg = `${res.released} vendeur(s) payé(s) ✅${res.skipped ? ` · ${res.skipped} ignoré(s)` : ''}${res.errors ? ` · ${res.errors} erreur(s)` : ''}`
+      setResult({ msg, error: '', details: res.details ?? [] })
+      await loadPending()   // recharge la liste (les payés disparaissent)
+    } catch (e) {
+      setResult({ msg: '', error: e.message || 'Erreur lors du versement.', details: [] })
+    } finally {
+      setPaying(false)
     }
   }
 
@@ -64,30 +100,106 @@ export default function AdminDashboard() {
         <StatCard icon="" label="Signalements"      value={stats.reports}  to="/admin/signalements" color={stats.reports > 0 ? 'text-red-500' : 'text-nout-primary'} />
       </div>
 
-      {/* Versement à la demande : verse les vendeurs en attente (livrés + délai écoulé). Filet quand
-          le cron de versement automatique ne s'exécute pas. Réservé admin, versement idempotent. */}
+      {/* Paiements vendeurs : liste + sélection. L'admin VOIT tout et CHOISIT qui payer (argent = contrôle
+          humain). Filet quand le cron de versement ne s'exécute pas. Versement idempotent (jamais 2×). */}
       <div className="bg-white rounded-xl p-5 shadow-sm mb-8">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
           <div>
-            <h2 className="font-bold text-nout-dark">Paiements vendeurs</h2>
+            <h2 className="font-bold text-nout-dark">Paiements vendeurs en attente</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              Verse les vendeurs dont le colis est livré et le délai de protection écoulé.
+              Colis livrés, délai de protection écoulé. Coche qui tu veux payer, puis verse.
             </p>
           </div>
           <button
-            onClick={handleReleasePayouts}
-            disabled={payout.loading}
-            className="px-6 py-3 rounded-xl text-white text-sm font-semibold disabled:opacity-60 whitespace-nowrap"
-            style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}
+            onClick={loadPending}
+            disabled={loadingList || paying}
+            className="text-sm text-gray-400 hover:text-nout-primary transition-colors"
           >
-            {payout.loading ? 'Versement en cours…' : 'Verser les paiements en attente'}
+            ↻ Rafraîchir
           </button>
         </div>
-        {payout.msg && <p className="text-sm text-green-600 mt-3 font-medium">{payout.msg}</p>}
-        {payout.error && <p className="text-sm text-red-500 mt-3">{payout.error}</p>}
-        {payout.details?.length > 0 && (
+
+        {loadingList ? (
+          <p className="text-sm text-gray-400 py-4">Chargement…</p>
+        ) : pending.length === 0 ? (
+          <p className="text-sm text-gray-500 py-4">Aucun paiement en attente. Tout est à jour ✅</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-gray-400 text-left border-b border-gray-100">
+                    <th className="py-2 pr-2 w-8"></th>
+                    <th className="py-2 pr-3 font-medium">Vendeur</th>
+                    <th className="py-2 pr-3 font-medium">Article</th>
+                    <th className="py-2 pr-3 font-medium text-right">Montant</th>
+                    <th className="py-2 pr-3 font-medium">Compte de paiement</th>
+                    <th className="py-2 pr-3 font-medium">Livré</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pending.map((it) => {
+                    const noCompte = !it.compte
+                    return (
+                      <tr key={it.orderId} className={`border-b border-gray-50 ${noCompte ? 'opacity-70' : ''}`}>
+                        <td className="py-2.5 pr-2">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(it.orderId)}
+                            disabled={noCompte}
+                            onChange={() => toggle(it.orderId)}
+                            className="w-4 h-4 accent-nout-primary cursor-pointer disabled:cursor-not-allowed"
+                          />
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          <div className="font-semibold text-nout-dark">{it.vendeur}</div>
+                          <div className="text-[11px] text-gray-400">{it.email}</div>
+                        </td>
+                        <td className="py-2.5 pr-3 text-gray-600">{it.article}</td>
+                        <td className="py-2.5 pr-3 text-right font-semibold text-nout-dark tabular-nums">
+                          {it.montant != null ? formatPrice(it.montant) : '—'}
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          {noCompte ? (
+                            <span className="text-[11px] font-semibold text-red-500">⚠ Compte non activé — argent bloqué</span>
+                          ) : (
+                            <span className="text-[11px] text-gray-400 font-mono">{String(it.compte).slice(0, 14)}…</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-3 text-gray-500 whitespace-nowrap">
+                          {it.joursDepuisLivraison != null
+                            ? (it.joursDepuisLivraison === 0 ? "aujourd'hui" : `il y a ${it.joursDepuisLivraison} j`)
+                            : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 flex-wrap mt-4 pt-3 border-t border-gray-100">
+              <p className="text-sm text-gray-600">
+                <strong>{selected.size}</strong> sélectionné(s) · total à verser :{' '}
+                <strong className="text-nout-dark">{formatPrice(totalSelectionne)}</strong>
+              </p>
+              <button
+                onClick={handlePaySelected}
+                disabled={paying || selected.size === 0}
+                className="px-6 py-3 rounded-xl text-white text-sm font-semibold disabled:opacity-60 whitespace-nowrap"
+                style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}
+              >
+                {paying ? 'Versement en cours…' : `Verser les ${selected.size} sélectionné(s)`}
+              </button>
+            </div>
+          </>
+        )}
+
+        {result.msg && <p className="text-sm text-green-600 mt-3 font-medium">{result.msg}</p>}
+        {result.error && <p className="text-sm text-red-500 mt-3">{result.error}</p>}
+        {result.details?.length > 0 && (
           <ul className="mt-2 text-sm text-gray-600 list-disc list-inside space-y-0.5">
-            {payout.details.map((d, i) => <li key={i}>{d}</li>)}
+            {result.details.map((d, i) => <li key={i}>{d}</li>)}
           </ul>
         )}
       </div>
