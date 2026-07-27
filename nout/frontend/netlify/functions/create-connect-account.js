@@ -85,13 +85,21 @@ exports.handler = async (event) => {
 
     let accountId = profile?.stripe_account_id
 
-    // AUTO-RÉPARATION 1 : si l'ID stocké ne correspond plus à un compte Stripe existant → on repart de zéro.
+    // AUTO-RÉPARATION 1 : si l'ID stocké ne correspond plus à un compte Stripe VALIDE de la plateforme
+    // → on repart de zéro. Couvre 404 (resource_missing) ET account_invalid / not-connected / revoked
+    // (compte mort : même logique que connect-kyc-status). Ça évite de garder un ID mort et de retenter
+    // en vain. Une vraie erreur transitoire (Stripe down) garde l'ID et laisse accountLinks.create tenter.
     if (accountId) {
       try {
         await stripe.accounts.retrieve(accountId)
       } catch (e) {
-        if (e?.code === 'resource_missing' || e?.statusCode === 404) {
-          console.warn(`[connect] stripe_account_id ${accountId} invalide → recréation`)
+        const dead =
+          e?.code === 'resource_missing' ||
+          e?.statusCode === 404 ||
+          e?.code === 'account_invalid' ||
+          /not connected to your platform|does not exist|No such account|access may have been revoked/i.test(String(e?.message ?? ''))
+        if (dead) {
+          console.warn(`[connect] stripe_account_id ${accountId} mort (${e?.code || e?.message}) → recréation`)
           accountId = null
           await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', userId)
         } else {
