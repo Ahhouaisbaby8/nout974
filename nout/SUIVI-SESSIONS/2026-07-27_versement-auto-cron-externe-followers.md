@@ -64,7 +64,32 @@ attente »** ✅. Le mécanisme complet tourne désormais seul.
   aussi si besoin (auto-refund, sweep-wallets, chronopost-tracking tournent, eux — à confirmer par les logs).
 - URL secrète + clé `PAYOUT_CRON_KEY` = à NE PAS mettre sur GitHub (elle vit uniquement dans Netlify + cron-job.org).
 
+## 🔎 Filtres de recherche façon Vinted (Search.jsx)
+CONSTAT : les filtres existaient DÉJÀ et marchaient (côté écran ET côté données listings.js :
+taille/couleur/matière/marque/prix/état/sous-catégorie tous branchés). Le vrai chantier = l'EXPÉRIENCE.
+- **Puces de filtres actifs** sous la barre : chaque filtre posé = pastille teal, retrait d'un clic
+  (croix) + « Tout effacer ». Prix min/max regroupé en UNE puce (« Moins de 30 € », « 10 – 50 € »).
+- **Filtres rapides** toujours visibles (Taille / Prix / État / Tri) quand le panneau est fermé →
+  ouvrent le panneau complet. Passent en teal quand actifs.
+- Avant : une fois le panneau refermé, on ne voyait plus ce qu'on avait filtré → l'acheteur se perdait.
+- Maquette validée par Amandine avant implémentation. Commit `d02959b`.
+
+## 🌱 Nouvelle catégorie « Jardin & plantes » (categories.js + CategoryIcon.jsx)
+Suite au constat : une vendeuse (Saint-Philippe) met déjà des plantes en vente (Davallia, Dracaena,
+Philodendron…) sans catégorie dédiée.
+- Catégorie `jardin-plantes` (navLabel « Jardin »), 9 sous-cat : plantes intérieur/extérieur, cactus &
+  succulentes, fruitiers & aromatiques, graines & boutures, pots & jardinières, outils, déco, autres.
+- Icône `Sprout`. Apparaît AUTO partout (nav desktop/mobile, picker publication, footer — tout est
+  généré depuis CATEGORIES). Non-fashion → pas de taille, le vendeur précise juste l'état.
+- Commit `989d339`.
+- ⚠️ À NOTER : les plantes déjà en ligne ont été publiées dans une AUTRE catégorie → elles ne
+  basculent pas toutes seules dans « Jardin ». À rééditer par la vendeuse, ou rebascule SQL possible
+  plus tard (non bloquant).
+
 ## Commits clés
 - `6c763c0` création `cron-payouts.js`
 - `a41b598` redéploiement pour activer `PAYOUT_CRON_KEY`
+- `677317d` doc suivi session
+- `d02959b` filtres recherche façon Vinted (puces + filtres rapides)
+- `989d339` catégorie Jardin & plantes
 - (+ commits followers, textarea, admin payouts, auto-repair — voir git log)
