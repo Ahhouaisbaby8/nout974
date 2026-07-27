@@ -24,8 +24,26 @@ const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { releaseSellerPayout } = require('./_payout')
 
-const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+// Init « paresseuse » de Stripe : `new Stripe(undefined)` JETTE au chargement du module (« Neither
+// apiKey provided ») → la fonction planifiée mourrait AVANT de logger, silencieusement (0 log). On
+// initialise donc Stripe à l'exécution, avec garde. Robuste même si la clé manque ponctuellement.
+let _stripe = null
+const getStripe = () => {
+  if (_stripe) return _stripe
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY absente')
+  _stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  return _stripe
+}
+// Idem pour Supabase : createClient(undefined) jette « supabaseUrl is required » au chargement.
+// Init paresseuse → le module se charge TOUJOURS, la fonction planifiée démarre et log, même si une
+// variable manque (on renverra alors une erreur propre au lieu d'un crash silencieux à 0 log).
+let _supabase = null
+const getSupabase = () => {
+  if (_supabase) return _supabase
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) throw new Error('Config Supabase absente')
+  _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  return _supabase
+}
 const SITE_URL = process.env.URL || 'https://nout.re'
 
 // Délai de protection acheteur après livraison constatée (choix commercial NOUT).
@@ -55,6 +73,12 @@ exports.handler = async (event) => {
   }
 
   console.log('💰 release-delivered démarré', new Date().toISOString())
+
+  // Init Stripe + Supabase ici (pas au chargement du module) → on log toujours le démarrage même si
+  // une config manque, au lieu de crasher silencieusement (le bug des « 0 log »).
+  let stripe, supabase
+  try { stripe = getStripe(); supabase = getSupabase() }
+  catch (e) { console.error('release-delivered : config indisponible :', e.message); return { statusCode: 500, body: e.message } }
 
   // Commandes livrées dont le délai de réception est écoulé, pas en litige.
   const cutoff = new Date(Date.now() - RECEIPT_WINDOW_HOURS * 60 * 60 * 1000).toISOString()
