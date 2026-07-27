@@ -70,7 +70,8 @@ exports.handler = async (event) => {
       }
       const res = await releaseSellerPayout({ stripe, supabase, order })
       if (res.outcome === 'settled' && res.transferOk) {
-        released++; details.push(`${order.seller?.username || order.seller?.email} : ${res.payoutNet} € versés ✅`)
+        const compte = order.seller?.stripe_account_id ? ` (compte ${String(order.seller.stripe_account_id).slice(0, 12)}…)` : ''
+        released++; details.push(`${order.seller?.username || order.seller?.email} : ${res.payoutNet} € versés${compte} ✅`)
       } else if (res.outcome === 'retry') {
         skipped++; details.push(`${order.seller?.username || '?'} : à réessayer (transfert non abouti)`)
       } else {

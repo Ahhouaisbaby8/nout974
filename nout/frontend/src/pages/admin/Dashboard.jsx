@@ -17,19 +17,19 @@ const StatCard = ({ icon, label, value, to, color = 'text-nout-primary' }) => (
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({})
-  const [payout, setPayout] = useState({ loading: false, msg: '', error: '' })
+  const [payout, setPayout] = useState({ loading: false, msg: '', error: '', details: [] })
 
   const handleReleasePayouts = async () => {
     if (payout.loading) return
-    setPayout({ loading: true, msg: '', error: '' })
+    setPayout({ loading: true, msg: '', error: '', details: [] })
     try {
       const res = await releasePayouts()
       const msg = res.released > 0
         ? `${res.released} vendeur(s) payé(s) ✅${res.skipped ? ` · ${res.skipped} ignoré(s)` : ''}${res.errors ? ` · ${res.errors} erreur(s)` : ''}`
         : (res.message || 'Aucun paiement en attente à verser.')
-      setPayout({ loading: false, msg, error: '' })
+      setPayout({ loading: false, msg, error: '', details: res.details ?? [] })
     } catch (e) {
-      setPayout({ loading: false, msg: '', error: e.message || 'Erreur lors du versement.' })
+      setPayout({ loading: false, msg: '', error: e.message || 'Erreur lors du versement.', details: [] })
     }
   }
 
@@ -83,8 +83,13 @@ export default function AdminDashboard() {
             {payout.loading ? 'Versement en cours…' : 'Verser les paiements en attente'}
           </button>
         </div>
-        {payout.msg && <p className="text-sm text-green-600 mt-3">{payout.msg}</p>}
+        {payout.msg && <p className="text-sm text-green-600 mt-3 font-medium">{payout.msg}</p>}
         {payout.error && <p className="text-sm text-red-500 mt-3">{payout.error}</p>}
+        {payout.details?.length > 0 && (
+          <ul className="mt-2 text-sm text-gray-600 list-disc list-inside space-y-0.5">
+            {payout.details.map((d, i) => <li key={i}>{d}</li>)}
+          </ul>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
