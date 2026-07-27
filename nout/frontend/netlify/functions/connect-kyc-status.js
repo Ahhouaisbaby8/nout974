@@ -56,11 +56,22 @@ exports.handler = async (event) => {
     try {
       account = await stripe.accounts.retrieve(accountId)
     } catch (e) {
-      // ID périmé/étranger : le parcours repartira de zéro (même philosophie d'auto-réparation
-      // que create-connect-account) — on ne bloque pas le vendeur sur un ID mort.
-      if (e?.code === 'resource_missing' || e?.statusCode === 404) {
+      // AUTO-RÉPARATION : un compte connecté « mort » (supprimé, invalide, ou plus rattaché à la
+      // plateforme) ne doit JAMAIS bloquer le vendeur sur un message d'erreur permanent. On efface
+      // l'ID mort en base et on renvoie « pas de compte » → la page affiche « Active tes paiements »
+      // et le vendeur en recrée un propre tout seul. Couvre 404 (resource_missing) ET account_invalid
+      // / « not connected to your platform » (c'est le cas qui bloquait Am_8 et pouvait bloquer d'autres).
+      const dead =
+        e?.code === 'resource_missing' ||
+        e?.statusCode === 404 ||
+        e?.code === 'account_invalid' ||
+        /not connected to your platform|does not exist|No such account|access may have been revoked/i.test(String(e?.message ?? ''))
+      if (dead) {
+        console.warn(`[connect-kyc-status] compte ${accountId} mort (${e?.code || e?.message}) → reset auto`)
+        await supabase.from('profiles').update({ stripe_account_id: null }).eq('id', authUser.id)
         return { statusCode: 200, headers, body: JSON.stringify({ ...EMPTY_SNAPSHOT, publishableKey }) }
       }
+      // Vraie erreur transitoire (Stripe down, réseau) : on ne casse pas le lien, on demande de réessayer.
       console.error('[connect-kyc-status] accounts.retrieve:', e?.message, e?.code)
       return { statusCode: 502, headers, body: JSON.stringify({ error: 'Lecture du compte de paiement impossible pour le moment. Réessaie.' }) }
     }
