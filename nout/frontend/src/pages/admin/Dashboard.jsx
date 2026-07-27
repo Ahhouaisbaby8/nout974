@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabase'
+import { releasePayouts } from '../../lib/adminApi'
 
 const StatCard = ({ icon, label, value, to, color = 'text-nout-primary' }) => (
   <Link to={to} className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow block">
@@ -16,6 +17,21 @@ const StatCard = ({ icon, label, value, to, color = 'text-nout-primary' }) => (
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({})
+  const [payout, setPayout] = useState({ loading: false, msg: '', error: '' })
+
+  const handleReleasePayouts = async () => {
+    if (payout.loading) return
+    setPayout({ loading: true, msg: '', error: '' })
+    try {
+      const res = await releasePayouts()
+      const msg = res.released > 0
+        ? `${res.released} vendeur(s) payé(s) ✅${res.skipped ? ` · ${res.skipped} ignoré(s)` : ''}${res.errors ? ` · ${res.errors} erreur(s)` : ''}`
+        : (res.message || 'Aucun paiement en attente à verser.')
+      setPayout({ loading: false, msg, error: '' })
+    } catch (e) {
+      setPayout({ loading: false, msg: '', error: e.message || 'Erreur lors du versement.' })
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +62,29 @@ export default function AdminDashboard() {
         <StatCard icon="" label="Annonces actives"  value={stats.listings} to="/admin/annonces" />
         <StatCard icon="" label="Ventes conclues"   value={stats.sold}     to="/admin/commandes" color="text-green-600" />
         <StatCard icon="" label="Signalements"      value={stats.reports}  to="/admin/signalements" color={stats.reports > 0 ? 'text-red-500' : 'text-nout-primary'} />
+      </div>
+
+      {/* Versement à la demande : verse les vendeurs en attente (livrés + délai écoulé). Filet quand
+          le cron de versement automatique ne s'exécute pas. Réservé admin, versement idempotent. */}
+      <div className="bg-white rounded-xl p-5 shadow-sm mb-8">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="font-bold text-nout-dark">Paiements vendeurs</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Verse les vendeurs dont le colis est livré et le délai de protection écoulé.
+            </p>
+          </div>
+          <button
+            onClick={handleReleasePayouts}
+            disabled={payout.loading}
+            className="px-6 py-3 rounded-xl text-white text-sm font-semibold disabled:opacity-60 whitespace-nowrap"
+            style={{ background: 'linear-gradient(135deg, #0E7FAB, #00C4B4)' }}
+          >
+            {payout.loading ? 'Versement en cours…' : 'Verser les paiements en attente'}
+          </button>
+        </div>
+        {payout.msg && <p className="text-sm text-green-600 mt-3">{payout.msg}</p>}
+        {payout.error && <p className="text-sm text-red-500 mt-3">{payout.error}</p>}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
