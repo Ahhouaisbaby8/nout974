@@ -5,7 +5,7 @@ import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
 import { CATEGORIES, CONDITIONS, BRANDS, MATERIALS, COLORS, SIZES_VETEMENTS, SIZES_CHAUSSURES, SIZES_ENFANT } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
-import { Search as SearchIcon } from 'lucide-react'
+import { Search as SearchIcon, ChevronDown, X } from 'lucide-react'
 import ListingCard from '../components/ui/ListingCard'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
@@ -154,6 +154,26 @@ export default function Search() {
     : category === 'vetements-enfant' ? SIZES_ENFANT
     : (category === 'accessoires' || category === 'sacs') ? ['Taille unique']
     : SIZES_VETEMENTS
+
+  // Puces de filtres actifs (façon Vinted) : chaque filtre posé devient une pastille avec son
+  // libellé lisible + de quoi le retirer d'un clic. Le prix (min/max) est regroupé en UNE puce.
+  const conditionLabel = CONDITIONS.find(c => c.id === condition)?.label
+  const priceChipLabel = (minPrice && maxPrice) ? `${minPrice} – ${maxPrice} €`
+    : minPrice ? `Plus de ${minPrice} €`
+    : maxPrice ? `Moins de ${maxPrice} €`
+    : ''
+  const activeChips = [
+    category    && { key: 'cat',   label: CATEGORIES.find(c => c.id === category)?.label, clear: () => changeCategory('') },
+    subcategory && { key: 'sub',   label: subOptions.find(s => s.id === subcategory)?.label, clear: () => setSubcategory('') },
+    (city && city !== 'Toute La Réunion') && { key: 'ville', label: city, clear: () => setCity('Toute La Réunion') },
+    condition   && { key: 'etat',  label: conditionLabel, clear: () => setCondition('') },
+    brand       && { key: 'marque',label: brand, clear: () => setBrand('') },
+    size        && { key: 'taille',label: `Taille ${size}`, clear: () => setSize('') },
+    color       && { key: 'coul',  label: color, clear: () => setColor('') },
+    material    && { key: 'mat',   label: material, clear: () => setMaterial('') },
+    priceChipLabel && { key: 'prix', label: priceChipLabel, clear: () => { setMinPrice(''); setMaxPrice('') } },
+  ].filter(Boolean)
+
   const catLabel  = CATEGORIES.find(c => c.id === category)?.label
   const subLabel  = subOptions.find(s => s.id === subcategory)?.label
   const cityLabel = (city && city !== 'Toute La Réunion') ? city : 'La Réunion'
@@ -198,6 +218,61 @@ export default function Search() {
           Filtres {hasFilters && '•'}
         </button>
       </form>
+
+      {/* ── FILTRES RAPIDES (toujours visibles) : ouvrent le panneau complet, positionné sur le bon champ ──
+          Les plus utilisés à portée de main, sans déplier tout le panneau à chaque fois. */}
+      {!showFilters && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {[
+            { label: size ? `Taille ${size}` : 'Taille', active: !!size },
+            { label: priceChipLabel || 'Prix', active: !!priceChipLabel },
+            { label: conditionLabel || 'État', active: !!condition },
+            { label: sortBy === 'price_asc' ? 'Prix croissant' : sortBy === 'price_desc' ? 'Prix décroissant' : 'Plus récent', active: sortBy !== 'recent', tri: true },
+          ].map(qf => (
+            <button
+              key={qf.label}
+              type="button"
+              onClick={() => setShowFilters(true)}
+              className={`inline-flex items-center gap-1.5 rounded-full border text-sm font-semibold px-4 py-2 transition-colors ${
+                qf.active
+                  ? 'border-nout-primary text-nout-primary bg-[#EAF6F5]'
+                  : 'border-nout-border bg-white text-nout-texte hover:border-nout-primary hover:text-nout-primary'
+              }`}
+            >
+              {qf.tri && <span className="text-xs text-gray-400 font-normal">Trier :</span>}
+              {qf.label}
+              <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── PUCES DE FILTRES ACTIFS (façon Vinted) : ce qui est filtré, visible en un coup d'œil.
+          On retire un filtre d'un clic sur la croix, ou tout d'un coup avec « Tout effacer ». */}
+      {activeChips.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {activeChips.map(chip => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={chip.clear}
+              className="group inline-flex items-center gap-2 rounded-full bg-[#EAF6F5] text-nout-primary border border-transparent hover:border-nout-primary pl-3.5 pr-2.5 py-1.5 text-sm font-semibold transition-colors"
+            >
+              <span>{chip.label}</span>
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-nout-primary text-white group-hover:bg-nout-dark transition-colors">
+                <X className="w-2.5 h-2.5" strokeWidth={3} />
+              </span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="inline-flex items-center rounded-full text-gray-400 hover:text-red-500 px-3 py-1.5 text-sm transition-colors"
+          >
+            Tout effacer
+          </button>
+        </div>
+      )}
 
       {/* ── FILTRES ── */}
       {showFilters && (
