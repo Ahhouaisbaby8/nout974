@@ -31,10 +31,8 @@
 [functions."chronopost-tracking"]
   schedule = "15 * * * *"
 
-# Cron : versement vendeur 48h apres livraison (release-delivered). Verse depuis 'delivered' via
-# releaseSellerPayout. A :45 (bien decale de auto-refund a :00) pour ne jamais croiser le gel/rattrapage argent.
-[functions."release-delivered"]
-  schedule = "45 * * * *"
+# Cron release-delivered : le schedule est declare DANS le fichier via schedule('45 * * * *', ...)
+# (methode officielle @netlify/functions, plus fiable). NE PAS le redeclarer ici (double = conflit).
 
 # Cron : suivi transporteur UBN (PULL). Lit la page de suivi publique ubn-speed.fr (statut rendu cote
 # serveur) et passe la commande en 'delivered' + delivered_at a la livraison. Independant du callback

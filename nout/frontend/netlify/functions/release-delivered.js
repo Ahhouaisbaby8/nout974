@@ -20,6 +20,7 @@
 //
 // Lancé par un cron Netlify. Auth : header x-nout-cron = CRON_SECRET.
 
+const { schedule } = require('@netlify/functions')
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { releaseSellerPayout } = require('./_payout')
@@ -63,9 +64,9 @@ const sendEmail = async (to, subject, html) => {
   } catch (err) { console.error('Email error:', err.message) }
 }
 
-exports.handler = async (event) => {
+const releaseDeliveredHandler = async (event) => {
   // Auth cron (invocation planifiée = pas de httpMethod ; appel HTTP direct = secret requis)
-  if (event.httpMethod) {
+  if (event?.httpMethod) {
     const secret = process.env.CRON_SECRET
     if (!secret || event.headers['x-nout-cron'] !== secret) {
       return { statusCode: 401, body: 'Non autorisé.' }
@@ -167,3 +168,8 @@ exports.handler = async (event) => {
   console.log(summary)
   return { statusCode: 200, body: summary }
 }
+
+// Cron déclaré DANS le fichier (méthode officielle Netlify, plus fiable que le seul netlify.toml pour
+// la détection des scheduled functions). Toutes les heures à :45. Le wrapper schedule() gère l'appel
+// planifié ; les appels HTTP directs (avec x-nout-cron) restent acceptés par le handler ci-dessus.
+exports.handler = schedule('45 * * * *', releaseDeliveredHandler)
