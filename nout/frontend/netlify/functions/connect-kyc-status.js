@@ -62,7 +62,9 @@ exports.handler = async (event) => {
         return { statusCode: 200, headers, body: JSON.stringify({ ...EMPTY_SNAPSHOT, publishableKey }) }
       }
       console.error('[connect-kyc-status] accounts.retrieve:', e?.message, e?.code)
-      return { statusCode: 502, headers, body: JSON.stringify({ error: 'Lecture du compte de paiement impossible pour le moment. Réessaie.' }) }
+      // TEMPORAIRE (diagnostic) : renvoie le détail Stripe exact à l'écran pour identifier la cause
+      // (test/live, clé invalide…). À REMETTRE au message générique une fois le souci compris.
+      return { statusCode: 502, headers, body: JSON.stringify({ error: `DIAG: ${e?.message || 'erreur inconnue'} [code=${e?.code || '-'} type=${e?.type || '-'} account=${String(accountId).slice(0,10)}…]` }) }
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ...buildKycSnapshot(account), publishableKey }) }
