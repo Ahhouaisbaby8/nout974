@@ -167,6 +167,20 @@ export const CATEGORIES = [
     ],
   },
   {
+    id: 'jardin-plantes', label: 'Jardin & plantes', navLabel: 'Jardin',
+    sub: [
+      { id: 'jardin-plantes-interieur', label: "Plantes d'intérieur" },
+      { id: 'jardin-plantes-exterieur', label: 'Plantes extérieur & jardin' },
+      { id: 'jardin-succulentes',       label: 'Cactus & succulentes' },
+      { id: 'jardin-fruitiers',         label: 'Fruitiers & aromatiques' },
+      { id: 'jardin-graines',           label: 'Graines & boutures' },
+      { id: 'jardin-pots',              label: 'Pots & jardinières' },
+      { id: 'jardin-outils',            label: 'Outils & matériel de jardin' },
+      { id: 'jardin-deco',              label: 'Déco de jardin' },
+      { id: 'jardin-autres',            label: 'Autres' },
+    ],
+  },
+  {
     id: 'livres-medias', label: 'Livres & médias', navLabel: 'Livres & médias',
     sub: [
       { id: 'livres-romans',   label: 'Romans & littérature' },
