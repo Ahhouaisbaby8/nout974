@@ -5,10 +5,12 @@ import { stripEmoji } from '../utils/stripEmoji'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { createListing, uploadListingImage } from '../services/listings'
+import { getMyShippingAddress } from '../services/profiles'
 import { supabase } from '../services/supabase'
 import { compressImage } from '../utils/imageCompressor'
-import { CONDITIONS, BRANDS, MATERIALS, sizeLabel } from '../utils/categories'
+import { CONDITIONS, BRANDS, MATERIALS, sizeLabel, isContactCategory } from '../utils/categories'
 import { REUNION_CITIES } from '../utils/cities'
+import { REUNION_COMMUNES, REUNION_CP } from '../utils/communes974'
 import { computeSellerPayout } from '../utils/shipping'
 import { describeListing } from '../utils/describeListing'
 import { formatPrice } from '../utils/formatters'
@@ -19,7 +21,7 @@ import ColorPicker from '../components/ui/ColorPicker'
 import SizeGuideModal from '../components/ui/SizeGuideModal'
 import VerifyEmailBanner from '../components/VerifyEmailBanner'
 import { isEmailVerified } from '../utils/emailVerified'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, MapPin, Lock } from 'lucide-react'
 
 // Phrases-types pour aider à rédiger la description (un clic = ajout)
 const DESC_TEMPLATES = [
@@ -68,7 +70,7 @@ const SIZES_CHAUSSURES = ['35', '36', '37', '38', '39', '40', '41', '42', '43', 
 const SIZES_ENFANT     = ['3 mois', '6 mois', '9 mois', '12 mois', '18 mois', '2 ans', '3 ans', '4 ans', '5 ans', '6 ans', '8 ans', '10 ans', '12 ans', '14 ans']
 
 export default function CreateListing() {
-  const { user, profile } = useAuth()
+  const { user, profile, updateProfile } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
   const titleRef = useRef(null)
@@ -101,6 +103,33 @@ export default function CreateListing() {
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
 
+  // ── Adresse de COLLECTE du vendeur (là où le transporteur vient chercher le colis) ──
+  // Demandée à la publication, enregistrée dans le profil (phone + ship_*) → réutilisée pour toutes
+  // les ventes en livraison. Pré-remplie si déjà connue (le vendeur vérifie au lieu de re-remplir).
+  const [collectAddress,  setCollectAddress]  = useState('')
+  const [collectAddress2, setCollectAddress2] = useState('')
+  const [collectCity,     setCollectCity]     = useState('')   // commune 974 (le CP en découle)
+  const [collectPhone,    setCollectPhone]    = useState('')
+  const collectRef = useRef(null)
+
+  // Pré-remplissage : d'abord depuis le profil en mémoire (instantané), puis complété par la RPC
+  // sécurisée get_my_account (au cas où ship_* n'y soit pas encore). On ne réécrit pas un champ déjà saisi.
+  useEffect(() => {
+    if (profile) {
+      setCollectAddress(prev  => prev || profile.ship_address  || '')
+      setCollectAddress2(prev => prev || profile.ship_address2 || '')
+      setCollectCity(prev     => prev || profile.ship_city     || profile.city || '')
+      setCollectPhone(prev    => prev || profile.phone         || '')
+    }
+    getMyShippingAddress()
+      .then((a) => {
+        setCollectAddress(prev  => prev || a.ship_address  || '')
+        setCollectAddress2(prev => prev || a.ship_address2 || '')
+        setCollectCity(prev     => prev || a.ship_city     || '')
+      })
+      .catch(() => {})
+  }, [profile?.id])
+
   const isClothing = CLOTHING_CATS.includes(category)
   const isFashion  = FASHION_CATS.includes(category)
   const sizeOptions = category === 'chaussures' ? SIZES_CHAUSSURES
@@ -112,6 +141,13 @@ export default function CreateListing() {
   // Valeurs finales (gèrent le cas "Autre")
   const finalBrand    = brandSelect    === '__autre__' ? brandCustom    : brandSelect
   const finalMaterial = materialSelect === '__autre__' ? materialCustom : materialSelect
+
+  // L'adresse de collecte n'a de sens que pour un article LIVRABLE : on l'exige donc sauf pour les
+  // véhicules (mise en relation, pas de transporteur NOUT) et les dons à 0 € (remise en main propre).
+  const isContactCat  = isContactCategory(category, subcategory)
+  const isFree        = price !== '' && Number(price) === 0
+  const needsCollect  = Boolean(category) && !isContactCat && !isFree
+  const collectComplete = collectAddress.trim() && collectCity.trim() && collectPhone.trim().replace(/\s/g, '').length >= 10
 
   // Assez d'infos pour proposer une rédaction automatique ?
   const canGenerate = Boolean(category && (finalBrand || colors[0] || size || finalMaterial))
@@ -176,6 +212,7 @@ export default function CreateListing() {
   const fieldRefs = {
     photos: photosRef, title: titleRef, category: categoryRef,
     condition: conditionRef, size: sizeRef, price: priceRef, city: cityRef,
+    collect: collectRef,
   }
 
   // Signale une erreur SUR un champ précis : message + surlignage rouge + défilement vers le champ.
@@ -202,6 +239,11 @@ export default function CreateListing() {
     if (Number(price) > 0 && Number(price) < 1) return failField('price', 'Le prix minimum est 1 € (ou 0 € pour offrir l\'article).')
     if (Number(price) > 50000)      return failField('price', 'Le prix maximum est 50 000 €.')
     if (!city)                      return failField('city', 'Choisis ta ville.')
+    // Adresse de collecte obligatoire dès que l'article est livrable (transporteur → il faut savoir
+    // où venir chercher le colis). Exclut véhicules (mise en relation) et dons à 0 € (main propre).
+    if (needsCollect && !collectComplete) {
+      return failField('collect', 'Renseigne ton adresse de collecte (adresse, commune et téléphone) : le transporteur en a besoin pour venir chercher tes colis.')
+    }
 
     setLoading(true)
     try {
@@ -260,6 +302,24 @@ export default function CreateListing() {
         color:       isFashion ? (colors[0] ?? null) : null,
         colors:      isFashion ? colors : [],
       })
+
+      // Enregistre l'adresse de collecte du vendeur dans son profil (phone + ship_*) → réutilisée
+      // pour toutes ses ventes en livraison, et transmise au transporteur au moment de l'envoi.
+      // Le CP découle de la commune 974 (source unique REUNION_CP). Best-effort : l'annonce est déjà
+      // créée, on ne la perd pas si cette écriture échoue (le vendeur pourra compléter dans ses réglages).
+      if (needsCollect && collectComplete) {
+        try {
+          await updateProfile({
+            phone:         clean(collectPhone.trim()),
+            ship_address:  clean(collectAddress.trim()),
+            ship_address2: clean(collectAddress2.trim()) || null,
+            ship_city:     collectCity.trim(),
+            ship_postcode: REUNION_CP[collectCity.trim()] ?? null,
+          })
+        } catch (e) {
+          console.error('Enregistrement adresse de collecte échoué :', e?.message)
+        }
+      }
 
       // Vérification éligibilité fondateur en arrière-plan (ne bloque pas la navigation)
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -620,6 +680,85 @@ export default function CreateListing() {
             </select>
           </div>
         </section>
+
+        {/* ── ADRESSE DE COLLECTE (vendeur) : où le transporteur vient chercher le colis ──
+            Demandée à la publication, obligatoire dès que l'article peut être livré (sauf véhicules
+            en mise en relation et dons à 0 €). Pré-remplie si déjà connue → le vendeur ne saisit qu'une fois.
+            Enregistrée dans le profil (phone + ship_*) et transmise à UBN/Chronopost au moment de l'envoi. */}
+        {needsCollect && (
+          <section ref={collectRef} className="bg-[#F0FBFB] border border-[#B9E5E1] rounded-xl p-5 shadow-sm flex flex-col gap-3">
+            <div className="flex items-start gap-2.5">
+              <MapPin className="w-5 h-5 text-[#0E7FAB] flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-bold text-nout-dark">Adresse de collecte</h2>
+                <p className="text-xs text-gray-500 mt-0.5 leading-snug">
+                  C'est là que le transporteur vient récupérer ton colis quand tu vends avec livraison.
+                  Tu ne la remplis qu'une fois : on la garde pour tes prochaines annonces. Elle n'est jamais affichée publiquement.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Adresse (rue, numéro) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={collectAddress}
+                onChange={(e) => { setCollectAddress(e.target.value); if (errorField === 'collect') setErrorField('') }}
+                placeholder="8 chemin des Manguiers"
+                className={`input-field ${errorField === 'collect' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-nout-dark mb-1">
+                Complément <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input
+                type="text"
+                value={collectAddress2}
+                onChange={(e) => setCollectAddress2(e.target.value)}
+                placeholder="Bâtiment, étage, lieu-dit, résidence…"
+                className="input-field"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-nout-dark mb-1">
+                  Commune <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={collectCity}
+                  onChange={(e) => { setCollectCity(e.target.value); if (errorField === 'collect') setErrorField('') }}
+                  className={`input-field cursor-pointer ${errorField === 'collect' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
+                >
+                  <option value="">Choisis ta commune…</option>
+                  {REUNION_COMMUNES.map((c) => <option key={c} value={c}>{c} ({REUNION_CP[c]})</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-nout-dark mb-1">
+                  Téléphone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  value={collectPhone}
+                  onChange={(e) => { setCollectPhone(e.target.value); if (errorField === 'collect') setErrorField('') }}
+                  placeholder="0692 12 34 56"
+                  className={`input-field ${errorField === 'collect' ? 'border-red-400 ring-2 ring-red-200' : ''}`}
+                />
+              </div>
+            </div>
+
+            <p className="flex items-start gap-1.5 text-[11px] text-gray-500 leading-snug">
+              <Lock className="w-3.5 h-3.5 text-[#0E7FAB] flex-shrink-0 mt-0.5" />
+              Ton adresse et ton téléphone servent uniquement au transporteur, au moment d'une vente en
+              livraison. Ils ne sont jamais montrés aux acheteurs ni sur ton profil.
+            </p>
+          </section>
+        )}
 
         {/* ── RÉDACTION AUTO (en bas : on l'utilise une fois les détails remplis) ── */}
         <div className="bg-white rounded-xl p-4 shadow-sm">

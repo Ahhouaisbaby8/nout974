@@ -16,23 +16,14 @@ const { ubnPostcodeFor } = require('./_ubn-cities')   // table ville→CP offici
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
 
-// Adresse expéditeur de repli (NOUT) — utilisée SEULEMENT si le vendeur n'a pas
-// encore renseigné son adresse d'expédition. Sur une marketplace, l'expéditeur est
-// normalement LE VENDEUR (c'est lui qui dépose le colis + reçoit les retours).
-const fallbackShipper = () => ({
-  company: process.env.UBN_SHIPPER_COMPANY || 'NOUT',
-  name:    process.env.UBN_SHIPPER_NAME    || 'NOUT',
-  cp:      process.env.UBN_SHIPPER_CP      || '97490',
-  ville:   process.env.UBN_SHIPPER_VILLE   || 'Sainte-Clotilde',
-  address: process.env.UBN_SHIPPER_ADDRESS || 'La Réunion',
-  phone:   process.env.UBN_SHIPPER_PHONE   || '',
-  email:   process.env.UBN_SHIPPER_EMAIL   || 'contact@nout.re',
-})
-
 // Construit l'expéditeur = le VENDEUR à partir de son profil (adresse d'expédition +
 // téléphone). Lecture directe avec la SERVICE KEY (côté serveur, contourne la RLS) —
 // PAS via get_my_account (qui dépend de auth.uid(), absent avec la service key).
-// Repli sur NOUT si l'adresse vendeur est incomplète.
+//
+// L'adresse de collecte est demandée OBLIGATOIREMENT à la publication (CreateListing) → un vendeur
+// qui expédie a normalement TOUJOURS son adresse. Si elle manque quand même (ancien compte, écriture
+// ratée), on renvoie { incomplete: true } → le handler REFUSE l'expédition avec un message clair, au
+// lieu d'expédier avec l'adresse NOUT (sinon UBN irait chercher le colis chez NOUS, pas chez le vendeur).
 async function sellerShipper(sellerId) {
   const { data: s } = await supabase
     .from('profiles')
@@ -51,7 +42,7 @@ async function sellerShipper(sellerId) {
       email:   s.email || 'contact@nout.re',
     }
   }
-  return fallbackShipper()
+  return { incomplete: true }
 }
 
 const _rateLimits = new Map()
@@ -174,6 +165,16 @@ exports.handler = async (event) => {
 
     const buyerName = (order.buyer?.username || 'Client').slice(0, 60)
     const s = await sellerShipper(order.seller_id)
+
+    // Verrou expéditeur : jamais d'expédition avec une adresse incomplète (sinon UBN irait chercher le
+    // colis chez NOUT au lieu du vendeur). L'adresse de collecte est demandée à la publication ; ce refus
+    // n'arrive que sur un compte l'ayant perdue → on renvoie le vendeur la compléter dans ses réglages.
+    if (s.incomplete) {
+      return { statusCode: 400, headers, body: JSON.stringify({
+        error: 'Renseigne ton adresse de collecte (adresse, commune et téléphone) dans tes réglages avant d\'expédier : le transporteur en a besoin pour venir chercher ton colis.',
+        code: 'seller_address_missing',
+      }) }
+    }
 
     // Poids : par défaut 1 kg si non précisé (vêtements légers), borné à 30 kg/ligne
     const weight = Math.min(30, Math.max(0.1, Number(weight_kg) || 1))
