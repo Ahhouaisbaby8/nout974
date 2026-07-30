@@ -132,6 +132,27 @@ export default function OrdersList() {
   const [inspectQ, setInspectQ] = useState('')   // enquête sur une commande précise (base + Stripe)
   const [inspect,  setInspect]  = useState(null)
   const [inspecting, setInspecting] = useState(false)
+  const [refunding, setRefunding] = useState(false)
+  const [refundMsg, setRefundMsg] = useState(null)
+
+  // Rembourse la commande actuellement enquêtée, en un clic, avec le résultat/l'erreur affiché à l'écran.
+  const refundOrder = async (orderId) => {
+    if (!orderId) return
+    if (!window.confirm('Rembourser cette commande à l\'acheteur maintenant ? (irréversible)')) return
+    setRefunding(true); setRefundMsg(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/admin-refund-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ orderId }),
+      })
+      const data = await res.json()
+      setRefundMsg(res.ok ? { ok: true, txt: data.message } : { ok: false, txt: data.error || 'Erreur' })
+      if (res.ok) { runInspect(); load() }   // rafraîchit l'enquête + le tableau
+    } catch { setRefundMsg({ ok: false, txt: 'Impossible de contacter le serveur.' }) }
+    finally { setRefunding(false) }
+  }
 
   const runInspect = async () => {
     if (!inspectQ.trim()) return
@@ -351,6 +372,25 @@ export default function OrdersList() {
                     </div>
                   </div>
                 </div>
+
+                {/* Bouton REMBOURSER à la demande : visible si non remboursé, non livré, non versé au vendeur. */}
+                {!inspect.argent.refunded && !inspect.commande.livre_le && !inspect.argent.sellerTransferred
+                  && ['paid', 'shipped'].includes(inspect.commande.statut) && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => refundOrder(inspect.commande.id)}
+                      disabled={refunding}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold ${refunding ? 'bg-gray-100 text-gray-400' : 'bg-red-600 text-white hover:bg-red-700'}`}
+                    >
+                      {refunding ? 'Remboursement…' : `Rembourser l'acheteur maintenant`}
+                    </button>
+                  </div>
+                )}
+                {refundMsg && (
+                  <p className={`mt-2 text-sm font-semibold rounded-lg px-3 py-2 ${refundMsg.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                    {refundMsg.txt}
+                  </p>
+                )}
               </>
             )}
           </div>
