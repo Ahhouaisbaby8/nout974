@@ -12,8 +12,23 @@ const escHtml = (str) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 
-const stripe   = new Stripe(process.env.STRIPE_SECRET_KEY)
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+// Init « paresseuse » : new Stripe(undefined) / createClient(undefined) JETTENT au chargement du module
+// → la fonction planifiée mourrait AVANT de logger (sortie en quelques ms, « 0 travail »). On initialise
+// donc à l'exécution, avec garde. Robuste même si une variable manque ponctuellement.
+let _stripe = null
+const getStripe = () => {
+  if (_stripe) return _stripe
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY absente')
+  _stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  return _stripe
+}
+let _supabase = null
+const getSupabase = () => {
+  if (_supabase) return _supabase
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) throw new Error('Config Supabase absente')
+  _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+  return _supabase
+}
 
 const SITE_URL = process.env.URL || 'https://nout.re'
 
@@ -46,6 +61,12 @@ exports.handler = async (event) => {
   }
 
   console.log('⏰ auto-refund démarré', new Date().toISOString())
+
+  // Init Stripe + Supabase ICI (pas au chargement du module) → on log toujours le démarrage même si une
+  // config manque, au lieu de crasher silencieusement en quelques ms (le bug des « 4 ms sans rien faire »).
+  let stripe, supabase
+  try { stripe = getStripe(); supabase = getSupabase() }
+  catch (e) { console.error('auto-refund : config indisponible :', e.message); return { statusCode: 500, body: e.message } }
 
   // ── ANNULER LES COMMANDES PENDING EXPIRÉES (paiement abandonné > 1h) ──
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
