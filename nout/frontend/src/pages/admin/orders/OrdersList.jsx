@@ -48,26 +48,34 @@ function payoutState(o) {
   }
 }
 
+// Date courte lisible (JJ/MM/AAAA à HHhMM), ou null si absente.
+const fmtDate = (d) => d
+  ? new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(':', 'h')
+  : null
+
 // État du DÉLAI avant annulation auto (le vendeur a 7 j pour remettre/expédier).
-// Ne concerne que les commandes 'paid' (en attente) : ailleurs, le délai n'a plus lieu d'être.
+// `date` = la date à afficher SOUS le libellé (remis le… / limite le… / annulée le…).
 function delaiState(o) {
   if (o.status === 'cancelled')
-    return { label: 'annulée — délai dépassé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500' }
+    return { label: 'annulée — délai dépassé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500', date: null }
   if (['shipped', 'delivered', 'completed', 'payout_pending'].includes(o.status))
-    return { label: 'remis à temps', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
+    // Remis à temps : on montre la DATE de remise (shipped_at).
+    return { label: 'remis à temps', color: 'bg-green-100 text-green-700', dot: 'bg-green-500', date: fmtDate(o.shipped_at) ? `remis le ${fmtDate(o.shipped_at)}` : null }
   if (o.status === 'refunded')
-    return { label: 'remboursée', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400' }
+    return { label: 'remboursée', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400', date: null }
   if (o.status !== 'paid' || !o.expires_at)
-    return { label: '—', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300' }
+    return { label: '—', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300', date: null }
 
+  // En attente : on montre la DATE LIMITE (expires_at) + le temps restant.
+  const limite = fmtDate(o.expires_at) ? `limite le ${fmtDate(o.expires_at)}` : null
   const msLeft = new Date(o.expires_at).getTime() - Date.now()
   if (msLeft <= 0)
-    return { label: 'délai écoulé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500' }
+    return { label: 'délai écoulé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500', date: limite }
   const hLeft = Math.ceil(msLeft / 3600000)
   if (hLeft <= 24)
-    return { label: `bientôt — ${hLeft} h`, color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' }
+    return { label: `bientôt — ${hLeft} h`, color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500', date: limite }
   const dLeft = Math.ceil(hLeft / 24)
-  return { label: `${dLeft} j restants`, color: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
+  return { label: `${dLeft} j restants`, color: 'bg-green-100 text-green-700', dot: 'bg-green-500', date: limite }
 }
 
 // Crons dont on surveille la santé (nom technique → libellé clair + ce qu'il fait).
@@ -119,6 +127,7 @@ export default function OrdersList() {
           status: o.statut,
           created_at: o.date,
           delivered_at: o.delivered_at,
+          shipped_at: o.shipped_at,
           seller_payout: o.seller_payout,
           expires_at: o.expires_at,
           buyer:    { username: o.acheteur !== '—' ? o.acheteur : null },
@@ -270,10 +279,13 @@ export default function OrdersList() {
                       {(() => {
                         const dl = delaiState(o)
                         return (
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dl.dot}`} />
-                            <span className={`text-xs px-2 py-1 rounded-full ${dl.color}`}>{dl.label}</span>
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dl.dot}`} />
+                              <span className={`text-xs px-2 py-1 rounded-full ${dl.color}`}>{dl.label}</span>
+                            </span>
+                            {dl.date && <span className="text-[11px] text-gray-400 pl-3.5">{dl.date}</span>}
+                          </div>
                         )
                       })()}
                     </td>

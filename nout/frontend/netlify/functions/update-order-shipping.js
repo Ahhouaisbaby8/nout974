@@ -1,6 +1,35 @@
 const { createClient } = require('@supabase/supabase-js')
+const {
+  soapCall, buildTags, isChronopostConfigured, xmlAll, xmlFirst,
+} = require('./_chronopost-client')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
+
+// Un numéro tapé à la main est-il un VRAI colis chez le transporteur ? On ne laisse pas un vendeur
+// déclarer « expédié » avec un numéro bidon. Le format Chronopost = 8 à 15 caractères alphanum
+// finissant souvent par « FR ». Si le numéro ressemble à du Chronopost ET que Chronopost est
+// configuré, on interroge le suivi : des événements = colis réel ; « inconnu » = on refuse.
+// Prudence : si Chronopost ne répond pas (réseau), on N'EMPÊCHE PAS (un vendeur honnête ne doit pas
+// être bloqué par une panne) — on ne refuse QUE sur un « colis introuvable » explicite.
+const looksLikeChronopost = (n) => /^[A-Z]{2}\d{9}FR$/i.test(n) || /^[A-Z0-9]{13,15}$/i.test(n)
+
+async function verifyTrackingNumber(tracking) {
+  if (!looksLikeChronopost(tracking) || !isChronopostConfigured()) {
+    return { checked: false, exists: null }   // non vérifiable → on laisse passer
+  }
+  try {
+    const inner = buildTags({ language: 'fr_FR', skybillNumber: tracking })
+    const xml = await soapCall('tracking', 'trackSkybillV2', inner)
+    const events = xmlAll(xml, 'events')
+    const errorCode = xmlFirst(xml, 'errorCode')
+    // Colis connu = au moins un événement de suivi. Pas d'événement + code d'erreur = numéro inconnu.
+    if (events.length > 0) return { checked: true, exists: true }
+    if (errorCode) return { checked: true, exists: false }
+    return { checked: true, exists: false }   // aucune trace = numéro non reconnu
+  } catch {
+    return { checked: false, exists: null }   // Chronopost injoignable → on ne bloque pas
+  }
+}
 
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
 const SITE_URL       = process.env.URL || 'https://nout.re'
@@ -77,6 +106,17 @@ exports.handler = async (event) => {
         headers,
         body: JSON.stringify({ error: `Statut de commande incompatible : "${order.status}". Seules les commandes "paid" peuvent être expédiées.` }),
       }
+    }
+
+    // Anti-faux-suivi : si le numéro ressemble à un colis Chronopost, on vérifie qu'il existe VRAIMENT
+    // avant d'accepter « expédié ». Un numéro inventé est refusé (message clair). Numéro non vérifiable
+    // (transporteur libre) ou Chronopost injoignable → on laisse passer (on ne bloque pas un honnête).
+    const verif = await verifyTrackingNumber(cleaned)
+    if (verif.checked && verif.exists === false) {
+      return { statusCode: 400, headers, body: JSON.stringify({
+        error: 'Ce numéro de suivi est introuvable chez le transporteur. Vérifie que tu as bien copié le numéro exact figurant sur ton bordereau.',
+        code: 'tracking_not_found',
+      }) }
     }
 
     // Mise à jour atomique : tracking_number + shipped_at + status
