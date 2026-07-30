@@ -104,6 +104,25 @@ export default function OrdersList() {
   const [busy,    setBusy]    = useState(null)
   const [diag,    setDiag]    = useState(null)   // état factuel lu directement en base (fraîcheur)
   const [diagLoading, setDiagLoading] = useState(false)
+  const [inspectQ, setInspectQ] = useState('')   // enquête sur une commande précise (base + Stripe)
+  const [inspect,  setInspect]  = useState(null)
+  const [inspecting, setInspecting] = useState(false)
+
+  const runInspect = async () => {
+    if (!inspectQ.trim()) return
+    setInspecting(true); setInspect(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/admin-order-inspect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ query: inspectQ.trim() }),
+      })
+      const data = await res.json()
+      setInspect(res.ok ? data : { error: data.error || 'Erreur' })
+    } catch { setInspect({ error: 'Impossible de contacter le serveur.' }) }
+    finally { setInspecting(false) }
+  }
 
   // Chargement des commandes VIA LE SERVEUR (service key) : contourne la RLS qui, en lecture
   // navigateur, masquait des commandes (bug « il manque des lignes récentes »). La même réponse
@@ -239,6 +258,65 @@ export default function OrdersList() {
           </p>
         </div>
       )}
+
+      {/* ── ENQUÊTE sur une commande (base + Stripe) : la vérité sur l'argent d'une commande précise ── */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-5">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Enquêter sur une commande (argent réel)</p>
+        <div className="flex gap-2">
+          <input
+            value={inspectQ}
+            onChange={(e) => setInspectQ(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && runInspect()}
+            placeholder="Titre de l'article (ex. Vend 3 pour 10€) ou id de commande"
+            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          />
+          <button onClick={runInspect} disabled={inspecting}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold ${inspecting ? 'bg-gray-100 text-gray-400' : 'bg-nout-primary text-white hover:opacity-90'}`}>
+            {inspecting ? 'Analyse…' : 'Enquêter'}
+          </button>
+        </div>
+
+        {inspect && (
+          <div className="mt-4 border-t border-gray-100 pt-4 text-sm">
+            {inspect.error ? (
+              <p className="text-red-600">{inspect.error}</p>
+            ) : (
+              <>
+                {inspect.alertes?.length > 0 && (
+                  <div className="mb-3 space-y-1">
+                    {inspect.alertes.map((a, i) => (
+                      <p key={i} className={`text-xs font-semibold rounded-lg px-3 py-2 ${a.startsWith('⚠') ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-700'}`}>{a}</p>
+                    ))}
+                  </div>
+                )}
+                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+                  <div><span className="text-gray-400">Article : </span><b>{inspect.commande.article ?? '—'}</b></div>
+                  <div><span className="text-gray-400">Statut : </span><b>{inspect.commande.statut}</b></div>
+                  <div><span className="text-gray-400">Vendeur : </span>{inspect.commande.vendeur}</div>
+                  <div><span className="text-gray-400">Acheteur : </span>{inspect.commande.acheteur}</div>
+                  <div><span className="text-gray-400">Transporteur : </span>{inspect.commande.transporteur ?? '—'}</div>
+                  <div><span className="text-gray-400">N° suivi : </span>{inspect.commande.numero_suivi ?? '—'}</div>
+                  <div><span className="text-gray-400">Expédié le : </span>{inspect.commande.expedie_le ? new Date(inspect.commande.expedie_le).toLocaleString('fr-FR') : '—'}</div>
+                  <div><span className="text-gray-400">Livré le : </span>{inspect.commande.livre_le ? new Date(inspect.commande.livre_le).toLocaleString('fr-FR') : <span className="text-amber-600 font-semibold">non livré</span>}</div>
+                </div>
+                <div className="mt-3 rounded-lg bg-gray-50 border border-gray-100 p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Argent (source : Stripe)</p>
+                  <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+                    <div><span className="text-gray-400">Paiement acheteur : </span><b>{inspect.argent.paymentStatus ?? '—'}</b></div>
+                    <div><span className="text-gray-400">Remboursé : </span>{inspect.argent.refunded ? <b className="text-green-700">oui ({inspect.argent.refundedAmount} €)</b> : 'non'}</div>
+                    <div className="sm:col-span-2">
+                      <span className="text-gray-400">Vendeur payé (transfert Stripe) : </span>
+                      {inspect.argent.sellerTransferred
+                        ? <b className="text-red-600">OUI — {inspect.argent.transfers.filter(t => !t.reversed).map(t => `${t.montant} €`).join(', ')}</b>
+                        : <b className="text-green-700">non</b>}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="flex gap-2 flex-wrap mb-5">
         {[['all','Toutes'], ...Object.entries(STATUS).map(([k,v]) => [k, v.label])].map(([val, label]) => (
