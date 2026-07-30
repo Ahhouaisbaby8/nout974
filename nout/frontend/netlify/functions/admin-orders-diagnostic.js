@@ -109,6 +109,17 @@ exports.handler = async (event) => {
       .map(r => r.created_at).filter(Boolean)
       .sort().slice(-1)[0] ?? null
 
+    // Santé des tâches automatiques (crons) : dernière exécution de chacune. Prouve que NOUT
+    // interroge bien les transporteurs et gère les délais/versements — ou signale un cron mort.
+    // Si la table n'existe pas encore (migration pas passée), heartbeats reste vide (pas d'erreur).
+    let heartbeats = []
+    try {
+      const { data: hb } = await supabase
+        .from('cron_heartbeats')
+        .select('job, last_run_at, last_summary')
+      heartbeats = hb ?? []
+    } catch { /* table absente = migration pas encore passée : on n'échoue pas pour autant */ }
+
     return { statusCode: 200, headers, body: JSON.stringify({
       total,
       mostRecent,          // date ISO de la commande la plus récente (null si base vide)
@@ -116,6 +127,7 @@ exports.handler = async (event) => {
       recent30,            // nb de commandes des 30 derniers jours
       byStatus,            // { paid: n, cancelled: n, ... }
       orders: rows,        // TOUTES les commandes (filtrées par statut si demandé), pour le tableau
+      heartbeats,          // [{ job, last_run_at, last_summary }] — santé des crons
       generatedAt: new Date().toISOString(),
     }) }
   } catch (e) {

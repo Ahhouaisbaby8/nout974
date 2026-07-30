@@ -19,6 +19,7 @@
 
 const { createClient } = require('@supabase/supabase-js')
 const { classifyUbnStatuses } = require('./_ubn-status')
+const { recordHeartbeat } = require('./_heartbeat')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const SITE_URL = process.env.URL || 'https://nout.re'
@@ -90,6 +91,7 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: 'Erreur lecture base.' }
   }
   if (!orders || orders.length === 0) {
+    await recordHeartbeat(supabase, 'ubn-tracking', 'Aucune commande UBN à suivre.')
     return { statusCode: 200, body: 'Aucune commande UBN à suivre.' }
   }
 
@@ -154,5 +156,6 @@ exports.handler = async (event) => {
 
   const summary = `ubn-tracking terminé — ${checked} vérifiée(s), ${delivered} livrée(s), ${failed} échec(s), ${errors} erreur(s).`
   console.log(summary)
+  await recordHeartbeat(supabase, 'ubn-tracking', summary)
   return { statusCode: 200, body: summary }
 }

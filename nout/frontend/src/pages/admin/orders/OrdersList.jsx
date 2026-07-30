@@ -70,6 +70,25 @@ function delaiState(o) {
   return { label: `${dLeft} j restants`, color: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
 }
 
+// Crons dont on surveille la santé (nom technique → libellé clair + ce qu'il fait).
+const WATCHED_CRONS = [
+  { job: 'chronopost-tracking', label: 'Suivi Chronopost', desc: 'Vérifie si les colis Chronopost sont livrés' },
+  { job: 'ubn-tracking',        label: 'Suivi UBN',        desc: 'Vérifie si les colis UBN sont livrés' },
+  { job: 'auto-refund',         label: 'Annulation & remboursement', desc: 'Annule et rembourse après 7 jours sans envoi' },
+  { job: 'cron-payouts',        label: 'Versement des vendeurs', desc: 'Verse les vendeurs 48h après livraison' },
+]
+
+// État de santé d'un cron : à jour (vert) si vu récemment, en retard (ambre), muet/mort (rouge).
+// Seuils larges : un cron horaire vu il y a < 90 min = OK ; cron-payouts (15 min) tolère aussi.
+function cronHealth(hb) {
+  if (!hb?.last_run_at) return { txt: 'jamais vu', color: 'text-red-600', dot: 'bg-red-500', ago: null }
+  const min = Math.floor((Date.now() - new Date(hb.last_run_at).getTime()) / 60000)
+  const ago = min < 60 ? `il y a ${min} min` : min < 1440 ? `il y a ${Math.floor(min / 60)} h` : `il y a ${Math.floor(min / 1440)} j`
+  if (min <= 90)  return { txt: ago, color: 'text-green-600', dot: 'bg-green-500', ago }
+  if (min <= 360) return { txt: ago, color: 'text-amber-600', dot: 'bg-amber-500', ago }
+  return { txt: ago, color: 'text-red-600', dot: 'bg-red-500', ago }
+}
+
 export default function OrdersList() {
   const [orders,  setOrders]  = useState([])
   const [loading, setLoading] = useState(true)
@@ -180,6 +199,37 @@ export default function OrdersList() {
           <span className="text-gray-400 text-xs">{diagLoading ? 'Lecture de la base…' : 'Diagnostic indisponible.'}</span>
         )}
       </div>
+
+      {/* Encart SANTÉ DU SYSTÈME : prouve que les tâches automatiques tournent vraiment (NOUT interroge
+          bien les transporteurs, gère les délais et les versements). Une pastille par cron + dernière exécution.
+          Vert = vu récemment · Ambre = en retard · Rouge = muet (à basculer sur un cron externe fiable). */}
+      {diag?.heartbeats && (
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-5">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Santé du système — tâches automatiques</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {WATCHED_CRONS.map(c => {
+              const hb = diag.heartbeats.find(h => h.job === c.job)
+              const h = cronHealth(hb)
+              return (
+                <div key={c.job} className="flex items-start gap-2.5 border border-gray-100 rounded-lg px-3 py-2.5">
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1 ${h.dot}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-nout-dark">{c.label}</p>
+                    <p className="text-[11px] text-gray-400 leading-snug">{c.desc}</p>
+                    <p className={`text-xs font-semibold mt-0.5 ${h.color}`}>
+                      {h.ago ? `Dernière exécution ${h.txt}` : 'Jamais exécuté'}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-3 leading-snug">
+            Vert = à jour · Ambre = en retard · Rouge = ne répond plus (à basculer sur un déclencheur externe fiable, comme les versements).
+            {diag.heartbeats.length === 0 && ' — En attente de la première exécution (ou migration cron_heartbeats à passer).'}
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-2 flex-wrap mb-5">
         {[['all','Toutes'], ...Object.entries(STATUS).map(([k,v]) => [k, v.label])].map(([val, label]) => (

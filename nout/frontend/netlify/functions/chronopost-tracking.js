@@ -15,6 +15,7 @@
 // completed/disputed/refunded). En test/non configuré → ne fait rien proprement.
 
 const { createClient } = require('@supabase/supabase-js')
+const { recordHeartbeat } = require('./_heartbeat')
 const {
   soapCall, buildTags, isChronopostConfigured, xmlAll, xmlFirst, ChronopostError,
 } = require('./_chronopost-client')
@@ -79,6 +80,9 @@ exports.handler = async (event) => {
     return { statusCode: 500, body: 'Erreur lecture base.' }
   }
   if (!orders || orders.length === 0) {
+    // Le cron a bien tourné (juste rien à suivre) → on enregistre quand même le battement de cœur,
+    // sinon la santé afficherait « mort » alors que tout va bien.
+    await recordHeartbeat(supabase, 'chronopost-tracking', 'Aucune commande Chronopost à suivre.')
     return { statusCode: 200, body: 'Aucune commande Chronopost à suivre.' }
   }
 
@@ -143,5 +147,6 @@ exports.handler = async (event) => {
 
   const summary = `chronopost-tracking terminé — ${checked} vérifiée(s), ${delivered} livrée(s), ${errors} erreur(s).`
   console.log(summary)
+  await recordHeartbeat(supabase, 'chronopost-tracking', summary)
   return { statusCode: 200, body: summary }
 }

@@ -2,6 +2,7 @@ const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { computeRefundAmount } = require('./_fees')
 const { releaseSellerPayout } = require('./_payout')
+const { recordHeartbeat } = require('./_heartbeat')
 
 const escHtml = (str) =>
   String(str ?? '')
@@ -533,5 +534,6 @@ exports.handler = async (event) => {
 
   const summary = `auto-refund terminé — ${refunded} remboursé(s), ${drained} payout_pending débloqué(s), ${frozen} gelée(s) en litige, ${errors} erreur(s).`
   console.log(summary)
+  await recordHeartbeat(supabase, 'auto-refund', summary)
   return { statusCode: 200, body: summary }
 }

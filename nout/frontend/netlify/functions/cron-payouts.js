@@ -12,6 +12,7 @@
 const Stripe = require('stripe')
 const { createClient } = require('@supabase/supabase-js')
 const { releaseSellerPayout } = require('./_payout')
+const { recordHeartbeat } = require('./_heartbeat')
 
 const RECEIPT_WINDOW_HOURS = 48
 const SITE_URL = process.env.URL || 'https://nout.re'
@@ -73,6 +74,7 @@ exports.handler = async (event) => {
   }
   if (!orders?.length) {
     console.log('[cron-payouts] aucune commande à verser.')
+    await recordHeartbeat(supabase, 'cron-payouts', 'RAS — aucun versement en attente.')
     return { statusCode: 200, body: 'RAS — aucun versement en attente.' }
   }
 
@@ -114,6 +116,7 @@ exports.handler = async (event) => {
 
   const summary = `cron-payouts terminé — ${released} versée(s), ${skipped} ignorée(s), ${errors} erreur(s).`
   console.log(summary)
+  await recordHeartbeat(supabase, 'cron-payouts', summary)
   return { statusCode: 200, body: summary }
 }
 // redeploy trigger 1785152480 — active PAYOUT_CRON_KEY
