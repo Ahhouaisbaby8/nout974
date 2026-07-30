@@ -55,12 +55,19 @@ const fmtDate = (d) => d
 
 // État du DÉLAI avant annulation auto (le vendeur a 7 j pour remettre/expédier).
 // `date` = la date à afficher SOUS le libellé (remis le… / limite le… / annulée le…).
+//
+// DISTINCTION IMPORTANTE : « étiquette générée » ≠ « colis vraiment remis au transporteur ».
+// Le seul fait FIABLE est delivered_at (livraison confirmée par le transporteur). Un statut 'shipped'
+// sans delivered_at = le vendeur a juste généré l'étiquette → on N'AFFIRME PAS que le colis est parti.
 function delaiState(o) {
   if (o.status === 'cancelled')
     return { label: 'annulée — délai dépassé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500', date: null }
-  if (['shipped', 'delivered', 'completed', 'payout_pending'].includes(o.status))
-    // Remis à temps : on montre la DATE de remise (shipped_at).
-    return { label: 'remis à temps', color: 'bg-green-100 text-green-700', dot: 'bg-green-500', date: fmtDate(o.shipped_at) ? `remis le ${fmtDate(o.shipped_at)}` : null }
+  // Livraison RÉELLEMENT confirmée par le transporteur → là seulement « remis à temps ».
+  if (o.delivered_at || o.status === 'completed' || o.status === 'payout_pending')
+    return { label: 'livré', color: 'bg-green-100 text-green-700', dot: 'bg-green-500', date: fmtDate(o.delivered_at) ? `livré le ${fmtDate(o.delivered_at)}` : null }
+  // Étiquette générée mais transporteur n'a rien confirmé → colis pas (encore) réellement remis.
+  if (o.status === 'shipped')
+    return { label: 'colis pas encore remis', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500', date: fmtDate(o.shipped_at) ? `étiquette le ${fmtDate(o.shipped_at)}` : null }
   if (o.status === 'refunded')
     return { label: 'remboursée', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400', date: null }
   if (o.status !== 'paid' || !o.expires_at)

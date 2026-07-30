@@ -15,7 +15,7 @@ const STATUS_LABELS = {
   completed:      { label: 'Remise faite',          color: 'bg-green-100 text-green-700' },
   payout_pending: { label: 'Virement en attente',  color: 'bg-orange-100 text-orange-700' },
   refunded:       { label: 'Remboursé',             color: 'bg-gray-100 text-gray-500' },
-  shipped:        { label: 'Expédié',               color: 'bg-purple-100 text-purple-700' },
+  shipped:        { label: 'Étiquette prête',       color: 'bg-purple-100 text-purple-700' },
   delivered:      { label: 'Livré',                 color: 'bg-green-100 text-green-700' },
   cancelled:      { label: 'Annulé',                color: 'bg-gray-100 text-gray-500' },
   disputed:       { label: 'Litige',                color: 'bg-red-100 text-red-600' },
