@@ -40,7 +40,7 @@ function payoutState(o) {
     case 'disputed':
       return { label: 'Suspendu (litige)', sub: 'versement bloqué', color: 'bg-red-100 text-red-600', dot: 'bg-red-500' }
     case 'refunded':
-      return { label: 'Remboursé', sub: 'acheteur remboursé', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400' }
+      return { label: '✓ Acheteur remboursé', sub: 'remboursement effectué', color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' }
     case 'cancelled':
       return { label: 'Rien à verser', sub: 'commande annulée', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300' }
     default:
@@ -69,7 +69,7 @@ function delaiState(o) {
   if (o.status === 'shipped')
     return { label: 'colis pas encore remis', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500', date: fmtDate(o.shipped_at) ? `étiquette le ${fmtDate(o.shipped_at)}` : null }
   if (o.status === 'refunded')
-    return { label: 'remboursée', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400', date: null }
+    return { label: 'remboursée', color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', date: null }
   if (o.status !== 'paid' || !o.expires_at)
     return { label: '—', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300', date: null }
 
@@ -107,7 +107,7 @@ function orderAlert(o) {
 const WATCHED_CRONS = [
   { job: 'chronopost-tracking', label: 'Suivi Chronopost', desc: 'Vérifie si les colis Chronopost sont livrés' },
   { job: 'ubn-tracking',        label: 'Suivi UBN',        desc: 'Vérifie si les colis UBN sont livrés' },
-  { job: 'auto-refund',         label: 'Annulation & remboursement', desc: 'Annule et rembourse après 7 jours sans envoi' },
+  { job: 'auto-refund',         label: 'Annulation & remboursement', desc: 'Rembourse l\'acheteur : 7 j si rien envoyé, 10 j si colis expédié mais jamais déposé' },
   { job: 'cron-payouts',        label: 'Versement des vendeurs', desc: 'Verse les vendeurs 48h après livraison' },
 ]
 
