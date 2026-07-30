@@ -357,61 +357,85 @@ exports.handler = async (event) => {
     }
   }
 
-  // ── TEMPS 1 — FILET DE SÉCURITÉ LIVRAISON (gel pour examen manuel) ──
-  // Tant que le SUIVI TRANSPORTEUR (UBN/Chronopost) n'est pas branché, on ne peut PAS savoir si un colis
-  // est livré. Donc : NI auto-versement vendeur (trop risqué : on paierait même un colis jamais reçu),
-  // NI commande bloquée à vie. Une commande 'shipped' dont le délai a expiré est GELÉE en 'disputed' +
-  // notif admin → examen manuel dans le back-office (rembourser l'acheteur OU libérer le vendeur).
-  // AUCUN mouvement d'argent ici. (TEMPS 3 remplacera ce gel par la libération auto sur confirmation
-  // du transporteur.)
-  let frozen = 0
-  const SHIP_FREEZE_DAYS = 12
-  const freezeCutoff = new Date(Date.now() - SHIP_FREEZE_DAYS * 24 * 60 * 60 * 1000).toISOString()
+  // ── FILET LIVRAISON — REMBOURSEMENT AUTO DU COLIS JAMAIS DÉPOSÉ ──
+  // Cas réel (« Vend 3 pour 10€ ») : le vendeur GÉNÈRE l'étiquette (→ commande 'shipped') mais ne dépose
+  // JAMAIS le colis. Le suivi transporteur ne verra donc aucune livraison → la commande resterait coincée
+  // à vie en 'shipped', et l'acheteur ne serait jamais remboursé (l'ancien code ne remboursait que 'paid').
+  // Règle : une commande 'shipped' SANS livraison confirmée (delivered_at null) depuis > 10 jours →
+  // on considère le colis jamais remis → REMBOURSEMENT AUTOMATIQUE de l'acheteur (prix + port ; NOUT
+  // garde la protection, comme pour le cas 'paid'). 10 j = marge transport (colis lent à être scanné).
+  let shipRefunded = 0
+  const SHIP_REFUND_DAYS = 10
+  const shipCutoff = new Date(Date.now() - SHIP_REFUND_DAYS * 24 * 60 * 60 * 1000).toISOString()
   const { data: staleShipped, error: shippedErr } = await supabase
     .from('orders')
-    .select(`id, status, shipped_at, total_price, listing_id, listing:listings!listing_id(title)`)
+    .select(`id, status, shipped_at, delivered_at, stripe_payment_id, total_price, seller_payout,
+             shipping_fee, shipping_method, listing_id,
+             listing:listings!listing_id(title),
+             buyer:profiles!buyer_id(email, username)`)
     .eq('status', 'shipped')
-    .lt('shipped_at', freezeCutoff)
+    .is('delivered_at', null)                 // JAMAIS livré (sinon c'est le flux versement, pas remboursement)
+    .lt('shipped_at', shipCutoff)
 
   if (shippedErr) {
-    console.error('Erreur lecture commandes shipped (gel litige) :', shippedErr.message)
+    console.error('Erreur lecture commandes shipped (remboursement colis non déposé) :', shippedErr.message)
   } else if (staleShipped?.length) {
-    console.log(`${staleShipped.length} commande(s) expédiée(s) expirée(s) à geler en litige (>${SHIP_FREEZE_DAYS}j).`)
+    console.log(`${staleShipped.length} commande(s) expédiée(s) non livrée(s) > ${SHIP_REFUND_DAYS}j à rembourser.`)
     for (const order of staleShipped) {
       try {
-        // Gel ATOMIQUE : on ne passe en 'disputed' que si la commande est ENCORE 'shipped'
-        // (garde anti double-traitement / concurrence). AUCUN appel Stripe, aucun argent déplacé.
-        const { data: frozenRow } = await supabase
-          .from('orders')
-          .update({ status: 'disputed' })
-          .eq('id', order.id)
-          .eq('status', 'shipped')
-          .select('id')
-        if (!frozenRow || !frozenRow.length) continue   // déjà traitée ailleurs
-        frozen++
-        console.log(`Order ${order.id} gelée en litige (livraison non confirmée, >${SHIP_FREEZE_DAYS}j).`)
+        if (!order.stripe_payment_id) {
+          console.error(`Pas de stripe_payment_id (order ${order.id}) — remboursement colis non déposé impossible`)
+          errors++; continue
+        }
+        // Verrou atomique via escrow_codes (jamais rembourser deux fois, jamais si déjà versé au vendeur).
+        const { data: locked } = await supabase
+          .from('escrow_codes')
+          .update({ refunded_at: new Date().toISOString() })
+          .eq('order_id', order.id)
+          .is('refunded_at', null)
+          .is('confirmed_at', null)
+          .select()
+          .single()
+        if (!locked) { console.log(`Order ${order.id} déjà verrouillée/versée — pas de remboursement colis.`); continue }
 
-        // Notif ADMIN (même canal que confirm-receipt : email support). Examen humain requis.
-        const titre   = escHtml(order.listing?.title ?? 'l\'article')
-        const montant = Number(order.total_price ?? 0).toFixed(2)
-        await sendEmail(
-          'contact@nout.re',
-          `Livraison à examiner (gelée) — commande ${order.id}`,
-          `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
-             <h1 style="color:#1A3A8F;font-size:18px;margin:0 0 12px">Commande livraison à examiner</h1>
-             <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
-               La commande <strong>${order.id}</strong> (« ${titre} », ${montant} €) a été expédiée il y a plus de
-               ${SHIP_FREEZE_DAYS} jours sans confirmation. Le suivi transporteur n'étant pas encore branché,
-               elle a été <strong>gelée en litige</strong> (auto-versement suspendu).
-             </p>
-             <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
-               À traiter dans le back-office (rembourser l'acheteur ou libérer le vendeur).
-               <strong>Vérifier d'abord sur Stripe qu'aucun virement n'est déjà parti</strong> pour cette commande.
-             </p>
-           </div>`
-        )
+        const refundInfo = computeRefundAmount(order)
+        try {
+          await stripe.refunds.create(
+            { payment_intent: order.stripe_payment_id, ...(refundInfo.amountCents > 0 ? { amount: refundInfo.amountCents } : {}) },
+            { idempotencyKey: `refund_${order.id}` },
+          )
+        } catch (stripeErr) {
+          console.error(`STRIPE REFUND (colis non déposé) ÉCHOUÉ order ${order.id} :`, stripeErr.message)
+          errors++; continue
+        }
+
+        // Commande → refunded (garde : uniquement depuis 'shipped'), annonce remise en vente.
+        await Promise.all([
+          supabase.from('orders').update({ status: 'refunded' }).eq('id', order.id).eq('status', 'shipped'),
+          supabase.from('listings').update({ is_sold: false }).eq('id', order.listing_id),
+        ])
+        shipRefunded++
+        const montant = (refundInfo.amountCents / 100).toFixed(2)
+        console.log(`✅ Remboursement colis non déposé — order ${order.id} : ${montant} €`)
+
+        // Email acheteur
+        if (order.buyer?.email) {
+          await sendEmail(
+            order.buyer.email,
+            `Remboursement effectué — ${order.listing?.title ?? 'NOUT 974'}`,
+            `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
+               <h1 style="color:#1A3A8F;font-size:20px">Tu as été remboursé</h1>
+               <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+                 Le colis de « ${escHtml(order.listing?.title ?? 'ton article')} » n'a pas été pris en charge par
+                 le transporteur dans les délais. Ta commande est annulée et un remboursement de
+                 <strong>${montant} €</strong> (prix + livraison) a été effectué sur ton moyen de paiement.
+                 Il apparaîtra sous 5 à 10 jours ouvrés selon ta banque.
+               </p>
+             </div>`,
+          )
+        }
       } catch (e) {
-        console.error(`Gel litige order ${order.id} :`, e.message)
+        console.error(`Remboursement colis non déposé order ${order.id} :`, e.message)
         errors++
       }
     }
@@ -532,7 +556,7 @@ exports.handler = async (event) => {
     }
   }
 
-  const summary = `auto-refund terminé — ${refunded} remboursé(s), ${drained} payout_pending débloqué(s), ${frozen} gelée(s) en litige, ${errors} erreur(s).`
+  const summary = `auto-refund terminé — ${refunded} remboursé(s) (paid), ${shipRefunded} remboursé(s) (colis non déposé), ${drained} payout_pending débloqué(s), ${errors} erreur(s).`
   console.log(summary)
   await recordHeartbeat(supabase, 'auto-refund', summary)
   return { statusCode: 200, body: summary }

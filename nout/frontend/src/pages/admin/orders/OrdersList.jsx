@@ -86,6 +86,23 @@ function delaiState(o) {
   return { label: `${dLeft} j restants`, color: 'bg-green-100 text-green-700', dot: 'bg-green-500', date: limite }
 }
 
+// Une commande mérite-t-elle l'attention de l'admin ? Renvoie un motif court, ou null.
+// But : repérer visuellement les commandes à surveiller SANS avoir à enquêter une par une.
+function orderAlert(o) {
+  // Colis dont l'étiquette est générée mais jamais confirmé livré, et qui traîne.
+  if (o.status === 'shipped' && !o.delivered_at) {
+    const days = o.shipped_at ? Math.floor((Date.now() - new Date(o.shipped_at).getTime()) / 86400000) : null
+    if (days != null && days >= 10) return { level: 'danger', txt: `colis non remis depuis ${days} j` }
+    if (days != null && days >= 5)  return { level: 'warn',   txt: `colis pas encore remis (${days} j)` }
+    return { level: 'warn', txt: 'colis pas encore remis' }
+  }
+  if (o.status === 'disputed') return { level: 'danger', txt: 'litige à traiter' }
+  // Délai de remise dépassé mais commande encore en attente (devrait être annulée).
+  if (o.status === 'paid' && o.expires_at && new Date(o.expires_at).getTime() < Date.now())
+    return { level: 'danger', txt: 'délai dépassé — à annuler' }
+  return null
+}
+
 // Crons dont on surveille la santé (nom technique → libellé clair + ce qu'il fait).
 const WATCHED_CRONS = [
   { job: 'chronopost-tracking', label: 'Suivi Chronopost', desc: 'Vérifie si les colis Chronopost sont livrés' },
@@ -306,6 +323,20 @@ export default function OrdersList() {
                   <div><span className="text-gray-400">N° suivi : </span>{inspect.commande.numero_suivi ?? '—'}</div>
                   <div><span className="text-gray-400">Expédié le : </span>{inspect.commande.expedie_le ? new Date(inspect.commande.expedie_le).toLocaleString('fr-FR') : '—'}</div>
                   <div><span className="text-gray-400">Livré le : </span>{inspect.commande.livre_le ? new Date(inspect.commande.livre_le).toLocaleString('fr-FR') : <span className="text-amber-600 font-semibold">non livré</span>}</div>
+                  {/* Temps écoulé depuis l'expédition + combien il reste avant remboursement auto (10 j). */}
+                  {inspect.commande.expedie_le && !inspect.commande.livre_le && (() => {
+                    const j = Math.floor((Date.now() - new Date(inspect.commande.expedie_le).getTime()) / 86400000)
+                    const reste = 10 - j
+                    return (
+                      <div className="sm:col-span-2">
+                        <span className="text-gray-400">Depuis l'expédition : </span>
+                        <b className={j >= 10 ? 'text-red-600' : 'text-amber-600'}>{j} jour{j > 1 ? 's' : ''}</b>
+                        {reste > 0
+                          ? <span className="text-gray-500"> — remboursement auto de l'acheteur dans {reste} jour{reste > 1 ? 's' : ''} si toujours pas livré</span>
+                          : <span className="text-red-600 font-semibold"> — délai dépassé, remboursement au prochain passage</span>}
+                      </div>
+                    )
+                  })()}
                 </div>
                 <div className="mt-3 rounded-lg bg-gray-50 border border-gray-100 p-3">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Argent (source : Stripe)</p>
@@ -354,9 +385,22 @@ export default function OrdersList() {
             <tbody className="divide-y divide-gray-100">
               {orders.map(o => {
                 const s = STATUS[o.status] ?? STATUS.pending
+                const alert = orderAlert(o)   // commande à surveiller ? (surlignage + badge)
+                const rowBg = alert?.level === 'danger' ? 'bg-red-50 hover:bg-red-100'
+                  : alert?.level === 'warn' ? 'bg-amber-50 hover:bg-amber-100'
+                  : 'hover:bg-gray-50'
                 return (
-                  <tr key={o.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-nout-dark max-w-[180px] truncate">{o.listings?.title ?? '—'}</td>
+                  <tr key={o.id} className={rowBg}>
+                    <td className="px-4 py-3 font-medium text-nout-dark max-w-[200px]">
+                      <div className="truncate">{o.listings?.title ?? '—'}</div>
+                      {alert && (
+                        <span className={`inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                          alert.level === 'danger' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          ⚠ {alert.txt}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-600">{o.buyer?.username ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{o.seller?.username ?? '—'}</td>
                     <td className="px-4 py-3 font-semibold text-nout-primary">{formatPrice(o.total_price)}</td>
