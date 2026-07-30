@@ -21,37 +21,38 @@ export default function OrdersList() {
   const [diag,    setDiag]    = useState(null)   // état factuel lu directement en base (fraîcheur)
   const [diagLoading, setDiagLoading] = useState(false)
 
-  // Diagnostic « la page est-elle à jour ? » : lit la base via la SERVICE KEY (aucune commande
-  // masquable par la RLS) et renvoie total + date de la plus récente + volumes 7/30 j.
-  const runDiag = useCallback(async () => {
+  // Chargement des commandes VIA LE SERVEUR (service key) : contourne la RLS qui, en lecture
+  // navigateur, masquait des commandes (bug « il manque des lignes récentes »). La même réponse
+  // alimente l'encart de fraîcheur ET le tableau → un seul appel, tout cohérent.
+  const load = useCallback(async () => {
+    setLoading(true)
     setDiagLoading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/.netlify/functions/admin-orders-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ status: filter }),
       })
       const data = await res.json()
-      if (res.ok) setDiag(data)
-    } catch { /* silencieux : le diagnostic est un confort, pas un bloqueur */ }
-    finally { setDiagLoading(false) }
-  }, [])
-
-  useEffect(() => { runDiag() }, [runDiag])
-
-  const load = useCallback(() => {
-    setLoading(true)
-    let q = supabase.from('orders')
-      .select(`id, total_price, status, created_at,
-        buyer:profiles!buyer_id(username),
-        seller:profiles!seller_id(username),
-        listings(title)`)
-      .order('created_at', { ascending: false }).limit(50)
-    if (filter !== 'all') q = q.eq('status', filter)
-    q.then(({ data }) => setOrders(data ?? [])).finally(() => setLoading(false))
+      if (res.ok) {
+        setDiag(data)
+        setOrders((data.orders ?? []).map(o => ({
+          id: o.id,
+          total_price: o.montant,
+          status: o.statut,
+          created_at: o.date,
+          buyer:    { username: o.acheteur !== '—' ? o.acheteur : null },
+          seller:   { username: o.vendeur  !== '—' ? o.vendeur  : null },
+          listings: { title:    o.article  !== '—' ? o.article  : null },
+        })))
+      }
+    } catch { /* silencieux */ }
+    finally { setLoading(false); setDiagLoading(false) }
   }, [filter])
 
   useEffect(() => { load() }, [load])
+  const runDiag = load   // le bouton « Rafraîchir » relance le même chargement complet
 
   // Résolution d'un litige (admin) : rembourse l'acheteur OU libère le paiement au vendeur.
   const resolve = async (orderId, action) => {

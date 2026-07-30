@@ -35,6 +35,10 @@ exports.handler = async (event) => {
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès réservé aux administrateurs.' }) }
   }
 
+  // Filtre de statut optionnel (pour alimenter le tableau admin complet).
+  let statusFilter = null
+  try { statusFilter = (JSON.parse(event.body || '{}').status) || null } catch { /* défaut = tout */ }
+
   try {
     // Total exact (head + count → ne rapatrie aucune ligne)
     const { count: total, error: countErr } = await supabase
@@ -60,19 +64,24 @@ exports.handler = async (event) => {
       if (t >= D30) recent30++
     }
 
-    // Les 20 dernières commandes, détaillées.
-    const { data: latest, error: latestErr } = await supabase
+    // Liste COMPLÈTE des commandes (jusqu'à 200), triée du plus récent au plus ancien.
+    // Passe par la service key → contourne la RLS : l'admin voit TOUTES les commandes (le bug
+    // « il manque des lignes » venait de la lecture navigateur bridée par la RLS).
+    let listQ = supabase
       .from('orders')
       .select(`id, total_price, status, created_at,
         buyer:profiles!buyer_id(username),
         seller:profiles!seller_id(username),
         listings(title)`)
-      .order('created_at', { ascending: false })
-      .limit(20)
-    if (latestErr) throw new Error(latestErr.message)
+      .order('created_at', { ascending: false, nullsFirst: false })
+      .limit(200)
+    if (statusFilter && statusFilter !== 'all') listQ = listQ.eq('status', statusFilter)
+    const { data: allOrders, error: listErr } = await listQ
+    if (listErr) throw new Error(listErr.message)
 
-    const rows = (latest ?? []).map(o => ({
-      article: o.listings?.title ?? '—',
+    const rows = (allOrders ?? []).map(o => ({
+      id:       o.id,
+      article:  o.listings?.title ?? '—',
       acheteur: o.buyer?.username ?? '—',
       vendeur:  o.seller?.username ?? '—',
       montant:  o.total_price,
@@ -80,7 +89,10 @@ exports.handler = async (event) => {
       date:     o.created_at,
     }))
 
-    const mostRecent = rows[0]?.date ?? null
+    // Date de la plus récente : indépendante du filtre statut (donnée globale).
+    const mostRecent = (statusRows ?? [])
+      .map(r => r.created_at).filter(Boolean)
+      .sort().slice(-1)[0] ?? null
 
     return { statusCode: 200, headers, body: JSON.stringify({
       total,
@@ -88,7 +100,7 @@ exports.handler = async (event) => {
       recent7,             // nb de commandes des 7 derniers jours
       recent30,            // nb de commandes des 30 derniers jours
       byStatus,            // { paid: n, cancelled: n, ... }
-      latest: rows,        // 20 dernières, détaillées
+      orders: rows,        // TOUTES les commandes (filtrées par statut si demandé), pour le tableau
       generatedAt: new Date().toISOString(),
     }) }
   } catch (e) {
