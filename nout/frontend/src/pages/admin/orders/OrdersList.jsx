@@ -73,8 +73,9 @@ function delaiState(o) {
   if (o.status !== 'paid' || !o.expires_at)
     return { label: '—', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300', date: null }
 
-  // En attente : on montre la DATE LIMITE (expires_at) + le temps restant.
-  const limite = fmtDate(o.expires_at) ? `limite le ${fmtDate(o.expires_at)}` : null
+  // En attente : on montre la DATE LIMITE de remise (expires_at) + le temps restant.
+  // Formulation explicite pour le suivi admin : « à remettre avant le … ».
+  const limite = fmtDate(o.expires_at) ? `à remettre avant le ${fmtDate(o.expires_at)}` : null
   const msLeft = new Date(o.expires_at).getTime() - Date.now()
   if (msLeft <= 0)
     return { label: 'délai écoulé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500', date: limite }
