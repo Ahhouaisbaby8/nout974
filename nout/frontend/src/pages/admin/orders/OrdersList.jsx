@@ -13,6 +13,41 @@ const STATUS = {
   disputed:       { label: 'Litige',      color: 'bg-red-100 text-red-600' },
 }
 
+// Fenêtre de protection acheteur : le versement auto part 48h APRÈS la livraison constatée.
+const RECEIPT_WINDOW_H = 48
+
+// État du VERSEMENT VENDEUR d'une commande : a-t-il reçu / dans combien de temps ?
+// Déduit du statut + delivered_at (pas d'appel Stripe → instantané pour toute la liste).
+function payoutState(o) {
+  switch (o.status) {
+    case 'completed':
+      return { label: 'Vendeur payé', sub: 'versement effectué', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
+    case 'payout_pending':
+      return { label: 'Versement en cours', sub: 'en route vers le vendeur', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' }
+    case 'delivered': {
+      // Livré → payé automatiquement 48h après. On affiche le temps restant.
+      if (!o.delivered_at) return { label: 'Bientôt', sub: 'livré, versement sous 48h', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' }
+      const dueAt = new Date(o.delivered_at).getTime() + RECEIPT_WINDOW_H * 3600 * 1000
+      const msLeft = dueAt - Date.now()
+      if (msLeft <= 0) return { label: 'Imminent', sub: 'délai écoulé, versement au prochain passage', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' }
+      const hLeft = Math.ceil(msLeft / 3600000)
+      const when = hLeft >= 24 ? `sous ${Math.ceil(hLeft / 24)} j` : `sous ${hLeft} h`
+      return { label: `Versement ${when}`, sub: 'après le délai de protection 48h', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' }
+    }
+    case 'paid':
+    case 'shipped':
+      return { label: 'En attente de livraison', sub: 'argent sécurisé chez NOUT', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400' }
+    case 'disputed':
+      return { label: 'Suspendu (litige)', sub: 'versement bloqué', color: 'bg-red-100 text-red-600', dot: 'bg-red-500' }
+    case 'refunded':
+      return { label: 'Remboursé', sub: 'acheteur remboursé', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400' }
+    case 'cancelled':
+      return { label: 'Rien à verser', sub: 'commande annulée', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300' }
+    default:
+      return { label: '—', sub: '', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300' }
+  }
+}
+
 export default function OrdersList() {
   const [orders,  setOrders]  = useState([])
   const [loading, setLoading] = useState(true)
@@ -42,6 +77,8 @@ export default function OrdersList() {
           total_price: o.montant,
           status: o.statut,
           created_at: o.date,
+          delivered_at: o.delivered_at,
+          seller_payout: o.seller_payout,
           buyer:    { username: o.acheteur !== '—' ? o.acheteur : null },
           seller:   { username: o.vendeur  !== '—' ? o.vendeur  : null },
           listings: { title:    o.article  !== '—' ? o.article  : null },
@@ -140,6 +177,7 @@ export default function OrdersList() {
                 <th className="px-4 py-3 text-left">Vendeur</th>
                 <th className="px-4 py-3 text-left">Montant</th>
                 <th className="px-4 py-3 text-left">Statut</th>
+                <th className="px-4 py-3 text-left">Versement vendeur</th>
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Actions</th>
               </tr>
@@ -154,6 +192,17 @@ export default function OrdersList() {
                     <td className="px-4 py-3 text-gray-600">{o.seller?.username ?? '—'}</td>
                     <td className="px-4 py-3 font-semibold text-nout-primary">{formatPrice(o.total_price)}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full ${s.color}`}>{s.label}</span></td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const p = payoutState(o)
+                        return (
+                          <span className="inline-flex items-center gap-1.5" title={p.sub}>
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${p.dot}`} />
+                            <span className={`text-xs px-2 py-1 rounded-full ${p.color}`}>{p.label}</span>
+                          </span>
+                        )
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">{formatRelativeDate(o.created_at)}</td>
                     <td className="px-4 py-3">
                       {o.status === 'disputed' ? (

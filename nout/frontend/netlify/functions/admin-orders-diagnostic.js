@@ -69,7 +69,7 @@ exports.handler = async (event) => {
     // « il manque des lignes » venait de la lecture navigateur bridée par la RLS).
     let listQ = supabase
       .from('orders')
-      .select(`id, total_price, status, created_at,
+      .select(`id, total_price, status, created_at, delivered_at, seller_payout,
         buyer:profiles!buyer_id(username),
         seller:profiles!seller_id(username),
         listings(title)`)
@@ -80,13 +80,15 @@ exports.handler = async (event) => {
     if (listErr) throw new Error(listErr.message)
 
     const rows = (allOrders ?? []).map(o => ({
-      id:       o.id,
-      article:  o.listings?.title ?? '—',
-      acheteur: o.buyer?.username ?? '—',
-      vendeur:  o.seller?.username ?? '—',
-      montant:  o.total_price,
-      statut:   o.status,
-      date:     o.created_at,
+      id:           o.id,
+      article:      o.listings?.title ?? '—',
+      acheteur:     o.buyer?.username ?? '—',
+      vendeur:      o.seller?.username ?? '—',
+      montant:      o.total_price,
+      statut:       o.status,
+      date:         o.created_at,
+      delivered_at: o.delivered_at ?? null,   // pour calculer le temps restant avant versement auto (48h)
+      seller_payout: o.seller_payout ?? null,  // montant dû au vendeur
     }))
 
     // Date de la plus récente : indépendante du filtre statut (donnée globale).
