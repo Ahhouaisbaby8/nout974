@@ -11,7 +11,7 @@ import {
 } from '../utils/shipping'
 import { REUNION_COMMUNES, REUNION_CP, sortRelaysByProximity } from '../utils/communes974'
 import { isContactCategory } from '../utils/categories'
-import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck, Info } from 'lucide-react'
+import { MapPin, Home as HomeIcon, Store, ShieldCheck, Lock, ChevronLeft, Truck, Info, Clock } from 'lucide-react'
 import { SAFE_ZONES, SAFE_TIPS } from '../utils/safeZones'
 import { thumbUrl } from '../utils/image'
 import Spinner from '../components/ui/Spinner'
@@ -374,6 +374,23 @@ export default function Checkout() {
             <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-nout-texte text-base">
               <span>Total</span><span>{formatPrice(totalAcheteur)}</span>
             </div>
+          </div>
+
+          {/* Délai de protection : on prévient AVANT de payer. Le vendeur a 7 jours pour remettre/expédier,
+              sinon la commande est annulée et l'acheteur remboursé automatiquement. Message adapté au mode. */}
+          <div className="mt-4 flex gap-2.5 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5">
+            <Clock className="w-4 h-4 text-[#D97706] flex-shrink-0 mt-0.5" />
+            <p className="text-[11.5px] text-gray-600 leading-snug">
+              <span className="font-semibold text-[#B45309]">
+                {deliveryId === 'hand'
+                  ? 'La remise doit se faire sous 7 jours.'
+                  : 'Le vendeur a 7 jours pour t\'envoyer l\'article.'}
+              </span>{' '}
+              {deliveryId === 'hand'
+                ? "Sans confirmation de la remise sous 7 jours, la commande est annulée et tu es intégralement remboursé."
+                : "Sans dépôt du colis sous 7 jours, la commande est annulée et tu es intégralement remboursé."}
+              {' '}Ton paiement reste sécurisé chez NOUT en attendant.
+            </p>
           </div>
 
           {payError && <p className="text-[13px] text-red-500 mt-3">{payError}</p>}

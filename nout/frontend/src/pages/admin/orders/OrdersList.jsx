@@ -48,6 +48,28 @@ function payoutState(o) {
   }
 }
 
+// État du DÉLAI avant annulation auto (le vendeur a 7 j pour remettre/expédier).
+// Ne concerne que les commandes 'paid' (en attente) : ailleurs, le délai n'a plus lieu d'être.
+function delaiState(o) {
+  if (o.status === 'cancelled')
+    return { label: 'annulée — délai dépassé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500' }
+  if (['shipped', 'delivered', 'completed', 'payout_pending'].includes(o.status))
+    return { label: 'remis à temps', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
+  if (o.status === 'refunded')
+    return { label: 'remboursée', color: 'bg-gray-100 text-gray-500', dot: 'bg-gray-400' }
+  if (o.status !== 'paid' || !o.expires_at)
+    return { label: '—', color: 'bg-gray-100 text-gray-400', dot: 'bg-gray-300' }
+
+  const msLeft = new Date(o.expires_at).getTime() - Date.now()
+  if (msLeft <= 0)
+    return { label: 'délai écoulé', color: 'bg-red-50 text-red-600', dot: 'bg-red-500' }
+  const hLeft = Math.ceil(msLeft / 3600000)
+  if (hLeft <= 24)
+    return { label: `bientôt — ${hLeft} h`, color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' }
+  const dLeft = Math.ceil(hLeft / 24)
+  return { label: `${dLeft} j restants`, color: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
+}
+
 export default function OrdersList() {
   const [orders,  setOrders]  = useState([])
   const [loading, setLoading] = useState(true)
@@ -79,6 +101,7 @@ export default function OrdersList() {
           created_at: o.date,
           delivered_at: o.delivered_at,
           seller_payout: o.seller_payout,
+          expires_at: o.expires_at,
           buyer:    { username: o.acheteur !== '—' ? o.acheteur : null },
           seller:   { username: o.vendeur  !== '—' ? o.vendeur  : null },
           listings: { title:    o.article  !== '—' ? o.article  : null },
@@ -177,6 +200,7 @@ export default function OrdersList() {
                 <th className="px-4 py-3 text-left">Vendeur</th>
                 <th className="px-4 py-3 text-left">Montant</th>
                 <th className="px-4 py-3 text-left">Statut</th>
+                <th className="px-4 py-3 text-left">Délai avant annulation</th>
                 <th className="px-4 py-3 text-left">Versement vendeur</th>
                 <th className="px-4 py-3 text-left">Date</th>
                 <th className="px-4 py-3 text-left">Actions</th>
@@ -192,6 +216,17 @@ export default function OrdersList() {
                     <td className="px-4 py-3 text-gray-600">{o.seller?.username ?? '—'}</td>
                     <td className="px-4 py-3 font-semibold text-nout-primary">{formatPrice(o.total_price)}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full ${s.color}`}>{s.label}</span></td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const dl = delaiState(o)
+                        return (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dl.dot}`} />
+                            <span className={`text-xs px-2 py-1 rounded-full ${dl.color}`}>{dl.label}</span>
+                          </span>
+                        )
+                      })()}
+                    </td>
                     <td className="px-4 py-3">
                       {(() => {
                         const p = payoutState(o)

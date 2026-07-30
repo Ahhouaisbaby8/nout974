@@ -7,6 +7,7 @@ import { trackingUrl, orderDeliveryLabel } from '../utils/shipping'
 import Spinner from '../components/ui/Spinner'
 import EscrowConfirm from '../components/EscrowConfirm'
 import { supabase } from '../services/supabase'
+import { Clock } from 'lucide-react'
 
 const STATUS_LABELS = {
   pending:        { label: 'En attente',          color: 'bg-yellow-100 text-yellow-700' },
@@ -132,6 +133,76 @@ function ReviewModal({ order, onClose, onSubmitted }) {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Compte à rebours avant annulation automatique : le vendeur a 7 jours (date limite = escrow_codes.expires_at)
+// pour déposer le colis / confirmer la remise. Sinon la commande est annulée et l'acheteur remboursé.
+// `role` = 'acheteur' | 'vendeur' → message adapté. `isHand` = remise en main propre (sinon livraison).
+function DelaiCountdown({ order, role, isHand }) {
+  const [expiresAt, setExpiresAt] = useState(null)
+  const [now, setNow] = useState(Date.now())
+
+  useEffect(() => {
+    let cancelled = false
+    supabase
+      .from('escrow_codes')
+      .select('expires_at')
+      .eq('order_id', order.id)
+      .maybeSingle()
+      .then(({ data }) => { if (!cancelled && data?.expires_at) setExpiresAt(data.expires_at) })
+    return () => { cancelled = true }
+  }, [order.id])
+
+  // Rafraîchit chaque minute (suffisant pour un délai en jours/heures).
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
+  if (!expiresAt) return null
+  const msLeft = new Date(expiresAt).getTime() - now
+  if (msLeft <= 0) return null   // délai dépassé : l'annulation auto s'en charge (cron)
+
+  let s = Math.floor(msLeft / 1000)
+  const d = Math.floor(s / 86400); s -= d * 86400
+  const h = Math.floor(s / 3600);  s -= h * 3600
+  const m = Math.floor(s / 60)
+  const urgent = msLeft < 24 * 3600 * 1000   // moins de 24h → ton plus insistant
+
+  const Unit = ({ n, u }) => (
+    <div className="flex-1 rounded-lg bg-white border border-[#FDE68A] py-1.5 text-center">
+      <div className="text-lg font-extrabold text-nout-texte tabular-nums leading-none">{n}</div>
+      <div className="text-[9px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{u}</div>
+    </div>
+  )
+
+  return (
+    <div className="mt-3 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3">
+      <p className="flex items-center gap-2 text-[13px] font-semibold text-[#B45309] mb-2">
+        <Clock className="w-4 h-4 text-[#D97706]" />
+        {role === 'vendeur'
+          ? (isHand ? 'Il te reste pour remettre l\'article' : 'Il te reste pour expédier')
+          : 'Temps restant au vendeur pour t\'envoyer l\'article'}
+      </p>
+      <div className="flex gap-2 mb-2">
+        <Unit n={d} u="jours" />
+        <Unit n={String(h).padStart(2, '0')} u="heures" />
+        <Unit n={String(m).padStart(2, '0')} u="min" />
+      </div>
+      <p className="text-[11.5px] text-gray-600 leading-snug">
+        {role === 'vendeur'
+          ? (isHand
+              ? 'Confirme la remise avec le code de l\'acheteur avant la fin du délai. Sinon la vente est annulée et l\'acheteur remboursé — tu ne toucheras pas l\'argent.'
+              : 'Dépose ton colis avant la fin du délai. Sinon la vente est annulée et l\'acheteur remboursé — tu ne toucheras pas l\'argent.')
+          : 'Si le vendeur ne t\'envoie rien à temps, tu es remboursé automatiquement. Ton paiement est sécurisé chez NOUT.'}
+      </p>
+      {urgent && (
+        <p className="text-[11px] font-semibold text-[#DC2626] mt-1.5">
+          {role === 'vendeur' ? 'Dernier jour — agis vite pour ne pas perdre la vente.' : 'Dernier jour du délai.'}
+        </p>
+      )}
     </div>
   )
 }
@@ -621,6 +692,16 @@ export default function Orders() {
                       )}
                     </div>
                   </div>
+
+                  {/* Compte à rebours avant annulation auto — visible tant que la commande est payée
+                      mais pas encore expédiée/remise (c'est pendant cette fenêtre que le délai court). */}
+                  {order.status === 'paid' && (
+                    <DelaiCountdown
+                      order={order}
+                      role={tab === 'achats' ? 'acheteur' : 'vendeur'}
+                      isHand={order.shipping_method !== 'relay' && order.shipping_method !== 'home'}
+                    />
+                  )}
 
                   {/* Confirmation escrow — vendeur, statut paid (remise en main propre) */}
                   <EscrowConfirm

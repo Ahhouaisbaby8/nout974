@@ -79,6 +79,18 @@ exports.handler = async (event) => {
     const { data: allOrders, error: listErr } = await listQ
     if (listErr) throw new Error(listErr.message)
 
+    // Date limite avant annulation auto (escrow_codes.expires_at) pour les commandes affichées.
+    // Une seule requête (in), indexée par order_id → le front affiche le temps restant.
+    const orderIds = (allOrders ?? []).map(o => o.id)
+    const expiryByOrder = {}
+    if (orderIds.length) {
+      const { data: escrows } = await supabase
+        .from('escrow_codes')
+        .select('order_id, expires_at, confirmed_at, refunded_at')
+        .in('order_id', orderIds)
+      for (const e of escrows ?? []) expiryByOrder[e.order_id] = e
+    }
+
     const rows = (allOrders ?? []).map(o => ({
       id:           o.id,
       article:      o.listings?.title ?? '—',
@@ -89,6 +101,7 @@ exports.handler = async (event) => {
       date:         o.created_at,
       delivered_at: o.delivered_at ?? null,   // pour calculer le temps restant avant versement auto (48h)
       seller_payout: o.seller_payout ?? null,  // montant dû au vendeur
+      expires_at:   expiryByOrder[o.id]?.expires_at ?? null,   // date limite avant annulation auto
     }))
 
     // Date de la plus récente : indépendante du filtre statut (donnée globale).
