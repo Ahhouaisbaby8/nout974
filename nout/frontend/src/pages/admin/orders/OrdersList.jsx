@@ -18,6 +18,26 @@ export default function OrdersList() {
   const [loading, setLoading] = useState(true)
   const [filter,  setFilter]  = useState('all')
   const [busy,    setBusy]    = useState(null)
+  const [diag,    setDiag]    = useState(null)   // état factuel lu directement en base (fraîcheur)
+  const [diagLoading, setDiagLoading] = useState(false)
+
+  // Diagnostic « la page est-elle à jour ? » : lit la base via la SERVICE KEY (aucune commande
+  // masquable par la RLS) et renvoie total + date de la plus récente + volumes 7/30 j.
+  const runDiag = useCallback(async () => {
+    setDiagLoading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/admin-orders-diagnostic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+      })
+      const data = await res.json()
+      if (res.ok) setDiag(data)
+    } catch { /* silencieux : le diagnostic est un confort, pas un bloqueur */ }
+    finally { setDiagLoading(false) }
+  }, [])
+
+  useEffect(() => { runDiag() }, [runDiag])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -60,7 +80,45 @@ export default function OrdersList() {
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold text-nout-dark mb-6">Commandes</h1>
+      <h1 className="text-2xl font-extrabold text-nout-dark mb-4">Commandes</h1>
+
+      {/* Encart FRAÎCHEUR : confirme, chiffres à l'appui, que la page reflète bien la base en direct.
+          Lu via la fonction serveur (service key) → aucune commande ne peut y échapper. */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+        {diag ? (
+          <>
+            <div>
+              <span className="text-gray-400">Total commandes&nbsp;: </span>
+              <span className="font-bold text-nout-dark">{diag.total}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">7 derniers jours&nbsp;: </span>
+              <span className={`font-bold ${diag.recent7 > 0 ? 'text-emerald-600' : 'text-gray-500'}`}>{diag.recent7}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">30 derniers jours&nbsp;: </span>
+              <span className={`font-bold ${diag.recent30 > 0 ? 'text-emerald-600' : 'text-gray-500'}`}>{diag.recent30}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Dernière commande&nbsp;: </span>
+              <span className="font-bold text-nout-dark">
+                {diag.mostRecent
+                  ? new Date(diag.mostRecent).toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  : 'aucune'}
+              </span>
+            </div>
+            <button
+              onClick={runDiag}
+              disabled={diagLoading}
+              className="ml-auto text-xs font-semibold text-nout-primary hover:underline disabled:opacity-50"
+            >
+              {diagLoading ? 'Vérification…' : 'Rafraîchir'}
+            </button>
+          </>
+        ) : (
+          <span className="text-gray-400 text-xs">{diagLoading ? 'Lecture de la base…' : 'Diagnostic indisponible.'}</span>
+        )}
+      </div>
 
       <div className="flex gap-2 flex-wrap mb-5">
         {[['all','Toutes'], ...Object.entries(STATUS).map(([k,v]) => [k, v.label])].map(([val, label]) => (
