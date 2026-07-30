@@ -50,14 +50,16 @@ const sendEmail = async (to, subject, html) => {
 }
 
 exports.handler = async (event) => {
-  // Protection contre les appels HTTP manuels non autorisés.
-  // Les invocations planifiées par Netlify arrivent sans httpMethod (null/undefined).
-  // Un appel HTTP direct doit présenter le header x-nout-cron = CRON_SECRET.
-  if (event.httpMethod) {
-    const secret = process.env.CRON_SECRET
-    if (!secret || event.headers['x-nout-cron'] !== secret) {
-      return { statusCode: 401, body: 'Non autorisé.' }
-    }
+  // ── AUTORISATION ──
+  // On accepte une invocation UNIQUEMENT si elle vient de Netlify (planifiée OU « Run now » du dashboard)
+  // ou d'un appel serveur signé. Netlify marque SES invocations avec le header X-NF-Event: schedule +
+  // user-agent « Netlify Clockwork » (doc officielle) — un appel externe ne peut pas forger ce contexte.
+  // Sinon, un appel HTTP direct doit présenter x-nout-cron = CRON_SECRET. Tout le reste est refusé.
+  const h = event.headers || {}
+  const isNetlify = (h['x-nf-event'] === 'schedule') || /clockwork/i.test(h['user-agent'] || '')
+  const hasSecret = process.env.CRON_SECRET && h['x-nout-cron'] === process.env.CRON_SECRET
+  if (event.httpMethod && !isNetlify && !hasSecret) {
+    return { statusCode: 401, body: 'Non autorisé.' }
   }
 
   console.log('⏰ auto-refund démarré', new Date().toISOString())
