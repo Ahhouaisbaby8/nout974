@@ -99,6 +99,50 @@ Question d'Amandine : NOUT est-il VRAIMENT à jour (interroge les transporteurs,
 3. (Optionnel) Bouton admin « Rembourser maintenant » pour commandes coincées (ex. Vend 3 pour 10€).
 4. SEO (voir [[seo_rappel]]) = à faire à la fin, priorité majeure.
 
+## SUITE 30-31/07 (soir) — remboursement colis non déposé + audit argent complet
+⭐ Grosse suite. Amandine repère « Vend 3 pour 10€ » (acheteur thomas) affichée expédiée/remis à temps
+alors que le colis UBN n'a JAMAIS été déposé, + elle a reçu 4,35€ Revolut → crainte versement anormal.
+
+- **Enquête (admin-order-inspect)** : PAS de bug argent. Vendeur PAS payé. 4,35€ = payout PLATEFORME
+  [[stripe_compte_plateforme]]. Juste libellé trompeur → corrigé (« Étiquette prête », « colis pas encore remis »).
+- **BUG RACINE TROUVÉ** : auto-refund ne remboursait QUE les commandes 'paid' → une commande 'shipped'
+  (étiquette générée) dont le colis n'est jamais déposé restait coincée à vie, acheteur jamais remboursé.
+  FIX (`8e41cdc`) : commande 'shipped' + delivered_at null + shipped_at > **10j** → remboursement AUTO
+  (Stripe idempotent, verrou escrow, relist, email). REMPLACE l'ancien gel-litige-12j.
+- **Le fameux « 4 ms »** : le bouton « Run now » de Netlify était bloqué par le garde x-nout-cron (401 en 4ms).
+  Fix `6ba2891` : accepter les invocations Netlify (header X-NF-Event: schedule / UA Netlify Clockwork),
+  externes toujours refusés sauf x-nout-cron. + init paresseuse Stripe/Supabase `f4a0a15`.
+- **thomas REMBOURSÉ** 5,50€ (via bouton admin `admin-refund-order` `14ef27f`), confirmé Stripe « Remboursement partiel ».
+- **Surlignage commandes à problème** (rouge/ambre + badge « colis non remis depuis X j ») + temps écoulé
+  dans l'enquête + commandes remboursées bien visibles en vert (`69fa47f`).
+- **cron-logistics.js** (`88133ed`) : endpoint chef d'orchestre (chronopost+ubn+auto-refund en 1 appel,
+  clé PAYOUT_CRON_KEY). ⚠️ FAIT DOUBLON avec la proposition de Dawson (5 jobs séparés x-nout-cron) → À TRANCHER.
+
+### ⭐ NETLIFY MARCHE (je me trompais) — vérifié via les captures d'Amandine
+Les crons natifs SONT « Scheduled » avec next execution programmée (auto-refund 22h, chronopost 22h15…).
+`auto-refund` TOURNE (Run now a remboursé thomas). Ce n'est PAS l'abonnement. Reste à confirmer via LOGS
+si chronopost-tracking/ubn-tracking tournent (pastilles rouges = pas encore d'exéc. avec le code heartbeat).
+
+### AUDIT ARGENT COMPLET (tout vérifié dans le code) — RASSURANT
+- ✅ Versement vendeur (48h, cron externe), remboursement 7j/10j, LITIGE (bouton « Signaler » → disputed
+  + email + versement suspendu, confirm-receipt.js), **CHARGEBACK géré** (stripe-webhook.js `charge.dispute.created`
+  → reprend l'argent au vendeur + gèle retraits + email → NOUT jamais à découvert).
+- 🟠 SEUL VRAI RISQUE : suivi transporteur (chronopost-tracking/ubn-tracking) peut-être mort → si oui,
+  aucun colis ne passe 'delivered' → personne payé/aucun litige démarré. À CONFIRMER (logs Netlify + Dawson).
+
+### ⏭️ REPRISE (décidé, PAS fait — stop pour ce soir)
+1. **CGV** : article 4 dit « 7 jours » → AJOUTER le cas 10j (colis expédié jamais déposé). Voir [[cgv-delai-10j]].
+2. **Crons** : vérifier logs chronopost-tracking/ubn-tracking. Si morts → cron-job.org. TRANCHER avec Dawson :
+   cron-logistics (1 job) OU ses 5 jobs séparés. NE PAS doublonner auto-refund.
+3. **Système délais complet** (validé par maquette, à coder) : alerte email 24h AVANT remboursement auto
+   (Amandine peut bloquer si arnaque) + litige 72h + email immédiat. « L'info sous les yeux de chacun »
+   (acheteur/vendeur voient leur délai sur chaque commande).
+4. Message point 6 pour Dawson préparé (liste commits + points à trancher) — à lui envoyer.
+
+Commits soir : `13f60c0` enquête · `ccd26f7` date+anti-faux-numéro · `a12b0ea` libellés · `88133ed` cron-logistics
+· `8e41cdc` remboursement 10j + surlignage · `f4a0a15` init paresseuse · `6ba2891` Run now · `14ef27f` bouton
+rembourser · `69fa47f` remboursées visibles.
+
 ## Commits de la session
 `4ee34d0` adresse collecte · `2bf24d1` bouton test UBN · `b0671b1` délai visible ·
 `f219f3e` santé système · `b94576c`+`9f1650d` fix RLS commandes · `1ca2994` colonne versement ·
