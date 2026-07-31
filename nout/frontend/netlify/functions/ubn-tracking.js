@@ -20,6 +20,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const { classifyUbnStatuses } = require('./_ubn-status')
 const { recordHeartbeat } = require('./_heartbeat')
+const { cronAuthorized } = require('./_cron-auth')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const SITE_URL = process.env.URL || 'https://nout.re'
@@ -66,13 +67,8 @@ async function fetchStatusStream(trackingNumber) {
 }
 
 exports.handler = async (event) => {
-  // Auth cron (invocation planifiée Netlify = pas de httpMethod ; appel HTTP direct = secret requis)
-  if (event.httpMethod) {
-    const secret = process.env.CRON_SECRET
-    if (!secret || event.headers['x-nout-cron'] !== secret) {
-      return { statusCode: 401, body: 'Non autorisé.' }
-    }
-  }
+  // Auth cron : invocation Netlify (planifiée + « Run now ») ou appel signé x-nout-cron. Externe = refusé.
+  if (!cronAuthorized(event)) return { statusCode: 401, body: 'Non autorisé.' }
 
   console.log('📦 ubn-tracking démarré', new Date().toISOString())
 

@@ -12,6 +12,7 @@
 // Auth : invocation planifiée Netlify (pas de httpMethod) OU header x-nout-cron = CRON_SECRET.
 
 const { createClient } = require('@supabase/supabase-js')
+const { cronAuthorized } = require('./_cron-auth')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const SITE_URL = process.env.URL || 'https://nout.re'
@@ -38,12 +39,7 @@ const sendEmail = async (to, subject, html) => {
 const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString()
 
 exports.handler = async (event) => {
-  if (event.httpMethod) {
-    const secret = process.env.CRON_SECRET
-    if (!secret || event.headers['x-nout-cron'] !== secret) {
-      return { statusCode: 401, body: 'Non autorisé.' }
-    }
-  }
+  if (!cronAuthorized(event)) return { statusCode: 401, body: 'Non autorisé.' }
 
   console.log('🩺 admin-health-check démarré', new Date().toISOString())
 
