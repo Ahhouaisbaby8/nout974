@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../../services/supabase'
 import { formatPrice, formatRelativeDate } from '../../../utils/formatters'
+import { RefreshCw } from 'lucide-react'
 
 const STATUS = {
   pending:        { label: 'En attente',  color: 'bg-yellow-100 text-yellow-700' },
@@ -264,9 +265,11 @@ export default function OrdersList() {
             <button
               onClick={runDiag}
               disabled={diagLoading}
-              className="ml-auto text-xs font-semibold text-nout-primary hover:underline disabled:opacity-50"
+              title="Recharge les commandes, les stats et la santé du système"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-nout-primary text-white text-sm font-semibold px-3.5 py-2 hover:opacity-90 disabled:opacity-60 transition-opacity"
             >
-              {diagLoading ? 'Vérification…' : 'Rafraîchir'}
+              <RefreshCw className={`w-4 h-4 ${diagLoading ? 'animate-spin' : ''}`} />
+              {diagLoading ? 'Actualisation…' : 'Actualiser'}
             </button>
           </>
         ) : (
