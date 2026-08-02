@@ -143,6 +143,33 @@ Commits soir : `13f60c0` enquête · `ccd26f7` date+anti-faux-numéro · `a12b0e
 · `8e41cdc` remboursement 10j + surlignage · `f4a0a15` init paresseuse · `6ba2891` Run now · `14ef27f` bouton
 rembourser · `69fa47f` remboursées visibles.
 
+## SUITE 02/08 — crons confirmés OK + boutons test transporteurs + UBN 5 services complets
+- ⭐ **CRONS CONFIRMÉS VIVANTS** : le panneau Santé affiche les 4 crons TOUS VERTS (Suivi Chronopost,
+  Suivi UBN, Annulation & remboursement, Versement) avec exécutions récentes. Netlify DÉCLENCHE bien
+  les crons natifs — je m'étais trompé (le « 4 ms » du Run now = garde x-nout-cron qui bloquait le Run
+  now du dashboard, PAS un cron mort). Fix `_cron-auth.js` (`884c586`) : accepte les invocations Netlify
+  (X-NF-Event: schedule / UA Clockwork) + appel signé, refuse les externes. Applique aux 4 crons.
+  ⚠️ CONCLUSION : PAS besoin de cron-job.org pour les crons de suivi — Netlify suffit. cron-logistics
+  reste dispo en secours mais NON branché (ne pas doublonner). thomas remboursé + Evin payé = preuves.
+- **Bouton « Actualiser »** bien visible sur page Commandes (`97e380e`, recharge tout).
+- **Bouton « Tester Chronopost »** ajouté à côté de « Tester UBN » (`b5f015d`, admin-chronopost-test.js,
+  composant CarrierTest réutilisé). Admin > Paramètres > Transporteurs.
+- **UBN — champs formulaire Point Relais + domicile** remplis explicitement (demande UBN) : `755b846`
+  (Point Relais) + `f9db71b` (adapte relais/domicile). Les fichiers UBN ne contiennent AUCUN prix
+  (« frais_expedition » vide → tarif calculé par le HUB).
+- **UBN — 5 SERVICES tous branchés** (`fa545d8`) : tarifs TTC confirmés par l'interface UBN (captures) :
+  Point Relais 4€ (relais) · 48/72H 6€ (economique, = le fichier « 4872 ») · Express 10€ (express) ·
+  Express Premium 14€ (express_pro) · Samedi Express 18€ (samedi_express). 3 nouveaux ajoutés à
+  shipping.js (checkout) + _fees.js (tarif serveur) + ubn-create-shipment.js (mapping + DELIVERY_PARAMS
+  type_lieu/délai/créneau par service tirés des fichiers UBN).
+- **CHRONOPOST = déjà complet** : 2 contrats seulement (Relais DOM 8,52€ + Express 10,96€), les 2
+  déjà branchés. RIEN à ajouter (contrairement à UBN qui avait 5 services). Pour en ajouter il faudrait
+  souscrire de nouveaux contrats Chronopost — pas nécessaire.
+
+⏭️ REPRISE : UBN production only → le vrai bordereau ne sortira qu'à une VRAIE commande UBN (le code
+envoie maintenant tous les champs des 5 services). CGV 10j toujours à ajouter [[cgv-delai-10j]].
+Système alerte 24h + litige 72h toujours à coder.
+
 ## Commits de la session
 `4ee34d0` adresse collecte · `2bf24d1` bouton test UBN · `b0671b1` délai visible ·
 `f219f3e` santé système · `b94576c`+`9f1650d` fix RLS commandes · `1ca2994` colonne versement ·
