@@ -197,6 +197,21 @@ exports.handler = async (event) => {
       rising_payment_wpcargo_mode_field: 0,
       preuve_livraison:                  'Sans Preuve',
 
+      // ── Champs FORMULAIRE Point Relais (fichier UBN « Point Relais (api distant) ») ──
+      // La doc v4.5 dit que le HUB les complète, MAIS UBN a demandé qu'ils soient remplis explicitement.
+      // On envoie donc les valeurs canoniques du fichier UBN pour ne dépendre d'aucune complétion HUB.
+      // (Le HUB ignore un champ qu'il gère déjà → aucun conflit à les envoyer en plus.)
+      wpcargo_type_of_shipment:          'Intradepartement',
+      assur_colis:                       'Sans assurance colis',
+      wpcargo_delai_removal:             'Express',
+      creneau_horaire_enlevement:        '10:00 - 18:00',
+      option_creneau_horaire_enlevement: 'OUVERT/DISPONIBLE ENTRE 12H/14H',
+      type_delivery_locations:           'En Point Relais',
+      wpcargo_delai_field:               'Sous 48H/72h',
+      creneau_horaire_livraison:         '10:00 - 16:00',
+      option_creneau_horaire_livraison:  'OUVERT/DISPONIBLE ENTRE 12H/14H',
+      option_livraison:                  'Livraison obligatoire : intérieur bâtiment avec ou sans étage',
+
       // Expéditeur (le vendeur, repli NOUT) — noms canoniques §7
       shipper_company:  s.company,
       shipper_name:     s.name,
@@ -245,8 +260,12 @@ exports.handler = async (event) => {
       }],
     }
 
-    // Point relais : on envoie seulement l'id canonique (issu de la COMMANDE), le HUB hydrate le reste
-    if (service === 'relais') payload.ubn_pr_user_id = String(relayId)
+    // Point relais : id canonique (issu de la COMMANDE) + nom du relais. Le HUB hydrate le téléphone
+    // et les infos complémentaires du relais à partir de l'id.
+    if (service === 'relais') {
+      payload.ubn_pr_user_id = String(relayId)
+      if (order.relay_label) payload.ubn_pr_shop_name = order.relay_label
+    }
 
     // ── Appel signé HUB ──
     const result = await ubnPost('/shipments', payload)
