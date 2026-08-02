@@ -58,6 +58,9 @@ export const DELIVERY_OPTIONS = [
   { id: 'ubn_relay',    carrier: 'ubn',        mode: 'relais',  label: 'Point relais — UBN',         sublabel: 'Retrait en point relais · sous 48/72h', fee: 4,     delay: 'Sous 48/72h', needsRelay: true,  needsAddress: false },
   { id: 'chrono_relay', carrier: 'chronopost', mode: 'relais',  label: 'Point relais — Chronopost',  sublabel: 'Retrait en point relais Chronopost',    fee: 8.52,  delay: '1 à 2 j ouvrés', needsRelay: true,  needsAddress: false },
   { id: 'ubn_home',     carrier: 'ubn',        mode: 'home',    label: 'Domicile — UBN',             sublabel: 'Livraison chez toi · sous 48/72h',      fee: 6,     delay: 'Sous 48/72h', needsRelay: false, needsAddress: true },
+  { id: 'ubn_express',  carrier: 'ubn',        mode: 'express', label: 'Express — UBN',              sublabel: 'Livraison rapide à domicile',           fee: 10,    delay: 'Express',     needsRelay: false, needsAddress: true },
+  { id: 'ubn_premium',  carrier: 'ubn',        mode: 'premium', label: 'Express Premium — UBN',      sublabel: 'Livraison premium (bureau ou magasin)', fee: 14,    delay: 'Express Premium', needsRelay: false, needsAddress: true },
+  { id: 'ubn_samedi',   carrier: 'ubn',        mode: 'samedi',  label: 'Samedi Express — UBN',       sublabel: 'Livraison le samedi',                   fee: 18,    delay: 'Samedi',      needsRelay: false, needsAddress: true },
   { id: 'chrono_home',  carrier: 'chronopost', mode: 'express', label: 'Domicile — Chronopost',      sublabel: 'Livraison express chez toi',            fee: 10.96, delay: '1 à 2 j ouvrés', needsRelay: false, needsAddress: true },
 ]
 

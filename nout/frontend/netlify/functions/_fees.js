@@ -13,6 +13,7 @@ const SHIPPING_FEES    = {
   relay: 6.51, home: 10.80,          // anciens ids (compat)
   ubn_relay: 4, chrono_relay: 8.52,  // point relais (Chronopost = tarif officiel 8,52€ tout compris, 0-5kg)
   ubn_home: 6, chrono_home: 10.96,   // domicile (Chronopost express = tarif officiel 10,96€ tout compris, 0-3kg)
+  ubn_express: 10, ubn_premium: 14, ubn_samedi: 18,  // UBN Express / Express Premium / Samedi (tarifs TTC grille UBN)
 }
 const COMMISSION_RATE  = 0.10   // 10 % du prix — protection acheteur (payée par l'acheteur)
 const COMMISSION_FIXED = 0.25   // + 0,25 € fixe

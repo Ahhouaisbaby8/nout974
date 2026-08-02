@@ -125,7 +125,14 @@ exports.handler = async (event) => {
     if (order.chronopost_tracking_number) {
       return { statusCode: 409, headers, body: JSON.stringify({ error: 'Une étiquette Chronopost existe déjà pour cette commande.' }) }
     }
-    const OPTION_TO_UBN_SERVICE = { ubn_relay: 'relais', ubn_home: 'economique' }
+    // Codes service canoniques UBN (doc v4.5 §formulaires). NOUT propose 5 services.
+    const OPTION_TO_UBN_SERVICE = {
+      ubn_relay:   'relais',
+      ubn_home:    'economique',
+      ubn_express: 'express',
+      ubn_premium: 'express_pro',
+      ubn_samedi:  'samedi_express',
+    }
     const service = OPTION_TO_UBN_SERVICE[order.delivery_option]
     if (!service) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Option de livraison UBN inconnue pour cette commande.' }) }
@@ -185,6 +192,18 @@ exports.handler = async (event) => {
     // valeurs identiques → conforme v4.6 ET rétro-compatible si le HUB lit encore les anciens (aucun
     // conflit possible). Champs unknown = ignorés par le HUB.
     const addr = service === 'relais' ? '' : (order.shipping_address || '')
+
+    // Paramètres LIVRAISON par service (tirés des fichiers UBN « api distant »). Le HUB complète sinon,
+    // mais UBN a demandé qu'ils soient explicites. type_lieu / délai / créneau diffèrent par service.
+    const DELIVERY_PARAMS = {
+      relais:         { lieu: 'En Point Relais',   delai: 'Sous 48H/72h',   creneau: '10:00 - 16:00' },
+      economique:     { lieu: 'Domicile',          delai: 'Sous 48H/72h',   creneau: '06:00 - 21:00' },
+      express:        { lieu: 'Domicile',          delai: 'Express',        creneau: '06:00 - 21:00' },
+      express_pro:    { lieu: 'Bureau ou Magasin', delai: 'Express Premium', creneau: '10:00 - 16:00' },
+      samedi_express: { lieu: 'Domicile',          delai: 'Express',        creneau: '06:00 - 21:00' },
+    }
+    const dp = DELIVERY_PARAMS[service] || DELIVERY_PARAMS.relais
+
     const payload = {
       id_api_connect:     Number(process.env.UBN_API_CONNECT_ID) || undefined,
       ubn_sr_source_site: process.env.UBN_SOURCE_SITE || process.env.URL || 'https://nout.re',
@@ -197,18 +216,17 @@ exports.handler = async (event) => {
       rising_payment_wpcargo_mode_field: 0,
       preuve_livraison:                  'Sans Preuve',
 
-      // ── Champs FORMULAIRE UBN (fichiers « Point Relais » et « 4872 » = domicile 48/72h) ──
+      // ── Champs FORMULAIRE UBN (fichiers « api distant » : Point Relais, 4872, Express, Premium, Samedi) ──
       // UBN a demandé que ces champs soient remplis explicitement (ne pas dépendre de la complétion HUB).
-      // Les valeurs de LIVRAISON s'adaptent au mode : relais (fichier Point Relais) ou domicile (fichier 4872).
-      // NOUT ne propose que ces 2 services UBN (relais + économique domicile) → pas besoin des autres fichiers.
+      // Les valeurs de LIVRAISON s'adaptent au service choisi via DELIVERY_PARAMS (voir plus haut).
       wpcargo_type_of_shipment:          'Intradepartement',
       assur_colis:                       'Sans assurance colis',
       wpcargo_delai_removal:             'Express',
       creneau_horaire_enlevement:        '10:00 - 18:00',
       option_creneau_horaire_enlevement: 'OUVERT/DISPONIBLE ENTRE 12H/14H',
-      type_delivery_locations:           service === 'relais' ? 'En Point Relais' : 'Domicile',
-      wpcargo_delai_field:               'Sous 48H/72h',
-      creneau_horaire_livraison:         service === 'relais' ? '10:00 - 16:00' : '06:00 - 21:00',
+      type_delivery_locations:           dp.lieu,
+      wpcargo_delai_field:               dp.delai,
+      creneau_horaire_livraison:         dp.creneau,
       option_creneau_horaire_livraison:  'OUVERT/DISPONIBLE ENTRE 12H/14H',
       option_livraison:                  'Livraison obligatoire : intérieur bâtiment avec ou sans étage',
 
