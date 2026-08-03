@@ -87,7 +87,10 @@ export default function AdminLayout() {
       </aside>
 
       {/* ── CONTENU ── */}
-      <main className="flex-1 overflow-auto p-4 md:p-8 mt-14 md:mt-0">
+      {/* min-w-0 CRUCIAL : sans lui, un enfant flex ne rétrécit pas sous la taille de son contenu →
+          un tableau large élargit toute la page (débordement mobile, scroll cassé). Avec min-w-0, le
+          contenu reste dans l'écran et les tableaux scrollent PROPREMENT à l'intérieur (overflow-x-auto). */}
+      <main className="flex-1 min-w-0 overflow-auto p-4 md:p-8 mt-14 md:mt-0">
         <Outlet />
       </main>
 
