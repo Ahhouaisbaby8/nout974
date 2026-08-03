@@ -137,6 +137,51 @@ function ReviewModal({ order, onClose, onSubmitted }) {
   )
 }
 
+// Frise d'étapes de la commande (Payé → Expédié → Livré). Aide chacun à voir OÙ en est sa commande
+// en un coup d'œil. `role` adapte le libellé « Expédié » (vendeur : « Étiquette »). Uniquement pour
+// les livraisons (la main propre n'a pas d'étape transporteur). Statuts annulés/remboursés → pas de frise.
+function OrderTimeline({ order, role }) {
+  const isDelivery = order.shipping_method === 'relay' || order.shipping_method === 'home'
+  if (!isDelivery) return null
+  if (['cancelled', 'refunded', 'disputed'].includes(order.status)) return null
+
+  // Étape atteinte : 0 = payé, 1 = expédié/étiquette, 2 = livré.
+  const delivered = order.status === 'delivered' || order.status === 'completed' || order.status === 'payout_pending' || !!order.delivered_at
+  const shipped   = delivered || order.status === 'shipped'
+  const reached   = delivered ? 2 : shipped ? 1 : 0
+
+  const steps = [
+    { l: 'Payé' },
+    { l: role === 'vendeur' ? 'Étiquette' : 'Expédié' },
+    { l: 'Livré' },
+  ]
+  const Check = () => (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+  )
+
+  return (
+    <div className="mt-3 flex items-center px-1">
+      {steps.map((s, i) => (
+        <div key={i} className="contents">
+          <div className="flex flex-col items-center gap-1 w-16 text-center flex-shrink-0">
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+              i < reached ? 'bg-nout-primary'
+              : i === reached ? 'bg-nout-primary ring-4 ring-[#E9F5F8]'
+              : 'bg-gray-200'
+            }`}>
+              {i < reached ? <Check /> : <span className={`w-1.5 h-1.5 rounded-full ${i === reached ? 'bg-white' : 'bg-gray-400'}`} />}
+            </div>
+            <span className={`text-[10px] font-semibold leading-none ${i <= reached ? 'text-nout-dark' : 'text-gray-400'}`}>{s.l}</span>
+          </div>
+          {i < steps.length - 1 && (
+            <div className={`flex-1 h-0.5 -mt-4 ${i < reached ? 'bg-nout-primary' : 'bg-gray-200'}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // Compte à rebours avant annulation automatique : le vendeur a 7 jours (date limite = escrow_codes.expires_at)
 // pour déposer le colis / confirmer la remise. Sinon la commande est annulée et l'acheteur remboursé.
 // `role` = 'acheteur' | 'vendeur' → message adapté. `isHand` = remise en main propre (sinon livraison).
@@ -692,6 +737,9 @@ export default function Orders() {
                       )}
                     </div>
                   </div>
+
+                  {/* Frise d'étapes (Payé → Expédié → Livré) : voir où en est la commande d'un coup d'œil. */}
+                  <OrderTimeline order={order} role={tab === 'achats' ? 'acheteur' : 'vendeur'} />
 
                   {/* Compte à rebours avant annulation auto — visible tant que la commande est payée
                       mais pas encore expédiée/remise (c'est pendant cette fenêtre que le délai court). */}
