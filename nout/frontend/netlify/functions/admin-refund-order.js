@@ -11,6 +11,32 @@ const { computeRefundAmount } = require('./_fees')
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 const CORS_ORIGIN = process.env.URL || 'https://nout.re'
+
+const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+// Email « tu as été remboursé » à l'acheteur (best-effort : n'empêche jamais le remboursement).
+const sendRefundEmail = async (to, username, titre, montant) => {
+  if (!process.env.RESEND_API_KEY || !to) return
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'NOUT <contact@nout.re>', to,
+        subject: `Remboursement effectué — ${titre || 'NOUT 974'}`,
+        html: `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
+          <h1 style="color:#1A3A8F;font-size:20px">Tu as été remboursé</h1>
+          <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+            Bonjour ${esc(username) || ''}, ta commande « ${esc(titre) || 'ton article'} » a été annulée et
+            un remboursement de <strong>${montant} €</strong> (prix de l'article + livraison) a été effectué
+            sur ton moyen de paiement. Il apparaîtra sur ton relevé sous 5 à 10 jours ouvrés selon ta banque.
+          </p>
+          <p style="color:#6B7A99;font-size:13px">Une question ? Écris-nous à contact@nout.re.</p>
+        </div>`,
+      }),
+    })
+  } catch (e) { console.error('[admin-refund-order] email:', e.message) }
+}
 const corsHeaders = {
   'Access-Control-Allow-Origin': CORS_ORIGIN,
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -75,9 +101,13 @@ exports.handler = async (event) => {
     ])
 
     const montant = (refundInfo.amountCents / 100).toFixed(2)
+
+    // Prévenir l'acheteur par email (comme le remboursement automatique). Best-effort.
+    await sendRefundEmail(order.buyer?.email, order.buyer?.username, order.listing?.title, montant)
+
     return { statusCode: 200, headers, body: JSON.stringify({
       success: true,
-      message: `Remboursement effectué : ${montant} € rendus à ${order.buyer?.username ?? 'l\'acheteur'} (${order.listing?.title ?? ''}). Visible sous 5-10 j sur son relevé.`,
+      message: `Remboursement effectué : ${montant} € rendus à ${order.buyer?.username ?? 'l\'acheteur'} (${order.listing?.title ?? ''}). Email envoyé. Visible sous 5-10 j sur son relevé.`,
       montant, refundId: refund.id, refundStatus: refund.status,
     }) }
   } catch (e) {
