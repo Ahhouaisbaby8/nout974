@@ -56,8 +56,8 @@ export default function UsersList() {
         onChange={(e) => setSearch(e.target.value)} className="input-field mb-5 max-w-sm" />
 
       {loading ? <p className="text-gray-400 text-sm">Chargement…</p> : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
                 <th className="px-4 py-3 text-left">Utilisateur</th>
