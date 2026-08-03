@@ -582,5 +582,26 @@ exports.handler = async (event) => {
   const summary = `auto-refund terminé — ${refunded} remboursé(s) (paid), ${shipRefunded} remboursé(s) (colis non déposé), ${drained} payout_pending débloqué(s), ${errors} erreur(s).`
   console.log(summary)
   await recordHeartbeat(supabase, 'auto-refund', summary)
+
+  // ── ALERTE ADMIN : quand un remboursement AUTOMATIQUE a lieu, on prévient contact@nout.re ──
+  // But : voir en vrai que le remboursement auto fonctionne (jamais observé jusqu'ici, thomas fait à la
+  // main) + garder une trace. On n'envoie l'email QUE s'il s'est passé quelque chose (pas de spam).
+  const totalRefunded = refunded + shipRefunded
+  if (totalRefunded > 0) {
+    await sendEmail(
+      'contact@nout.re',
+      `Remboursement automatique — ${totalRefunded} commande(s)`,
+      `<div style="font-family:sans-serif;max-width:520px;margin:auto;padding:24px">
+         <h1 style="color:#0E7FAB;font-size:19px">Remboursement(s) automatique(s) effectué(s)</h1>
+         <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
+           Le système a remboursé automatiquement <strong>${totalRefunded} commande(s)</strong> aujourd'hui :
+           <br>• ${refunded} pour « rien envoyé / remise non confirmée » (délai 7 j)
+           <br>• ${shipRefunded} pour « colis expédié mais jamais déposé » (délai 10 j)
+         </p>
+         <p style="color:#6B7A99;font-size:13px">Les acheteurs concernés ont été prévenus par email. Rien à faire de ton côté — ceci est juste un suivi.</p>
+       </div>`,
+    )
+  }
+
   return { statusCode: 200, body: summary }
 }
