@@ -376,6 +376,24 @@ export default function OrdersList() {
                   </div>
                 </div>
 
+                {/* Détail transparent du remboursement (date + qui récupère quoi + coût pour NOUT). */}
+                {inspect.argent.refunded && inspect.argent.refundDetail && (
+                  <div className="mt-3 rounded-lg bg-emerald-50 border border-emerald-100 p-3">
+                    <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">Détail du remboursement</p>
+                    <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
+                      <div><span className="text-gray-400">Date : </span><b>{inspect.argent.refundedAt ? new Date(inspect.argent.refundedAt).toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'}</b></div>
+                      <div><span className="text-gray-400">Rendu à l'acheteur : </span><b className="text-emerald-700">{inspect.argent.refundDetail.rendu} €</b> <span className="text-gray-400 text-[11px]">(prix + livraison)</span></div>
+                      <div><span className="text-gray-400">Protection gardée par NOUT : </span><b>{inspect.argent.refundDetail.protectionGardee} €</b></div>
+                      {inspect.argent.refundDetail.fraisStripePerdus != null && (
+                        <div><span className="text-gray-400">Frais Stripe non récupérés : </span><b className="text-amber-600">−{inspect.argent.refundDetail.fraisStripePerdus} €</b></div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-2 leading-snug">
+                      Sur un remboursement, Stripe ne rend pas ses frais de la transaction initiale (coût inhérent, quelques centimes). NOUT garde ses frais de protection. L'acheteur récupère le prix + la livraison.
+                    </p>
+                  </div>
+                )}
+
                 {/* Bouton REMBOURSER à la demande : visible si non remboursé, non livré, non versé au vendeur. */}
                 {!inspect.argent.refunded && !inspect.commande.livre_le && !inspect.argent.sellerTransferred
                   && ['paid', 'shipped'].includes(inspect.commande.statut) && (

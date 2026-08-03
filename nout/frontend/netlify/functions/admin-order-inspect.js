@@ -6,6 +6,7 @@
 
 const { createClient } = require('@supabase/supabase-js')
 const Stripe = require('stripe')
+const { computeRefundAmount } = require('./_fees')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -52,17 +53,39 @@ exports.handler = async (event) => {
     // ── Vérité Stripe sur l'ARGENT ──
     const money = { paymentStatus: null, refunded: false, refundedAmount: 0, sellerTransferred: false, transfers: [] }
 
-    // 1) Le paiement acheteur (PaymentIntent) : payé ? remboursé ?
+    // 1) Le paiement acheteur (PaymentIntent) : payé ? remboursé ? avec DÉTAIL des frais.
     if (order.stripe_payment_id) {
       try {
-        const pi = await stripe.paymentIntents.retrieve(order.stripe_payment_id, { expand: ['latest_charge'] })
+        const pi = await stripe.paymentIntents.retrieve(order.stripe_payment_id, {
+          expand: ['latest_charge.balance_transaction', 'latest_charge.refunds'],
+        })
         money.paymentStatus = pi.status
         const charge = pi.latest_charge
         if (charge && typeof charge === 'object') {
           money.refunded = charge.refunded || (charge.amount_refunded ?? 0) > 0
           money.refundedAmount = (charge.amount_refunded ?? 0) / 100
+          // Frais Stripe prélevés À L'ACHAT (non rendus au remboursement — coût inhérent).
+          const bt = charge.balance_transaction
+          if (bt && typeof bt === 'object') money.stripeFee = (bt.fee ?? 0) / 100
+          // Date du remboursement (le plus récent).
+          const refunds = charge.refunds?.data || []
+          if (refunds.length) {
+            const last = refunds[refunds.length - 1]
+            money.refundedAt = new Date(last.created * 1000).toISOString()
+          }
         }
       } catch (e) { money.paymentError = e.message }
+    }
+
+    // Détail « qui récupère quoi » sur le remboursement (modèle NOUT : acheteur = prix + port,
+    // NOUT garde la protection ; frais Stripe initiaux non rendus par Stripe).
+    if (money.refunded) {
+      const info = computeRefundAmount(order)
+      money.refundDetail = {
+        rendu: info.amountCents / 100,               // prix + port rendus à l'acheteur
+        protectionGardee: info.keptProtection,        // ce que NOUT garde
+        fraisStripePerdus: money.stripeFee ?? null,   // frais Stripe de l'achat, non rendus
+      }
     }
 
     // 2) Le VENDEUR a-t-il reçu un transfert ? (transfer_group = order_<id>)
