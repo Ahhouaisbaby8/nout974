@@ -170,6 +170,69 @@ rembourser · `69fa47f` remboursées visibles.
 envoie maintenant tous les champs des 5 services). CGV 10j toujours à ajouter [[cgv-delai-10j]].
 Système alerte 24h + litige 72h toujours à coder.
 
+## SUITE 04/08 — UBN 5 services + remboursements (detail/email/alerte) + secu + mobile + charte
+⭐ Grosse session multi-sujets.
+
+### UBN — 5 services + champs formulaire (demande UBN)
+- UBN avait dit : le fichier « Point Relais (api distant) » doit etre rempli. Les 5 fichiers .txt (Point
+  Relais, 4872, Express, Premium, Special Samedi) decrivent les CHAMPS a envoyer, PAS les prix (« frais_
+  expedition » vide → tarif calcule par le HUB). Le « 4872 » = 48/72H = service domicile eco 6€ existant.
+- Ajout de TOUS les champs formulaire au payload (`755b846`/`f9db71b`) : type_of_shipment, assur_colis,
+  delai_removal, creneaux enlevement/livraison, type_delivery_locations, option_livraison, ubn_pr_shop_name.
+  DELIVERY_PARAMS par service (lieu/delai/creneau adaptes relais/domicile/express/pro/samedi).
+- **5 SERVICES tous branches** (`fa545d8`) : tarifs TTC confirmes par l'interface UBN (captures) :
+  Point Relais 4€ · 48/72H 6€ · Express 10€ · Express Premium 14€ · Samedi Express 18€. shipping.js
+  (checkout) + _fees.js (tarif serveur) + ubn-create-shipment (mapping express/express_pro/samedi_express).
+- **CHRONOPOST = deja complet** (2 contrats Relais DOM 8,52€ + Express 10,96€). RIEN a ajouter.
+- Confirme : UBN recoit bien tel/adresse/email vendeur+acheteur (obligatoires a publication+paiement).
+  UBN production only → vrai bordereau seulement a la 1re vraie commande. SUIVI livraison via ubn-tracking
+  (PULL page publique ubn-speed.fr) ; callback PUSH ubn-status-sync branche si UBN l'active (bonus).
+
+### Remboursements — transparence + emails
+- **Detail transparent du remboursement** (`1f91df5`) dans l'enquete : date + rendu acheteur (prix+port) +
+  protection gardee NOUT + FRAIS STRIPE non recuperes (Stripe ne rend pas ses frais initiaux = cout inherent).
+  IMPORTANT (revue avec Amandine) : le modele est bon — frais a la charge de l'acheteur, tampon Stripe couvre
+  l'achat ; seule perte = frais Stripe non rendus au remboursement (inevitable, qqs centimes).
+- **thomas** : rembourse 5,50€ (prix+port ; NOUT garde 0,40€ protection) le 30/07 MANUELLEMENT par Amandine
+  (bouton admin), PAS auto. Reçu sur son compte le 1er aout (delai bancaire). Le cas auto 10j n'existait pas
+  avant le fix du 30/07 → d'ou le manuel.
+- **Email acheteur depuis le bouton admin** (`27fb8b5`) : avant, seul auto-refund envoyait l'email. Le bouton
+  manuel ne prevenait pas → corrige. Peu importe le chemin, l'acheteur est prevenu.
+- **Email ALERTE admin quand remboursement AUTO a lieu** (`7a7b7fb`) : pour VOIR que l'auto marche (jamais
+  observe en vrai). auto-refund → email a contact@nout.re si >=1 remboursement (pas de spam sinon).
+- ⚠️ Alertes LITIGE + CHARGEBACK existent DEJA (email a contact@nout.re, immediat, pas via cron). Rien a faire.
+
+### Securite (audit npm + diagnostic complet)
+- Diagnostic complet : build sain, aucun secret expose, aucun code dangereux, aucune fonction sans auth,
+  chargeback couvert, headers CSP complets. Site SOLIDE.
+- **dompurify → 3.4.12** (`781aaaa`) : corrige faille CUSTOM_ELEMENT_HANDLING (anti-XSS).
+- react-router : 2 failles « high » mais liees SSR/RSC → NON applicable a la SPA. NE PAS retrograder
+  (le fix npm --force retrograderait 7.18→7.11 = casse). Attendre patch amont. A surveiller avec Dawson.
+
+### Mobile admin — debordement corrige
+- CAUSE RACINE (`ca03f0d`) : `<main>` flex-1 SANS min-w-0 → un tableau large elargissait TOUTE la page
+  (debordement, « on ne voit pas tout meme en glissant »). min-w-0 → contenu reste dans l'ecran, tableaux
+  scrollent a l'interieur. + overflow-x-auto sur tableaux Commandes/Utilisateurs/Annonces (`842e778`/`226d8db`).
+- Bouton « Actualiser » bien visible page Commandes (`97e380e`). Bouton « Tester Chronopost » (`b5f015d`).
+
+### Carte de commande repensee (visuel — priorite n1 d'Amandine)
+- Maquette validee. Etape 1 (approche progressive) : **frise d'etapes Paye→Expedie→Livre** (`98a19af`,
+  composant OrderTimeline dans Orders.jsx). Actions existantes INCHANGEES. Reste a faire : bloc info-cle colore.
+
+### Charte graphique (documents, pas de code)
+- Fiche charte complete generee (artifact) : logo principal + 6 declinaisons + Famille 1 (N plein + 974) +
+  Famille 2 (N geometrique + 974) + palette hex + bonnes pratiques. print-color-adjust:exact pour garder les
+  couleurs au PDF. Logos reels lus depuis frontend/src/assets/*.svg. Couleurs : nuit #0A1628, turquoise #2EC4B6.
+
+### ⚠️⚠️ POINT CRITIQUE NON RESOLU — crons rouges
+- Le 04/08, panneau Sante : **3 crons ROUGES** (Suivi Chronopost, Suivi UBN, Annulation & remboursement) —
+  9h sans tourner. Seul « Versement » vert (cron externe). Les crons NATIFS Netlify ont RE-lache (deja constate).
+  Confirme : le planificateur Netlify n'est PAS fiable (file d'attente partagee, executions sautent sans erreur).
+- **SOLUTION PRETE, PAS BRANCHEE** : cron-logistics.js (lance chronopost+ubn+auto-refund en 1 appel, cle
+  PAYOUT_CRON_KEY). Amandine doit creer 1 tache cron-job.org : URL cron-logistics?key=<meme cle que versement>,
+  toutes les 15 min. ⏭️ TANT QUE PAS FAIT : suivi livraison + remboursement auto ne tournent pas de facon fiable.
+- Sur cron-job.org, Amandine n'a encore QUE la tache « versement vendeurs » (vue capture). Il MANQUE cron-logistics.
+
 ## Commits de la session
 `4ee34d0` adresse collecte · `2bf24d1` bouton test UBN · `b0671b1` délai visible ·
 `f219f3e` santé système · `b94576c`+`9f1650d` fix RLS commandes · `1ca2994` colonne versement ·
