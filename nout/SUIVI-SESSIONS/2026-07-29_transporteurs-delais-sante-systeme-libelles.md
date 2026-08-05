@@ -233,6 +233,28 @@ Système alerte 24h + litige 72h toujours à coder.
   toutes les 15 min. ⏭️ TANT QUE PAS FAIT : suivi livraison + remboursement auto ne tournent pas de facon fiable.
 - Sur cron-job.org, Amandine n'a encore QUE la tache « versement vendeurs » (vue capture). Il MANQUE cron-logistics.
 
+## SUITE 05/08 — ⭐ CRONS ENFIN REGLES (cron externe) + badge Gro stock + fondateurs OK
+- ⭐⭐ **CRONS DEFINITIVEMENT REGLES** : les crons Netlify natifs avaient RE-lache (3 rouges, 9h+ de
+  silence — le planificateur Netlify n'est pas fiable, file d'attente partagee, executions sautent en
+  silence, aggravé par les redeploiements). Amandine a **cree la tache cron-job.org « NOUT LOGISTIQUE »**
+  (URL cron-logistics?key=<meme cle que versement>, toutes les 15 min). Test = **200 OK** (7,25s = travaille
+  vraiment). → panneau Sante : **LES 4 CRONS VERTS** (« il y a 2 min »). Le sujet qui trainait depuis
+  plusieurs sessions est CLOS. cron-logistics lance chronopost-tracking + ubn-tracking + auto-refund a
+  chaque passage → suivi livraison + remboursement auto + versement enfin FIABLES, independants de Netlify.
+  ⚠️ NE PAS rebrancher les crons natifs Netlify / ne pas doublonner.
+- **Remboursement — decision** : sujet du delai (7j rien envoye / 10j colis expedie) mis en STAND-BY.
+  Amandine hesitait a passer tout a 14j → je lui ai explique le modele Vinted (5j ouvres pour expedier,
+  remboursement RAPIDE si vendeur fautif, 48-72h de verif apres reception). Reco = garder 7j/10j (deja
+  proche des pros). A retrancher plus tard. RIEN CHANGE pour l'instant.
+- **Badge « Gro stock »** (`dfbcaed`) : creole 974 = beaucoup de stock. Apparait AUTO sur le profil d'un
+  vendeur avec 10+ annonces actives (GRO_STOCK_THRESHOLD=10). Rassure l'acheteur (du choix). StockBadge.jsx
+  (meme style que CreatorBadge, icone lucide Boxes, couleurs ambre NOUT, pas d'emoji). Nom choisi par
+  Amandine parmi 4 (maquette) ; declencheur « 10+ annonces » choisi (pas « 3+ meme article »).
+  Idee venue de Dawson : « un truc visible qui dit qu'il vend plusieurs fois ». Sur PROFIL (2 endroits).
+- **Fondateurs (50 premiers) = TOUJOURS ACTIF** (verifie) : badge + anneau dore (FounderRing) sur profil/
+  annonces/messages, attribution auto (5 annonces + 1 vente + apres FOUNDER_LAUNCH_DATE, plafond 50).
+  Reglé pour ne se declencher qu'au VRAI lancement (pas avec les comptes de test). Amandine : « C'est bon ».
+
 ## Commits de la session
 `4ee34d0` adresse collecte · `2bf24d1` bouton test UBN · `b0671b1` délai visible ·
 `f219f3e` santé système · `b94576c`+`9f1650d` fix RLS commandes · `1ca2994` colonne versement ·
