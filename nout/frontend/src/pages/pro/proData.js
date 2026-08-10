@@ -188,8 +188,13 @@ export function slugify(s) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/, '')
 }
 
-// ── Images de démo (Unsplash — dev only) ──
-const U = (id, w, h) => `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&crop=entropy&fm=jpg&q=60`
+// ── Images de démo ──
+// Servies depuis /public/pro (téléchargées une fois, licence Unsplash : usage commercial
+// autorisé sans attribution). On NE pointe PAS vers images.unsplash.com : la galerie
+// charge plus de 250 visuels d'un coup, Unsplash limitait les requêtes et les vignettes
+// restaient blanches. En local, c'est instantané et il n'y a aucune dépendance externe.
+const P = (id) => `/pro/p/${id}.jpg`   // visuel produit (380×507)
+const H = (id) => `/pro/h/${id}.jpg`   // visuel d'accueil (1000×560)
 // 8 visuels par univers : avec seulement 4, les 6 produits d'une boutique répétaient
 // les mêmes photos (et le 2e visuel au survol retombait souvent sur la principale).
 const STOCK_IDS = {
@@ -249,7 +254,7 @@ const SECSLUG = {
 export function stockImg(sector, i, seed = 0) {
   const ids = STOCK_IDS[SECSLUG[sector] || 'maison']
   const n = ids.length
-  return U(ids[(((i + seed) % n) + n) % n], 400, 533)
+  return P(ids[(((i + seed) % n) + n) % n])
 }
 // Empreinte stable d'une chaîne → sert à donner à CHAQUE boutique son propre hero
 // (deux boutiques du même univers ne doivent pas afficher la même photo d'accueil).
@@ -260,7 +265,7 @@ export function seedOf(str) {
 }
 export function heroImg(sector, seed = 0) {
   const list = HERO_IDS[SECSLUG[sector] || 'maison']
-  return U(list[((seed % list.length) + list.length) % list.length], 900, 480)
+  return H(list[((seed % list.length) + list.length) % list.length])
 }
 
 // ── 12 boutiques-démo (identités fictives 974, une par thème) ──

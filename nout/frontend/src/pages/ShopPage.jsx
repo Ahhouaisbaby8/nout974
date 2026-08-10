@@ -197,13 +197,17 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
           </div>
         </div>
       ) : lay === 'minimal' ? (
-        <div className={`flex items-stretch ${wide ? 'max-w-[1600px] mx-auto' : ''}`}>
+        // en étroit, on empile (texte puis image) : côte à côte, la colonne de texte
+        // tombe à ~190 px et le titre se casse en bouillie sur téléphone
+        <div className={`flex items-stretch ${wide ? 'max-w-[1600px] mx-auto' : 'flex-col sm:flex-row'}`}>
           <div className={`flex-1 min-w-0 flex flex-col justify-center ${wide ? 'py-16 pl-[max(2rem,calc((100vw-1280px)/2))] pr-12' : 'p-6'}`}>{heroTxt()}</div>
-          <div className={`flex-1 ${wide ? 'min-h-[440px]' : 'min-h-[230px]'}`}><img src={hImg} alt="" className="w-full h-full object-cover" /></div>
+          <div className={`flex-1 ${wide ? 'min-h-[440px]' : 'h-[210px] sm:h-auto sm:min-h-[230px]'}`}>
+            <img src={hImg} alt="" className="w-full h-full object-cover" />
+          </div>
         </div>
       ) : lay === 'market' ? (
         <div className={wide ? 'py-14 px-8' : 'p-6'}>
-          <div className={`flex items-center gap-4 ${inner} ${wide ? 'gap-12' : ''}`}>
+          <div className={`flex items-center gap-4 ${inner} ${wide ? 'gap-12' : 'flex-col-reverse sm:flex-row'}`}>
             <div className="flex-1 min-w-0">{heroTxt()}</div>
             <div className={`rounded-full overflow-hidden border-4 border-white shadow-md flex-shrink-0 ${wide ? 'w-56 h-56' : 'w-28 h-28'}`}>
               <img src={hImg} alt="" className="w-full h-full object-cover" />
