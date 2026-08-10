@@ -362,10 +362,10 @@ export default function Home() {
             <div className="grid md:grid-cols-2">
               <div className="p-8 sm:p-10 flex flex-col justify-center">
                 <p className="text-[11px] font-bold uppercase tracking-[0.09em] text-nout-turquoise mb-2">
-                  NOUT Pro · réservé aux professionnels · ouverture prochaine
+                  NOUT Pro · entreprises et artisans · ouverture prochaine
                 </p>
                 <h2 className="font-title font-bold text-[26px] text-nout-texte leading-tight mb-3">
-                  Vous avez une entreprise&nbsp;?<br />Ouvrez votre boutique en ligne.
+                  Vous vendez ce que vous faites&nbsp;?<br />Ouvrez votre boutique en ligne.
                 </h2>
                 <p className="text-nout-muted text-[14.5px] leading-relaxed mb-5">
                   Votre marque, votre adresse, vos clients — avec le paiement sécurisé,
@@ -375,7 +375,7 @@ export default function Home() {
                 <ul className="flex flex-col gap-2 mb-6">
                   {['Boutique à votre marque en quelques minutes',
                     'Vos produits visibles aussi sur le marketplace NOUT',
-                    'SIRET requis — vous vendez en tant que professionnel'].map((t) => (
+                    'Créez-la gratuitement — le SIRET est demandé seulement pour publier'].map((t) => (
                     <li key={t} className="flex items-start gap-2.5 text-[13.5px] text-nout-texte">
                       <span className="w-4 h-4 rounded-full bg-[#EAF5F3] flex items-center justify-center flex-shrink-0 mt-0.5">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0E8C82" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>

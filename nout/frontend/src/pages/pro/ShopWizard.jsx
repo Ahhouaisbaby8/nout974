@@ -397,6 +397,7 @@ export default function ShopWizard() {
                   </li>
                 ))}
               </ul>
+              <SiretNotice />
               <p className="text-[11.5px] text-gray-400 leading-relaxed mb-4">
                 Aperçu local : rien n'est enregistré. Le branchement réel (table shops, tes vraies annonces, l'Espace pro)
                 arrive à l'étape suivante du chantier.
@@ -973,6 +974,59 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
         <Link to="/boutique-templates" className="btn-secondary flex-1 text-center">Changer de template</Link>
       </div>
     </>
+  )
+}
+
+// ─── SIRET : demandé à la PUBLICATION, jamais pour créer ────────────────────────────
+// Créer et personnaliser sa boutique n'est pas un acte de commerce : aucune raison
+// d'exiger un numéro d'entreprise à ce moment-là. En revanche, dès qu'on vend ce qu'on
+// fabrique de façon habituelle, l'activité est professionnelle au sens de la loi, et
+// NOUT doit collecter le numéro d'immatriculation du vendeur (règlement européen sur
+// les services numériques, traçabilité des professionnels). D'où : porte ouverte pour
+// créer, vérification au moment de publier, et un coup de main pour l'obtenir.
+function SiretNotice() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-gray-200 rounded-xl p-3.5 mb-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold text-nout-texte">Avant de publier : ton numéro SIRET</p>
+          <p className="text-[12px] text-gray-500 leading-relaxed mt-0.5">
+            Tu peux créer et personnaliser ta boutique librement. Le SIRET n'est demandé qu'au moment
+            de la rendre publique.
+          </p>
+        </div>
+        <button type="button" onClick={() => setOpen(!open)} className="text-[12px] font-semibold text-nout-turquoise flex-shrink-0">
+          {open ? 'Fermer' : 'Je n\'en ai pas'}
+        </button>
+      </div>
+      {open && (
+        <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-3">
+          <div>
+            <p className="text-[12.5px] font-semibold text-nout-texte">Tu fabriques ou tu achètes pour revendre</p>
+            <p className="text-[12px] text-gray-500 leading-relaxed mt-0.5">
+              Bijoux, savons, gâteaux, meubles, prestations… Dès que c'est régulier, la loi considère
+              que c'est une activité professionnelle, quel que soit le montant. L'immatriculation en
+              micro-entreprise se fait en ligne sur le guichet unique des entreprises : c'est gratuit,
+              ça prend une quinzaine de minutes, et les cotisations sont proportionnelles à ce que tu
+              vends. Une fois le numéro reçu, ta boutique se publie.
+            </p>
+          </div>
+          <div>
+            <p className="text-[12.5px] font-semibold text-nout-texte">Tu vends seulement tes affaires personnelles</p>
+            <p className="text-[12px] text-gray-500 leading-relaxed mt-0.5">
+              Là, aucun SIRET n'est nécessaire — et tu n'as pas besoin d'une boutique Pro :
+              ton compte NOUT classique te permet déjà de vendre, avec le même paiement protégé
+              et la même livraison 974.
+            </p>
+          </div>
+          <p className="text-[11.5px] text-gray-400 leading-relaxed">
+            NOUT ne peut pas se substituer à ton conseil : en cas de doute sur ton statut,
+            rapproche-toi de la Chambre de métiers ou de la CCI de La Réunion.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }
 

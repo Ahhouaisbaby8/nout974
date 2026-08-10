@@ -78,7 +78,7 @@ export default function ShopTemplates() {
         <h1 className="font-title text-[22px] font-bold text-nout-texte">Commence avec un template</h1>
         <p className="text-[13px] text-gray-500 mt-1">De vraies boutiques d'exemple — aperçu, puis personnalise tout.</p>
         <p className="inline-block mt-3 text-[11.5px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">
-          Aperçu — NOUT Pro ouvre bientôt aux entreprises (SIRET requis)
+          Aperçu — NOUT Pro ouvre bientôt. Créer sa boutique est libre ; le SIRET n'est demandé qu'à la publication.
         </p>
       </div>
 
