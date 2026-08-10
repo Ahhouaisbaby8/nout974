@@ -25,6 +25,7 @@ const GEN_TASKS = [
   'Activation du paiement sécurisé NOUT',
 ]
 const NAME_IDEAS = ['Vanille Bleue', 'Kaz Soleil', 'Péi Style', 'Fler de Sel']
+const DRAFT_KEY = 'nout-pro-brouillon'
 
 // Extraction de la couleur dominante d'un logo (lecture réelle des pixels — pas d'API)
 function extractAccent(img) {
@@ -87,6 +88,43 @@ export default function ShopWizard() {
 
   useEffect(() => { loadProFonts() }, [])
 
+  // ── Brouillon : le travail survit à un rechargement ──────────────────────────────
+  // Rien n'est encore enregistré côté serveur (la table `shops` n'existe pas), mais
+  // perdre une boutique entière sur un F5 ou une coupure était le défaut le plus
+  // pénible du wizard. Sauvegarde locale, sur ce navigateur uniquement.
+  const [restored, setRestored] = useState(false)
+  const [lightDraft, setLightDraft] = useState(false)   // photos écartées faute de place
+  const ready = useRef(false)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY)
+      if (raw) {
+        const d = JSON.parse(raw)
+        if (d.name) setName(d.name)
+        if (d.sector) { setSector(d.sector); setSectorTouched(!!d.sectorTouched) }
+        if (d.themeId && themeById(d.themeId)) setTheme(themeById(d.themeId))
+        if (d.accent) { setAccent(d.accent); setAccCustom(!!d.accCustom) }
+        if (d.logo) setLogo(d.logo)
+        if (d.fontKey) setFontKey(d.fontKey)
+        if (d.phrase) setPhrase(d.phrase)
+        if (Array.isArray(d.products)) setProducts(d.products)
+        if (d.texts) setTexts(d.texts)
+        if (Array.isArray(d.layout) && d.layout.length) setLayout(d.layout)
+        if (typeof d.heroIdx === 'number') setHeroIdx(d.heroIdx)
+        if (d.heroCustom) setHeroCustom(d.heroCustom)
+        if (d.aboutImage) setAboutImage(d.aboutImage)
+        if (d.heroLay) setHeroLay(d.heroLay)
+        if (d.accent2) setAccent2(d.accent2)
+        if (d.bgTone) setBgTone(d.bgTone)
+        // on ne restaure jamais l'écran d'animation : il n'a de sens qu'en direct
+        if (d.step && d.step !== 'gen') setStep(d.step)
+        setRestored(true)
+      }
+    } catch { /* brouillon illisible : on repart proprement */ }
+    ready.current = true
+  }, [])
+
   // Arrivée depuis la galerie (/boutique-templates) : thème + univers déjà répondus
   useEffect(() => {
     const id = location.state?.template
@@ -102,6 +140,35 @@ export default function ShopWizard() {
     const guess = detectSector(name)
     if (guess !== 'Autre') setSector(guess)
   }, [name, sectorTouched, fromGallery])
+
+  // Sauvegarde du brouillon. Les photos importées sont des données en base64 : au-delà
+  // du quota du navigateur (~5 Mo), on réenregistre SANS elles plutôt que de tout perdre.
+  useEffect(() => {
+    if (!ready.current) return
+    if (!name.trim() && !products.length) return
+    const base = {
+      name, sector, sectorTouched, themeId: theme?.id, accent, accCustom, fontKey, phrase,
+      texts, layout, heroIdx, heroLay, accent2, bgTone, step,
+    }
+    const full = { ...base, logo, products, heroCustom, aboutImage }
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(full))
+      setLightDraft(false)
+    } catch {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({
+          ...base, products: products.map((p) => ({ ...p, photos: [] })),
+        }))
+        setLightDraft(true)
+      } catch { /* stockage indisponible (navigation privée) : on continue sans brouillon */ }
+    }
+  }, [name, sector, sectorTouched, theme, accent, accCustom, logo, fontKey, phrase, products,
+      texts, layout, heroIdx, heroCustom, aboutImage, heroLay, accent2, bgTone, step])
+
+  const resetDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY) } catch { /* rien à nettoyer */ }
+    window.location.reload()
+  }
 
   const slug = slugify(name)
   const slugOk = slug.length >= 3 && !RESERVED_SLUGS.has(slug)
@@ -125,7 +192,10 @@ export default function ShopWizard() {
   const listings = useMemo(() => {
     if (products.length) {
       return products.map((p, i) => ({
-        id: 'w-' + i, title: p.title, price: p.price, rayon: rayons[(i % Math.max(rayons.length - 1, 1)) + (rayons.length > 1 ? 1 : 0)],
+        id: 'w-' + i, title: p.title, price: p.price,
+        // rayon choisi par le vendeur ; sinon réparti automatiquement dans ses rayons
+        rayon: p.rayon || rayons[(i % Math.max(rayons.length - 1, 1)) + (rayons.length > 1 ? 1 : 0)],
+        description: p.description, condition: p.condition,
         city: 'Saint-Denis', created_at: new Date().toISOString(), is_sold: false,
         images: p.photos?.length ? p.photos : [stockImg(sector || 'Autre', i)],
       }))
@@ -169,8 +239,22 @@ export default function ShopWizard() {
       <div className="flex items-center gap-3 mb-5">
         <p className="font-title font-extrabold text-nout-texte">NOUT <span className="text-[11px] font-bold text-nout-turquoise bg-[#EAF5F3] px-2 py-0.5 rounded-full align-middle">Pro</span></p>
         <div className="flex-1" />
+        {(name.trim() || products.length > 0) && (
+          <button type="button" onClick={resetDraft} className="text-[12px] font-semibold text-gray-400 hover:text-nout-texte">
+            Repartir de zéro
+          </button>
+        )}
         <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">Aperçu — rien n'est enregistré pour l'instant</span>
       </div>
+
+      {(restored || lightDraft) && (
+        <p className="text-[12.5px] text-[#0B716A] bg-[#EAF5F3] rounded-lg px-3.5 py-2.5 mb-4">
+          {restored && 'Ton brouillon a été repris là où tu t\'étais arrêté. '}
+          {lightDraft
+            ? "Tes photos sont trop lourdes pour être gardées en brouillon : elles seront à réimporter si tu recharges la page."
+            : 'Il reste enregistré dans ce navigateur, en attendant la vraie sauvegarde en ligne.'}
+        </p>
+      )}
 
       {/* stepper */}
       {stepIdx >= 0 && (
@@ -333,7 +417,7 @@ export default function ShopWizard() {
 
           {step === 'produits' && (
             <ProductsStep products={products} setProducts={setProducts} sector={sector} contact={contact}
-                          onBack={() => setStep('accroche')} onGenerate={startGen} />
+                          rayons={rayons} onBack={() => setStep('accroche')} onGenerate={startGen} />
           )}
 
           {step === 'perso' && (
@@ -443,31 +527,57 @@ export default function ShopWizard() {
 // classique reste à 5 photos (CreateListing.jsx), volontairement inchangé.
 export const MAX_PRO_PHOTOS = 8
 
-function ProductsStep({ products, setProducts, sector, contact, onBack, onGenerate }) {
-  const [adding, setAdding] = useState(false)
-  const [title, setTitle] = useState('')
-  const [price, setPrice] = useState('')
-  const [photos, setPhotos] = useState([])
+const EMPTY_PRODUCT = { title: '', price: '', description: '', rayon: '', condition: 'neuf', photos: [] }
+
+function ProductsStep({ products, setProducts, sector, contact, rayons, onBack, onGenerate }) {
+  // `edit` : index du produit en cours d'édition, 'new' pour un ajout, null si rien
+  const [edit, setEdit] = useState(null)
+  const [draft, setDraft] = useState(EMPTY_PRODUCT)
   const fileRef = useRef(null)
+  const rayonList = (rayons || []).slice(1)      // « Tout » n'est pas un rayon de rangement
+
+  const open = (i) => {
+    setEdit(i)
+    setDraft(i === 'new' ? { ...EMPTY_PRODUCT } : { ...EMPTY_PRODUCT, ...products[i], price: products[i].price ?? '' })
+  }
+  const set = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
 
   const addPhotos = (fileList) => {
     const files = Array.from(fileList || []).filter((f) => /^image\//.test(f.type))
     if (!files.length) return
-    const room = MAX_PRO_PHOTOS - photos.length
-    files.slice(0, room).forEach((f) => {
+    files.slice(0, MAX_PRO_PHOTOS).forEach((f) => {
       const rd = new FileReader()
-      rd.onload = (ev) => setPhotos((prev) => (prev.length >= MAX_PRO_PHOTOS ? prev : [...prev, ev.target.result]))
+      rd.onload = (ev) => setDraft((d) => (d.photos.length >= MAX_PRO_PHOTOS ? d : { ...d, photos: [...d.photos, ev.target.result] }))
       rd.readAsDataURL(f)
     })
   }
+  // la 1re photo est celle qui s'affiche partout : on peut la choisir sans tout refaire
+  const movePhoto = (k, dir) => setDraft((d) => {
+    const p = [...d.photos], j = k + dir
+    if (j < 0 || j >= p.length) return d
+    ;[p[k], p[j]] = [p[j], p[k]]
+    return { ...d, photos: p }
+  })
+
+  const priceNum = contact ? null : parseFloat(String(draft.price).replace(',', '.'))
+  const valid = draft.title.trim() && (contact || priceNum > 0)
 
   const commit = () => {
-    const t = title.trim()
-    const pr = contact ? null : parseFloat((price || '').replace(',', '.'))
-    if (!t || (!contact && !(pr > 0))) return
-    setProducts([...products, { title: t, price: pr, photos }])
-    setAdding(false); setTitle(''); setPrice(''); setPhotos([])
+    if (!valid) return
+    const p = { ...draft, title: draft.title.trim(), price: contact ? null : priceNum }
+    setProducts(edit === 'new' ? [...products, p] : products.map((x, i) => (i === edit ? p : x)))
+    setEdit(null); setDraft(EMPTY_PRODUCT)
   }
+  const remove = (i) => { setProducts(products.filter((_, j) => j !== i)); setEdit(null) }
+  const move = (i, dir) => {
+    const j = i + dir
+    if (j < 0 || j >= products.length) return
+    const next = [...products]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    setProducts(next)
+  }
+
+  const word = contact ? 'prestation' : 'produit'
 
   return (
     <>
@@ -477,56 +587,94 @@ function ProductsStep({ products, setProducts, sector, contact, onBack, onGenera
         {contact ? 'Liste tes prestations — les clients demandent un devis via la messagerie NOUT.'
           : "Remplis ta boutique carte par carte — chaque produit apparaît en direct dans l'aperçu. Laisse vide : on met des exemples."}
       </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {adding ? (
-          <div className="rounded-xl border border-gray-200 overflow-hidden">
-            <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
-                   onChange={(e) => { addPhotos(e.target.files); e.target.value = '' }} />
-            <button type="button" onClick={() => fileRef.current?.click()}
-                    className="w-full aspect-[3/4] bg-gray-50 flex items-center justify-center text-[11.5px] font-semibold text-gray-400 overflow-hidden relative">
-              {photos[0]
-                ? <><img src={photos[0]} alt="" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                      {photos.length}/{MAX_PRO_PHOTOS}</span></>
-                : <>Ajouter des photos<br/><span className="text-[10px] font-normal">jusqu'à {MAX_PRO_PHOTOS}</span></>}
-            </button>
-            {photos.length > 0 && (
-              <div className="flex gap-1 flex-wrap p-1.5 pb-0">
-                {photos.map((p, k) => (
-                  <span key={k} className="relative w-9 h-9 rounded overflow-hidden group/ph">
-                    <img src={p} alt="" className="w-full h-full object-cover" />
-                    {k === 0 && <span className="absolute inset-x-0 bottom-0 bg-nout-turquoise text-white text-[7px] text-center font-bold leading-tight">1re</span>}
-                    <button type="button" aria-label="Retirer la photo"
-                            onClick={() => setPhotos(photos.filter((_, j) => j !== k))}
-                            className="absolute inset-0 bg-black/55 text-white text-xs opacity-0 group-hover/ph:opacity-100">×</button>
-                  </span>
-                ))}
-                {photos.length < MAX_PRO_PHOTOS && (
-                  <button type="button" onClick={() => fileRef.current?.click()}
-                          className="w-9 h-9 rounded border border-dashed border-gray-300 text-gray-400 text-sm leading-none">+</button>
-                )}
-              </div>
+
+      {/* ── formulaire d'édition (ajout ou modification) ── */}
+      {edit !== null && (
+        <div className="border border-gray-200 rounded-xl p-3 mb-4">
+          <p className="text-[13px] font-bold text-nout-texte mb-2">
+            {edit === 'new' ? `Nouveau ${word}` : `Modifier « ${products[edit]?.title} »`}
+          </p>
+
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+                 onChange={(e) => { addPhotos(e.target.files); e.target.value = '' }} />
+          <div className="flex gap-1.5 flex-wrap mb-2.5">
+            {draft.photos.map((p, k) => (
+              <span key={k} className="relative w-16 h-20 rounded-lg overflow-hidden border border-gray-200 group/ph">
+                <img src={p} alt="" className="w-full h-full object-cover" />
+                {k === 0 && <span className="absolute inset-x-0 top-0 bg-nout-turquoise text-white text-[8px] text-center font-bold leading-tight py-0.5">Principale</span>}
+                <span className="absolute inset-x-0 bottom-0 flex opacity-0 group-hover/ph:opacity-100 bg-black/60">
+                  <button type="button" aria-label="Reculer la photo" onClick={() => movePhoto(k, -1)} className="flex-1 text-white text-[11px] leading-5">‹</button>
+                  <button type="button" aria-label="Retirer la photo" onClick={() => set('photos', draft.photos.filter((_, j) => j !== k))} className="flex-1 text-white text-[11px] leading-5">×</button>
+                  <button type="button" aria-label="Avancer la photo" onClick={() => movePhoto(k, 1)} className="flex-1 text-white text-[11px] leading-5">›</button>
+                </span>
+              </span>
+            ))}
+            {draft.photos.length < MAX_PRO_PHOTOS && (
+              <button type="button" onClick={() => fileRef.current?.click()}
+                      className="w-16 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-nout-turquoise text-[10.5px] font-semibold text-gray-400 leading-tight">
+                Photos<br /><span className="font-normal">{draft.photos.length}/{MAX_PRO_PHOTOS}</span>
+              </button>
             )}
-            <div className="p-2 flex flex-col gap-1.5">
-              <input className="input-field !py-2 !text-[13px]" placeholder={contact ? 'Nom de la prestation' : 'Titre du produit'}
-                     value={title} onChange={(e) => setTitle(e.target.value)} maxLength={40} />
-              {!contact && <input className="input-field !py-2 !text-[13px]" placeholder="Prix €" inputMode="decimal"
-                                  value={price} onChange={(e) => setPrice(e.target.value)} />}
-              <div className="flex gap-1.5">
-                <button type="button" onClick={commit} className="btn-primary flex-1 !py-2 !text-[12.5px]">Ajouter</button>
-                <button type="button" onClick={() => { setAdding(false); setPhotos([]) }} className="text-[12px] font-semibold text-gray-400 px-2">Annuler</button>
-              </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <input className="input-field !py-2 !text-[13px]" placeholder={contact ? 'Nom de la prestation' : 'Titre du produit'}
+                   value={draft.title} onChange={(e) => set('title', e.target.value)} maxLength={60} />
+            {!contact && (
+              <input className="input-field !py-2 !text-[13px]" placeholder="Prix € (ce que tu reçois)" inputMode="decimal"
+                     value={draft.price} onChange={(e) => set('price', e.target.value)} />
+            )}
+            <textarea className="input-field resize-none min-h-[64px] !text-[13px]" maxLength={600}
+                      placeholder={contact ? 'Ce que comprend la prestation, la durée, la zone…' : 'Matière, dimensions, entretien, ce qui rend ce produit unique…'}
+                      value={draft.description} onChange={(e) => set('description', e.target.value)} />
+            <div className="flex gap-1.5 flex-wrap">
+              {rayonList.length > 0 && (
+                <select className="input-field !py-2 !text-[13px] flex-1 min-w-[130px]" value={draft.rayon}
+                        onChange={(e) => set('rayon', e.target.value)} aria-label="Rayon">
+                  <option value="">Rayon : automatique</option>
+                  {rayonList.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              )}
+              {!contact && (
+                <select className="input-field !py-2 !text-[13px] flex-1 min-w-[130px]" value={draft.condition}
+                        onChange={(e) => set('condition', e.target.value)} aria-label="État du produit">
+                  <option value="neuf">Produit neuf</option>
+                  <option value="occasion">Produit d'occasion</option>
+                </select>
+              )}
+            </div>
+            {!contact && (
+              <p className="text-[11px] text-gray-400 leading-relaxed">
+                L'état choisi commande l'encadré légal des garanties affiché sur la fiche : la présomption
+                de défaut couvre 24 mois pour un produit neuf, 12 mois pour un produit d'occasion.
+              </p>
+            )}
+            <div className="flex gap-1.5 items-center">
+              <button type="button" onClick={commit} disabled={!valid}
+                      className="btn-primary flex-1 !py-2 !text-[12.5px] disabled:opacity-40 disabled:cursor-not-allowed">
+                {edit === 'new' ? 'Ajouter' : 'Enregistrer'}
+              </button>
+              {edit !== 'new' && (
+                <button type="button" onClick={() => remove(edit)} className="text-[12px] font-semibold text-red-600 px-2">Supprimer</button>
+              )}
+              <button type="button" onClick={() => { setEdit(null); setDraft(EMPTY_PRODUCT) }}
+                      className="text-[12px] font-semibold text-gray-400 px-2">Annuler</button>
             </div>
           </div>
-        ) : (
-          <button type="button" onClick={() => setAdding(true)}
+        </div>
+      )}
+
+      {/* ── grille des produits ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {edit !== 'new' && (
+          <button type="button" onClick={() => open('new')}
                   className="rounded-xl border-2 border-dashed border-gray-300 hover:border-nout-turquoise hover:bg-[#EAF5F3] min-h-[180px] flex flex-col items-center justify-center gap-1 text-[13px] font-semibold text-gray-500">
             <span className="text-2xl font-light text-nout-turquoise">+</span>
             Ajouter {contact ? 'une prestation' : 'un produit'}
           </button>
         )}
         {products.map((p, i) => (
-          <div key={i} className="rounded-xl border border-gray-200 overflow-hidden relative">
+          <div key={i} className={`rounded-xl border overflow-hidden relative group/card ${edit === i ? 'border-nout-turquoise ring-2 ring-nout-turquoise/20' : 'border-gray-200'}`}>
             <div className="aspect-[3/4] bg-gray-100 relative">
               <img src={p.photos?.[0] || stockImg(sector || 'Autre', i)} alt="" className="w-full h-full object-cover" />
               {p.photos?.length > 1 && (
@@ -534,17 +682,27 @@ function ProductsStep({ products, setProducts, sector, contact, onBack, onGenera
                   {p.photos.length} photos
                 </span>
               )}
+              {/* réordonner : l'ordre de la grille est l'ordre de la boutique */}
+              <span className="absolute inset-x-0 top-0 flex justify-between p-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                <button type="button" aria-label="Déplacer vers la gauche" disabled={i === 0} onClick={() => move(i, -1)}
+                        className="w-6 h-6 rounded-full bg-black/55 text-white text-[13px] leading-none disabled:opacity-30">‹</button>
+                <button type="button" aria-label="Déplacer vers la droite" disabled={i === products.length - 1} onClick={() => move(i, 1)}
+                        className="w-6 h-6 rounded-full bg-black/55 text-white text-[13px] leading-none disabled:opacity-30">›</button>
+              </span>
+              <button type="button" onClick={() => open(i)}
+                      className="absolute inset-x-0 bottom-0 py-1.5 bg-black/60 text-white text-[11.5px] font-semibold opacity-0 group-hover/card:opacity-100 transition-opacity">
+                Modifier
+              </button>
             </div>
-            <button type="button" aria-label="Retirer"
-                    onClick={() => setProducts(products.filter((_, j) => j !== i))}
-                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/55 text-white text-sm leading-none">×</button>
             <div className="p-2">
               <p className="text-[12.5px] font-semibold text-nout-texte truncate">{p.title}</p>
               <p className="text-[13px] font-bold text-nout-texte">{contact ? 'Sur devis' : formatEuro(p.price)}</p>
+              {p.rayon && <p className="text-[10.5px] text-gray-400 truncate">{p.rayon}</p>}
             </div>
           </div>
         ))}
       </div>
+
       <div className="flex gap-2 mt-6">
         <button type="button" onClick={onBack} className="btn-secondary flex-1">Retour</button>
         <button type="button" onClick={onGenerate} className="btn-primary flex-1">Générer ma boutique</button>

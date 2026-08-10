@@ -95,9 +95,27 @@ export function ProductView({ shop, listing, index, accent, dark, titleFam, cont
         <p className={`text-[11.5px] mt-3 ${dark ? 'text-white/60' : 'text-gray-500'}`}>
           {contact ? 'Intervention sur devis, sans engagement.' : 'Livraison : point relais 974 dès 4 € · remise en main propre gratuite'}
         </p>
-        <p className={`text-[12.5px] leading-relaxed mt-2 ${dark ? 'text-white/70' : 'text-gray-500'}`}>
-          Préparé par {shop.name} depuis La Réunion. {contact ? 'Devis répondu sous 24 h.' : 'Envoi soigné, emballage renforcé.'}
+        <p className={`text-[12.5px] leading-relaxed mt-2 whitespace-pre-line ${dark ? 'text-white/70' : 'text-gray-500'}`}>
+          {listing.description
+            || `Préparé par ${shop.name} depuis La Réunion. ${contact ? 'Devis répondu sous 24 h.' : 'Envoi soigné, emballage renforcé.'}`}
         </p>
+
+        {/* Garanties légales : le texte officiel dépend de l'état déclaré par le vendeur
+            (présomption de défaut 24 mois sur du neuf, 12 mois sur de l'occasion). */}
+        {!contact && (
+          <div className={`mt-3 rounded-lg border px-3 py-2.5 ${dark ? 'border-white/15' : 'border-gray-200'}`}>
+            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: accent }}>
+              {listing.condition === 'occasion' ? "Produit d'occasion" : 'Produit neuf'} · garanties légales
+            </p>
+            <p className={`text-[11.5px] leading-relaxed mt-1 ${dark ? 'text-white/60' : 'text-gray-500'}`}>
+              Garantie légale de conformité de 2 ans, dont {listing.condition === 'occasion' ? '12' : '24'} mois
+              pendant lesquels vous n'avez pas à prouver la date d'apparition du défaut, et garantie des vices
+              cachés. [Encadré officiel art. D. 211-2 du code de la consommation — inséré automatiquement par
+              NOUT dans sa version {listing.condition === 'occasion' ? 'occasion' : 'neuf'}.]
+            </p>
+          </div>
+        )}
+
         <p className={`text-[12px] mt-3 pt-3 border-t ${line} ${dark ? 'text-white/60' : 'text-gray-500'}`}>
           Vendu par <b>{shop.name}</b> · ★ 4,9 · Vendeur vérifié NOUT
         </p>
