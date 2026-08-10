@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import ShopPage from '../ShopPage'
+import ShopPage, { LAYS, TONES } from '../ShopPage'
 import {
   THEMES, themeById, FONTS, FONT_CONTEXTS, SECTORS, SECS_MAIN, SECTOR_LABEL, familyOf,
   DEMOS, detectSector, genTagline, genDescription,
-  RESERVED_SLUGS, slugify, stockImg, loadProFonts, demoListings,
+  RESERVED_SLUGS, slugify, stockImg, heroImg, heroCount, loadProFonts, demoListings,
 } from './proData'
 
 // ─── NOUT Pro : WIZARD de création de boutique (DEV ONLY — /boutique-creer) ─────────
@@ -70,6 +70,20 @@ export default function ShopWizard() {
   const [genStep, setGenStep] = useState(-1)
   const [showAllFonts, setShowAllFonts] = useState(false)
   const fileRef = useRef(null)
+  // Personnalisation avancée : textes réécrits, ordre des sections, visuels choisis
+  const [texts, setTexts] = useState({})
+  const [layout, setLayout] = useState([
+    { id: 'bs', label: 'Nos best-sellers', on: true, pos: 'before' },
+    { id: 'reviews', label: 'Avis clients', on: true, pos: 'after' },
+    { id: 'about', label: "L'atelier / L'équipe", on: true, pos: 'after' },
+    { id: 'how', label: 'Comment ça marche', on: true, pos: 'after' },
+  ])
+  const [heroIdx, setHeroIdx] = useState(0)
+  const [heroCustom, setHeroCustom] = useState(null)
+  const [aboutImage, setAboutImage] = useState(null)
+  const [heroLay, setHeroLay] = useState(null)      // null = mise en page du thème
+  const [accent2, setAccent2] = useState(null)      // null = même que la principale
+  const [bgTone, setBgTone] = useState(null)        // null = fond du thème
 
   useEffect(() => { loadProFonts() }, [])
 
@@ -103,7 +117,10 @@ export default function ShopWizard() {
     template_key: theme?.id || 'epuree', mode: theme?.mode || 'escrow',
     sector: sector || 'Autre', rayons,
     links: theme?.mode === 'bio' ? (DEMOS.bio.links) : null,
-  }), [slug, name, phrase, sector, accent, fontKey, theme, rayons])
+    texts, layout, aboutImage, heroIdx, heroImage: heroCustom, hero_lay: heroLay,
+    accent2, bg_tone: bgTone,
+  }), [slug, name, phrase, sector, accent, fontKey, theme, rayons, texts, layout, aboutImage,
+       heroIdx, heroCustom, heroLay, accent2, bgTone])
 
   const listings = useMemo(() => {
     if (products.length) {
@@ -175,7 +192,7 @@ export default function ShopWizard() {
       {/* min-w-0 sur la grille ET ses colonnes : sans ça, l'aperçu impose sa largeur
           minimale et toute la page déborde de l'écran sur téléphone (il fallait
           dézoomer pour lire). Même cause que le débordement corrigé côté admin. */}
-      <div className={`grid gap-6 min-w-0 ${stepIdx >= 0 && step !== 'theme' ? 'lg:grid-cols-2' : ''}`}>
+      <div className={`grid gap-6 min-w-0 ${(stepIdx >= 0 && step !== 'theme') || step === 'perso' ? 'lg:grid-cols-2' : ''}`}>
         {/* ── colonne formulaire ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 min-w-0">
 
@@ -319,6 +336,19 @@ export default function ShopWizard() {
                           onBack={() => setStep('accroche')} onGenerate={startGen} />
           )}
 
+          {step === 'perso' && (
+            <PersoStep
+              shop={shop} sector={sector} accent={accent} setAccent={(c) => { setAccent(c); setAccCustom(true) }}
+              fontKey={fontKey} setFontKey={setFontKey} theme={theme} setTheme={pickTheme}
+              texts={texts} setTexts={setTexts} layout={layout} setLayout={setLayout}
+              phrase={phrase} setPhrase={setPhrase}
+              heroIdx={heroIdx} setHeroIdx={setHeroIdx} heroCustom={heroCustom} setHeroCustom={setHeroCustom}
+              aboutImage={aboutImage} setAboutImage={setAboutImage}
+              heroLay={heroLay} setHeroLay={setHeroLay}
+              accent2={accent2} setAccent2={setAccent2} bgTone={bgTone} setBgTone={setBgTone}
+              onDone={() => setStep('result')} />
+          )}
+
           {step === 'gen' && (
             <div className="py-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-nout-turquoise mb-1">Génération</p>
@@ -373,7 +403,7 @@ export default function ShopWizard() {
               </p>
               <div className="flex gap-2 flex-wrap">
                 <button type="button" onClick={() => setStep('produits')} className="btn-secondary flex-1">Produits</button>
-                <button type="button" onClick={() => setStep('identite')} className="btn-secondary flex-1">Personnaliser</button>
+                <button type="button" onClick={() => setStep('perso')} className="btn-primary flex-1">Personnaliser</button>
                 <Link to="/boutique-templates" className="btn-secondary flex-1 text-center">Templates</Link>
               </div>
             </div>
@@ -381,7 +411,7 @@ export default function ShopWizard() {
         </div>
 
         {/* ── colonne aperçu live (cadre navigateur) ── */}
-        {(stepIdx >= 0 && step !== 'theme') || step === 'gen' || step === 'result' ? (
+        {(stepIdx >= 0 && step !== 'theme') || step === 'gen' || step === 'result' || step === 'perso' ? (
           <div className="lg:sticky lg:top-4 self-start min-w-0">
             <p className="text-[10.5px] font-bold uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-nout-turquoise inline-block" /> Aperçu en direct
@@ -519,6 +549,457 @@ function ProductsStep({ products, setProducts, sector, contact, onBack, onGenera
         <button type="button" onClick={onGenerate} className="btn-primary flex-1">Générer ma boutique</button>
       </div>
     </>
+  )
+}
+
+// ─── « Personnaliser » : l'éditeur complet de la boutique ──────────────────────────
+// Quatre volets : Textes (tout est réécrivable), Images (où va la photo + laquelle),
+// Sections (ordre, affichage, avant/après la grille), Style (couleur, police, thème).
+// Tout tape dans le même état que l'aperçu à droite → chaque changement est visible
+// immédiatement. Aucune base touchée : la sauvegarde viendra avec la table `shops`.
+
+const TABS = [['textes', 'Textes'], ['images', 'Images'], ['sections', 'Sections'], ['style', 'Style']]
+
+// Mises en page d'accueil : où se place la grande image
+const HERO_LAYS = [
+  ['hero', 'Image en fond', 'Photo plein cadre, texte par-dessus'],
+  ['minimal', 'Image à droite', 'Texte à gauche, photo à côté'],
+  ['splitL', 'Image à gauche', 'Photo à gauche, texte à droite'],
+  ['band', 'Bandeau photo', 'Photo pleine largeur, texte dessous'],
+  ['market', 'Photo ronde', 'Vignette ronde à côté du texte'],
+  ['modern', 'Bandeau sombre', 'Bloc foncé, sans photo'],
+  ['soft', 'Sans image', 'Texte seul, teinté, très sobre'],
+]
+
+// Champs de texte : [clé, libellé, aide, taille max, multiligne]
+const TEXT_FIELDS = (contact) => [
+  ['announce', "Barre d'annonce", 'La bande de couleur tout en haut', 90, false],
+  ['tagline', 'Accroche (grand titre)', "La phrase d'accueil de ta boutique", 120, true],
+  ['description', 'Texte sous l\'accroche', 'Deux lignes pour te présenter', 220, true],
+  ['cta', 'Bouton principal', contact ? 'Ex. Demander un devis' : 'Ex. Découvrir la collection', 28, false],
+  ['bsTitle', 'Titre « best-sellers »', 'Ex. Nos coups de cœur', 40, false],
+  ['reviewsTitle', 'Titre des avis', 'Ex. Ils nous font confiance', 40, false],
+  ['aboutTitle', 'Titre « à propos »', contact ? "Ex. L'équipe" : "Ex. L'atelier", 40, false],
+  ['aboutText', 'Texte « à propos »', 'Raconte ton histoire en quelques lignes', 320, true],
+  ['howTitle', 'Titre « comment ça marche »', 'Ex. Commander en 3 étapes', 40, false],
+]
+
+// ── Couleurs : une vraie palette à explorer, pas 15 pastilles ──────────────────────
+// 14 familles de teintes × 5 nuances, générées en HSL → le vendeur balaie tout le
+// spectre sans quitter la page ; le sélecteur système et le code hexa restent
+// disponibles pour ceux qui ont une charte de marque précise.
+const HUES = [
+  ['Rouge', 6], ['Orange', 24], ['Ambre', 38], ['Or', 48], ['Olive', 78], ['Vert', 138],
+  ['Émeraude', 162], ['Teal', 176], ['Cyan', 192], ['Bleu', 214], ['Indigo', 236],
+  ['Violet', 266], ['Magenta', 302], ['Rose', 338],
+]
+const SHADES = [[70, 34], [58, 44], [48, 54], [38, 58], [26, 46]]   // [luminosité, saturation]
+const NEUTRALS = ['#111820', '#37415C', '#6B7280', '#A8A29E', '#C8BFB2', '#EDE9E3']
+
+function hsl2hex(h, s, l) {
+  s /= 100; l /= 100
+  const k = (n) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  const to = (v) => Math.round(255 * v).toString(16).padStart(2, '0')
+  return '#' + to(f(0)) + to(f(8)) + to(f(4))
+}
+function hex2hsl(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '')
+  if (!m) return null
+  const [r, g, b] = m.slice(1).map((v) => parseInt(v, 16) / 255)
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn
+  const l = (mx + mn) / 2
+  if (!d) return { h: 0, s: 0, l: l * 100 }
+  const s = d / (1 - Math.abs(2 * l - 1))
+  const h = mx === r ? 60 * (((g - b) / d) % 6) : mx === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4)
+  return { h: (h + 360) % 360, s: s * 100, l: l * 100 }
+}
+// Accords calculés à partir de la couleur principale (ce qui « va avec »)
+function harmonies(hex) {
+  const c = hex2hsl(hex)
+  if (!c) return []
+  const s = Math.max(28, Math.min(c.s, 62))
+  return [
+    ['Plus foncée', hsl2hex(c.h, s + 6, Math.max(20, c.l - 20))],
+    ['Voisine', hsl2hex((c.h + 32) % 360, s, c.l)],
+    ['Opposée', hsl2hex((c.h + 180) % 360, s, Math.min(52, c.l + 4))],
+    ['Neutre foncé', '#1F2933'],
+  ]
+}
+
+function ColorField({ label, hint, value, onChange, suggestions, swatches, onReset }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div>
+      <div className="flex items-center gap-2.5 mb-1.5">
+        <span className="w-9 h-9 rounded-lg border border-black/10 flex-shrink-0" style={{ background: value }} />
+        <div className="min-w-0 flex-1">
+          <span className="block text-[10.5px] font-bold uppercase tracking-wide text-gray-400">{label}</span>
+          <span className="block text-[11.5px] text-gray-400">{hint}</span>
+        </div>
+        <button type="button" onClick={() => setOpen(!open)} className="text-[12px] font-semibold text-nout-turquoise flex-shrink-0">
+          {open ? 'Fermer' : 'Explorer'}
+        </button>
+      </div>
+
+      {swatches?.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap mb-2">
+          {swatches.map((c) => (
+            <button key={c} type="button" aria-label={`Couleur ${c}`} onClick={() => onChange(c)}
+                    className={`w-7 h-7 rounded-lg border-2 ${value?.toLowerCase() === c.toLowerCase() ? 'border-nout-texte' : 'border-transparent'}`}
+                    style={{ background: c }} />
+          ))}
+        </div>
+      )}
+
+      {suggestions?.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap mb-2">
+          {suggestions.map(([n, c]) => (
+            <button key={n} type="button" onClick={() => onChange(c)} title={n}
+                    className={`flex items-center gap-1.5 pl-1 pr-2.5 py-1 rounded-full border text-[11.5px] font-semibold
+                      ${value === c ? 'border-nout-texte text-nout-texte' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+              <span className="w-4 h-4 rounded-full border border-black/10" style={{ background: c }} />{n}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        <input value={value} onChange={(e) => onChange(e.target.value)} spellCheck={false}
+               className="input-field !py-1.5 !text-[12.5px] !w-28 font-mono uppercase" maxLength={7} aria-label={`Code couleur ${label}`} />
+        <label className="w-8 h-8 rounded-lg overflow-hidden cursor-pointer relative border border-gray-200 flex-shrink-0"
+               style={{ background: 'conic-gradient(#E4572E,#E8B93E,#4E9E5B,#0E8C82,#1A3A8F,#8B5CF6,#C86B8E,#E4572E)' }} title="Pipette">
+          <input type="color" value={/^#[0-9a-f]{6}$/i.test(value) ? value : '#0E8C82'}
+                 onChange={(e) => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+        </label>
+        {onReset && <button type="button" onClick={onReset} className="text-[12px] font-semibold text-gray-400 hover:text-nout-texte">Réinitialiser</button>}
+      </div>
+
+      {open && (
+        <div className="mt-2.5 border border-gray-100 rounded-xl p-2 max-h-64 overflow-y-auto">
+          {HUES.map(([n, h]) => (
+            <div key={n} className="flex items-center gap-1 mb-1">
+              <span className="text-[10px] text-gray-400 w-14 flex-shrink-0">{n}</span>
+              {SHADES.map(([l, s]) => {
+                const c = hsl2hex(h, s, l)
+                return <button key={l} type="button" aria-label={`${n} ${l}`} onClick={() => onChange(c)}
+                               className={`flex-1 h-6 rounded-md border-2 ${value.toLowerCase() === c ? 'border-nout-texte' : 'border-transparent'}`}
+                               style={{ background: c }} />
+              })}
+            </div>
+          ))}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-gray-400 w-14 flex-shrink-0">Neutres</span>
+            {NEUTRALS.map((c) => (
+              <button key={c} type="button" aria-label={`Neutre ${c}`} onClick={() => onChange(c)}
+                      className={`flex-1 h-6 rounded-md border-2 ${value.toLowerCase() === c.toLowerCase() ? 'border-nout-texte' : 'border-transparent'}`}
+                      style={{ background: c }} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function readImage(file, cb) {
+  if (!file || !/^image\//.test(file.type)) return
+  const rd = new FileReader()
+  rd.onload = (e) => cb(e.target.result)
+  rd.readAsDataURL(file)
+}
+
+function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme, setTheme,
+                     texts, setTexts, layout, setLayout, phrase, setPhrase,
+                     heroIdx, setHeroIdx, heroCustom, setHeroCustom,
+                     aboutImage, setAboutImage, heroLay, setHeroLay,
+                     accent2, setAccent2, bgTone, setBgTone, onDone }) {
+  const [tab, setTab] = useState('textes')
+  const [allFonts, setAllFonts] = useState(false)
+  const heroRef = useRef(null)
+  const aboutRef = useRef(null)
+  const contact = shop.mode === 'contact'
+  const sec = sector || 'Autre'
+  const curLay = heroLay || LAYS[theme?.id] || 'minimal'
+
+  const setT = (k, v) => setTexts({ ...texts, [k]: v })
+  // l'accroche vit dans son propre état (elle sert dès l'étape 4) — on la route à part
+  const val = (k) => (k === 'tagline' ? phrase : texts[k] || '')
+  const put = (k, v) => (k === 'tagline' ? setPhrase(v) : setT(k, v))
+
+  // Ordre des sections. Invariant : les blocs « avant la grille » sont en tête du tableau.
+  // Descendre le dernier bloc d'avant (ou monter le premier d'après) fait traverser la grille.
+  const firstAfter = layout.findIndex((b) => b.pos === 'after')
+  const gridAt = firstAfter < 0 ? layout.length : firstAfter
+  const move = (i, dir) => {
+    const next = layout.map((b) => ({ ...b }))
+    const j = i + dir
+    if (dir === 1 && i === gridAt - 1) { next[i].pos = 'after'; setLayout(next); return }
+    if (dir === -1 && i === gridAt) { next[i].pos = 'before'; setLayout(next); return }
+    if (j < 0 || j >= next.length) return
+    const tmp = next[i]; next[i] = next[j]; next[j] = tmp
+    setLayout(next)
+  }
+  const toggle = (i) => setLayout(layout.map((b, k) => (k === i ? { ...b, on: !b.on } : b)))
+
+  const recoFonts = FONT_CONTEXTS[sec] || FONT_CONTEXTS.Autre
+  const fontList = allFonts ? Object.keys(FONTS) : [...new Set([...recoFonts, fontKey])]
+
+  const Row = ({ children }) => <div className="border-t border-gray-100 pt-3 mt-3">{children}</div>
+  const Lab = ({ children, hint }) => (
+    <label className="block mb-1.5">
+      <span className="block text-[10.5px] font-bold uppercase tracking-wide text-gray-400">{children}</span>
+      {hint && <span className="block text-[11.5px] text-gray-400 font-normal mt-0.5">{hint}</span>}
+    </label>
+  )
+
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-nout-turquoise mb-1">Personnaliser</p>
+          <h1 className="font-title text-xl font-bold text-nout-texte">Ta boutique, à ta main</h1>
+        </div>
+        <button type="button" onClick={onDone} className="btn-primary !py-2 !px-4 !text-[12.5px] flex-shrink-0">Terminer</button>
+      </div>
+      <p className="text-[13px] text-gray-500 mb-4">Chaque changement apparaît tout de suite dans l'aperçu.</p>
+
+      <div className="flex gap-1 p-1 bg-gray-50 rounded-xl mb-4">
+        {TABS.map(([k, l]) => (
+          <button key={k} type="button" onClick={() => setTab(k)}
+                  className={`flex-1 py-2 rounded-lg text-[12.5px] font-semibold transition-colors
+                    ${tab === k ? 'bg-white text-nout-texte shadow-sm' : 'text-gray-500 hover:text-nout-texte'}`}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* ── TEXTES ── */}
+      {tab === 'textes' && (
+        <div className="flex flex-col gap-3">
+          {TEXT_FIELDS(contact).map(([k, label, hint, max, multi]) => (
+            <div key={k}>
+              <Lab hint={hint}>{label}</Lab>
+              {multi ? (
+                <textarea className="input-field resize-none min-h-[70px] !text-[13px]" maxLength={max}
+                          value={val(k)} onChange={(e) => put(k, e.target.value)} placeholder="Laisse vide : on garde le texte généré" />
+              ) : (
+                <input className="input-field !py-2 !text-[13px]" maxLength={max}
+                       value={val(k)} onChange={(e) => put(k, e.target.value)} placeholder="Laisse vide : on garde le texte généré" />
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={() => { setTexts({}); setPhrase('') }}
+                  className="text-[12.5px] font-semibold text-gray-400 hover:text-nout-texte self-start mt-1">
+            Revenir aux textes générés
+          </button>
+        </div>
+      )}
+
+      {/* ── IMAGES ── */}
+      {tab === 'images' && (
+        <div>
+          {curLay === 'bio' ? (
+            <p className="text-[12.5px] text-gray-500 leading-relaxed mb-3 px-3 py-2.5 bg-gray-50 rounded-lg">
+              Le thème « lien en bio » a une seule mise en page : ta photo en rond, puis tes liens.
+              Choisis un autre thème dans l'onglet Style pour disposer les images librement.
+            </p>
+          ) : (<>
+          <Lab hint="Où se place ta grande photo sur la page d'accueil">Mise en page de l'accueil</Lab>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {HERO_LAYS.map(([k, l, d]) => (
+              <button key={k} type="button" onClick={() => setHeroLay(k)}
+                      className={`text-left rounded-xl border p-2.5 transition-colors
+                        ${curLay === k ? 'border-nout-turquoise bg-[#EAF5F3]' : 'border-gray-200 hover:border-gray-300'}`}>
+                <HeroSchema kind={k} />
+                <p className="text-[12px] font-semibold text-nout-texte mt-1.5">{l}</p>
+                <p className="text-[10.5px] text-gray-400 leading-snug">{d}</p>
+              </button>
+            ))}
+          </div>
+          </>)}
+
+          <Row>
+            <Lab hint="Choisis dans la banque d'images libres de droits, ou mets la tienne">Photo d'accueil</Lab>
+            <input ref={heroRef} type="file" accept="image/*" className="hidden"
+                   onChange={(e) => { readImage(e.target.files[0], setHeroCustom); e.target.value = '' }} />
+            <div className="flex gap-2 flex-wrap">
+              {Array.from({ length: heroCount(sec) }, (_, i) => (
+                <button key={i} type="button" onClick={() => { setHeroIdx(i); setHeroCustom(null) }}
+                        className={`w-20 h-14 rounded-lg overflow-hidden border-2 ${!heroCustom && heroIdx === i ? 'border-nout-turquoise' : 'border-transparent'}`}>
+                  <img src={heroImg(sec, i)} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+              <button type="button" onClick={() => heroRef.current?.click()}
+                      className={`w-20 h-14 rounded-lg border-2 border-dashed text-[11px] font-semibold overflow-hidden
+                        ${heroCustom ? 'border-nout-turquoise' : 'border-gray-300 text-gray-400 hover:border-nout-turquoise'}`}>
+                {heroCustom ? <img src={heroCustom} alt="" className="w-full h-full object-cover" /> : 'Ma photo'}
+              </button>
+            </div>
+            {heroCustom && (
+              <button type="button" onClick={() => setHeroCustom(null)} className="text-[12px] font-semibold text-gray-400 mt-1.5">Retirer ma photo</button>
+            )}
+          </Row>
+
+          <Row>
+            <Lab hint="La photo à côté de ton texte de présentation">Photo « à propos »</Lab>
+            <input ref={aboutRef} type="file" accept="image/*" className="hidden"
+                   onChange={(e) => { readImage(e.target.files[0], setAboutImage); e.target.value = '' }} />
+            <div className="flex gap-2 flex-wrap">
+              {Array.from({ length: 6 }, (_, i) => {
+                const src = stockImg(sec, i)
+                return (
+                  <button key={i} type="button" onClick={() => setAboutImage(src)}
+                          className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${aboutImage === src ? 'border-nout-turquoise' : 'border-transparent'}`}>
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                  </button>
+                )
+              })}
+              <button type="button" onClick={() => aboutRef.current?.click()}
+                      className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 text-[10.5px] font-semibold text-gray-400 hover:border-nout-turquoise">
+                Ma photo
+              </button>
+            </div>
+          </Row>
+          <p className="text-[11.5px] text-gray-400 leading-relaxed mt-3">
+            Les photos de tes produits se règlent dans « Produits » — jusqu'à {MAX_PRO_PHOTOS} par fiche.
+          </p>
+        </div>
+      )}
+
+      {/* ── SECTIONS ── */}
+      {tab === 'sections' && (
+        <div>
+          <Lab hint="Monte, descends ou masque tes blocs. La grille de produits reste au centre.">Ordre de la page</Lab>
+          <div className="flex flex-col">
+            {layout.map((b, i) => (
+              <div key={b.id}>
+                {i === gridAt && <GridDivider />}
+                <div className={`flex items-center gap-2 border rounded-xl px-3 py-2.5 mb-1.5 ${b.on ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'}`}>
+                  <div className="flex flex-col gap-0.5 flex-shrink-0">
+                    <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => move(i, -1)}
+                            className="w-6 h-5 rounded border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+                    </button>
+                    <button type="button" aria-label="Descendre" disabled={i === layout.length - 1} onClick={() => move(i, 1)}
+                            className="w-6 h-5 rounded border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                  </div>
+                  <span className={`flex-1 text-[13px] font-semibold ${b.on ? 'text-nout-texte' : 'text-gray-400'}`}>{b.label}</span>
+                  <button type="button" onClick={() => toggle(i)}
+                          className={`text-[12px] font-semibold px-2.5 py-1 rounded-full border
+                            ${b.on ? 'border-[#0E8C82] text-[#0B716A] bg-[#EAF5F3]' : 'border-gray-200 text-gray-400'}`}>
+                    {b.on ? 'Affiché' : 'Masqué'}
+                  </button>
+                </div>
+              </div>
+            ))}
+            {gridAt === layout.length && <GridDivider />}
+          </div>
+          <p className="text-[11.5px] text-gray-400 leading-relaxed mt-3">
+            Tes pages légales (CGV, retours, mentions, confidentialité) et le pied de page restent toujours en bas :
+            ils sont obligatoires pour vendre.
+          </p>
+        </div>
+      )}
+
+      {/* ── STYLE ── */}
+      {tab === 'style' && (
+        <div>
+          <ColorField label="Couleur principale" hint="Boutons, prix, liens"
+                      value={accent} onChange={setAccent} swatches={PALETTE} />
+
+          <Row>
+            <ColorField label="Couleur secondaire" hint="Barre d'annonce, pastilles, étapes"
+                        value={accent2 || accent} onChange={setAccent2}
+                        suggestions={harmonies(accent)}
+                        onReset={accent2 ? () => setAccent2(null) : null} />
+          </Row>
+
+          <Row>
+            <Lab hint="La teinte de la page derrière tes produits">Fond de la boutique</Lab>
+            <div className="grid grid-cols-5 gap-2">
+              {[['blanc', 'Blanc'], ['creme', 'Crème'], ['sable', 'Sable'], ['gris', 'Gris clair'], ['sombre', 'Sombre']].map(([k, l]) => (
+                <button key={k} type="button" onClick={() => setBgTone(k)}
+                        className={`rounded-xl border p-1.5 ${bgTone === k ? 'border-nout-turquoise ring-2 ring-nout-turquoise/20' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <span className="block h-8 rounded-md border border-black/5" style={{ background: TONES[k] }} />
+                  <span className="block text-[10.5px] font-semibold text-gray-500 mt-1">{l}</span>
+                </button>
+              ))}
+            </div>
+            <p className="text-[11.5px] text-gray-400 mt-2 leading-relaxed">
+              Le fond sombre bascule automatiquement tous les textes en clair — la lisibilité reste garantie.
+            </p>
+          </Row>
+
+          <Row>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10.5px] font-bold uppercase tracking-wide text-gray-400">Police des titres</span>
+              <button type="button" onClick={() => setAllFonts(!allFonts)} className="text-[12px] font-semibold text-nout-turquoise">
+                {allFonts ? 'Voir les conseillées' : `Toutes (${Object.keys(FONTS).length})`}
+              </button>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+              {fontList.map((k) => (
+                <button key={k} type="button" onClick={() => setFontKey(k)}
+                        className={`rounded-xl border px-2 py-2.5 text-center ${fontKey === k ? 'border-nout-turquoise bg-[#EAF5F3]' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <span className="block text-[19px] leading-none text-nout-texte" style={{ fontFamily: FONTS[k].fam }}>Ag</span>
+                  <span className="block text-[10px] font-semibold text-gray-500 mt-1">{FONTS[k].label}</span>
+                </button>
+              ))}
+            </div>
+          </Row>
+
+          <Row>
+            <Lab hint="Changer de thème garde tes textes et tes photos">Thème</Lab>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {THEMES.map((t) => (
+                <button key={t.id} type="button" onClick={() => setTheme(t)}
+                        className={`text-left rounded-xl border p-2.5 ${theme?.id === t.id ? 'border-nout-turquoise ring-2 ring-nout-turquoise/20' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <span className="block w-6 h-6 rounded-md mb-1.5" style={{ background: t.acc }} />
+                  <p className="text-[12.5px] font-bold text-nout-texte">{t.name}</p>
+                  <p className="text-[10.5px] text-gray-400 leading-snug">{t.vibe}</p>
+                </button>
+              ))}
+            </div>
+          </Row>
+        </div>
+      )}
+
+      <div className="flex gap-2 mt-6">
+        <button type="button" onClick={onDone} className="btn-secondary flex-1">Retour au récapitulatif</button>
+        <Link to="/boutique-templates" className="btn-secondary flex-1 text-center">Changer de template</Link>
+      </div>
+    </>
+  )
+}
+
+function GridDivider() {
+  return (
+    <div className="flex items-center gap-2 my-1.5">
+      <span className="flex-1 h-px bg-gray-200" />
+      <span className="text-[10.5px] font-bold uppercase tracking-wide text-gray-400">Grille de tes produits</span>
+      <span className="flex-1 h-px bg-gray-200" />
+    </div>
+  )
+}
+
+// Petit schéma qui montre OÙ tombe l'image dans chaque mise en page
+function HeroSchema({ kind }) {
+  const box = 'rounded-[3px] bg-nout-turquoise/70'
+  const txt = 'rounded-[2px] bg-gray-300'
+  return (
+    <div className="h-11 rounded-md bg-gray-50 border border-gray-100 p-1.5 flex gap-1">
+      {kind === 'hero' && <div className={`${box} flex-1 flex flex-col justify-end p-1 gap-0.5`}><span className="h-1 w-2/3 rounded-[2px] bg-white/85" /><span className="h-0.5 w-1/2 rounded-[2px] bg-white/60" /></div>}
+      {kind === 'minimal' && <><div className="flex-1 flex flex-col justify-center gap-1"><span className={`${txt} h-1 w-4/5`} /><span className={`${txt} h-0.5 w-3/5`} /></div><div className={`${box} w-2/5`} /></>}
+      {kind === 'splitL' && <><div className={`${box} w-2/5`} /><div className="flex-1 flex flex-col justify-center gap-1"><span className={`${txt} h-1 w-4/5`} /><span className={`${txt} h-0.5 w-3/5`} /></div></>}
+      {kind === 'band' && <div className="flex-1 flex flex-col gap-1"><span className={`${box} h-4 w-full`} /><span className={`${txt} h-1 w-2/3`} /><span className={`${txt} h-0.5 w-1/2`} /></div>}
+      {kind === 'market' && <><div className="flex-1 flex flex-col justify-center gap-1"><span className={`${txt} h-1 w-4/5`} /><span className={`${txt} h-0.5 w-3/5`} /></div><span className={`${box} w-7 h-7 !rounded-full self-center`} /></>}
+      {kind === 'modern' && <div className="flex-1 rounded-[3px] bg-[#131A22] flex flex-col justify-center px-1.5 gap-1"><span className="h-1 w-2/3 rounded-[2px] bg-white/80" /><span className="h-0.5 w-1/2 rounded-[2px] bg-white/45" /></div>}
+      {kind === 'soft' && <div className="flex-1 rounded-[3px] bg-nout-turquoise/10 flex flex-col justify-center items-center gap-1"><span className={`${txt} h-1 w-2/3`} /><span className={`${txt} h-0.5 w-1/2`} /></div>}
+    </div>
   )
 }
 

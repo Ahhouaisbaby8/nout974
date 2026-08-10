@@ -267,6 +267,10 @@ export function heroImg(sector, seed = 0) {
   const list = HERO_IDS[SECSLUG[sector] || 'maison']
   return H(list[((seed % list.length) + list.length) % list.length])
 }
+// Nombre de visuels d'accueil disponibles pour un univers (galerie de « Personnaliser »)
+export function heroCount(sector) {
+  return HERO_IDS[SECSLUG[sector] || 'maison'].length
+}
 
 // ── 12 boutiques-démo (identités fictives 974, une par thème) ──
 export const DEMOS = {

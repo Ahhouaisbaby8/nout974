@@ -15,13 +15,16 @@ import { ProductView, CheckoutView, LegalView } from './pro/ShopViews'
 // Argent : les prix passent par utils/shipping (prix TOTAL protection incluse affiché
 // en principal — conformité affichage des prix, audit 10/08). AUCUN code paiement ici.
 
-const LAYS = {
+// mise en page d'accueil livrée par chaque thème (l'éditeur « Personnaliser » peut la changer)
+export const LAYS = {
   epuree: 'minimal', vitrine: 'hero', marche: 'market', douce: 'soft', moderne: 'modern',
   grille: 'grid', lumina: 'hero', pure: 'minimal', studio: 'grid', active: 'modern',
   marmaille: 'soft', ecrin: 'soft', conseil: 'minimal', terrain: 'hero', bio: 'bio', classic: 'minimal',
   galerie: 'hero', metier: 'market', spot: 'bio', botanique: 'soft',
 }
 const DARKS = new Set(['moderne', 'lumina', 'active', 'bio'])
+// fonds de page proposés dans « Personnaliser » (clé → couleur)
+export const TONES = { blanc: '#FFFFFF', creme: '#FBF6EE', sable: '#F7F3EE', gris: '#F4F5F6', sombre: '#10151C' }
 
 function Stars({ i }) {
   const rating = (4.5 + ((i * 7) % 5) / 10).toFixed(1).replace('.', ',')
@@ -29,7 +32,11 @@ function Stars({ i }) {
   return <p className="text-[10.5px] text-amber-600/90 mt-0.5 font-medium">★ {rating} ({count})</p>
 }
 
-function SfCard({ l, i, dark, contact, accent, sector, seed = 0, onOpen }) {
+function SfCard({ l, i, dark, contact, accent, badge, sector, seed = 0, onOpen }) {
+  // `badge` : couleur secondaire choisie par le vendeur. Non renseignée → pastille blanche
+  // (le rendu d'origine des 21 templates, qu'on ne change pas sans qu'il le demande).
+  const badgeStyle = badge ? { background: badge, color: '#fff' } : undefined
+  const badgeCls = badge ? '' : 'bg-white text-nout-texte'
   const img = l.images?.[0]
   // 2e visuel au survol : la vraie 2e photo du produit si elle existe, sinon une image
   // d'ambiance de l'univers (pattern des meilleures boutiques : 8/19 des sites étudiés).
@@ -45,8 +52,8 @@ function SfCard({ l, i, dark, contact, accent, sector, seed = 0, onOpen }) {
           <img src={img2} alt="" loading="lazy"
                className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         )}
-        {i === 0 && <span className="absolute top-2 left-2 text-[8.5px] font-bold uppercase tracking-wide bg-white text-nout-texte px-2 py-0.5 rounded-full shadow-sm">Plus vendu</span>}
-        {i === 3 && <span className="absolute top-2 left-2 text-[8.5px] font-bold uppercase tracking-wide bg-white text-nout-texte px-2 py-0.5 rounded-full shadow-sm">Nouveau</span>}
+        {i === 0 && <span className={`absolute top-2 left-2 text-[8.5px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shadow-sm ${badgeCls}`} style={badgeStyle}>Plus vendu</span>}
+        {i === 3 && <span className={`absolute top-2 left-2 text-[8.5px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shadow-sm ${badgeCls}`} style={badgeStyle}>Nouveau</span>}
         {nPhotos > 1 && (
           <span className="absolute bottom-2 right-2 flex gap-1 opacity-80" aria-label={`${nPhotos} photos`}>
             {l.images.slice(0, 5).map((_, k) => (
@@ -85,8 +92,16 @@ function SfCard({ l, i, dark, contact, accent, sector, seed = 0, onOpen }) {
 // légales). Désactivé dans les vignettes de la galerie, où la boutique est une image.
 export default function ShopPage({ shop, listings = [], isOwner = false, wide = false, browsable = false }) {
   const accent = shop.accent_color || '#0E8C82'
-  const lay = LAYS[shop.template_key] || 'minimal'
-  const dark = DARKS.has(shop.template_key)
+  // couleur secondaire : badges, chiffres des étapes, bandeau de confiance. Par défaut =
+  // la principale, pour qu'une boutique qui n'y touche pas reste cohérente.
+  const accent2 = shop.accent2 || accent
+  // `hero_lay` : mise en page d'accueil choisie dans « Personnaliser » (où va l'image) ;
+  // sinon celle du thème. La page « Lien en bio » garde sa structure propre.
+  const themeLay = LAYS[shop.template_key] || 'minimal'
+  const lay = themeLay === 'bio' ? 'bio' : (shop.hero_lay || themeLay)
+  // fond de page choisi dans « Personnaliser » ; sinon celui du thème
+  const tone = shop.bg_tone || (DARKS.has(shop.template_key) ? 'sombre' : themeLay === 'market' ? 'creme' : 'blanc')
+  const dark = tone === 'sombre'
   const contact = shop.mode === 'contact'
   const titleFam = (FONTS[shop.font_key] || FONTS.montserrat).fam
   const rayons = ['Tout', ...(shop.rayons || [])]
@@ -99,20 +114,86 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
   const shown = rayon === 'Tout' ? listings : listings.filter((l) => l.rayon === rayon)
   const best = useMemo(() => listings.slice(0, wide ? 4 : 3), [listings, wide])
   const seed = shop.imgSeed || 0
-  const hImg = heroImg(shop.sector || 'Autre', shop.heroIdx ?? seed)
+  // visuel d'accueil : celui téléversé par le vendeur, sinon celui choisi dans la galerie
+  const hImg = shop.heroImage || heroImg(shop.sector || 'Autre', shop.heroIdx ?? seed)
 
-  const bg = dark ? 'bg-[#10151C] text-white' : lay === 'market' ? 'bg-[#FBF6EE] text-nout-texte' : 'bg-white text-nout-texte'
+  const bg = dark ? 'text-white' : 'text-nout-texte'
+  const bgStyle = { background: TONES[tone] || '#fff' }
   // Écrans internes : on parcourt la boutique comme un vrai site (produit, commande, légal)
   const viewProps = { shop, accent, dark, titleFam, contact, wide, onSay: say, onBack: () => setView(null) }
+
+  // ── Sections de contenu : ORDRE et textes définis par le vendeur (« Personnaliser ») ──
+  // shop.layout = [{ id, on, pos }] ; pos = 'before' (avant les rayons) ou 'after' (après la grille)
+  const T = shop.texts || {}
+  const descr = T.description || shop.description
+  const cta = T.cta || (contact ? 'Demander un devis' : 'Découvrir')
   const line = dark ? 'border-white/10' : 'border-gray-100'
   const secTitle = { fontFamily: titleFam }
   // En grand écran, les fonds restent pleine largeur mais le CONTENU est centré et borné
   // (comportement de tous les vrais sites : une ligne de texte de 1600 px est illisible).
   const inner = wide ? 'max-w-[1280px] mx-auto w-full' : ''
+  const SECTION_NODES = {
+    bs: (!contact && best.length > 0) && (
+      <div key="bs" className={`${wide ? 'px-8 pt-9' : 'px-5 pt-5'} ${inner}`}>
+        <h2 className={`font-bold mb-3 ${wide ? 'text-[19px]' : 'text-[15px]'}`} style={secTitle}>{T.bsTitle || 'Nos best-sellers'}</h2>
+        <div className={`grid gap-3 ${wide ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          {best.map((l, i) => <SfCard key={l.id} l={l} i={i} dark={dark} contact={contact} accent={accent} badge={shop.accent2}
+                                      sector={shop.sector} seed={seed}
+                                      onOpen={() => { if (!openProduct(l, i)) say('Démo — fiche produit et achat protégé NOUT') }} />)}
+        </div>
+      </div>
+    ),
+    reviews: (
+      <div key="reviews" className={`px-5 py-5 border-t ${line} ${inner} ${wide ? 'px-8 py-8' : ''}`}>
+        <h2 className="text-[15px] font-bold" style={secTitle}>{T.reviewsTitle || `Ils ont ${contact ? 'fait appel à nous' : 'commandé'}`}</h2>
+        <p className="text-[12px] font-bold text-amber-600/90 mt-1 mb-3">★ 4,9 / 5 — avis d'exemple (démo). Les vrais avis NOUT apparaîtront ici.</p>
+        <blockquote className={`text-[12.5px] leading-relaxed ${dark ? 'text-white/75' : 'text-gray-600'}`}>
+          « {contact ? 'Devis clair, travail propre, je recommande.' : 'Reçu en 2 jours au point relais, qualité au top.'} »
+          <span className={`block text-[11px] mt-0.5 ${dark ? 'text-white/45' : 'text-gray-400'}`}>— Mélissa · Saint-Denis</span>
+        </blockquote>
+      </div>
+    ),
+    about: (
+      <div key="about" className={`flex items-center gap-4 px-5 py-5 border-t ${line} ${inner} ${wide ? 'px-8 py-8 gap-8' : ''}`}>
+        <div className={`rounded-xl overflow-hidden flex-shrink-0 ${wide ? 'w-44 h-44' : 'w-24 h-24'}`}>
+          <img src={shop.aboutImage || stockImg(shop.sector || 'Autre', 1, seed)} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-bold" style={secTitle}>{T.aboutTitle || (contact ? "L'équipe" : "L'atelier")}</h2>
+          <p className={`text-[12px] leading-relaxed mt-1 ${dark ? 'text-white/60' : 'text-gray-500'}`}>
+            {T.aboutText || `Une ${contact ? 'entreprise' : 'boutique'} indépendante de La Réunion. Chaque ${contact ? 'projet est suivi' : 'commande est préparée'} avec soin.`}
+          </p>
+          <p className={`text-[11px] mt-1.5 ${dark ? 'text-white/40' : 'text-gray-400'}`}>{shop.city || 'La Réunion (974)'} · Vendeur vérifié NOUT</p>
+        </div>
+      </div>
+    ),
+    how: (
+      <div key="how" className={`px-5 py-5 border-t ${line} ${inner} ${wide ? 'px-8 py-8' : ''}`}>
+        <h2 className="text-[15px] font-bold mb-3" style={secTitle}>{T.howTitle || 'Comment ça marche'}</h2>
+        <div className="grid grid-cols-3 gap-3 text-[11px] leading-relaxed opacity-80">
+          {(contact
+            ? [['1. Je décris', 'Mon besoin en 2 minutes'], ['2. Je reçois un devis', 'Réponse sous 24 h'], ['3. On planifie', 'Échanges via la messagerie NOUT']]
+            : [['1. Je commande', 'Paiement sécurisé en ligne'], ['2. Mon argent est protégé', "Conservé en sécurité jusqu'à réception"], ['3. Je reçois', 'Point relais 974, domicile ou main propre']]
+          ).map(([t, s]) => (
+            <div key={t}><b className="block mb-0.5" style={{ color: accent2 }}>{t}</b>{s}</div>
+          ))}
+        </div>
+      </div>
+    ),
+  }
+  const DEFAULT_LAYOUT = [
+    { id: 'bs', on: true, pos: 'before' },
+    { id: 'reviews', on: true, pos: 'after' },
+    { id: 'about', on: true, pos: 'after' },
+    { id: 'how', on: true, pos: 'after' },
+  ]
+  const blocks = (shop.layout || DEFAULT_LAYOUT)
+    .filter((b) => b.on && SECTION_NODES[b.id])
+    .map((b) => ({ pos: b.pos, node: SECTION_NODES[b.id] }))
 
   // ── Écrans internes (quand on navigue dans la boutique) ──
   if (view) {
-    const shell = (child) => <div className={`${bg} min-h-[70vh]`}>{child}{toast && <Toast msg={toast} />}</div>
+    const shell = (child) => <div className={`${bg} min-h-[70vh]`} style={bgStyle}>{child}{toast && <Toast msg={toast} />}</div>
     if (view.kind === 'product') return shell(
       <ProductView {...viewProps} listing={view.l} index={view.i}
                    onBuy={() => setView({ kind: 'checkout', l: view.l, i: view.i })} />)
@@ -135,7 +216,7 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
           </div>
           <h1 className="text-xl font-bold" style={secTitle}>{shop.name}</h1>
           <p className={`text-[13px] mt-1 ${dark ? 'text-white/60' : 'text-gray-500'}`}>{shop.tagline}</p>
-          <p className={`text-[12px] mt-2 leading-relaxed ${dark ? 'text-white/45' : 'text-gray-400'}`}>{shop.description}</p>
+          <p className={`text-[12px] mt-2 leading-relaxed ${dark ? 'text-white/45' : 'text-gray-400'}`}>{descr}</p>
           <div className="flex flex-col gap-3 mt-7">
             {(shop.links || []).map((lk) => (
               <button key={lk.title} type="button"
@@ -156,31 +237,33 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
     )
   }
 
-  const heroTxt = (center = false) => (
+  // `onDark` : le bloc d'accueil peut être sombre alors que le reste de la page est clair
+  // (bandeau sombre) — sans ce paramètre le texte gris se retrouve illisible sur fond noir.
+  const heroTxt = (center = false, onDark = dark) => (
     <div className={center ? 'text-center flex flex-col items-center' : ''}>
-      <p className="text-[10px] font-bold uppercase tracking-[.14em]" style={{ color: dark ? '#fff' : accent }}>Boutique</p>
-      <h1 className={`leading-tight font-bold mt-2 max-w-[24ch] ${wide ? 'text-[40px]' : 'text-[24px]'}`} style={secTitle}>{shop.tagline}</h1>
-      <p className={`leading-relaxed mt-3 max-w-[46ch] ${wide ? 'text-[15px]' : 'text-[13px]'} ${dark ? 'text-white/70' : 'text-gray-500'}`}>{shop.description}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[.14em]" style={{ color: onDark ? '#fff' : accent }}>Boutique</p>
+      <h1 className={`leading-tight font-bold mt-2 max-w-[24ch] ${wide ? 'text-[40px]' : 'text-[24px]'} ${onDark ? 'text-white' : ''}`} style={secTitle}>{shop.tagline}</h1>
+      <p className={`leading-relaxed mt-3 max-w-[46ch] ${wide ? 'text-[15px]' : 'text-[13px]'} ${onDark ? 'text-white/70' : 'text-gray-500'}`}>{descr}</p>
       <button type="button" onClick={() => say(contact ? 'Démo — ouvre la messagerie NOUT (devis)' : 'Voir les produits ci-dessous')}
               className={`mt-4 rounded-full font-bold text-white w-fit ${wide ? 'px-7 py-3 text-[14px]' : 'px-5 py-2.5 text-[13px]'}`}
               style={{ background: accent }}>
-        {contact ? 'Demander un devis' : 'Découvrir'}
+        {cta}
       </button>
-      <p className={`text-[11px] mt-3 ${dark ? 'text-white/50' : 'text-gray-400'}`}>★ 4,9 · {contact ? '38 avis clients' : '47 ventes'} · Vendeur vérifié NOUT</p>
+      <p className={`text-[11px] mt-3 ${onDark ? 'text-white/50' : 'text-gray-400'}`}>★ 4,9 · {contact ? '38 avis clients' : '47 ventes'} · Vendeur vérifié NOUT</p>
     </div>
   )
 
   return (
-    <div className={`${bg} min-h-[70vh]`}>
+    <div className={`${bg} min-h-[70vh]`} style={bgStyle}>
       <title>{`${shop.name} — Boutique NOUT 974`}</title>
       <meta name="description" content={shop.tagline || `La boutique ${shop.name} sur NOUT.`} />
 
       {/* barre d'annonce (promesse escrow — pattern 14/19 des meilleurs sites) */}
       <div className="text-center text-[9.5px] font-bold uppercase tracking-wider py-1.5 px-3 text-white"
-           style={{ background: accent }}>
-        {contact
+           style={{ background: accent2 }}>
+        {T.announce || (contact
           ? 'Devis gratuit sous 24 h · Échanges sécurisés via NOUT'
-          : "Votre argent est protégé jusqu'à réception · Livraison en point relais dès 4 €"}
+          : "Votre argent est protégé jusqu'à réception · Livraison en point relais dès 4 €")}
       </div>
 
       {/* header : wordmark typographié (pas de pastille-lettre) */}
@@ -208,22 +291,32 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
           <div className={inner}>
             <p className="text-[10px] font-bold uppercase tracking-[.14em] text-white/90">Boutique</p>
             <h1 className={`leading-tight font-bold mt-1 max-w-[24ch] ${wide ? 'text-[40px]' : 'text-[24px]'}`} style={secTitle}>{shop.tagline}</h1>
-            <p className={`text-white/85 mt-2 max-w-[46ch] ${wide ? 'text-[15px]' : 'text-[13px]'}`}>{shop.description}</p>
+            <p className={`text-white/85 mt-2 max-w-[46ch] ${wide ? 'text-[15px]' : 'text-[13px]'}`}>{descr}</p>
             <button type="button" onClick={() => say(contact ? 'Démo — ouvre la messagerie NOUT (devis)' : 'Voir les produits ci-dessous')}
                     className={`mt-3 rounded-full font-bold w-fit text-white ${wide ? 'px-7 py-3 text-[14px]' : 'px-5 py-2.5 text-[13px]'}`}
                     style={{ background: accent }}>
-              {contact ? 'Demander un devis' : 'Découvrir'}
-            </button>
+              {cta}
+      </button>
           </div>
         </div>
-      ) : lay === 'minimal' ? (
+      ) : lay === 'minimal' || lay === 'splitL' ? (
         // en étroit, on empile (texte puis image) : côte à côte, la colonne de texte
         // tombe à ~190 px et le titre se casse en bouillie sur téléphone
-        <div className={`flex items-stretch ${wide ? 'max-w-[1600px] mx-auto' : 'flex-col sm:flex-row'}`}>
-          <div className={`flex-1 min-w-0 flex flex-col justify-center ${wide ? 'py-16 pl-[max(2rem,calc((100vw-1280px)/2))] pr-12' : 'p-6'}`}>{heroTxt()}</div>
+        <div className={`flex items-stretch ${wide ? 'max-w-[1600px] mx-auto' : 'flex-col sm:flex-row'} ${lay === 'splitL' ? 'sm:flex-row-reverse' : ''}`}>
+          <div className={`flex-1 min-w-0 flex flex-col justify-center ${wide
+            ? (lay === 'splitL' ? 'py-16 pr-[max(2rem,calc((100vw-1280px)/2))] pl-12' : 'py-16 pl-[max(2rem,calc((100vw-1280px)/2))] pr-12')
+            : 'p-6'}`}>{heroTxt()}</div>
           <div className={`flex-1 ${wide ? 'min-h-[440px]' : 'h-[210px] sm:h-auto sm:min-h-[230px]'}`}>
             <img src={hImg} alt="" className="w-full h-full object-cover" />
           </div>
+        </div>
+      ) : lay === 'band' ? (
+        // bandeau photo pleine largeur, texte en dessous
+        <div>
+          <div className={`w-full overflow-hidden ${wide ? 'h-[300px]' : 'h-[150px]'}`}>
+            <img src={hImg} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div className={`${inner} ${wide ? 'py-10 px-8' : 'p-6'}`}>{heroTxt()}</div>
         </div>
       ) : lay === 'market' ? (
         <div className={wide ? 'py-14 px-8' : 'p-6'}>
@@ -236,7 +329,7 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
         </div>
       ) : lay === 'modern' ? (
         <div className={`border-b-2 ${wide ? 'py-16 px-8' : 'p-6'}`} style={{ background: '#131A22', borderColor: accent }}>
-          <div className={inner}>{heroTxt()}</div>
+          <div className={inner}>{heroTxt(false, true)}</div>
         </div>
       ) : (
         <div className={`rounded-b-3xl ${wide ? 'py-16 px-8' : 'p-7'}`}
@@ -245,17 +338,8 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
         </div>
       )}
 
-      {/* BEST-SELLERS (15/19 des meilleurs sites) */}
-      {!contact && best.length > 0 && (
-        <div className={`${wide ? 'px-8 pt-9' : 'px-5 pt-5'} ${inner}`}>
-          <h2 className={`font-bold mb-3 ${wide ? 'text-[19px]' : 'text-[15px]'}`} style={secTitle}>Nos best-sellers</h2>
-          <div className={`grid gap-3 ${wide ? 'grid-cols-4' : 'grid-cols-3'}`}>
-            {best.map((l, i) => <SfCard key={l.id} l={l} i={i} dark={dark} contact={contact} accent={accent}
-                                        sector={shop.sector} seed={seed}
-                                        onOpen={() => { if (!openProduct(l, i)) say('Démo — fiche produit et achat protégé NOUT') }} />)}
-          </div>
-        </div>
-      )}
+      {/* Sections de contenu, dans l'ORDRE choisi par le vendeur (voir « Personnaliser ») */}
+      {blocks.filter((b) => b.pos === 'before').map((b) => b.node)}
 
       {/* RAYONS */}
       <div className={`flex gap-1 mt-4 overflow-x-auto border-b px-4 ${line} scrollbar-none ${inner} ${wide ? 'px-8' : ''}`}>
@@ -274,48 +358,13 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
       ) : (
         <div className={`grid gap-4 ${wide ? 'p-8' : 'p-5'} ${inner} ${
           wide ? (lay === 'grid' ? 'grid-cols-5' : 'grid-cols-4') : (lay === 'grid' ? 'grid-cols-3' : 'grid-cols-2')}`}>
-          {shown.map((l, i) => <SfCard key={l.id} l={l} i={i} dark={dark} contact={contact} accent={accent}
+          {shown.map((l, i) => <SfCard key={l.id} l={l} i={i} dark={dark} contact={contact} accent={accent} badge={shop.accent2}
                                        sector={shop.sector} seed={seed}
                                        onOpen={() => { if (!openProduct(l, i)) say(contact ? 'Démo — demande de devis via la messagerie NOUT' : 'Démo — fiche produit et achat protégé NOUT') }} />)}
         </div>
       )}
 
-      {/* AVIS (exemples — le réel n'affichera que des avis NOUT vérifiés et datés) */}
-      <div className={`px-5 py-5 border-t ${line} ${inner} ${wide ? 'px-8 py-8' : ''}`}>
-        <h2 className="text-[15px] font-bold" style={secTitle}>Ils ont {contact ? 'fait appel à nous' : 'commandé'}</h2>
-        <p className="text-[12px] font-bold text-amber-600/90 mt-1 mb-3">★ 4,9 / 5 — avis d'exemple (démo). Les vrais avis NOUT apparaîtront ici.</p>
-        <blockquote className={`text-[12.5px] leading-relaxed ${dark ? 'text-white/75' : 'text-gray-600'}`}>
-          « {contact ? 'Devis clair, travail propre, je recommande.' : 'Reçu en 2 jours au point relais, qualité au top.'} »
-          <span className={`block text-[11px] mt-0.5 ${dark ? 'text-white/45' : 'text-gray-400'}`}>— Mélissa · Saint-Denis</span>
-        </blockquote>
-      </div>
-
-      {/* L'ATELIER (ancrage local 12/19) */}
-      <div className={`flex items-center gap-4 px-5 py-5 border-t ${line} ${inner} ${wide ? 'px-8 py-8 gap-8' : ''}`}>
-        <div className={`rounded-xl overflow-hidden flex-shrink-0 ${wide ? 'w-44 h-44' : 'w-24 h-24'}`}>
-          <img src={stockImg(shop.sector || 'Autre', 1, seed)} alt="" className="w-full h-full object-cover" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-[15px] font-bold" style={secTitle}>{contact ? "L'équipe" : "L'atelier"}</h2>
-          <p className={`text-[12px] leading-relaxed mt-1 ${dark ? 'text-white/60' : 'text-gray-500'}`}>
-            Une {contact ? 'entreprise' : 'boutique'} indépendante de La Réunion. Chaque {contact ? 'projet est suivi' : 'commande est préparée'} avec soin.
-          </p>
-          <p className={`text-[11px] mt-1.5 ${dark ? 'text-white/40' : 'text-gray-400'}`}>La Réunion (974) · Vendeur vérifié NOUT</p>
-        </div>
-      </div>
-
-      {/* COMMENT ÇA MARCHE (l'escrow en langage client) */}
-      <div className={`px-5 py-5 border-t ${line} ${inner} ${wide ? 'px-8 py-8' : ''}`}>
-        <h2 className="text-[15px] font-bold mb-3" style={secTitle}>Comment ça marche</h2>
-        <div className="grid grid-cols-3 gap-3 text-[11px] leading-relaxed opacity-80">
-          {(contact
-            ? [['1. Je décris', 'Mon besoin en 2 minutes'], ['2. Je reçois un devis', 'Réponse sous 24 h'], ['3. On planifie', 'Échanges via la messagerie NOUT']]
-            : [['1. Je commande', 'Paiement sécurisé en ligne'], ['2. Mon argent est protégé', "Conservé en sécurité jusqu'à réception"], ['3. Je reçois', 'Point relais 974, domicile ou main propre']]
-          ).map(([t, s]) => (
-            <div key={t}><b className="block mb-0.5" style={{ color: accent }}>{t}</b>{s}</div>
-          ))}
-        </div>
-      </div>
+      {blocks.filter((b) => b.pos === 'after').map((b) => b.node)}
 
       {/* bandeau confiance mutualisé (non désactivable — socle NOUT) */}
       <div className={`grid grid-cols-4 gap-2 px-5 py-3.5 text-center text-[9px] font-bold uppercase tracking-wide opacity-60 border-t ${line} ${inner} ${wide ? 'px-8 py-5 text-[10.5px]' : ''}`}>
