@@ -10,29 +10,32 @@ import { stockImg } from './proData'
 
 const money = (n) => formatPrice(Math.round(n * 100) / 100)
 
-function Chrome({ shop, accent, dark, titleFam, onBack, backLabel = '← Boutique', children }) {
+// `wide` : rendu ordinateur. Le contenu est borné et centré — sans ça, la photo
+// d'un produit s'étirait sur toute la largeur de l'écran (effet « zoom » énorme).
+function Chrome({ shop, accent, dark, titleFam, onBack, backLabel = '← Boutique', wide = false, max = 'max-w-[1180px]', children }) {
   const line = dark ? 'border-white/10' : 'border-gray-100'
+  const inner = wide ? `${max} mx-auto w-full` : ''
   return (
     <>
       <div className="text-center text-[9.5px] font-bold uppercase tracking-wider py-1.5 px-3 text-white" style={{ background: accent }}>
         Votre argent est protégé jusqu'à réception
       </div>
-      <div className={`flex items-center justify-between px-5 py-3.5 border-b ${line}`}>
+      <div className={`flex items-center justify-between px-5 py-3.5 border-b ${line} ${inner} ${wide ? 'px-8 py-5' : ''}`}>
         <span className="text-[16px] font-bold truncate" style={{ fontFamily: titleFam }}>{shop.name}</span>
       </div>
-      <div className="px-5 pt-3">
+      <div className={`px-5 pt-3 ${inner} ${wide ? 'px-8 pt-5' : ''}`}>
         <button type="button" onClick={onBack}
                 className={`text-[12px] font-bold ${dark ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-nout-texte'}`}>
           {backLabel}
         </button>
       </div>
-      {children}
+      <div className={inner}>{children}</div>
     </>
   )
 }
 
 // ── Fiche produit ──
-export function ProductView({ shop, listing, index, accent, dark, titleFam, contact, onBack, onBuy, onSay }) {
+export function ProductView({ shop, listing, index, accent, dark, titleFam, contact, wide = false, onBack, onBuy, onSay }) {
   const imgs = (listing.images || []).filter(Boolean)
   const [main, setMain] = useState(imgs[0] || stockImg(shop.sector, index))
   const line = dark ? 'border-white/10' : 'border-gray-100'
@@ -40,8 +43,10 @@ export function ProductView({ shop, listing, index, accent, dark, titleFam, cont
   const rating = (4.5 + ((index * 7) % 5) / 10).toFixed(1).replace('.', ',')
 
   return (
-    <Chrome shop={shop} accent={accent} dark={dark} titleFam={titleFam} onBack={onBack}>
-      <div className="px-5 pt-3">
+    <Chrome shop={shop} accent={accent} dark={dark} titleFam={titleFam} onBack={onBack} wide={wide}>
+      {/* ordinateur : photo à gauche (bornée), informations à droite — standard e-commerce */}
+      <div className={wide ? 'flex gap-10 px-8 pt-4 items-start' : ''}>
+      <div className={wide ? 'w-[46%] max-w-[520px] flex-shrink-0' : 'px-5 pt-3'}>
         <div className="rounded-xl overflow-hidden bg-gray-100" style={{ aspectRatio: '4 / 5' }}>
           <img src={main} alt={listing.title} className="w-full h-full object-cover" />
         </div>
@@ -58,7 +63,7 @@ export function ProductView({ shop, listing, index, accent, dark, titleFam, cont
         )}
       </div>
 
-      <div className="px-5 pt-4 pb-2">
+      <div className={wide ? 'flex-1 min-w-0 pb-2' : 'px-5 pt-4 pb-2'}>
         <h1 className="text-[21px] font-bold leading-tight" style={{ fontFamily: titleFam }}>{listing.title}</h1>
         <p className="text-[10.5px] text-amber-600/90 font-medium mt-1">★ {rating} · {6 + (index * 13) % 38} avis</p>
 
@@ -97,12 +102,13 @@ export function ProductView({ shop, listing, index, accent, dark, titleFam, cont
           Vendu par <b>{shop.name}</b> · ★ 4,9 · Vendeur vérifié NOUT
         </p>
       </div>
+      </div>
     </Chrome>
   )
 }
 
 // ── Récapitulatif de commande (bouton légal « commande avec obligation de paiement ») ──
-export function CheckoutView({ shop, listing, index, accent, dark, titleFam, onBack, onSay }) {
+export function CheckoutView({ shop, listing, index, accent, dark, titleFam, wide = false, onBack, onSay }) {
   const opts = DELIVERY_OPTIONS.filter((o) => ['hand', 'ubn_relay', 'chrono_relay', 'ubn_home'].includes(o.id))
   const [ship, setShip] = useState(opts[0])
   const [accepte, setAccepte] = useState(false)
@@ -111,8 +117,9 @@ export function CheckoutView({ shop, listing, index, accent, dark, titleFam, onB
   const img = (listing.images || [])[0] || stockImg(shop.sector, index)
 
   return (
-    <Chrome shop={shop} accent={accent} dark={dark} titleFam={titleFam} onBack={onBack} backLabel="← Retour au produit">
-      <div className="px-5 py-4">
+    <Chrome shop={shop} accent={accent} dark={dark} titleFam={titleFam} onBack={onBack}
+            backLabel="← Retour au produit" wide={wide} max="max-w-[680px]">
+      <div className={wide ? 'px-8 py-6' : 'px-5 py-4'}>
         <h1 className="text-[19px] font-bold mb-3" style={{ fontFamily: titleFam }}>Récapitulatif de commande</h1>
 
         <div className={`flex items-center justify-between gap-3 py-3 border-t ${line}`}>
@@ -172,15 +179,15 @@ export function CheckoutView({ shop, listing, index, accent, dark, titleFam, onB
 // ── Pages légales (générées par NOUT à partir des informations vérifiées du vendeur) ──
 const LEGAL_PAGES = ['CGV', 'Livraison & retours', 'Mentions légales', 'Confidentialité', 'Contact']
 
-export function LegalView({ shop, page, accent, dark, titleFam, contact, onBack, onOpen, onSay }) {
+export function LegalView({ shop, page, accent, dark, titleFam, contact, wide = false, onBack, onOpen, onSay }) {
   const line = dark ? 'border-white/10' : 'border-gray-100'
   const soft = dark ? 'text-white/70' : 'text-gray-500'
   const H = ({ children }) => <h2 className="text-[13px] font-bold mt-4 mb-1">{children}</h2>
   const P = ({ children }) => <p className={`text-[12.5px] leading-relaxed ${soft}`}>{children}</p>
 
   return (
-    <Chrome shop={shop} accent={accent} dark={dark} titleFam={titleFam} onBack={onBack}>
-      <div className="px-5 py-4">
+    <Chrome shop={shop} accent={accent} dark={dark} titleFam={titleFam} onBack={onBack} wide={wide} max="max-w-[760px]">
+      <div className={wide ? 'px-8 py-6' : 'px-5 py-4'}>
         <h1 className="text-[19px] font-bold" style={{ fontFamily: titleFam }}>{page}</h1>
         <p className={`text-[11px] mt-1 ${dark ? 'text-white/40' : 'text-gray-400'}`}>
           Les champs entre [crochets] sont remplis automatiquement par NOUT à partir des informations vérifiées du vendeur.

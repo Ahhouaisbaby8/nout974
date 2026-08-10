@@ -103,7 +103,7 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
 
   const bg = dark ? 'bg-[#10151C] text-white' : lay === 'market' ? 'bg-[#FBF6EE] text-nout-texte' : 'bg-white text-nout-texte'
   // Écrans internes : on parcourt la boutique comme un vrai site (produit, commande, légal)
-  const viewProps = { shop, accent, dark, titleFam, contact, onSay: say, onBack: () => setView(null) }
+  const viewProps = { shop, accent, dark, titleFam, contact, wide, onSay: say, onBack: () => setView(null) }
   const line = dark ? 'border-white/10' : 'border-gray-100'
   const secTitle = { fontFamily: titleFam }
   // En grand écran, les fonds restent pleine largeur mais le CONTENU est centré et borné
