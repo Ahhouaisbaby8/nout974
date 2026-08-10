@@ -133,6 +133,8 @@ const AdminSettings      = lazy(() => import('./pages/admin/SiteSettings'))
 // 404
 const NotFound = lazy(() => import('./pages/NotFound'))
 const ShopRoute = lazy(() => import('./pages/ShopRoute'))
+const ProOffer  = lazy(() => import('./pages/pro/ProOffer'))
+const ProSpace  = lazy(() => import('./pages/pro/ProSpace'))
 
 // Brand (dev uniquement)
 const BrandPage    = lazy(() => import('./pages/BrandPage'))
@@ -257,6 +259,8 @@ function AppShell() {
           <Route path="/boutique-demo"      element={<ShopDemo />} />
           <Route path="/boutique-templates" element={<ShopTemplates />} />
           <Route path="/boutique-creer"     element={<ShopWizard />} />
+          <Route path="/boutique-tarifs"    element={<ProOffer />} />
+          <Route path="/espace-pro"         element={<PrivateRoute><ProSpace /></PrivateRoute>} />
 
           {/* Légal */}
           <Route path="/legal/cgu"                      element={<CGU />} />

@@ -28,6 +28,13 @@ const GEN_TASKS = [
 ]
 const NAME_IDEAS = ['Vanille Bleue', 'Kaz Soleil', 'Péi Style', 'Fler de Sel']
 const DRAFT_KEY = 'nout-pro-brouillon'
+// sections de contenu livrées par défaut (ordre, affichage, avant/après la grille)
+const DEFAULT_BLOCKS = [
+  { id: 'bs', label: 'Nos best-sellers', on: true, pos: 'before' },
+  { id: 'reviews', label: 'Avis clients', on: true, pos: 'after' },
+  { id: 'about', label: "L'atelier / L'équipe", on: true, pos: 'after' },
+  { id: 'how', label: 'Comment ça marche', on: true, pos: 'after' },
+]
 
 // Extraction de la couleur dominante d'un logo (lecture réelle des pixels — pas d'API)
 function extractAccent(img) {
@@ -75,12 +82,7 @@ export default function ShopWizard() {
   const fileRef = useRef(null)
   // Personnalisation avancée : textes réécrits, ordre des sections, visuels choisis
   const [texts, setTexts] = useState({})
-  const [layout, setLayout] = useState([
-    { id: 'bs', label: 'Nos best-sellers', on: true, pos: 'before' },
-    { id: 'reviews', label: 'Avis clients', on: true, pos: 'after' },
-    { id: 'about', label: "L'atelier / L'équipe", on: true, pos: 'after' },
-    { id: 'how', label: 'Comment ça marche', on: true, pos: 'after' },
-  ])
+  const [layout, setLayout] = useState(DEFAULT_BLOCKS)
   const [heroIdx, setHeroIdx] = useState(0)
   const [heroCustom, setHeroCustom] = useState(null)
   const [aboutImage, setAboutImage] = useState(null)
@@ -102,6 +104,73 @@ export default function ShopWizard() {
   const [restored, setRestored] = useState(false)
   const [lightDraft, setLightDraft] = useState(false)   // photos écartées faute de place
   const ready = useRef(false)
+
+  // ── Annuler / Rétablir ────────────────────────────────────────────────────────────
+  // Un éditeur sans marche arrière rend prudent, et la prudence tue l'envie d'essayer.
+  // On garde une pile d'états complets : la photographie et la restauration existent
+  // déjà pour le brouillon, on s'en sert. `applying` empêche une restauration d'être
+  // elle-même enregistrée comme une nouvelle action.
+  const hist = useRef({ passe: [], futur: [], dernier: null, applying: false })
+  const [histTick, setHistTick] = useState(0)   // force le rafraîchissement des boutons
+  const MAX_HIST = 60
+
+  const applySnap = (d) => {
+    hist.current.applying = true
+    setName(d.name || '')
+    setSector(d.sector || null); setSectorTouched(!!d.sectorTouched)
+    setTheme(d.themeId ? themeById(d.themeId) : null)
+    setAccent(d.accent || '#0E8C82'); setAccCustom(!!d.accCustom)
+    setLogo(d.logo ?? null)
+    setFontKey(d.fontKey || 'montserrat')
+    setPhrase(d.phrase || '')
+    setProducts(Array.isArray(d.products) ? d.products : [])
+    setTexts(d.texts || {})
+    setLayout(Array.isArray(d.layout) && d.layout.length ? d.layout : DEFAULT_BLOCKS)
+    setHeroIdx(typeof d.heroIdx === 'number' ? d.heroIdx : 0)
+    setHeroCustom(d.heroCustom ?? null)
+    setAboutImage(d.aboutImage ?? null)
+    setHeroLay(d.heroLay ?? null)
+    setAccent2(d.accent2 ?? null)
+    setBgTone(d.bgTone ?? null)
+    setBgColor(d.bgColor ?? null)
+    setTextColor(d.textColor ?? null)
+    setSurfaceColor(d.surfaceColor ?? null)
+    setRayonsCustom(Array.isArray(d.rayonsCustom) ? d.rayonsCustom : null)
+    setLinksCustom(Array.isArray(d.linksCustom) ? d.linksCustom : null)
+    if (d.step && d.step !== 'gen') setStep(d.step)
+    hist.current.dernier = d
+    setHistTick((t) => t + 1)
+    // la vague de setState est traitée avant le prochain effet : on relâche après
+    setTimeout(() => { hist.current.applying = false }, 0)
+  }
+
+  const undo = () => {
+    const h = hist.current
+    if (!h.passe.length) return
+    const cible = h.passe.pop()
+    if (h.dernier) h.futur.push(h.dernier)
+    applySnap(cible)
+  }
+  const redo = () => {
+    const h = hist.current
+    if (!h.futur.length) return
+    const cible = h.futur.pop()
+    if (h.dernier) h.passe.push(h.dernier)
+    applySnap(cible)
+  }
+
+  // Ctrl+Z / Ctrl+Maj+Z (et ⌘ sur Mac), hors champs de saisie où le navigateur gère déjà
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z') return
+      const t = e.target
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      e.preventDefault()
+      if (e.shiftKey) redo(); else undo()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     try {
@@ -164,6 +233,30 @@ export default function ShopWizard() {
       rayonsCustom, linksCustom, step,
     }
     const full = { ...base, logo, products, heroCustom, aboutImage }
+
+    // Historique : on empile l'état PRÉCÉDENT dès qu'il change vraiment. Les
+    // restaurations (annuler/rétablir) ne créent pas de nouvelle entrée.
+    // La signature évite de sérialiser les photos (du base64 lourd) à chaque frappe :
+    // on ne retient d'elles que de quoi repérer un changement.
+    const h = hist.current
+    if (!h.applying) {
+      const sig = JSON.stringify({
+        ...base,
+        l: logo ? logo.length : 0, hc: heroCustom ? heroCustom.length : 0,
+        ai: aboutImage ? aboutImage.length : 0,
+        p: products.map((p) => [p.title, p.price, p.description, p.rayon, p.condition,
+                                (p.photos || []).length, (p.photos || [])[0]?.length || 0].join('|')),
+      })
+      if (h.dernier && h.sig !== sig) {
+        h.passe.push(h.dernier)
+        if (h.passe.length > MAX_HIST) h.passe.shift()
+        h.futur.length = 0
+        setHistTick((t) => t + 1)
+      }
+      h.dernier = full
+      h.sig = sig
+    }
+
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(full))
       setLightDraft(false)
@@ -254,6 +347,19 @@ export default function ShopWizard() {
       <div className="flex items-center gap-3 mb-5">
         <p className="font-title font-extrabold text-nout-texte">NOUT <span className="text-[11px] font-bold text-nout-turquoise bg-[#EAF5F3] px-2 py-0.5 rounded-full align-middle">Pro</span></p>
         <div className="flex-1" />
+        {/* marche arrière : visible partout, pas seulement dans l'éditeur */}
+        <span className="flex items-center gap-1" data-hist={histTick}>
+          <button type="button" onClick={undo} disabled={!hist.current.passe.length}
+                  title="Annuler (Ctrl+Z)" aria-label="Annuler"
+                  className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:text-nout-texte disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12H11"/></svg>
+          </button>
+          <button type="button" onClick={redo} disabled={!hist.current.futur.length}
+                  title="Rétablir (Ctrl+Maj+Z)" aria-label="Rétablir"
+                  className="w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:text-nout-texte disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>
+          </button>
+        </span>
         {(name.trim() || products.length > 0) && (
           <button type="button" onClick={resetDraft} className="text-[12px] font-semibold text-gray-400 hover:text-nout-texte">
             Repartir de zéro

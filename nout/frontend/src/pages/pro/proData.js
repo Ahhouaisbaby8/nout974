@@ -182,7 +182,12 @@ export function genDescription(sector) {
 export const RESERVED_SLUGS = new Set(['annonce', 'annonces', 'recherche', 'c', 'profil', 'profils',
   'createurs', 'commander', 'compte', 'comptes', 'espace-vendeur', 'admin', 'publier', 'messages',
   'favoris', 'notifications', 'boutique', 'boutiques', 'aide', 'legal', 'connexion', 'inscription',
-  'nout', 'api', 'www', 'shop', 'pro'])
+  'nout', 'api', 'www', 'shop', 'pro',
+  // routes NOUT Pro : le nom exact compte, « boutique » ne couvre pas « boutique-creer »
+  'boutique-creer', 'boutique-templates', 'boutique-demo', 'boutique-tarifs', 'espace-pro',
+  'tarifs', 'points-relais', 'comment-ca-marche', 'a-propos', 'installer-app', 'commandes',
+  'parametres', 'reinitialiser', 'mot-de-passe-oublie', 'verifier-email', 'compte-active',
+  'paiement-reussi', 'modifier'])
 export function slugify(s) {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/, '')

@@ -121,6 +121,8 @@ export default function SellerSpace() {
       <div className="flex items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="font-title text-2xl text-nout-dark mb-1">Espace Vendeur</h1>
+          {/* passerelle vers la boutique de marque : deux espaces distincts, ici les ventes, là la vitrine */}
+          <Link to="/espace-pro" className="inline-block text-[12.5px] font-semibold text-nout-turquoise mb-2">Ma boutique NOUT Pro</Link>
           <p className="text-sm text-gray-400">Suis tes gains et ton activité.</p>
         </div>
         <Link
