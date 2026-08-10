@@ -172,9 +172,12 @@ export default function ShopWizard() {
         </div>
       )}
 
-      <div className={`grid gap-6 ${stepIdx >= 0 && step !== 'theme' ? 'lg:grid-cols-2' : ''}`}>
+      {/* min-w-0 sur la grille ET ses colonnes : sans ça, l'aperçu impose sa largeur
+          minimale et toute la page déborde de l'écran sur téléphone (il fallait
+          dézoomer pour lire). Même cause que le débordement corrigé côté admin. */}
+      <div className={`grid gap-6 min-w-0 ${stepIdx >= 0 && step !== 'theme' ? 'lg:grid-cols-2' : ''}`}>
         {/* ── colonne formulaire ── */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 min-w-0">
 
           {step === 'activite' && (
             <>
@@ -379,11 +382,11 @@ export default function ShopWizard() {
 
         {/* ── colonne aperçu live (cadre navigateur) ── */}
         {(stepIdx >= 0 && step !== 'theme') || step === 'gen' || step === 'result' ? (
-          <div className="lg:sticky lg:top-4 self-start">
+          <div className="lg:sticky lg:top-4 self-start min-w-0">
             <p className="text-[10.5px] font-bold uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-nout-turquoise inline-block" /> Aperçu en direct
             </p>
-            <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white">
+            <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white min-w-0">
               <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
                 <span className="flex gap-1.5 text-gray-300">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -393,7 +396,7 @@ export default function ShopWizard() {
                   nout.re/<b className="text-nout-texte">{slug || 'ma-boutique'}</b>
                 </span>
               </div>
-              <div className="max-h-[560px] overflow-y-auto">
+              <div className="max-h-[560px] overflow-y-auto overflow-x-hidden">
                 <ShopPage shop={shop} listings={listings} />
               </div>
             </div>
