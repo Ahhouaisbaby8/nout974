@@ -132,6 +132,7 @@ const AdminSettings      = lazy(() => import('./pages/admin/SiteSettings'))
 
 // 404
 const NotFound = lazy(() => import('./pages/NotFound'))
+const ShopRoute = lazy(() => import('./pages/ShopRoute'))
 
 // Brand (dev uniquement)
 const BrandPage    = lazy(() => import('./pages/BrandPage'))
@@ -265,6 +266,11 @@ function AppShell() {
           <Route path="/legal/mentions"                 element={<MentionsLegales />} />
           <Route path="/legal/charte-bonne-conduite"    element={<CharteBonneConduite />} />
           <Route path="/legal/reglement-catalogue"      element={<ReglementCatalogue />} />
+
+          {/* Boutique d'un pro : nout.re/<slug>. Placée en AVANT-DERNIER — toutes les
+              routes fixes ci-dessus restent prioritaires, et une adresse sans boutique
+              retombe sur la 404 (ShopRoute rend NotFound lui-même). */}
+          <Route path="/:slug" element={<ShopRoute />} />
 
           {/* 404 */}
           <Route path="*" element={<NotFound />} />

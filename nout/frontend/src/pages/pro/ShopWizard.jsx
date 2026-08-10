@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import ShopPage, { LAYS, TONES } from '../ShopPage'
+import { useAuth } from '../../context/AuthContext'
+import { createShop, updateShop, publishShop, getMyShop, SHOPS_TABLE_MISSING } from '../../services/shops'
 import {
   THEMES, themeById, FONTS, FONT_CONTEXTS, SECTORS, SECS_MAIN, SECTOR_LABEL, familyOf,
   DEMOS, detectSector, genTagline, genDescription,
@@ -250,7 +252,7 @@ export default function ShopWizard() {
             Repartir de zéro
           </button>
         )}
-        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">Aperçu — rien n'est enregistré pour l'instant</span>
+        <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1">Brouillon — invisible tant que tu ne publies pas</span>
       </div>
 
       {(restored || lightDraft) && (
@@ -489,11 +491,8 @@ export default function ShopWizard() {
                   </li>
                 ))}
               </ul>
+              <PublishPanel shop={shop} slug={slug} />
               <SiretNotice />
-              <p className="text-[11.5px] text-gray-400 leading-relaxed mb-4">
-                Aperçu local : rien n'est enregistré. Le branchement réel (table shops, tes vraies annonces, l'Espace pro)
-                arrive à l'étape suivante du chantier.
-              </p>
               <div className="flex gap-2 flex-wrap">
                 <button type="button" onClick={() => setStep('produits')} className="btn-secondary flex-1">Produits</button>
                 <button type="button" onClick={() => setStep('perso')} className="btn-primary flex-1">Personnaliser</button>
@@ -1166,6 +1165,110 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
         <Link to="/boutique-templates" className="btn-secondary flex-1 text-center">Changer de template</Link>
       </div>
     </>
+  )
+}
+
+// ─── Publication : enregistrer la boutique, puis la rendre publique ────────────────
+// Deux temps distincts. « Enregistrer » crée la ligne `shops` (brouillon) : aucune
+// immatriculation demandée, rien n'est visible. « Publier » exige le SIRET — règle
+// portée aussi par la base (contrainte `shops_active_needs_siret`), le front n'étant
+// jamais la source de vérité. Tant que la migration n'a pas été exécutée, la table
+// n'existe pas : on le dit franchement au lieu d'afficher une erreur technique.
+function PublishPanel({ shop, slug }) {
+  const { user } = useAuth()
+  const [saved, setSaved] = useState(null)      // ligne `shops` enregistrée
+  const [siret, setSiret] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState(null)          // { kind: 'ok'|'err'|'soon', text }
+
+  const payload = {
+    slug, name: shop.name, tagline: shop.tagline, description: shop.description,
+    accent_color: shop.accent_color, font_key: shop.font_key, template_key: shop.template_key,
+    sector: shop.sector, mode: shop.mode,
+    // toute la présentation produite par l'éditeur part dans `settings`
+    settings: {
+      texts: shop.texts, layout: shop.layout, hero_lay: shop.hero_lay, heroIdx: shop.heroIdx,
+      heroImage: shop.heroImage, aboutImage: shop.aboutImage, accent2: shop.accent2,
+      bg_tone: shop.bg_tone, rayons: shop.rayons, links: shop.links,
+    },
+  }
+
+  const run = async (fn) => {
+    setBusy(true); setMsg(null)
+    try { return await fn() } catch (e) {
+      setMsg(e?.message === SHOPS_TABLE_MISSING
+        ? { kind: 'soon', text: "La sauvegarde en ligne n'est pas encore activée : la table des boutiques n'existe pas sur ce site. Ton travail reste dans ce navigateur." }
+        : { kind: 'err', text: e?.message || 'Enregistrement impossible.' })
+      return null
+    } finally { setBusy(false) }
+  }
+
+  const save = () => run(async () => {
+    const mine = await getMyShop(user.id)
+    const row = mine ? await updateShop(mine.id, payload) : await createShop(user.id, payload)
+    setSaved(row)
+    setMsg({ kind: 'ok', text: 'Boutique enregistrée en brouillon. Elle n\'est pas encore visible.' })
+    return row
+  })
+
+  const publish = () => run(async () => {
+    const row = saved || await save()
+    if (!row) return null
+    const out = await publishShop(row.id, siret)
+    setSaved(out)
+    setMsg({ kind: 'ok', text: `En ligne : nout.re/${out.slug}` })
+    return out
+  })
+
+  if (!user) {
+    return (
+      <div className="border border-gray-200 rounded-xl p-3.5 mb-4">
+        <p className="text-[13px] font-bold text-nout-texte">Enregistrer ta boutique</p>
+        <p className="text-[12px] text-gray-500 leading-relaxed mt-0.5 mb-2.5">
+          Connecte-toi pour la garder sur ton compte. Sans connexion, elle reste dans ce navigateur seulement.
+        </p>
+        <Link to="/connexion" className="btn-primary !py-2 !px-4 !text-[12.5px] inline-block">Me connecter</Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-xl p-3.5 mb-4">
+      <p className="text-[13px] font-bold text-nout-texte">Enregistrer et publier</p>
+      <p className="text-[12px] text-gray-500 leading-relaxed mt-0.5 mb-2.5">
+        Enregistre quand tu veux : ta boutique reste en brouillon, invisible, tant que tu ne la publies pas.
+      </p>
+
+      <div className="flex gap-2 flex-wrap items-center mb-2.5">
+        <button type="button" onClick={save} disabled={busy}
+                className="btn-secondary !py-2 !px-4 !text-[12.5px] disabled:opacity-40">
+          {busy ? 'Enregistrement…' : 'Enregistrer le brouillon'}
+        </button>
+        {saved?.is_active && (
+          <Link to={`/${saved.slug}`} className="text-[12.5px] font-semibold text-nout-turquoise">Voir ma boutique</Link>
+        )}
+      </div>
+
+      <div className="border-t border-gray-100 pt-2.5">
+        <label className="block text-[10.5px] font-bold uppercase tracking-wide text-gray-400 mb-1">
+          SIRET (14 chiffres) — demandé pour publier
+        </label>
+        <div className="flex gap-2 flex-wrap">
+          <input className="input-field !py-2 !text-[13px] flex-1 min-w-[160px]" inputMode="numeric" maxLength={17}
+                 placeholder="123 456 789 00012" value={siret} onChange={(e) => setSiret(e.target.value)} />
+          <button type="button" onClick={publish} disabled={busy}
+                  className="btn-primary !py-2 !px-4 !text-[12.5px] disabled:opacity-40">Publier</button>
+        </div>
+      </div>
+
+      {msg && (
+        <p className={`text-[12px] leading-relaxed mt-2.5 rounded-lg px-3 py-2 ${
+          msg.kind === 'ok' ? 'text-[#0B716A] bg-[#EAF5F3]'
+            : msg.kind === 'soon' ? 'text-amber-800 bg-amber-50' : 'text-red-700 bg-red-50'}`}>
+          {msg.text}
+        </p>
+      )}
+    </div>
   )
 }
 

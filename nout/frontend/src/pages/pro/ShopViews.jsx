@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { computeProtectionFee, computeBuyerTotal, DELIVERY_OPTIONS } from '../../utils/shipping'
 import { formatPrice } from '../../utils/formatters'
 import { stockImg } from './proData'
+import { isNewGoods } from '../../services/shops'
 
 // ─── NOUT Pro : écrans internes d'une boutique (fiche produit, pages légales, commande)
 // Permettent de PARCOURIR la boutique dans l'aperçu, comme sur un vrai site.
@@ -102,19 +103,24 @@ export function ProductView({ shop, listing, index, accent, dark, titleFam, cont
 
         {/* Garanties légales : le texte officiel dépend de l'état déclaré par le vendeur
             (présomption de défaut 24 mois sur du neuf, 12 mois sur de l'occasion). */}
-        {!contact && (
-          <div className={`mt-3 rounded-lg border px-3 py-2.5 ${dark ? 'border-white/15' : 'border-gray-200'}`}>
-            <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: accent }}>
-              {listing.condition === 'occasion' ? "Produit d'occasion" : 'Produit neuf'} · garanties légales
-            </p>
-            <p className={`text-[11.5px] leading-relaxed mt-1 ${dark ? 'text-white/60' : 'text-gray-500'}`}>
-              Garantie légale de conformité de 2 ans, dont {listing.condition === 'occasion' ? '12' : '24'} mois
-              pendant lesquels vous n'avez pas à prouver la date d'apparition du défaut, et garantie des vices
-              cachés. [Encadré officiel art. D. 211-2 du code de la consommation — inséré automatiquement par
-              NOUT dans sa version {listing.condition === 'occasion' ? 'occasion' : 'neuf'}.]
-            </p>
-          </div>
-        )}
+        {!contact && (() => {
+          // l'état vient soit du wizard (neuf/occasion), soit du vocabulaire du
+          // marketplace (neuf_avec_etiquette, bon_etat, …) : les deux se lisent pareil
+          const neuf = isNewGoods(listing.condition)
+          return (
+            <div className={`mt-3 rounded-lg border px-3 py-2.5 ${dark ? 'border-white/15' : 'border-gray-200'}`}>
+              <p className="text-[11px] font-bold uppercase tracking-wide" style={{ color: accent }}>
+                {neuf ? 'Produit neuf' : "Produit d'occasion"} · garanties légales
+              </p>
+              <p className={`text-[11.5px] leading-relaxed mt-1 ${dark ? 'text-white/60' : 'text-gray-500'}`}>
+                Garantie légale de conformité de 2 ans, dont {neuf ? '24' : '12'} mois pendant lesquels vous
+                n'avez pas à prouver la date d'apparition du défaut, et garantie des vices cachés.
+                [Encadré officiel art. D. 211-2 du code de la consommation — inséré automatiquement par NOUT
+                dans sa version {neuf ? 'neuf' : 'occasion'}.]
+              </p>
+            </div>
+          )
+        })()}
 
         <p className={`text-[12px] mt-3 pt-3 border-t ${line} ${dark ? 'text-white/60' : 'text-gray-500'}`}>
           Vendu par <b>{shop.name}</b> · ★ 4,9 · Vendeur vérifié NOUT
