@@ -26,7 +26,7 @@ export default function ShopDemo() {
         </select>
       </div>
       <div className="max-w-lg mx-auto my-5 rounded-2xl overflow-hidden shadow-xl border border-gray-200">
-        <ShopPage shop={demoShop(d)} listings={demoListings(d)} />
+        <ShopPage key={id} shop={demoShop(d)} listings={demoListings(d)} browsable />
       </div>
     </>
   )

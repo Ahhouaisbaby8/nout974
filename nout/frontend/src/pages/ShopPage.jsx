@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { computeProtectionFee, computeBuyerTotal } from '../utils/shipping'
 import { formatPrice } from '../utils/formatters'
 import { FONTS, stockImg, heroImg } from './pro/proData'
+import { ProductView, CheckoutView, LegalView } from './pro/ShopViews'
 
 // ─── NOUT Pro : BOUTIQUE à la marque du vendeur (storefront riche) ──────────────────
 // Présentationnel : reçoit `shop` (marque, accent_color, font_key, template_key, mode,
@@ -80,7 +81,9 @@ function SfCard({ l, i, dark, contact, accent, sector, seed = 0, onOpen }) {
 // explicitement plutôt que d'utiliser des breakpoints CSS, parce que cette page est
 // rendue dans des conteneurs de largeurs très différentes (vignette réduite, aperçu
 // live étroit, aperçu plein écran) — les media queries regardent la fenêtre, pas le cadre.
-export default function ShopPage({ shop, listings = [], isOwner = false, wide = false }) {
+// `browsable` : autorise la navigation interne (fiche produit → commande, pages
+// légales). Désactivé dans les vignettes de la galerie, où la boutique est une image.
+export default function ShopPage({ shop, listings = [], isOwner = false, wide = false, browsable = false }) {
   const accent = shop.accent_color || '#0E8C82'
   const lay = LAYS[shop.template_key] || 'minimal'
   const dark = DARKS.has(shop.template_key)
@@ -89,7 +92,9 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
   const rayons = ['Tout', ...(shop.rayons || [])]
   const [rayon, setRayon] = useState('Tout')
   const [toast, setToast] = useState('')
+  const [view, setView] = useState(null)   // { kind:'product'|'checkout'|'legal', … }
   const say = (m) => { setToast(m); setTimeout(() => setToast(''), 2400) }
+  const openProduct = (l, i) => { if (browsable) { setView({ kind: 'product', l, i }); return true } return false }
 
   const shown = rayon === 'Tout' ? listings : listings.filter((l) => l.rayon === rayon)
   const best = useMemo(() => listings.slice(0, wide ? 4 : 3), [listings, wide])
@@ -97,11 +102,26 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
   const hImg = heroImg(shop.sector || 'Autre', shop.heroIdx ?? seed)
 
   const bg = dark ? 'bg-[#10151C] text-white' : lay === 'market' ? 'bg-[#FBF6EE] text-nout-texte' : 'bg-white text-nout-texte'
+  // Écrans internes : on parcourt la boutique comme un vrai site (produit, commande, légal)
+  const viewProps = { shop, accent, dark, titleFam, contact, onSay: say, onBack: () => setView(null) }
   const line = dark ? 'border-white/10' : 'border-gray-100'
   const secTitle = { fontFamily: titleFam }
   // En grand écran, les fonds restent pleine largeur mais le CONTENU est centré et borné
   // (comportement de tous les vrais sites : une ligne de texte de 1600 px est illisible).
   const inner = wide ? 'max-w-[1280px] mx-auto w-full' : ''
+
+  // ── Écrans internes (quand on navigue dans la boutique) ──
+  if (view) {
+    const shell = (child) => <div className={`${bg} min-h-[70vh]`}>{child}{toast && <Toast msg={toast} />}</div>
+    if (view.kind === 'product') return shell(
+      <ProductView {...viewProps} listing={view.l} index={view.i}
+                   onBuy={() => setView({ kind: 'checkout', l: view.l, i: view.i })} />)
+    if (view.kind === 'checkout') return shell(
+      <CheckoutView {...viewProps} listing={view.l} index={view.i}
+                    onBack={() => setView({ kind: 'product', l: view.l, i: view.i })} />)
+    if (view.kind === 'legal') return shell(
+      <LegalView {...viewProps} page={view.page} onOpen={(p) => setView({ kind: 'legal', page: p })} />)
+  }
 
   // ── Page « Lien en bio » : structure dédiée, pas de catalogue ──
   if (lay === 'bio') {
@@ -231,7 +251,8 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
           <h2 className={`font-bold mb-3 ${wide ? 'text-[19px]' : 'text-[15px]'}`} style={secTitle}>Nos best-sellers</h2>
           <div className={`grid gap-3 ${wide ? 'grid-cols-4' : 'grid-cols-3'}`}>
             {best.map((l, i) => <SfCard key={l.id} l={l} i={i} dark={dark} contact={contact} accent={accent}
-                                        sector={shop.sector} seed={seed} onOpen={() => say('Démo — fiche produit et achat protégé NOUT')} />)}
+                                        sector={shop.sector} seed={seed}
+                                        onOpen={() => { if (!openProduct(l, i)) say('Démo — fiche produit et achat protégé NOUT') }} />)}
           </div>
         </div>
       )}
@@ -255,7 +276,7 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
           wide ? (lay === 'grid' ? 'grid-cols-5' : 'grid-cols-4') : (lay === 'grid' ? 'grid-cols-3' : 'grid-cols-2')}`}>
           {shown.map((l, i) => <SfCard key={l.id} l={l} i={i} dark={dark} contact={contact} accent={accent}
                                        sector={shop.sector} seed={seed}
-                                       onOpen={() => say(contact ? 'Démo — demande de devis via la messagerie NOUT' : 'Démo — fiche produit et achat protégé NOUT')} />)}
+                                       onOpen={() => { if (!openProduct(l, i)) say(contact ? 'Démo — demande de devis via la messagerie NOUT' : 'Démo — fiche produit et achat protégé NOUT') }} />)}
         </div>
       )}
 
@@ -310,7 +331,13 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
           {(contact
             ? ['CGV', 'Mentions légales', 'Confidentialité', 'Contact']
             : ['CGV', 'Livraison & retours', 'Mentions légales', 'Confidentialité', 'Contact']
-          ).map((t) => <span key={t}>{t}</span>)}
+          ).map((t) => (
+            <button key={t} type="button"
+                    onClick={() => browsable ? setView({ kind: 'legal', page: t }) : say('Page « ' + t +' » générée par NOUT')}
+                    className={browsable ? 'hover:underline' : 'cursor-default'}>
+              {t}
+            </button>
+          ))}
         </div>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <span className={`text-[12px] ${dark ? 'text-white/55' : 'text-gray-500'}`}>

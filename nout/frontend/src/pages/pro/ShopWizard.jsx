@@ -397,7 +397,7 @@ export default function ShopWizard() {
                 </span>
               </div>
               <div className="max-h-[560px] overflow-y-auto overflow-x-hidden">
-                <ShopPage shop={shop} listings={listings} />
+                <ShopPage shop={shop} listings={listings} browsable />
               </div>
             </div>
           </div>

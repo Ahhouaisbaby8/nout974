@@ -165,8 +165,10 @@ export default function ShopTemplates() {
           <div className={`flex-1 overflow-y-auto pb-24 ${device === 'mobile' ? 'px-3 py-5' : ''}`}>
             <div className={`mx-auto bg-white overflow-hidden transition-all ${
               device === 'mobile' ? 'max-w-[430px] rounded-2xl shadow-2xl' : 'w-full'}`}>
-              <ShopPage shop={demoShop(DEMOS[preview])} listings={demoListings(DEMOS[preview])}
-                        wide={device === 'desktop'} />
+              {/* browsable : dans l'aperçu, on parcourt vraiment la boutique
+                  (produit → commande, pages légales), comme sur le site final */}
+              <ShopPage key={preview + device} shop={demoShop(DEMOS[preview])} listings={demoListings(DEMOS[preview])}
+                        wide={device === 'desktop'} browsable />
             </div>
           </div>
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-nout-texte text-white rounded-full pl-4 pr-1.5 py-1.5 shadow-2xl z-[210] text-[12px] whitespace-nowrap">
