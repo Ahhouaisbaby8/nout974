@@ -137,6 +137,11 @@ const NotFound = lazy(() => import('./pages/NotFound'))
 const BrandPage    = lazy(() => import('./pages/BrandPage'))
 const BrandCompare = lazy(() => import('./pages/BrandCompare'))
 
+// NOUT Pro — constructeur de boutique (aperçu interne, non lié publiquement)
+const ShopDemo      = lazy(() => import('./pages/ShopDemo'))
+const ShopTemplates = lazy(() => import('./pages/ShopTemplates'))
+const ShopWizard    = lazy(() => import('./pages/pro/ShopWizard'))
+
 // Légal
 const CGU                 = lazy(() => import('./pages/legal/CGU'))
 const CGV                 = lazy(() => import('./pages/legal/CGV'))
@@ -244,6 +249,13 @@ function AppShell() {
           {/* Brand — aperçu charte graphique (dev only) */}
           {import.meta.env.DEV && <Route path="/brand"         element={<BrandPage />} />}
           {import.meta.env.DEV && <Route path="/brand-compare" element={<BrandCompare />} />}
+          {/* NOUT Pro — aperçu interne. Les routes existent en production pour être
+              consultables (et partageables pour avis), mais AUCUN lien public n'y mène :
+              les entrées du header, du menu mobile et de l'accueil sont réservées aux
+              admins tant que l'offre entreprises n'est pas ouverte. */}
+          <Route path="/boutique-demo"      element={<ShopDemo />} />
+          <Route path="/boutique-templates" element={<ShopTemplates />} />
+          <Route path="/boutique-creer"     element={<ShopWizard />} />
 
           {/* Légal */}
           <Route path="/legal/cgu"                      element={<CGU />} />

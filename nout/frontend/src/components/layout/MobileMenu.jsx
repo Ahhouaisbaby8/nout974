@@ -11,6 +11,9 @@ const NAV_LINKS = [
   { to: '/points-relais',     label: 'Points relais' },
   { to: '/aide',              label: 'Aide' },
 ]
+// NOUT Pro : NOUT est mobile-first — sans cette entrée, l'offre entreprises serait
+// invisible sur téléphone, or c'est la majorité du trafic.
+const PRO_LINK = { to: '/boutique-templates', label: 'NOUT Pro', badge: 'Entreprises' }
 
 // Drawer mobile (lg:hidden) : glisse depuis la gauche. Liens de nav + accordéon catégories.
 // Ferme sur clic d'un lien, sur le fond, et sur Échap. Verrouille le scroll du body.
@@ -57,14 +60,20 @@ export default function MobileMenu({ open, onClose, isAdmin, isLoggedIn }) {
         <div className="flex-1 overflow-y-auto overscroll-contain py-2">
           {/* Liens de nav */}
           <nav className="px-2">
-            {NAV_LINKS.map(l => (
+            {[...NAV_LINKS, PRO_LINK].map(l => (
               <Link
                 key={l.to}
                 to={l.to}
                 onClick={onClose}
-                className="block px-4 py-3 rounded-xl text-[15px] font-medium text-nout-texte hover:bg-[#F1F7FA] transition-colors"
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-[15px] transition-colors hover:bg-[#F1F7FA] ${
+                  l.badge ? 'font-semibold text-nout-turquoise' : 'font-medium text-nout-texte'}`}
               >
                 {l.label}
+                {l.badge && (
+                  <span className="text-[9.5px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#EAF5F3]">
+                    {l.badge}
+                  </span>
+                )}
               </Link>
             ))}
             {isAdmin && (

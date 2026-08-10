@@ -119,6 +119,17 @@ export default function Header() {
           <Link to="/a-propos"          className="hover:text-nout-turquoise transition-colors font-medium">À propos</Link>
           <Link to="/points-relais"     className="hover:text-nout-turquoise transition-colors font-medium">Points relais</Link>
           <Link to="/aide"              className="hover:text-nout-turquoise transition-colors font-medium">Aide</Link>
+          {/* NOUT Pro — offre entreprises. Visible publiquement : les pages concernées
+              annoncent clairement « ouverture prochaine » tant qu'on ne peut pas souscrire. */}
+          {(
+            <Link to="/boutique-templates"
+                  className={`font-semibold transition-colors flex items-center gap-1.5 ${light ? '!text-white' : '!text-nout-turquoise'}`}>
+              NOUT Pro
+              <span className={`text-[9.5px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${light ? 'bg-white/20' : 'bg-[#EAF5F3]'}`}>
+                Entreprises
+              </span>
+            </Link>
+          )}
           {isAdmin && (
             <Link to="/admin" className={`font-semibold hover:text-nout-lagon transition-colors ${light ? '!text-white' : 'text-nout-roi'}`}>
               Admin
