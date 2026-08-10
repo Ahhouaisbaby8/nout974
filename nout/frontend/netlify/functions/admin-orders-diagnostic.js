@@ -70,6 +70,7 @@ exports.handler = async (event) => {
     let listQ = supabase
       .from('orders')
       .select(`id, total_price, status, created_at, delivered_at, shipped_at, seller_payout, package_stage,
+        carrier, delivery_option, shipping_method,
         buyer:profiles!buyer_id(username),
         seller:profiles!seller_id(username),
         listings(title)`)
@@ -102,6 +103,9 @@ exports.handler = async (event) => {
       delivered_at: o.delivered_at ?? null,   // pour calculer le temps restant avant versement auto (48h)
       shipped_at:   o.shipped_at ?? null,      // date d'expédition (= « remis le… »)
       package_stage: o.package_stage ?? null,  // étape réelle du colis (not_handed/in_transit/at_relay/delivered)
+      carrier:      o.carrier ?? null,          // 'ubn' | 'chronopost' | null (main propre)
+      delivery_option: o.delivery_option ?? null, // ex. 'ubn_relay' (mode précis)
+      shipping_method: o.shipping_method ?? null, // repli vieilles commandes (hand/relay/home)
       seller_payout: o.seller_payout ?? null,  // montant dû au vendeur
       expires_at:   expiryByOrder[o.id]?.expires_at ?? null,   // date limite avant annulation auto
     }))

@@ -116,6 +116,20 @@ function orderAlert(o) {
   return null
 }
 
+// Canal de livraison d'une commande → badge court + couleur. Priorité au champ `carrier`
+// ('ubn'/'chronopost'/null=main propre) ; repli sur shipping_method pour les vieilles commandes.
+function carrierBadge(o) {
+  const c = o.carrier
+  if (c === 'ubn')        return { label: 'UBN',         color: 'bg-indigo-100 text-indigo-700' }
+  if (c === 'chronopost') return { label: 'Chronopost',  color: 'bg-sky-100 text-sky-700' }
+  // Pas de carrier renseigné : main propre si mode 'hand', sinon on ne sait pas (vieille commande livraison).
+  const m = o.shipping_method
+  if (c === null && (m === 'hand' || o.delivery_option === 'hand')) return { label: 'Main propre', color: 'bg-emerald-100 text-emerald-700' }
+  if (m === 'relay' || m === 'home')                               return { label: 'Chronopost',  color: 'bg-sky-100 text-sky-700' }
+  if (m === 'hand')                                                return { label: 'Main propre', color: 'bg-emerald-100 text-emerald-700' }
+  return { label: '—', color: 'bg-gray-100 text-gray-400' }
+}
+
 // Crons dont on surveille la santé (nom technique → libellé clair + ce qu'il fait).
 const WATCHED_CRONS = [
   { job: 'chronopost-tracking', label: 'Suivi Chronopost', desc: 'Vérifie si les colis Chronopost sont livrés' },
@@ -208,6 +222,9 @@ export default function OrdersList() {
           delivered_at: o.delivered_at,
           shipped_at: o.shipped_at,
           package_stage: o.package_stage,
+          carrier: o.carrier,
+          delivery_option: o.delivery_option,
+          shipping_method: o.shipping_method,
           seller_payout: o.seller_payout,
           expires_at: o.expires_at,
           buyer:    { username: o.acheteur !== '—' ? o.acheteur : null },
@@ -443,12 +460,13 @@ export default function OrdersList() {
 
       {loading ? <p className="text-gray-400 text-sm">Chargement…</p> : (
         <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
-          <table className="w-full text-sm min-w-[860px]">
+          <table className="w-full text-sm min-w-[960px]">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
                 <th className="px-4 py-3 text-left">Article</th>
                 <th className="px-4 py-3 text-left">Acheteur</th>
                 <th className="px-4 py-3 text-left">Vendeur</th>
+                <th className="px-4 py-3 text-left">Transporteur</th>
                 <th className="px-4 py-3 text-left">Montant</th>
                 <th className="px-4 py-3 text-left">Statut</th>
                 <th className="px-4 py-3 text-left">Délai avant annulation</th>
@@ -480,6 +498,11 @@ export default function OrdersList() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{o.buyer?.username ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{o.seller?.username ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      {(() => { const cb = carrierBadge(o); return (
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${cb.color}`}>{cb.label}</span>
+                      )})()}
+                    </td>
                     <td className="px-4 py-3 font-semibold text-nout-primary">{formatPrice(o.total_price)}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full ${s.color}`}>{s.label}</span></td>
                     <td className="px-4 py-3">
