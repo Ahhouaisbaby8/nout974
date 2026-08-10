@@ -76,7 +76,7 @@ exports.handler = async (event) => {
   // Colis expédiés via UBN, pas encore livrés, avec un vrai n° de suivi UBN (USR…-RE).
   const { data: orders, error } = await supabase
     .from('orders')
-    .select('id, status, buyer_id, ubn_tracking_number, listing:listings!listing_id(title)')
+    .select('id, status, buyer_id, ubn_tracking_number, package_stage, listing:listings!listing_id(title)')
     .eq('status', 'shipped')
     .eq('carrier', 'ubn')
     .not('ubn_tracking_number', 'is', null)
@@ -103,9 +103,14 @@ exports.handler = async (event) => {
       const verdict = classifyUbnStatuses(stream)   // 'delivered' | 'failed' | null
 
       // Mémorise l'ÉTAPE lisible du colis (où il est physiquement), même si pas encore livré →
-      // sert à l'affichage ET à ne rembourser auto QUE si jamais pris en charge.
+      // sert à l'affichage ET à ne rembourser auto QUE si jamais pris en charge. On horodate
+      // (package_stage_at) UNIQUEMENT au changement d'étape (ex. arrivée au relais) → compte à rebours retrait.
       const stage = ubnStage(stream)
-      if (stage) await supabase.from('orders').update({ package_stage: stage }).eq('id', order.id).eq('status', 'shipped')
+      if (stage && stage !== order.package_stage) {
+        await supabase.from('orders')
+          .update({ package_stage: stage, package_stage_at: new Date().toISOString() })
+          .eq('id', order.id).eq('status', 'shipped')
+      }
 
       if (!verdict) { await sleep(300); continue }   // en transit / inconnu → rien de plus (sûr)
 

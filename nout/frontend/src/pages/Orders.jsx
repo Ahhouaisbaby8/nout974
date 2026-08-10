@@ -161,18 +161,29 @@ function OrderTimeline({ order, role }) {
 
   // Précision d'étape (quand le colis est parti mais pas encore livré) : où en est-il vraiment ?
   // Renseigné par le suivi transporteur (package_stage). Évite de laisser l'acheteur dans le flou.
+  // Pour un colis AU RELAIS : compte à rebours de retrait côté acheteur (10 j depuis l'arrivée) +
+  // message rassurant côté vendeur (« payé dès le retrait »).
+  const PICKUP_WINDOW_DAYS = 10
   let stageNote = null
   if (shipped && !delivered) {
-    if (order.package_stage === 'at_relay')
-      stageNote = role === 'acheteur'
-        ? 'Ton colis est au point relais — pense à aller le retirer.'
-        : 'Colis arrivé au point relais, en attente de retrait par l\'acheteur.'
-    else if (order.package_stage === 'in_transit')
+    if (order.package_stage === 'at_relay') {
+      if (role === 'acheteur') {
+        const joursRestants = order.package_stage_at
+          ? Math.max(0, PICKUP_WINDOW_DAYS - Math.floor((Date.now() - new Date(order.package_stage_at).getTime()) / 86400000))
+          : null
+        stageNote = joursRestants != null
+          ? `Ton colis est au point relais — retire-le vite : il te reste environ ${joursRestants} jour${joursRestants > 1 ? 's' : ''} avant qu'il ne soit renvoyé.`
+          : 'Ton colis est au point relais — pense à aller le retirer.'
+      } else {
+        stageNote = 'Colis arrivé au point relais, en attente de retrait par l\'acheteur. Tu seras payé dès qu\'il l\'aura récupéré.'
+      }
+    } else if (order.package_stage === 'in_transit') {
       stageNote = 'Colis en route, en cours d\'acheminement.'
-    else if (!order.package_stage)
+    } else if (!order.package_stage) {
       stageNote = role === 'vendeur'
         ? 'En attente de la prise en charge du colis par le transporteur.'
         : 'En attente de la prise en charge par le transporteur.'
+    }
   }
 
   return (

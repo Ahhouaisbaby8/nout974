@@ -9,6 +9,7 @@
 //   2) ubn-tracking        → interroge UBN : colis livré/échoué ? → pose delivered_at / disputed
 //   3) auto-refund         → rembourse l'acheteur si le colis n'a pas été déposé sous 7 jours
 //                            (et débloque les versements/gèle les litiges — logique déjà en place)
+//   4) relay-reminders     → relance l'acheteur (J+3 / J+7) dont le colis attend au point relais
 //
 // Résultat : NOUT est informé du dépôt/livraison réelle par les transporteurs, ET l'acheteur est
 // remboursé automatiquement au bout d'une semaine de non-dépôt. Circuit 100 % automatique.
@@ -21,6 +22,7 @@
 const chronopostTracking = require('./chronopost-tracking')
 const ubnTracking        = require('./ubn-tracking')
 const autoRefund         = require('./auto-refund')
+const relayReminders     = require('./relay-reminders')
 
 // Event « planifié » : pas de httpMethod → les handlers ne réclament pas le header x-nout-cron.
 const scheduledEvent = { source: 'cron-logistics' }
@@ -51,6 +53,9 @@ exports.handler = async (event) => {
   steps.push(await runStep('chronopost-tracking', chronopostTracking))
   steps.push(await runStep('ubn-tracking', ubnTracking))
   steps.push(await runStep('auto-refund', autoRefund))
+  // Après le suivi (qui pose 'at_relay' + la date d'arrivée), relancer les acheteurs qui n'ont pas
+  // encore retiré leur colis (J+3 / J+7). Aucun mouvement d'argent — juste email + notif.
+  steps.push(await runStep('relay-reminders', relayReminders))
 
   const summary = 'cron-logistics terminé — ' + steps.map(s => `${s.name}:${s.ok ? 'ok' : 'ERREUR'}`).join(' · ')
   console.log(summary)

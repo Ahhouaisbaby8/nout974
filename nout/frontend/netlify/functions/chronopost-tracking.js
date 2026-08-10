@@ -68,7 +68,7 @@ exports.handler = async (event) => {
   // Commandes expédiées via Chronopost, pas encore livrées, avec un numéro de suivi.
   const { data: orders, error } = await supabase
     .from('orders')
-    .select('id, status, buyer_id, chronopost_tracking_number, tracking_number, chronopost_status, listing:listings!listing_id(title)')
+    .select('id, status, buyer_id, chronopost_tracking_number, tracking_number, chronopost_status, package_stage, listing:listings!listing_id(title)')
     .eq('status', 'shipped')
     .eq('carrier', 'chronopost')
 
@@ -95,9 +95,14 @@ exports.handler = async (event) => {
 
       // Mémorise le dernier statut connu + l'ÉTAPE lisible du colis (où il est physiquement).
       // package_stage sert à afficher l'état réel ET à ne rembourser auto QUE si jamais pris en charge.
+      // package_stage_at = date du CHANGEMENT d'étape (ex. arrivée au relais) → compte à rebours de retrait.
       const stage = chronoStage(last.deliveredEvent?.code || last.code)
-      if (last.code !== order.chronopost_status) {
-        await supabase.from('orders').update({ chronopost_status: last.code, package_stage: stage }).eq('id', order.id)
+      const codeChanged  = last.code !== order.chronopost_status
+      const stageChanged = stage && stage !== order.package_stage
+      if (codeChanged || stageChanged) {
+        const patch = { chronopost_status: last.code }
+        if (stageChanged) { patch.package_stage = stage; patch.package_stage_at = new Date().toISOString() }
+        await supabase.from('orders').update(patch).eq('id', order.id)
       }
 
       // Livraison = un code livré trouvé N'IMPORTE OÙ dans l'historique (pas seulement l'événement

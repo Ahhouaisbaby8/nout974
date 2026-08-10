@@ -121,6 +121,7 @@ const WATCHED_CRONS = [
   { job: 'chronopost-tracking', label: 'Suivi Chronopost', desc: 'Vérifie si les colis Chronopost sont livrés' },
   { job: 'ubn-tracking',        label: 'Suivi UBN',        desc: 'Vérifie si les colis UBN sont livrés' },
   { job: 'auto-refund',         label: 'Annulation & remboursement', desc: 'Rembourse l\'acheteur : 7 j si rien envoyé, 14 j si colis expédié mais jamais déposé' },
+  { job: 'relay-reminders',     label: 'Relances retrait relais', desc: 'Relance l\'acheteur dont le colis attend au point relais (J+3, J+7)' },
   { job: 'cron-payouts',        label: 'Versement des vendeurs', desc: 'Verse les vendeurs 48h après livraison' },
 ]
 
