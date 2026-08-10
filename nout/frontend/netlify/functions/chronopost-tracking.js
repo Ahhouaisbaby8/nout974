@@ -17,6 +17,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const { recordHeartbeat } = require('./_heartbeat')
 const { cronAuthorized } = require('./_cron-auth')
+const { chronoStage } = require('./_carrier-stage')
 const {
   soapCall, buildTags, isChronopostConfigured, xmlAll, xmlFirst, ChronopostError,
 } = require('./_chronopost-client')
@@ -92,9 +93,11 @@ exports.handler = async (event) => {
       const last = await fetchLastEvent(tracking)
       if (!last || !last.code) continue
 
-      // Mémorise le dernier statut connu (best-effort, pour l'affichage/diagnostic).
+      // Mémorise le dernier statut connu + l'ÉTAPE lisible du colis (où il est physiquement).
+      // package_stage sert à afficher l'état réel ET à ne rembourser auto QUE si jamais pris en charge.
+      const stage = chronoStage(last.deliveredEvent?.code || last.code)
       if (last.code !== order.chronopost_status) {
-        await supabase.from('orders').update({ chronopost_status: last.code }).eq('id', order.id)
+        await supabase.from('orders').update({ chronopost_status: last.code, package_stage: stage }).eq('id', order.id)
       }
 
       // Livraison = un code livré trouvé N'IMPORTE OÙ dans l'historique (pas seulement l'événement

@@ -384,21 +384,26 @@ exports.handler = async (event) => {
   // Cas réel (« Vend 3 pour 10€ ») : le vendeur GÉNÈRE l'étiquette (→ commande 'shipped') mais ne dépose
   // JAMAIS le colis. Le suivi transporteur ne verra donc aucune livraison → la commande resterait coincée
   // à vie en 'shipped', et l'acheteur ne serait jamais remboursé (l'ancien code ne remboursait que 'paid').
-  // Règle : une commande 'shipped' SANS livraison confirmée (delivered_at null) depuis > 10 jours →
-  // on considère le colis jamais remis → REMBOURSEMENT AUTOMATIQUE de l'acheteur (prix + port ; NOUT
-  // garde la protection, comme pour le cas 'paid'). 10 j = marge transport (colis lent à être scanné).
+  //
+  // ⚠️ RÈGLE AFFINÉE (le vrai fix) : on ne rembourse QUE si le colis n'a JAMAIS été pris en charge par le
+  // transporteur — c-à-d package_stage NULL ou 'not_handed'. Un colis 'in_transit' (en route) ou 'at_relay'
+  // (dispo au point relais, l'acheteur doit juste le retirer) NE DOIT PAS être remboursé : le colis existe,
+  // il arrive ou attend d'être retiré. Sans ce garde-fou, on remboursait un colis deja au relais → l'acheteur
+  // aurait l'article ET l'argent, le vendeur lese. 10 j = marge de scan pour le 1er evenement transporteur.
   let shipRefunded = 0
   const SHIP_REFUND_DAYS = 10
   const shipCutoff = new Date(Date.now() - SHIP_REFUND_DAYS * 24 * 60 * 60 * 1000).toISOString()
-  const { data: staleShipped, error: shippedErr } = await supabase
+  const { data: staleShippedRaw, error: shippedErr } = await supabase
     .from('orders')
-    .select(`id, status, shipped_at, delivered_at, stripe_payment_id, total_price, seller_payout,
+    .select(`id, status, shipped_at, delivered_at, package_stage, stripe_payment_id, total_price, seller_payout,
              shipping_fee, shipping_method, listing_id,
              listing:listings!listing_id(title),
              buyer:profiles!buyer_id(email, username)`)
     .eq('status', 'shipped')
     .is('delivered_at', null)                 // JAMAIS livré (sinon c'est le flux versement, pas remboursement)
     .lt('shipped_at', shipCutoff)
+  // Garde-fou colis : on ne rembourse QUE les colis jamais pris en charge (pas ceux en transit / au relais).
+  const staleShipped = (staleShippedRaw || []).filter(o => o.package_stage == null || o.package_stage === 'not_handed')
 
   if (shippedErr) {
     console.error('Erreur lecture commandes shipped (remboursement colis non déposé) :', shippedErr.message)

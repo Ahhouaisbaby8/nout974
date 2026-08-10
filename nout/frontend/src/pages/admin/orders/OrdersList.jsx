@@ -66,9 +66,17 @@ function delaiState(o) {
   // Livraison RÉELLEMENT confirmée par le transporteur → là seulement « remis à temps ».
   if (o.delivered_at || o.status === 'completed' || o.status === 'payout_pending')
     return { label: 'livré', color: 'bg-green-100 text-green-700', dot: 'bg-green-500', date: fmtDate(o.delivered_at) ? `livré le ${fmtDate(o.delivered_at)}` : null }
-  // Étiquette générée mais transporteur n'a rien confirmé → colis pas (encore) réellement remis.
-  if (o.status === 'shipped')
-    return { label: 'colis pas encore remis', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500', date: fmtDate(o.shipped_at) ? `étiquette le ${fmtDate(o.shipped_at)}` : null }
+  // Étiquette générée, pas encore livré → on affiche l'ÉTAPE RÉELLE du colis (renseignée par le suivi
+  // transporteur), au lieu du fourre-tout « pas encore remis » qui affolait pour un colis en fait en route.
+  if (o.status === 'shipped') {
+    const etiq = fmtDate(o.shipped_at) ? `étiquette le ${fmtDate(o.shipped_at)}` : null
+    if (o.package_stage === 'at_relay')
+      return { label: 'à retirer au relais', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', date: etiq }
+    if (o.package_stage === 'in_transit')
+      return { label: 'en route', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', date: etiq }
+    // Aucun scan transporteur (null ou not_handed) → là, vraiment « pas encore remis ».
+    return { label: 'colis pas encore remis', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500', date: etiq }
+  }
   if (o.status === 'refunded')
     return { label: 'remboursée', color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', date: null }
   if (o.status !== 'paid' || !o.expires_at)
@@ -90,8 +98,12 @@ function delaiState(o) {
 // Une commande mérite-t-elle l'attention de l'admin ? Renvoie un motif court, ou null.
 // But : repérer visuellement les commandes à surveiller SANS avoir à enquêter une par une.
 function orderAlert(o) {
-  // Colis dont l'étiquette est générée mais jamais confirmé livré, et qui traîne.
+  // Colis 'shipped' pas encore livré. On distingue selon l'ÉTAPE RÉELLE du colis :
+  //  - en route / au relais → PAS une alerte : le colis existe et avance (l'acheteur doit juste le retirer).
+  //  - pas de scan (null / not_handed) → là seulement on alerte : l'étiquette est faite mais rien déposé.
   if (o.status === 'shipped' && !o.delivered_at) {
+    if (o.package_stage === 'at_relay') return { level: 'info', txt: 'à retirer au point relais' }
+    if (o.package_stage === 'in_transit') return null   // en route = normal, pas d'alarme
     const days = o.shipped_at ? Math.floor((Date.now() - new Date(o.shipped_at).getTime()) / 86400000) : null
     if (days != null && days >= 10) return { level: 'danger', txt: `colis non remis depuis ${days} j` }
     if (days != null && days >= 5)  return { level: 'warn',   txt: `colis pas encore remis (${days} j)` }
@@ -194,6 +206,7 @@ export default function OrdersList() {
           created_at: o.date,
           delivered_at: o.delivered_at,
           shipped_at: o.shipped_at,
+          package_stage: o.package_stage,
           seller_payout: o.seller_payout,
           expires_at: o.expires_at,
           buyer:    { username: o.acheteur !== '—' ? o.acheteur : null },
@@ -456,9 +469,11 @@ export default function OrdersList() {
                       <div className="truncate">{o.listings?.title ?? '—'}</div>
                       {alert && (
                         <span className={`inline-flex items-center gap-1 mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                          alert.level === 'danger' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                          alert.level === 'danger' ? 'bg-red-100 text-red-700'
+                          : alert.level === 'info' ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
                         }`}>
-                          ⚠ {alert.txt}
+                          {alert.level === 'info' ? '' : '⚠ '}{alert.txt}
                         </span>
                       )}
                     </td>

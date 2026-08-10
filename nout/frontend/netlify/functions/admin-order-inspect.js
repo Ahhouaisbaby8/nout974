@@ -7,6 +7,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const Stripe = require('stripe')
 const { computeRefundAmount } = require('./_fees')
+const { STAGE_LABEL } = require('./_carrier-stage')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -104,8 +105,16 @@ exports.handler = async (event) => {
 
     // Diagnostic lisible
     const flags = []
-    if (order.status === 'shipped' && !order.delivered_at)
-      flags.push('Étiquette générée mais livraison NON confirmée par le transporteur (colis peut-être pas encore déposé).')
+    if (order.status === 'shipped' && !order.delivered_at) {
+      // Le flag dépend de l'ÉTAPE réelle du colis (renseignée par le suivi transporteur) : on ne dit
+      // plus « pas déposé » pour un colis qui est en fait en route ou déjà au relais.
+      if (order.package_stage === 'at_relay')
+        flags.push('Colis À RETIRER au point relais : le transporteur l\'a livré au relais, l\'acheteur doit aller le chercher (ce n\'est PAS un colis perdu).')
+      else if (order.package_stage === 'in_transit')
+        flags.push('Colis EN ROUTE : pris en charge par le transporteur, en cours d\'acheminement (livraison non encore confirmée).')
+      else
+        flags.push('Colis PAS ENCORE PRIS EN CHARGE par le transporteur (étiquette générée mais aucun scan) — colis peut-être jamais déposé. Remboursement auto au bout de 10 j.')
+    }
     if (money.sellerTransferred && order.status !== 'completed' && order.status !== 'payout_pending')
       flags.push('⚠ ANORMAL : un transfert vendeur existe alors que la commande n\'est pas finalisée.')
     if (money.sellerTransferred && !order.delivered_at)
@@ -126,6 +135,10 @@ exports.handler = async (event) => {
         cree_le: order.created_at,
         expedie_le: order.shipped_at,
         livre_le: order.delivered_at,
+        etape_colis: order.package_stage || null,
+        etape_colis_libelle: order.package_stage
+          ? (STAGE_LABEL[order.package_stage] || order.package_stage)
+          : (order.status === 'shipped' ? 'Pas encore de scan transporteur' : null),
       },
       argent: money,
       alertes: flags,

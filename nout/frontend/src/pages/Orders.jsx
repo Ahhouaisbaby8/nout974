@@ -159,25 +159,48 @@ function OrderTimeline({ order, role }) {
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3.5"><polyline points="20 6 9 17 4 12"/></svg>
   )
 
+  // Précision d'étape (quand le colis est parti mais pas encore livré) : où en est-il vraiment ?
+  // Renseigné par le suivi transporteur (package_stage). Évite de laisser l'acheteur dans le flou.
+  let stageNote = null
+  if (shipped && !delivered) {
+    if (order.package_stage === 'at_relay')
+      stageNote = role === 'acheteur'
+        ? 'Ton colis est au point relais — pense à aller le retirer.'
+        : 'Colis arrivé au point relais, en attente de retrait par l\'acheteur.'
+    else if (order.package_stage === 'in_transit')
+      stageNote = 'Colis en route, en cours d\'acheminement.'
+    else if (!order.package_stage)
+      stageNote = role === 'vendeur'
+        ? 'En attente de la prise en charge du colis par le transporteur.'
+        : 'En attente de la prise en charge par le transporteur.'
+  }
+
   return (
-    <div className="mt-3 flex items-center px-1">
-      {steps.map((s, i) => (
-        <div key={i} className="contents">
-          <div className="flex flex-col items-center gap-1 w-16 text-center flex-shrink-0">
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-              i < reached ? 'bg-nout-primary'
-              : i === reached ? 'bg-nout-primary ring-4 ring-[#E9F5F8]'
-              : 'bg-gray-200'
-            }`}>
-              {i < reached ? <Check /> : <span className={`w-1.5 h-1.5 rounded-full ${i === reached ? 'bg-white' : 'bg-gray-400'}`} />}
+    <div className="mt-3 px-1">
+      <div className="flex items-center">
+        {steps.map((s, i) => (
+          <div key={i} className="contents">
+            <div className="flex flex-col items-center gap-1 w-16 text-center flex-shrink-0">
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                i < reached ? 'bg-nout-primary'
+                : i === reached ? 'bg-nout-primary ring-4 ring-[#E9F5F8]'
+                : 'bg-gray-200'
+              }`}>
+                {i < reached ? <Check /> : <span className={`w-1.5 h-1.5 rounded-full ${i === reached ? 'bg-white' : 'bg-gray-400'}`} />}
+              </div>
+              <span className={`text-[10px] font-semibold leading-none ${i <= reached ? 'text-nout-dark' : 'text-gray-400'}`}>{s.l}</span>
             </div>
-            <span className={`text-[10px] font-semibold leading-none ${i <= reached ? 'text-nout-dark' : 'text-gray-400'}`}>{s.l}</span>
+            {i < steps.length - 1 && (
+              <div className={`flex-1 h-0.5 -mt-4 ${i < reached ? 'bg-nout-primary' : 'bg-gray-200'}`} />
+            )}
           </div>
-          {i < steps.length - 1 && (
-            <div className={`flex-1 h-0.5 -mt-4 ${i < reached ? 'bg-nout-primary' : 'bg-gray-200'}`} />
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
+      {stageNote && (
+        <p className={`mt-2 text-[11px] text-center ${order.package_stage === 'at_relay' ? 'text-nout-primary font-semibold' : 'text-gray-500'}`}>
+          {stageNote}
+        </p>
+      )}
     </div>
   )
 }

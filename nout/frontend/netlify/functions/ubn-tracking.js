@@ -21,6 +21,7 @@ const { createClient } = require('@supabase/supabase-js')
 const { classifyUbnStatuses } = require('./_ubn-status')
 const { recordHeartbeat } = require('./_heartbeat')
 const { cronAuthorized } = require('./_cron-auth')
+const { ubnStage } = require('./_carrier-stage')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
 const SITE_URL = process.env.URL || 'https://nout.re'
@@ -100,7 +101,13 @@ exports.handler = async (event) => {
     try {
       const stream = await fetchStatusStream(tracking)
       const verdict = classifyUbnStatuses(stream)   // 'delivered' | 'failed' | null
-      if (!verdict) { await sleep(300); continue }   // en transit / inconnu → rien (sûr)
+
+      // Mémorise l'ÉTAPE lisible du colis (où il est physiquement), même si pas encore livré →
+      // sert à l'affichage ET à ne rembourser auto QUE si jamais pris en charge.
+      const stage = ubnStage(stream)
+      if (stage) await supabase.from('orders').update({ package_stage: stage }).eq('id', order.id).eq('status', 'shipped')
+
+      if (!verdict) { await sleep(300); continue }   // en transit / inconnu → rien de plus (sûr)
 
       if (verdict === 'delivered') {
         // ── LIVRÉ ── shipped → delivered + delivered_at. Transition ATOMIQUE (ne verse RIEN ici :

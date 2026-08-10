@@ -69,7 +69,7 @@ exports.handler = async (event) => {
     // « il manque des lignes » venait de la lecture navigateur bridée par la RLS).
     let listQ = supabase
       .from('orders')
-      .select(`id, total_price, status, created_at, delivered_at, shipped_at, seller_payout,
+      .select(`id, total_price, status, created_at, delivered_at, shipped_at, seller_payout, package_stage,
         buyer:profiles!buyer_id(username),
         seller:profiles!seller_id(username),
         listings(title)`)
@@ -101,6 +101,7 @@ exports.handler = async (event) => {
       date:         o.created_at,
       delivered_at: o.delivered_at ?? null,   // pour calculer le temps restant avant versement auto (48h)
       shipped_at:   o.shipped_at ?? null,      // date d'expédition (= « remis le… »)
+      package_stage: o.package_stage ?? null,  // étape réelle du colis (not_handed/in_transit/at_relay/delivered)
       seller_payout: o.seller_payout ?? null,  // montant dû au vendeur
       expires_at:   expiryByOrder[o.id]?.expires_at ?? null,   // date limite avant annulation auto
     }))
