@@ -128,7 +128,8 @@ export default function ProSpace() {
               s.is_active ? 'text-[#0B716A] bg-[#EAF5F3]' : 'text-gray-500 bg-gray-100'}`}>
               {s.is_active ? 'En ligne' : 'Brouillon'}
             </span>
-            {s.is_active && <Link to={`/${s.slug}`} className="text-[12.5px] font-semibold text-nout-turquoise flex-shrink-0">Voir</Link>}
+            <Link to={`/boutique-creer?shop=${s.id}`} className="text-[12.5px] font-semibold text-nout-turquoise flex-shrink-0">Modifier</Link>
+            {s.is_active && <Link to={`/${s.slug}`} className="text-[12.5px] font-semibold text-gray-400 flex-shrink-0">Voir</Link>}
             {s.is_active && (
               <button type="button" onClick={() => unpublishShop(s.id).then(() => setShops((l) => l.map((x) => (x.id === s.id ? { ...x, is_active: false } : x))))}
                       className="text-[12.5px] font-semibold text-gray-400 hover:text-nout-texte flex-shrink-0">Dépublier</button>
@@ -148,6 +149,7 @@ export default function ProSpace() {
       </div>
 
       <div className="flex gap-2 flex-wrap mt-4">
+        <Link to="/espace-pro/clients" className="btn-secondary !px-5">Mes clients</Link>
         <Link to="/compte/paiements" className="btn-secondary !px-5">Mon argent</Link>
         <Link to="/boutique-creer" className="btn-secondary !px-5">Personnaliser</Link>
       </div>

@@ -135,6 +135,7 @@ const NotFound = lazy(() => import('./pages/NotFound'))
 const ShopRoute = lazy(() => import('./pages/ShopRoute'))
 const ProOffer  = lazy(() => import('./pages/pro/ProOffer'))
 const ProSpace  = lazy(() => import('./pages/pro/ProSpace'))
+const ProClients = lazy(() => import('./pages/pro/ProClients'))
 
 // Brand (dev uniquement)
 const BrandPage    = lazy(() => import('./pages/BrandPage'))
@@ -261,6 +262,7 @@ function AppShell() {
           <Route path="/boutique-creer"     element={<ShopWizard />} />
           <Route path="/boutique-tarifs"    element={<ProOffer />} />
           <Route path="/espace-pro"         element={<PrivateRoute><ProSpace /></PrivateRoute>} />
+          <Route path="/espace-pro/clients" element={<PrivateRoute><ProClients /></PrivateRoute>} />
 
           {/* Légal */}
           <Route path="/legal/cgu"                      element={<CGU />} />

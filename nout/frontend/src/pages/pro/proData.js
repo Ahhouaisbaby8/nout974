@@ -185,7 +185,7 @@ export const RESERVED_SLUGS = new Set(['annonce', 'annonces', 'recherche', 'c', 
   'nout', 'api', 'www', 'shop', 'pro',
   // routes NOUT Pro : le nom exact compte, « boutique » ne couvre pas « boutique-creer »
   'boutique-creer', 'boutique-templates', 'boutique-demo', 'boutique-tarifs', 'espace-pro',
-  'tarifs', 'points-relais', 'comment-ca-marche', 'a-propos', 'installer-app', 'commandes',
+  'tarifs', 'clients', 'points-relais', 'comment-ca-marche', 'a-propos', 'installer-app', 'commandes',
   'parametres', 'reinitialiser', 'mot-de-passe-oublie', 'verifier-email', 'compte-active',
   'paiement-reussi', 'modifier'])
 export function slugify(s) {

@@ -4,7 +4,7 @@ import ShopPage, { LAYS, TONES, buildPalette, contrastRatio, isDarkColor } from 
 import { useAuth } from '../../context/AuthContext'
 import { DEFAULT_LAYOUT, sanitizeLayout, stripBlockImages, newBlock, BLOCK_KINDS,
          MAX_BLOCS, MAX_TITRE, MAX_TEXTE, MAX_PHOTOS_BLOC, hasContacts, claimIssue } from './ShopBlocks'
-import { createShop, updateShop, publishShop, getMyShop, SHOPS_TABLE_MISSING } from '../../services/shops'
+import { createShop, updateShop, publishShop, getMyShop, getMyShops, SHOPS_TABLE_MISSING } from '../../services/shops'
 import {
   THEMES, themeById, FONTS, FONT_CONTEXTS, SECTORS, SECS_MAIN, SECTOR_LABEL, familyOf,
   DEMOS, detectSector, genTagline, genDescription,
@@ -61,6 +61,8 @@ const PALETTE = ['#0E8C82', '#0E7FAB', '#1A3A8F', '#4FA9E0', '#4E7C4E', '#7BA05B
 
 export default function ShopWizard() {
   const location = useLocation()
+  const { user } = useAuth()
+  const [editingId, setEditingId] = useState(null)   // boutique enregistrée en cours d'édition
   const [step, setStep] = useState('activite')            // activite → theme → identite → accroche → produits → gen → result
   const [name, setName] = useState('')
   const [sector, setSector] = useState(null)
@@ -201,6 +203,38 @@ export default function ShopWizard() {
     } catch { /* brouillon illisible : on repart proprement */ }
     ready.current = true
   }, [])
+
+  // Arrivée depuis l'Espace pro avec ?shop=<id> : on édite une boutique ENREGISTRÉE,
+  // pas le brouillon local. Elle écrase donc ce qui vient du navigateur.
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('shop')
+    if (!id || !user) return
+    let vivant = true
+    ;(async () => {
+      try {
+        const mes = await getMyShops(user.id)
+        const s = mes.find((x) => x.id === id)
+        if (!s || !vivant) return
+        const g = s.settings || {}
+        setEditingId(s.id)
+        setName(s.name || ''); setPhrase(s.tagline || '')
+        setSector(s.sector || null); setSectorTouched(true)
+        if (s.template_key) setTheme(themeById(s.template_key))
+        if (s.accent_color) { setAccent(s.accent_color); setAccCustom(true) }
+        if (s.font_key) setFontKey(s.font_key)
+        setTexts(g.texts || {}); setLayout(sanitizeLayout(g.layout))
+        setHeroLay(g.hero_lay ?? null); setHeroIdx(g.heroIdx ?? 0)
+        setHeroCustom(g.heroImage ?? null); setAboutImage(g.aboutImage ?? null)
+        setAccent2(g.accent2 ?? null); setBgTone(g.bg_tone ?? null)
+        setBgColor(g.bg_color ?? null); setTextColor(g.text_color ?? null)
+        setSurfaceColor(g.surface_color ?? null)
+        setRayonsCustom(Array.isArray(g.rayons) ? g.rayons : null)
+        setLinksCustom(Array.isArray(g.links) ? g.links : null)
+        setStep('result')
+      } catch { /* table absente ou hors ligne : on reste sur le brouillon local */ }
+    })()
+    return () => { vivant = false }
+  }, [location.search, user])
 
   // Arrivée depuis la galerie (/boutique-templates) : thème + univers déjà répondus
   useEffect(() => {
@@ -604,7 +638,7 @@ export default function ShopWizard() {
                   </li>
                 ))}
               </ul>
-              <PublishPanel shop={shop} slug={slug} />
+              <PublishPanel shop={shop} slug={slug} editingId={editingId} onSaved={setEditingId} />
               <SiretNotice />
               <div className="flex gap-2 flex-wrap">
                 <button type="button" onClick={() => setStep('produits')} className="btn-secondary flex-1">Produits</button>
@@ -1369,7 +1403,7 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
 // portée aussi par la base (contrainte `shops_active_needs_siret`), le front n'étant
 // jamais la source de vérité. Tant que la migration n'a pas été exécutée, la table
 // n'existe pas : on le dit franchement au lieu d'afficher une erreur technique.
-function PublishPanel({ shop, slug }) {
+function PublishPanel({ shop, slug, editingId, onSaved }) {
   const { user } = useAuth()
   const [saved, setSaved] = useState(null)      // ligne `shops` enregistrée
   const [siret, setSiret] = useState('')
@@ -1399,8 +1433,10 @@ function PublishPanel({ shop, slug }) {
   }
 
   const save = () => run(async () => {
-    const mine = await getMyShop(user.id)
-    const row = mine ? await updateShop(mine.id, payload) : await createShop(user.id, payload)
+    // on met à jour LA boutique éditée si on vient de l'Espace pro ; sinon on en crée une
+    const cible = editingId || (await getMyShop(user.id))?.id
+    const row = cible ? await updateShop(cible, payload) : await createShop(user.id, payload)
+    onSaved?.(row.id)
     setSaved(row)
     setMsg({ kind: 'ok', text: 'Boutique enregistrée en brouillon. Elle n\'est pas encore visible.' })
     return row
