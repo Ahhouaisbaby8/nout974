@@ -31,13 +31,24 @@ export const getShopBySlug = async (slug) => {
   return data || null
 }
 
-// La boutique du vendeur connecté (brouillon compris) — une seule par compte au MVP.
-export const getMyShop = async (ownerId) => {
-  if (!ownerId) return null
+// Les boutiques du vendeur connecté (brouillons compris). Deux au maximum par défaut.
+export const getMyShops = async (ownerId) => {
+  if (!ownerId) return []
   const { data, error } = await supabase
-    .from('shops').select('*').eq('owner_id', ownerId).maybeSingle()
+    .from('shops').select('*').eq('owner_id', ownerId).order('created_at', { ascending: true })
   if (error) throw wrap(error)
-  return data || null
+  return data ?? []
+}
+export const getMyShop = async (ownerId) => (await getMyShops(ownerId))[0] || null
+
+// Quota du compte : 2 par défaut, relevé au cas par cas par le support.
+export const DEFAULT_SHOP_QUOTA = 2
+export const getShopQuota = async (ownerId) => {
+  if (!ownerId) return DEFAULT_SHOP_QUOTA
+  const { data, error } = await supabase
+    .from('profiles').select('shop_quota').eq('id', ownerId).maybeSingle()
+  if (error) { if (MISSING.has(error.code)) return DEFAULT_SHOP_QUOTA; throw wrap(error) }
+  return data?.shop_quota ?? DEFAULT_SHOP_QUOTA
 }
 
 // L'adresse est-elle libre ? (la base tranche vraiment, via son index unique)
@@ -70,7 +81,16 @@ export const createShop = async (ownerId, shop) => {
   if (!ownerId) throw new Error('Connexion requise')
   const { data, error } = await supabase
     .from('shops').insert({ owner_id: ownerId, ...shopRow(shop) }).select().single()
-  if (error) throw wrap(error)
+  if (error) {
+    // le quota est refusé par la base : on traduit son message technique
+    if (/SHOP_QUOTA_REACHED/.test(error.message || '')) {
+      const e = new Error(`Tu as déjà atteint le nombre de boutiques autorisé sur ce compte (${DEFAULT_SHOP_QUOTA}). `
+        + "Écris au support depuis l'aide si ton activité en demande davantage : on relève la limite au cas par cas.")
+      e.code = 'SHOP_QUOTA_REACHED'
+      throw e
+    }
+    throw wrap(error)
+  }
   return data
 }
 

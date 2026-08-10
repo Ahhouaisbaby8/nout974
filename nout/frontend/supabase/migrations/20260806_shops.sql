@@ -39,9 +39,44 @@ create table if not exists public.shops (
   updated_at    timestamptz not null default now()
 );
 
--- 1 seule boutique par vendeur (MVP) + slug unique global (insensible à la casse)
-create unique index if not exists shops_owner_unique on public.shops(owner_id);
+-- Slug unique global (insensible à la casse)
 create unique index if not exists shops_slug_unique  on public.shops(lower(slug));
+create index if not exists shops_owner_idx on public.shops(owner_id);
+
+-- QUOTA DE BOUTIQUES : 2 par personne, davantage sur demande au support -------------
+-- Un compte pourrait sinon fabriquer des dizaines de vitrines pour occuper le terrain
+-- (adresses accaparées, catalogue pollué, réputation). Le quota est stocké PAR PROFIL
+-- pour que le support puisse l'augmenter au cas par cas sans toucher au code, et il est
+-- appliqué par un TRIGGER : une garde côté écran serait contournable en appelant l'API.
+alter table public.profiles add column if not exists shop_quota smallint not null default 2;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'profiles_shop_quota_sane') then
+    alter table public.profiles
+      add constraint profiles_shop_quota_sane check (shop_quota between 0 and 50);
+  end if;
+end $$;
+
+create or replace function public.check_shop_quota()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  quota int;
+  used  int;
+begin
+  select coalesce(p.shop_quota, 2) into quota from public.profiles p where p.id = new.owner_id;
+  select count(*) into used from public.shops s where s.owner_id = new.owner_id;
+  if used >= coalesce(quota, 2) then
+    raise exception 'SHOP_QUOTA_REACHED: % boutique(s) maximum pour ce compte', coalesce(quota, 2)
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists trg_check_shop_quota on public.shops;
+create trigger trg_check_shop_quota
+  before insert on public.shops
+  for each row execute function public.check_shop_quota();
 
 -- Format du slug : minuscules/chiffres/tirets, 3–40 caractères, bornes alphanumériques
 do $$

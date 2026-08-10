@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import ShopPage, { LAYS, TONES } from '../ShopPage'
+import ShopPage, { LAYS, TONES, buildPalette, contrastRatio, isDarkColor } from '../ShopPage'
 import { useAuth } from '../../context/AuthContext'
 import { createShop, updateShop, publishShop, getMyShop, SHOPS_TABLE_MISSING } from '../../services/shops'
 import {
@@ -87,6 +87,9 @@ export default function ShopWizard() {
   const [heroLay, setHeroLay] = useState(null)      // null = mise en page du thème
   const [accent2, setAccent2] = useState(null)      // null = même que la principale
   const [bgTone, setBgTone] = useState(null)        // null = fond du thème
+  const [bgColor, setBgColor] = useState(null)        // null = teinte de fond prédéfinie
+  const [textColor, setTextColor] = useState(null)    // null = premier plan automatique
+  const [surfaceColor, setSurfaceColor] = useState(null)   // null = cartes automatiques
   const [rayonsCustom, setRayonsCustom] = useState(null)   // null = rayons conseillés de l'univers
   const [linksCustom, setLinksCustom] = useState(null)     // null = liens d'exemple (mode « lien en bio »)
 
@@ -121,6 +124,9 @@ export default function ShopWizard() {
         if (d.heroLay) setHeroLay(d.heroLay)
         if (d.accent2) setAccent2(d.accent2)
         if (d.bgTone) setBgTone(d.bgTone)
+        if (d.bgColor) setBgColor(d.bgColor)
+        if (d.textColor) setTextColor(d.textColor)
+        if (d.surfaceColor) setSurfaceColor(d.surfaceColor)
         if (Array.isArray(d.rayonsCustom)) setRayonsCustom(d.rayonsCustom)
         if (Array.isArray(d.linksCustom)) setLinksCustom(d.linksCustom)
         // on ne restaure jamais l'écran d'animation : il n'a de sens qu'en direct
@@ -154,7 +160,8 @@ export default function ShopWizard() {
     if (!name.trim() && !products.length) return
     const base = {
       name, sector, sectorTouched, themeId: theme?.id, accent, accCustom, fontKey, phrase,
-      texts, layout, heroIdx, heroLay, accent2, bgTone, rayonsCustom, linksCustom, step,
+      texts, layout, heroIdx, heroLay, accent2, bgTone, bgColor, textColor, surfaceColor,
+      rayonsCustom, linksCustom, step,
     }
     const full = { ...base, logo, products, heroCustom, aboutImage }
     try {
@@ -170,7 +177,7 @@ export default function ShopWizard() {
     }
   }, [name, sector, sectorTouched, theme, accent, accCustom, logo, fontKey, phrase, products,
       texts, layout, heroIdx, heroCustom, aboutImage, heroLay, accent2, bgTone,
-      rayonsCustom, linksCustom, step])
+      bgColor, textColor, surfaceColor, rayonsCustom, linksCustom, step])
 
   const resetDraft = () => {
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* rien à nettoyer */ }
@@ -193,9 +200,9 @@ export default function ShopWizard() {
     sector: sector || 'Autre', rayons,
     links: theme?.mode === 'bio' ? links : null,
     texts, layout, aboutImage, heroIdx, heroImage: heroCustom, hero_lay: heroLay,
-    accent2, bg_tone: bgTone,
+    accent2, bg_tone: bgTone, bg_color: bgColor, text_color: textColor, surface_color: surfaceColor,
   }), [slug, name, phrase, sector, accent, fontKey, theme, rayons, links, texts, layout, aboutImage,
-       heroIdx, heroCustom, heroLay, accent2, bgTone])
+       heroIdx, heroCustom, heroLay, accent2, bgTone, bgColor, textColor, surfaceColor])
 
   const listings = useMemo(() => {
     if (products.length) {
@@ -438,6 +445,8 @@ export default function ShopWizard() {
               aboutImage={aboutImage} setAboutImage={setAboutImage}
               heroLay={heroLay} setHeroLay={setHeroLay}
               accent2={accent2} setAccent2={setAccent2} bgTone={bgTone} setBgTone={setBgTone}
+              bgColor={bgColor} setBgColor={setBgColor} textColor={textColor} setTextColor={setTextColor}
+              surfaceColor={surfaceColor} setSurfaceColor={setSurfaceColor}
               rayons={rayons} rayonsCustom={rayonsCustom} setRayonsCustom={setRayonsCustom}
               links={links} setLinks={setLinksCustom}
               onDone={() => setStep('result')} />
@@ -794,6 +803,25 @@ function harmonies(hex) {
   ]
 }
 
+// Contrôle de lisibilité : on mesure le contraste réel entre le texte et le fond
+// (norme WCAG). En dessous de 4,5 un texte devient pénible à lire, en dessous de 3
+// il est illisible pour beaucoup de monde — on le dit, et on propose de corriger.
+function Readability({ paper, fg, onFix }) {
+  const r = contrastRatio(fg, paper)
+  const bon = r >= 4.5, moyen = r >= 3
+  return (
+    <div className={`flex items-center gap-2 mt-2 rounded-lg px-3 py-2 text-[12px] leading-snug ${
+      bon ? 'bg-[#EAF5F3] text-[#0B716A]' : moyen ? 'bg-amber-50 text-amber-800' : 'bg-red-50 text-red-700'}`}>
+      <span className="flex-1">
+        {bon ? 'Lisibilité : bonne.' : moyen ? 'Lisibilité : limite — fatigant à lire sur un long texte.'
+          : 'Lisibilité : insuffisante. Ce texte sera illisible pour une partie de tes visiteurs.'}
+        {' '}Contraste {r.toFixed(1)}/21.
+      </span>
+      {!bon && <button type="button" onClick={onFix} className="font-semibold underline flex-shrink-0">Corriger</button>}
+    </div>
+  )
+}
+
 function ColorField({ label, hint, value, onChange, suggestions, swatches, onReset }) {
   const [open, setOpen] = useState(false)
   return (
@@ -881,6 +909,7 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
                      heroIdx, setHeroIdx, heroCustom, setHeroCustom,
                      aboutImage, setAboutImage, heroLay, setHeroLay,
                      accent2, setAccent2, bgTone, setBgTone,
+                     bgColor, setBgColor, textColor, setTextColor, surfaceColor, setSurfaceColor,
                      rayons, rayonsCustom, setRayonsCustom, links, setLinks, onDone }) {
   const [tab, setTab] = useState('textes')
   const [allFonts, setAllFonts] = useState(false)
@@ -890,6 +919,7 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
   const sec = sector || 'Autre'
   const curLay = heroLay || LAYS[theme?.id] || 'minimal'
   const bio = curLay === 'bio'
+  const pal = buildPalette(shop)
 
   const setT = (k, v) => setTexts({ ...texts, [k]: v })
   // l'accroche vit dans son propre état (elle sert dès l'étape 4) — on la route à part
@@ -1111,18 +1141,38 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
           </Row>
 
           <Row>
-            <Lab hint="La teinte de la page derrière tes produits">Fond de la boutique</Lab>
-            <div className="grid grid-cols-5 gap-2">
+            <Lab hint="L'arrière-plan de toute la page">Fond de la boutique</Lab>
+            <div className="grid grid-cols-5 gap-2 mb-2">
               {[['blanc', 'Blanc'], ['creme', 'Crème'], ['sable', 'Sable'], ['gris', 'Gris clair'], ['sombre', 'Sombre']].map(([k, l]) => (
-                <button key={k} type="button" onClick={() => setBgTone(k)}
-                        className={`rounded-xl border p-1.5 ${bgTone === k ? 'border-nout-turquoise ring-2 ring-nout-turquoise/20' : 'border-gray-200 hover:border-gray-300'}`}>
+                <button key={k} type="button" onClick={() => { setBgTone(k); setBgColor(null) }}
+                        className={`rounded-xl border p-1.5 ${!bgColor && bgTone === k ? 'border-nout-turquoise ring-2 ring-nout-turquoise/20' : 'border-gray-200 hover:border-gray-300'}`}>
                   <span className="block h-8 rounded-md border border-black/5" style={{ background: TONES[k] }} />
                   <span className="block text-[10.5px] font-semibold text-gray-500 mt-1">{l}</span>
                 </button>
               ))}
             </div>
-            <p className="text-[11.5px] text-gray-400 mt-2 leading-relaxed">
-              Le fond sombre bascule automatiquement tous les textes en clair — la lisibilité reste garantie.
+            <ColorField label="Ou ta propre teinte de fond" hint="N'importe quelle couleur"
+                        value={pal.paper} onChange={setBgColor}
+                        onReset={bgColor ? () => setBgColor(null) : null} />
+          </Row>
+
+          <Row>
+            <ColorField label="Couleur du texte" hint="Le premier plan : titres et paragraphes"
+                        value={pal.fg} onChange={setTextColor}
+                        suggestions={[['Clair', '#FFFFFF'], ['Sombre', '#16302E'], ['Encre douce', '#33413F']]}
+                        onReset={textColor ? () => setTextColor(null) : null} />
+            <Readability paper={pal.paper} fg={pal.fg}
+                         onFix={() => setTextColor(isDarkColor(pal.paper) ? '#FFFFFF' : '#16302E')} />
+          </Row>
+
+          <Row>
+            <ColorField label="Couleur des cartes" hint="Le second plan : le fond des produits"
+                        value={pal.surface.startsWith('rgba') ? pal.paper : pal.surface} onChange={setSurfaceColor}
+                        suggestions={[['Blanc', '#FFFFFF'], ['Ivoire', '#FBF7F2'], ['Ardoise', '#1B222C']]}
+                        onReset={surfaceColor ? () => setSurfaceColor(null) : null} />
+            <p className="text-[11.5px] text-gray-400 mt-1.5 leading-relaxed">
+              Laisse sur automatique et les cartes se calent seules sur ton fond : blanches sur clair,
+              légèrement éclaircies sur sombre.
             </p>
           </Row>
 
