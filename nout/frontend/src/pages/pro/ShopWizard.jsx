@@ -85,6 +85,8 @@ export default function ShopWizard() {
   const [heroLay, setHeroLay] = useState(null)      // null = mise en page du thème
   const [accent2, setAccent2] = useState(null)      // null = même que la principale
   const [bgTone, setBgTone] = useState(null)        // null = fond du thème
+  const [rayonsCustom, setRayonsCustom] = useState(null)   // null = rayons conseillés de l'univers
+  const [linksCustom, setLinksCustom] = useState(null)     // null = liens d'exemple (mode « lien en bio »)
 
   useEffect(() => { loadProFonts() }, [])
 
@@ -117,6 +119,8 @@ export default function ShopWizard() {
         if (d.heroLay) setHeroLay(d.heroLay)
         if (d.accent2) setAccent2(d.accent2)
         if (d.bgTone) setBgTone(d.bgTone)
+        if (Array.isArray(d.rayonsCustom)) setRayonsCustom(d.rayonsCustom)
+        if (Array.isArray(d.linksCustom)) setLinksCustom(d.linksCustom)
         // on ne restaure jamais l'écran d'animation : il n'a de sens qu'en direct
         if (d.step && d.step !== 'gen') setStep(d.step)
         setRestored(true)
@@ -148,7 +152,7 @@ export default function ShopWizard() {
     if (!name.trim() && !products.length) return
     const base = {
       name, sector, sectorTouched, themeId: theme?.id, accent, accCustom, fontKey, phrase,
-      texts, layout, heroIdx, heroLay, accent2, bgTone, step,
+      texts, layout, heroIdx, heroLay, accent2, bgTone, rayonsCustom, linksCustom, step,
     }
     const full = { ...base, logo, products, heroCustom, aboutImage }
     try {
@@ -163,7 +167,8 @@ export default function ShopWizard() {
       } catch { /* stockage indisponible (navigation privée) : on continue sans brouillon */ }
     }
   }, [name, sector, sectorTouched, theme, accent, accCustom, logo, fontKey, phrase, products,
-      texts, layout, heroIdx, heroCustom, aboutImage, heroLay, accent2, bgTone, step])
+      texts, layout, heroIdx, heroCustom, aboutImage, heroLay, accent2, bgTone,
+      rayonsCustom, linksCustom, step])
 
   const resetDraft = () => {
     try { localStorage.removeItem(DRAFT_KEY) } catch { /* rien à nettoyer */ }
@@ -173,8 +178,9 @@ export default function ShopWizard() {
   const slug = slugify(name)
   const slugOk = slug.length >= 3 && !RESERVED_SLUGS.has(slug)
   const family = sector ? familyOf(sector) : null
-  const rayons = SECTORS[sector]?.rayons || SECTORS.Autre.rayons
+  const rayons = rayonsCustom || SECTORS[sector]?.rayons || SECTORS.Autre.rayons
   const contact = theme?.mode === 'contact'
+  const links = linksCustom || DEMOS.bio.links
 
   const shop = useMemo(() => ({
     slug: slug || 'ma-boutique', name: name || 'Ma boutique',
@@ -183,10 +189,10 @@ export default function ShopWizard() {
     accent_color: accent, font_key: fontKey,
     template_key: theme?.id || 'epuree', mode: theme?.mode || 'escrow',
     sector: sector || 'Autre', rayons,
-    links: theme?.mode === 'bio' ? (DEMOS.bio.links) : null,
+    links: theme?.mode === 'bio' ? links : null,
     texts, layout, aboutImage, heroIdx, heroImage: heroCustom, hero_lay: heroLay,
     accent2, bg_tone: bgTone,
-  }), [slug, name, phrase, sector, accent, fontKey, theme, rayons, texts, layout, aboutImage,
+  }), [slug, name, phrase, sector, accent, fontKey, theme, rayons, links, texts, layout, aboutImage,
        heroIdx, heroCustom, heroLay, accent2, bgTone])
 
   const listings = useMemo(() => {
@@ -430,6 +436,8 @@ export default function ShopWizard() {
               aboutImage={aboutImage} setAboutImage={setAboutImage}
               heroLay={heroLay} setHeroLay={setHeroLay}
               accent2={accent2} setAccent2={setAccent2} bgTone={bgTone} setBgTone={setBgTone}
+              rayons={rayons} rayonsCustom={rayonsCustom} setRayonsCustom={setRayonsCustom}
+              links={links} setLinks={setLinksCustom}
               onDone={() => setStep('result')} />
           )}
 
@@ -534,7 +542,7 @@ function ProductsStep({ products, setProducts, sector, contact, rayons, onBack, 
   const [edit, setEdit] = useState(null)
   const [draft, setDraft] = useState(EMPTY_PRODUCT)
   const fileRef = useRef(null)
-  const rayonList = (rayons || []).slice(1)      // « Tout » n'est pas un rayon de rangement
+  const rayonList = rayons || []
 
   const open = (i) => {
     setEdit(i)
@@ -873,7 +881,8 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
                      texts, setTexts, layout, setLayout, phrase, setPhrase,
                      heroIdx, setHeroIdx, heroCustom, setHeroCustom,
                      aboutImage, setAboutImage, heroLay, setHeroLay,
-                     accent2, setAccent2, bgTone, setBgTone, onDone }) {
+                     accent2, setAccent2, bgTone, setBgTone,
+                     rayons, rayonsCustom, setRayonsCustom, links, setLinks, onDone }) {
   const [tab, setTab] = useState('textes')
   const [allFonts, setAllFonts] = useState(false)
   const heroRef = useRef(null)
@@ -881,6 +890,7 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
   const contact = shop.mode === 'contact'
   const sec = sector || 'Autre'
   const curLay = heroLay || LAYS[theme?.id] || 'minimal'
+  const bio = curLay === 'bio'
 
   const setT = (k, v) => setTexts({ ...texts, [k]: v })
   // l'accroche vit dans son propre état (elle sert dès l'étape 4) — on la route à part
@@ -959,7 +969,7 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
       {/* ── IMAGES ── */}
       {tab === 'images' && (
         <div>
-          {curLay === 'bio' ? (
+          {bio ? (
             <p className="text-[12.5px] text-gray-500 leading-relaxed mb-3 px-3 py-2.5 bg-gray-50 rounded-lg">
               Le thème « lien en bio » a une seule mise en page : ta photo en rond, puis tes liens.
               Choisis un autre thème dans l'onglet Style pour disposer les images librement.
@@ -1057,9 +1067,33 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
             ))}
             {gridAt === layout.length && <GridDivider />}
           </div>
+          <Row>
+            <Lab hint="Les onglets qui rangent tes produits, sous l'accueil">Le menu de ta boutique</Lab>
+            <ListEditor
+              items={rayons} onChange={setRayonsCustom}
+              placeholder="Nom du rayon" addLabel="Ajouter un rayon" max={8}
+              onReset={rayonsCustom ? () => setRayonsCustom(null) : null} resetLabel="Revenir aux rayons conseillés" />
+            <p className="text-[11.5px] text-gray-400 leading-relaxed mt-2">
+              Renommer un rayon ne déclasse pas tes produits : ceux qui y étaient rangés suivent le nouveau nom.
+            </p>
+          </Row>
+
+          {bio && (
+            <Row>
+              <Lab hint="Les boutons de ta page, dans l'ordre">Tes liens</Lab>
+              <ListEditor
+                items={links.map((l) => l.title)}
+                onChange={(titles) => setLinks(titles.map((t, i) => ({ title: t, kind: links[i]?.kind || 'ext' })))}
+                placeholder="Intitulé du lien" addLabel="Ajouter un lien" max={10}
+                onReset={() => setLinks(null)} resetLabel="Revenir aux liens d'exemple" />
+            </Row>
+          )}
+
           <p className="text-[11.5px] text-gray-400 leading-relaxed mt-3">
-            Tes pages légales (CGV, retours, mentions, confidentialité) et le pied de page restent toujours en bas :
-            ils sont obligatoires pour vendre.
+            Restent verrouillés : le bandeau de confiance, les 3 étapes « comment ça marche » et les pages
+            légales (CGV, retours, mentions, confidentialité). Ils décrivent le fonctionnement de NOUT —
+            paiement protégé, délais, garanties — pas tes choix : les réécrire créerait des promesses
+            que la plateforme ne tiendrait pas.
           </p>
         </div>
       )}
@@ -1184,6 +1218,52 @@ function SiretNotice() {
           </p>
         </div>
       )}
+    </div>
+  )
+}
+
+// Petite liste ordonnée et renommable — sert aux rayons de la boutique et, en mode
+// « lien en bio », aux boutons de la page. Toujours au moins une entrée : une boutique
+// sans aucun rayon n'a plus de menu du tout.
+function ListEditor({ items, onChange, placeholder, addLabel, max = 8, onReset, resetLabel }) {
+  const set = (i, v) => onChange(items.map((x, k) => (k === i ? v : x)))
+  const move = (i, dir) => {
+    const j = i + dir
+    if (j < 0 || j >= items.length) return
+    const next = [...items]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    onChange(next)
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      {items.map((it, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <input className="input-field !py-1.5 !text-[13px] flex-1" value={it} maxLength={24}
+                 placeholder={placeholder} onChange={(e) => set(i, e.target.value)} />
+          <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => move(i, -1)}
+                  className="w-7 h-7 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center flex-shrink-0">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <button type="button" aria-label="Descendre" disabled={i === items.length - 1} onClick={() => move(i, 1)}
+                  className="w-7 h-7 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center flex-shrink-0">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <button type="button" aria-label="Retirer" disabled={items.length <= 1}
+                  onClick={() => onChange(items.filter((_, k) => k !== i))}
+                  className="w-7 h-7 rounded-lg border border-gray-200 text-gray-400 hover:text-red-600 disabled:opacity-30 text-[15px] leading-none flex-shrink-0">×</button>
+        </div>
+      ))}
+      <div className="flex items-center gap-3 mt-0.5">
+        {items.length < max && (
+          <button type="button" onClick={() => onChange([...items, ''])}
+                  className="text-[12.5px] font-semibold text-nout-turquoise">+ {addLabel}</button>
+        )}
+        {onReset && (
+          <button type="button" onClick={onReset} className="text-[12.5px] font-semibold text-gray-400 hover:text-nout-texte">
+            {resetLabel}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
