@@ -15,7 +15,7 @@ import BackButton from '../components/ui/BackButton'
 import ReportModal from '../components/ui/ReportModal'
 import { resolveFounder, FounderRing } from '../components/ui/FounderBadge'
 import CreatorBadge from '../components/ui/CreatorBadge'
-import StockBadge, { GRO_STOCK_THRESHOLD } from '../components/ui/StockBadge'
+import StockBadge, { hasGroStock } from '../components/ui/StockBadge'
 import { isFollowing as checkFollowing, followUser, unfollowUser, getFollowCounts, getFollowers, getFollowing } from '../services/follow'
 import { getPublicSellerStats } from '../services/sellerStats'
 import { blockUser, unblockUser, isBlocked } from '../services/blocks'
@@ -243,7 +243,7 @@ export default function Profile() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl font-extrabold text-white leading-tight">{profile.username}</h1>
                   {profile.is_creator && <CreatorBadge size="sm" />}
-                  {listings.length >= GRO_STOCK_THRESHOLD && <StockBadge size="sm" />}
+                  {hasGroStock(listings) && <StockBadge size="sm" />}
                   {isSellerActive && (
                     <span className="flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-400/30">
                       <span className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse inline-block" />
@@ -279,7 +279,7 @@ export default function Profile() {
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-extrabold text-nout-dark leading-tight">{profile.username}</h1>
                 {profile.is_creator && <CreatorBadge size="sm" />}
-                {listings.length >= GRO_STOCK_THRESHOLD && <StockBadge size="sm" />}
+                {hasGroStock(listings) && <StockBadge size="sm" />}
                 {isSellerActive && (
                   <span className="flex items-center gap-1 bg-emerald-500/20 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-300">
                     <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse inline-block" />
