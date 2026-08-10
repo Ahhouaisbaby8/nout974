@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import ShopPage, { LAYS, TONES, buildPalette, contrastRatio, isDarkColor } from '../ShopPage'
 import { useAuth } from '../../context/AuthContext'
+import { DEFAULT_LAYOUT, sanitizeLayout, stripBlockImages, newBlock, BLOCK_KINDS,
+         MAX_BLOCS, MAX_TITRE, MAX_TEXTE, MAX_PHOTOS_BLOC, hasContacts, claimIssue } from './ShopBlocks'
 import { createShop, updateShop, publishShop, getMyShop, SHOPS_TABLE_MISSING } from '../../services/shops'
 import {
   THEMES, themeById, FONTS, FONT_CONTEXTS, SECTORS, SECS_MAIN, SECTOR_LABEL, familyOf,
@@ -28,13 +30,7 @@ const GEN_TASKS = [
 ]
 const NAME_IDEAS = ['Vanille Bleue', 'Kaz Soleil', 'Péi Style', 'Fler de Sel']
 const DRAFT_KEY = 'nout-pro-brouillon'
-// sections de contenu livrées par défaut (ordre, affichage, avant/après la grille)
-const DEFAULT_BLOCKS = [
-  { id: 'bs', label: 'Nos best-sellers', on: true, pos: 'before' },
-  { id: 'reviews', label: 'Avis clients', on: true, pos: 'after' },
-  { id: 'about', label: "L'atelier / L'équipe", on: true, pos: 'after' },
-  { id: 'how', label: 'Comment ça marche', on: true, pos: 'after' },
-]
+
 
 // Extraction de la couleur dominante d'un logo (lecture réelle des pixels — pas d'API)
 function extractAccent(img) {
@@ -82,7 +78,7 @@ export default function ShopWizard() {
   const fileRef = useRef(null)
   // Personnalisation avancée : textes réécrits, ordre des sections, visuels choisis
   const [texts, setTexts] = useState({})
-  const [layout, setLayout] = useState(DEFAULT_BLOCKS)
+  const [layout, setLayout] = useState(DEFAULT_LAYOUT)
   const [heroIdx, setHeroIdx] = useState(0)
   const [heroCustom, setHeroCustom] = useState(null)
   const [aboutImage, setAboutImage] = useState(null)
@@ -125,7 +121,7 @@ export default function ShopWizard() {
     setPhrase(d.phrase || '')
     setProducts(Array.isArray(d.products) ? d.products : [])
     setTexts(d.texts || {})
-    setLayout(Array.isArray(d.layout) && d.layout.length ? d.layout : DEFAULT_BLOCKS)
+    setLayout(sanitizeLayout(d.layout))
     setHeroIdx(typeof d.heroIdx === 'number' ? d.heroIdx : 0)
     setHeroCustom(d.heroCustom ?? null)
     setAboutImage(d.aboutImage ?? null)
@@ -186,7 +182,7 @@ export default function ShopWizard() {
         if (d.phrase) setPhrase(d.phrase)
         if (Array.isArray(d.products)) setProducts(d.products)
         if (d.texts) setTexts(d.texts)
-        if (Array.isArray(d.layout) && d.layout.length) setLayout(d.layout)
+        if (Array.isArray(d.layout) && d.layout.length) setLayout(sanitizeLayout(d.layout))
         if (typeof d.heroIdx === 'number') setHeroIdx(d.heroIdx)
         if (d.heroCustom) setHeroCustom(d.heroCustom)
         if (d.aboutImage) setAboutImage(d.aboutImage)
@@ -229,10 +225,10 @@ export default function ShopWizard() {
     if (!name.trim() && !products.length) return
     const base = {
       name, sector, sectorTouched, themeId: theme?.id, accent, accCustom, fontKey, phrase,
-      texts, layout, heroIdx, heroLay, accent2, bgTone, bgColor, textColor, surfaceColor,
-      rayonsCustom, linksCustom, step,
+      texts, layout: stripBlockImages(layout), heroIdx, heroLay, accent2, bgTone,
+      bgColor, textColor, surfaceColor, rayonsCustom, linksCustom, step,
     }
-    const full = { ...base, logo, products, heroCustom, aboutImage }
+    const full = { ...base, layout, logo, products, heroCustom, aboutImage }
 
     // Historique : on empile l'état PRÉCÉDENT dès qu'il change vraiment. Les
     // restaurations (annuler/rétablir) ne créent pas de nouvelle entrée.
@@ -253,7 +249,9 @@ export default function ShopWizard() {
         h.futur.length = 0
         setHistTick((t) => t + 1)
       }
-      h.dernier = full
+      // l'historique ne retient PAS les photos des blocs : 60 pas x plusieurs
+      // centaines de Ko de base64 tueraient l'onglet sur téléphone
+      h.dernier = { ...full, layout: stripBlockImages(layout) }
       h.sig = sig
     }
 
@@ -839,7 +837,7 @@ function ProductsStep({ products, setProducts, sector, contact, rayons, onBack, 
 // Tout tape dans le même état que l'aperçu à droite → chaque changement est visible
 // immédiatement. Aucune base touchée : la sauvegarde viendra avec la table `shops`.
 
-const TABS = [['textes', 'Textes'], ['images', 'Images'], ['sections', 'Sections'], ['style', 'Style']]
+const TABS = [['textes', 'Textes'], ['images', 'Images'], ['sections', 'Blocs'], ['style', 'Style']]
 
 // Mises en page d'accueil : où se place la grande image
 const HERO_LAYS = [
@@ -1045,7 +1043,9 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
     const tmp = next[i]; next[i] = next[j]; next[j] = tmp
     setLayout(next)
   }
-  const toggle = (i) => setLayout(layout.map((b, k) => (k === i ? { ...b, on: !b.on } : b)))
+  const toggle = (i) => setLayout(layout.map((b, k) => (k === i && !b.locked ? { ...b, on: !b.on } : b)))
+  const [edit, setEdit] = useState(null)          // index du bloc libre en cours d'édition
+  const nLibres = layout.filter((b) => b.kind).length
 
   const recoFonts = FONT_CONTEXTS[sec] || FONT_CONTEXTS.Autre
   const fontList = allFonts ? Object.keys(FONTS) : [...new Set([...recoFonts, fontKey])]
@@ -1175,32 +1175,71 @@ function PersoStep({ shop, sector, accent, setAccent, fontKey, setFontKey, theme
       {/* ── SECTIONS ── */}
       {tab === 'sections' && (
         <div>
-          <Lab hint="Monte, descends ou masque tes blocs. La grille de produits reste au centre.">Ordre de la page</Lab>
+          <Lab hint="Monte, descends, masque. La grille de tes produits reste au centre.">Ordre de la page</Lab>
           <div className="flex flex-col">
             {layout.map((b, i) => (
-              <div key={b.id}>
+              <div key={b.uid || b.id}>
                 {i === gridAt && <GridDivider />}
-                <div className={`flex items-center gap-2 border rounded-xl px-3 py-2.5 mb-1.5 ${b.on ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50'}`}>
-                  <div className="flex flex-col gap-0.5 flex-shrink-0">
-                    <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => move(i, -1)}
-                            className="w-6 h-5 rounded border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
-                    </button>
-                    <button type="button" aria-label="Descendre" disabled={i === layout.length - 1} onClick={() => move(i, 1)}
-                            className="w-6 h-5 rounded border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                    </button>
+                <div className={`border rounded-xl mb-1.5 ${edit === i ? 'border-nout-turquoise ring-2 ring-nout-turquoise/20' : b.on ? 'border-gray-200' : 'border-gray-100 bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    <div className="flex flex-col gap-0.5 flex-shrink-0">
+                      <button type="button" aria-label="Monter" disabled={i === 0} onClick={() => move(i, -1)}
+                              className="w-6 h-5 rounded border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+                      </button>
+                      <button type="button" aria-label="Descendre" disabled={i === layout.length - 1} onClick={() => move(i, 1)}
+                              className="w-6 h-5 rounded border border-gray-200 text-gray-500 disabled:opacity-30 flex items-center justify-center">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                      </button>
+                    </div>
+                    <span className={`flex-1 min-w-0 text-[13px] font-semibold truncate ${b.on ? 'text-nout-texte' : 'text-gray-400'}`}>
+                      {b.kind ? (b.title || BLOCK_KINDS.find((k) => k.kind === b.kind)?.label) : b.label}
+                      {b.kind && <span className="font-normal text-gray-400"> · mon bloc</span>}
+                    </span>
+                    {b.kind && (
+                      <button type="button" onClick={() => setEdit(edit === i ? null : i)}
+                              className="text-[12px] font-semibold text-nout-turquoise flex-shrink-0">
+                        {edit === i ? 'Fermer' : 'Modifier'}
+                      </button>
+                    )}
+                    {b.locked ? (
+                      <span className="text-[11.5px] text-gray-400 flex-shrink-0">Toujours affiché</span>
+                    ) : (
+                      <button type="button" onClick={() => toggle(i)}
+                              className={`text-[12px] font-semibold px-2.5 py-1 rounded-full border flex-shrink-0
+                                ${b.on ? 'border-[#0E8C82] text-[#0B716A] bg-[#EAF5F3]' : 'border-gray-200 text-gray-400'}`}>
+                        {b.on ? 'Affiché' : 'Masqué'}
+                      </button>
+                    )}
                   </div>
-                  <span className={`flex-1 text-[13px] font-semibold ${b.on ? 'text-nout-texte' : 'text-gray-400'}`}>{b.label}</span>
-                  <button type="button" onClick={() => toggle(i)}
-                          className={`text-[12px] font-semibold px-2.5 py-1 rounded-full border
-                            ${b.on ? 'border-[#0E8C82] text-[#0B716A] bg-[#EAF5F3]' : 'border-gray-200 text-gray-400'}`}>
-                    {b.on ? 'Affiché' : 'Masqué'}
-                  </button>
+                  {b.kind && edit === i && (
+                    <BlockEditor b={b} sector={sector}
+                                 onChange={(patch) => setLayout(layout.map((x, k) => (k === i ? { ...x, ...patch } : x)))}
+                                 onDelete={() => { setLayout(layout.filter((_, k) => k !== i)); setEdit(null) }} />
+                  )}
                 </div>
               </div>
             ))}
             {gridAt === layout.length && <GridDivider />}
+          </div>
+
+          {/* ajouter un bloc à soi */}
+          <div className="mt-2">
+            {nLibres < MAX_BLOCS ? (
+              <div className="flex gap-1.5 flex-wrap">
+                {BLOCK_KINDS.map((k) => (
+                  <button key={k.kind} type="button" title={k.hint}
+                          onClick={() => { setLayout([...layout, newBlock(k.kind)]); setEdit(layout.length) }}
+                          className="text-[12.5px] font-semibold text-nout-turquoise border border-gray-200 hover:border-nout-turquoise rounded-full px-3 py-1.5">
+                    + {k.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px] text-gray-400">
+                {MAX_BLOCS} blocs, c'est le maximum : au-delà, une page devient longue et personne ne la lit jusqu'au bout.
+              </p>
+            )}
           </div>
           <Row>
             <Lab hint="Les onglets qui rangent tes produits, sous l'accueil">Le menu de ta boutique</Lab>
@@ -1522,6 +1561,136 @@ function ListEditor({ items, onChange, placeholder, addLabel, max = 8, onReset, 
             {resetLabel}
           </button>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ─── L'éditeur d'un bloc à soi ──────────────────────────────────────────────────────
+// Volontairement pauvre en réglages : un bloc ne porte ni couleur, ni fond, ni police,
+// ni lien. Tout hérite de la palette de la boutique — c'est ce qui garantit qu'un bloc
+// reste lisible sur n'importe quel fond, y compris sombre, sans que le vendeur y pense.
+function BlockEditor({ b, sector, onChange, onDelete }) {
+  const fileRef = useRef(null)
+  const sec = sector || 'Autre'
+  const alerteContact = hasContacts(b.title) || hasContacts(b.text)
+  const alerteClaim = claimIssue(b.title) || claimIssue(b.text)
+
+  const lire = (file, cb) => readImage(file, cb)
+  const addImgs = (files) => Array.from(files || []).slice(0, MAX_PHOTOS_BLOC).forEach((f) =>
+    lire(f, (src) => onChange({ imgs: [...(b.imgs || []), src].slice(0, MAX_PHOTOS_BLOC) })))
+
+  return (
+    <div className="border-t border-gray-100 p-3 flex flex-col gap-2">
+      <input className="input-field !py-2 !text-[13px]" placeholder="Titre du bloc (facultatif)"
+             maxLength={MAX_TITRE} value={b.title} onChange={(e) => onChange({ title: e.target.value })} />
+
+      {b.kind !== 'photos' && (
+        <textarea className="input-field resize-none min-h-[76px] !text-[13px]" maxLength={MAX_TEXTE}
+                  placeholder="Ton texte. Les retours à la ligne sont conservés."
+                  value={b.text} onChange={(e) => onChange({ text: e.target.value })} />
+      )}
+
+      {b.kind === 'texte' && (
+        <div className="flex gap-1.5">
+          {[['gauche', 'Aligné à gauche'], ['centre', 'Centré']].map(([k, l]) => (
+            <button key={k} type="button" onClick={() => onChange({ align: k })}
+                    className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border ${
+                      b.align === k ? 'border-nout-turquoise bg-[#EAF5F3] text-[#0B716A]' : 'border-gray-200 text-gray-500'}`}>{l}</button>
+          ))}
+        </div>
+      )}
+
+      {b.kind === 'photo-texte' && (
+        <>
+          <div className="flex gap-1.5 flex-wrap">
+            <span className="text-[11.5px] text-gray-400 self-center mr-1">Photo :</span>
+            {[['gauche', 'À gauche'], ['droite', 'À droite'], ['dessus', 'Au-dessus']].map(([k, l]) => (
+              <button key={k} type="button" onClick={() => onChange({ media: k })}
+                      className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border ${
+                        b.media === k ? 'border-nout-turquoise bg-[#EAF5F3] text-[#0B716A]' : 'border-gray-200 text-gray-500'}`}>{l}</button>
+            ))}
+          </div>
+          <div className="flex gap-1.5 flex-wrap items-center">
+            <span className="text-[11.5px] text-gray-400 mr-1">Taille :</span>
+            {[['petite', 'Petite'], ['moyenne', 'Moyenne'], ['grande', 'Grande']].map(([k, l]) => (
+              <button key={k} type="button" onClick={() => onChange({ size: k })}
+                      className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border ${
+                        b.size === k ? 'border-nout-turquoise bg-[#EAF5F3] text-[#0B716A]' : 'border-gray-200 text-gray-500'}`}>{l}</button>
+            ))}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                 onChange={(e) => { lire(e.target.files[0], (src) => onChange({ img: src })); e.target.value = '' }} />
+          <div className="flex gap-2 flex-wrap">
+            {Array.from({ length: 4 }, (_, i) => {
+              const src = stockImg(sec, i + 2)
+              return (
+                <button key={i} type="button" onClick={() => onChange({ img: src })}
+                        className={`w-14 h-14 rounded-lg overflow-hidden border-2 ${b.img === src ? 'border-nout-turquoise' : 'border-transparent'}`}>
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                </button>
+              )
+            })}
+            <button type="button" onClick={() => fileRef.current?.click()}
+                    className={`w-14 h-14 rounded-lg border-2 border-dashed text-[10.5px] font-semibold overflow-hidden ${
+                      b.img?.startsWith('data:') ? 'border-nout-turquoise' : 'border-gray-300 text-gray-400'}`}>
+              {b.img?.startsWith('data:') ? <img src={b.img} alt="" className="w-full h-full object-cover" /> : 'Ma photo'}
+            </button>
+            {b.img && <button type="button" onClick={() => onChange({ img: null })} className="text-[12px] font-semibold text-gray-400 self-center">Retirer</button>}
+          </div>
+        </>
+      )}
+
+      {b.kind === 'photos' && (
+        <>
+          <div className="flex gap-1.5 flex-wrap items-center">
+            <span className="text-[11.5px] text-gray-400 mr-1">Format :</span>
+            {[['portrait', 'Portrait'], ['carre', 'Carré'], ['paysage', 'Paysage']].map(([k, l]) => (
+              <button key={k} type="button" onClick={() => onChange({ format: k })}
+                      className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border ${
+                        b.format === k ? 'border-nout-turquoise bg-[#EAF5F3] text-[#0B716A]' : 'border-gray-200 text-gray-500'}`}>{l}</button>
+            ))}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+                 onChange={(e) => { addImgs(e.target.files); e.target.value = '' }} />
+          <div className="flex gap-1.5 flex-wrap">
+            {(b.imgs || []).map((src, k) => (
+              <span key={k} className="relative w-14 h-14 rounded-lg overflow-hidden group/bi">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button type="button" aria-label="Retirer la photo"
+                        onClick={() => onChange({ imgs: b.imgs.filter((_, j) => j !== k) })}
+                        className="absolute inset-0 bg-black/55 text-white text-xs opacity-0 group-hover/bi:opacity-100">×</button>
+              </span>
+            ))}
+            {(b.imgs || []).length < MAX_PHOTOS_BLOC && (
+              <>
+                <button type="button" onClick={() => onChange({ imgs: [...(b.imgs || []), stockImg(sec, (b.imgs || []).length + 3)] })}
+                        className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 text-[10.5px] font-semibold text-gray-400">Banque</button>
+                <button type="button" onClick={() => fileRef.current?.click()}
+                        className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 text-[10.5px] font-semibold text-gray-400">Mes photos</button>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {alerteContact && (
+        <p className="text-[12px] text-amber-800 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
+          Numéro, e-mail ou lien détecté : il sera masqué sur ta boutique. Les échanges passent par la
+          messagerie NOUT — c'est ce qui garde le paiement protégé, pour ton acheteur comme pour toi.
+        </p>
+      )}
+      {alerteClaim && (
+        <p className="text-[12px] text-amber-800 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
+          Ce texte reprend une promesse qui engage NOUT (paiement protégé, garanties, conditions de vente).
+          Ces mentions sont déjà affichées et tenues à jour ailleurs sur ta boutique : réécris-les ici et
+          elles risquent de se contredire le jour d'un litige.
+        </p>
+      )}
+
+      <div className="flex items-center gap-3">
+        <button type="button" onClick={onDelete} className="text-[12px] font-semibold text-red-600">Supprimer ce bloc</button>
+        <span className="text-[11.5px] text-gray-400">Les couleurs et la police suivent ta boutique.</span>
       </div>
     </div>
   )

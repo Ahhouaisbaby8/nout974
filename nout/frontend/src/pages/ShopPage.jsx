@@ -3,6 +3,7 @@ import { computeProtectionFee, computeBuyerTotal } from '../utils/shipping'
 import { formatPrice } from '../utils/formatters'
 import { FONTS, stockImg, heroImg } from './pro/proData'
 import { ProductView, CheckoutView, LegalView } from './pro/ShopViews'
+import { sanitizeLayout, FreeBlock } from './pro/ShopBlocks'
 
 // ─── NOUT Pro : BOUTIQUE à la marque du vendeur (storefront riche) ──────────────────
 // Présentationnel : reçoit `shop` (marque, accent_color, font_key, template_key, mode,
@@ -218,15 +219,19 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
       </div>
     ),
   }
-  const DEFAULT_LAYOUT = [
-    { id: 'bs', on: true, pos: 'before' },
-    { id: 'reviews', on: true, pos: 'after' },
-    { id: 'about', on: true, pos: 'after' },
-    { id: 'how', on: true, pos: 'after' },
-  ]
-  const blocks = (shop.layout || DEFAULT_LAYOUT)
-    .filter((b) => b.on && SECTION_NODES[b.id])
-    .map((b) => ({ pos: b.pos, node: SECTION_NODES[b.id] }))
+  // La mise en page mélange les sections NOUT (id) et les blocs libres du vendeur (kind).
+  // `sanitizeLayout` borne et caviarde AVANT rendu : `layout` arrive d'une colonne JSON
+  // que le propriétaire peut écrire directement, sans passer par l'éditeur.
+  const blockCtx = { mut, secTitle, styleLine, inner, wide }
+  const blocks = sanitizeLayout(shop.layout)
+    .filter((b) => b.on)
+    .map((b) => ({
+      pos: b.pos,
+      node: b.kind
+        ? <FreeBlock key={b.uid} b={b} ctx={blockCtx} />
+        : SECTION_NODES[b.id],
+    }))
+    .filter((b) => b.node)
 
   // ── Écrans internes (quand on navigue dans la boutique) ──
   if (view) {
