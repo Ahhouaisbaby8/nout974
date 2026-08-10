@@ -105,7 +105,7 @@ function orderAlert(o) {
     if (o.package_stage === 'at_relay') return { level: 'info', txt: 'à retirer au point relais' }
     if (o.package_stage === 'in_transit') return null   // en route = normal, pas d'alarme
     const days = o.shipped_at ? Math.floor((Date.now() - new Date(o.shipped_at).getTime()) / 86400000) : null
-    if (days != null && days >= 10) return { level: 'danger', txt: `colis non remis depuis ${days} j` }
+    if (days != null && days >= 14) return { level: 'danger', txt: `colis non remis depuis ${days} j` }
     if (days != null && days >= 5)  return { level: 'warn',   txt: `colis pas encore remis (${days} j)` }
     return { level: 'warn', txt: 'colis pas encore remis' }
   }
@@ -120,7 +120,7 @@ function orderAlert(o) {
 const WATCHED_CRONS = [
   { job: 'chronopost-tracking', label: 'Suivi Chronopost', desc: 'Vérifie si les colis Chronopost sont livrés' },
   { job: 'ubn-tracking',        label: 'Suivi UBN',        desc: 'Vérifie si les colis UBN sont livrés' },
-  { job: 'auto-refund',         label: 'Annulation & remboursement', desc: 'Rembourse l\'acheteur : 7 j si rien envoyé, 10 j si colis expédié mais jamais déposé' },
+  { job: 'auto-refund',         label: 'Annulation & remboursement', desc: 'Rembourse l\'acheteur : 7 j si rien envoyé, 14 j si colis expédié mais jamais déposé' },
   { job: 'cron-payouts',        label: 'Versement des vendeurs', desc: 'Verse les vendeurs 48h après livraison' },
 ]
 
@@ -360,14 +360,14 @@ export default function OrdersList() {
                   <div><span className="text-gray-400">N° suivi : </span>{inspect.commande.numero_suivi ?? '—'}</div>
                   <div><span className="text-gray-400">Expédié le : </span>{inspect.commande.expedie_le ? new Date(inspect.commande.expedie_le).toLocaleString('fr-FR') : '—'}</div>
                   <div><span className="text-gray-400">Livré le : </span>{inspect.commande.livre_le ? new Date(inspect.commande.livre_le).toLocaleString('fr-FR') : <span className="text-amber-600 font-semibold">non livré</span>}</div>
-                  {/* Temps écoulé depuis l'expédition + combien il reste avant remboursement auto (10 j). */}
+                  {/* Temps écoulé depuis l'expédition + combien il reste avant remboursement auto (14 j). */}
                   {inspect.commande.expedie_le && !inspect.commande.livre_le && (() => {
                     const j = Math.floor((Date.now() - new Date(inspect.commande.expedie_le).getTime()) / 86400000)
-                    const reste = 10 - j
+                    const reste = 14 - j
                     return (
                       <div className="sm:col-span-2">
                         <span className="text-gray-400">Depuis l'expédition : </span>
-                        <b className={j >= 10 ? 'text-red-600' : 'text-amber-600'}>{j} jour{j > 1 ? 's' : ''}</b>
+                        <b className={j >= 14 ? 'text-red-600' : 'text-amber-600'}>{j} jour{j > 1 ? 's' : ''}</b>
                         {reste > 0
                           ? <span className="text-gray-500"> — remboursement auto de l'acheteur dans {reste} jour{reste > 1 ? 's' : ''} si toujours pas livré</span>
                           : <span className="text-red-600 font-semibold"> — délai dépassé, remboursement au prochain passage</span>}

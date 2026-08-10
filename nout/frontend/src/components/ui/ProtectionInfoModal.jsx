@@ -42,7 +42,7 @@ export default function ProtectionInfoModal({ open, onClose }) {
               <p className="text-[15px] text-gray-500 leading-relaxed mb-2">Tu es remboursé automatiquement si&nbsp;:</p>
               <ul className="text-[15px] text-gray-500 leading-relaxed list-disc pl-5 space-y-0.5">
                 <li>le colis n'est jamais expédié (sous 7 jours)</li>
-                <li>le colis est expédié mais jamais pris en charge par le transporteur (sous 10 jours)</li>
+                <li>le colis est expédié mais jamais pris en charge par le transporteur (sous 14 jours)</li>
               </ul>
             </div>
           </div>

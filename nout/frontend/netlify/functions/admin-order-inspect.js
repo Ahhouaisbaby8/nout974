@@ -113,7 +113,7 @@ exports.handler = async (event) => {
       else if (order.package_stage === 'in_transit')
         flags.push('Colis EN ROUTE : pris en charge par le transporteur, en cours d\'acheminement (livraison non encore confirmée).')
       else
-        flags.push('Colis PAS ENCORE PRIS EN CHARGE par le transporteur (étiquette générée mais aucun scan) — colis peut-être jamais déposé. Remboursement auto au bout de 10 j.')
+        flags.push('Colis PAS ENCORE PRIS EN CHARGE par le transporteur (étiquette générée mais aucun scan) — colis peut-être jamais déposé. Remboursement auto au bout de 14 j.')
     }
     if (money.sellerTransferred && order.status !== 'completed' && order.status !== 'payout_pending')
       flags.push('⚠ ANORMAL : un transfert vendeur existe alors que la commande n\'est pas finalisée.')

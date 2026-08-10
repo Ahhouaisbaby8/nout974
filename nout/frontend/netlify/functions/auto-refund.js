@@ -389,9 +389,10 @@ exports.handler = async (event) => {
   // transporteur — c-à-d package_stage NULL ou 'not_handed'. Un colis 'in_transit' (en route) ou 'at_relay'
   // (dispo au point relais, l'acheteur doit juste le retirer) NE DOIT PAS être remboursé : le colis existe,
   // il arrive ou attend d'être retiré. Sans ce garde-fou, on remboursait un colis deja au relais → l'acheteur
-  // aurait l'article ET l'argent, le vendeur lese. 10 j = marge de scan pour le 1er evenement transporteur.
+  // aurait l'article ET l'argent, le vendeur lese. 14 j = marge de scan LARGE pour le 1er evenement
+  // transporteur (un vrai depot est scanne en 24-72h ; 14j sans AUCUN scan = jamais depose, quasi certain).
   let shipRefunded = 0
-  const SHIP_REFUND_DAYS = 10
+  const SHIP_REFUND_DAYS = 14
   const shipCutoff = new Date(Date.now() - SHIP_REFUND_DAYS * 24 * 60 * 60 * 1000).toISOString()
   const { data: staleShippedRaw, error: shippedErr } = await supabase
     .from('orders')
@@ -601,7 +602,7 @@ exports.handler = async (event) => {
          <p style="color:#1A1A2E;font-size:14px;line-height:1.6">
            Le système a remboursé automatiquement <strong>${totalRefunded} commande(s)</strong> aujourd'hui :
            <br>• ${refunded} pour « rien envoyé / remise non confirmée » (délai 7 j)
-           <br>• ${shipRefunded} pour « colis expédié mais jamais déposé » (délai 10 j)
+           <br>• ${shipRefunded} pour « colis expédié mais jamais déposé » (délai 14 j)
          </p>
          <p style="color:#6B7A99;font-size:13px">Les acheteurs concernés ont été prévenus par email. Rien à faire de ton côté — ceci est juste un suivi.</p>
        </div>`,
