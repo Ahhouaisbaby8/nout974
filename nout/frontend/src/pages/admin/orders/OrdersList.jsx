@@ -71,7 +71,7 @@ function delaiState(o) {
   if (o.status === 'shipped') {
     const etiq = fmtDate(o.shipped_at) ? `étiquette le ${fmtDate(o.shipped_at)}` : null
     if (o.package_stage === 'at_relay')
-      return { label: 'à retirer au relais', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', date: etiq }
+      return { label: 'au relais — attente retrait acheteur', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', date: etiq }
     if (o.package_stage === 'in_transit')
       return { label: 'en route', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', date: etiq }
     // Aucun scan transporteur (null ou not_handed) → là, vraiment « pas encore remis ».
@@ -102,7 +102,7 @@ function orderAlert(o) {
   //  - en route / au relais → PAS une alerte : le colis existe et avance (l'acheteur doit juste le retirer).
   //  - pas de scan (null / not_handed) → là seulement on alerte : l'étiquette est faite mais rien déposé.
   if (o.status === 'shipped' && !o.delivered_at) {
-    if (o.package_stage === 'at_relay') return { level: 'info', txt: 'à retirer au point relais' }
+    if (o.package_stage === 'at_relay') return { level: 'info', txt: 'au relais — attente retrait acheteur' }
     if (o.package_stage === 'in_transit') return null   // en route = normal, pas d'alarme
     const days = o.shipped_at ? Math.floor((Date.now() - new Date(o.shipped_at).getTime()) / 86400000) : null
     if (days != null && days >= 14) return { level: 'danger', txt: `colis non remis depuis ${days} j` }
