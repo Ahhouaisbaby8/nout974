@@ -6,6 +6,11 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const ALLOWED_ORIGIN = process.env.URL || 'https://nout.re'
 const SITE_URL        = process.env.URL || 'https://nout.re'
 
+// Échappe les données utilisateur avant de les injecter dans le HTML d'un email (anti-injection HTML).
+const escHtml = (s) => String(s ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+
 exports.handler = async (event) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
@@ -70,7 +75,7 @@ exports.handler = async (event) => {
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:auto">
             <h2 style="color:#0A0F2C">⚠️ Avertissement de l'équipe NOUT</h2>
-            <p>Bonjour <strong>${target.username}</strong>,</p>
+            <p>Bonjour <strong>${escHtml(target.username)}</strong>,</p>
             <p>Ton compte a reçu un <strong>avertissement</strong> suite à un signalement de la communauté NOUT 974.</p>
             <p>Nous te demandons de respecter les règles de la marketplace pour continuer à profiter du service. En cas de récidive, ton compte pourra être suspendu ou banni.</p>
             <p>Si tu penses qu'il s'agit d'une erreur, réponds à cet email.</p>
