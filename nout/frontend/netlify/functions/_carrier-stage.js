@@ -34,12 +34,22 @@ function chronoStage(code) {
 }
 
 // ── UBN — libellés de statut (rendus texte). On mappe par mots-clés (robuste aux variations). ──
+//
+// ⚠️ ORDRE CRUCIAL : on teste 'at_relay' AVANT 'delivered'. Piège réel constaté sur un vrai colis
+// (USR2026-5661017B-RE) : UBN écrit « Colis remis en point relais » quand le colis ARRIVE au relais
+// (pas encore retiré par l'acheteur !). Le mot « remis » ne doit donc PAS déclencher 'delivered' :
+// tant qu'on lit « relais / point relais / mise à disposition », c'est 'at_relay' (à retirer), pas livré.
+// 'delivered' n'est vrai que pour un RETRAIT/remise effectif SANS mention de relais (ex. « livraison
+// terminée », « colis retiré », « remis au destinataire »).
 function ubnStage(labels) {
   const txt = (Array.isArray(labels) ? labels.join(' ') : String(labels || '')).toLowerCase()
   if (!txt.trim()) return null
-  if (/livr|remis|retir|délivr|delivr/.test(txt)) return 'delivered'
-  if (/relais|point relais|disposition|à retirer|a retirer|consigne/.test(txt)) return 'at_relay'
-  if (/transit|achemin|pris en charge|collect|enlèv|enlev|en cours|expédi|expedi|tourn/.test(txt)) return 'in_transit'
+  // 1) AU RELAIS d'abord (prioritaire sur « remis ») : le colis est arrivé au point relais, à retirer.
+  if (/relais|point relais|mise a disposition|mise à disposition|disposition|à retirer|a retirer|consigne/.test(txt)) return 'at_relay'
+  // 2) LIVRÉ / RETIRÉ effectif (sans mention de relais, filtrée juste au-dessus).
+  if (/livr|retir|délivr|delivr|remis au|remis a|terminee|terminée/.test(txt)) return 'delivered'
+  // 3) EN ROUTE.
+  if (/transit|achemin|pris en charge|collect|enlèv|enlev|en cours|expédi|expedi|tri|centre|tourn/.test(txt)) return 'in_transit'
   return 'in_transit'
 }
 
