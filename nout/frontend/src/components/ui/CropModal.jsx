@@ -59,11 +59,11 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-4">
       {/* overflow-y-auto seul (pas overflow-hidden en même temps, qui se battaient sur l'axe Y) :
           garantit le scroll jusqu'aux boutons Annuler/Recadrer même si la modal dépasse le viewport
           (petit écran / paysage mobile). Le rounded-2xl reste net car le contenu ne déborde pas. */}
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-y-auto" style={{ maxHeight: '95dvh' }}>
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-y-auto" style={{ maxHeight: '92dvh', marginBottom: 'env(safe-area-inset-bottom)' }}>
 
         <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <h2 className="font-bold text-[#1A1A2E]">Recadrer la photo</h2>

@@ -79,7 +79,7 @@ export default function CategoryPicker({ category, subcategory, onSelect, placeh
 
       {open && (
         <div
-          className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center sm:p-4"
+          className="fixed inset-0 z-[200] bg-black/50 flex items-end sm:items-center justify-center sm:p-4"
           onClick={close}
         >
           <div
