@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { Shield, RefreshCcw, X } from 'lucide-react'
+import { Shield, RefreshCcw, Truck, X } from 'lucide-react'
 
 // Explication « Protection acheteur » (style Vinted) — montre CE QUE C'EST, sans jamais afficher
 // la formule des frais (décision produit : on montre l'info, pas le calcul « 10 % + 0,25 € »).
@@ -39,12 +39,22 @@ export default function ProtectionInfoModal({ open, onClose }) {
             <RefreshCcw size={20} className="text-nout-turquoise flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-[15px] font-semibold text-nout-texte mb-1">Politique de remboursement</p>
-              <p className="text-[15px] text-gray-500 leading-relaxed mb-2">Tu peux obtenir un remboursement si ta commande&nbsp;:</p>
+              <p className="text-[15px] text-gray-500 leading-relaxed mb-2">Tu es remboursé automatiquement si&nbsp;:</p>
               <ul className="text-[15px] text-gray-500 leading-relaxed list-disc pl-5 space-y-0.5">
-                <li>n'est pas remise dans les 7 jours</li>
-                <li>n'est pas conforme à sa description</li>
-                <li>présente un problème non signalé</li>
+                <li>le colis n'est jamais expédié (sous 7 jours)</li>
+                <li>le colis est expédié mais jamais pris en charge par le transporteur (sous 10 jours)</li>
               </ul>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 mb-4">
+            <Truck size={20} className="text-nout-turquoise flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[15px] font-semibold text-nout-texte mb-1">Suivi de ton colis</p>
+              <p className="text-[15px] text-gray-500 leading-relaxed">
+                Tu vois toujours où en est ton colis&nbsp;: en route, à retirer au point relais, ou livré.
+                Après la livraison, tu disposes de 48h pour signaler un problème avant que le vendeur soit payé.
+              </p>
             </div>
           </div>
 
