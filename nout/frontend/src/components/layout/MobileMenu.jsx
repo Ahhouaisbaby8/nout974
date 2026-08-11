@@ -76,6 +76,16 @@ export default function MobileMenu({ open, onClose, isAdmin, isLoggedIn }) {
                 )}
               </Link>
             ))}
+            {/* Accès direct à SES boutiques (réservé aux connectés) — pendant mobile du lien profil desktop. */}
+            {isLoggedIn && (
+              <Link
+                to="/espace-pro"
+                onClick={onClose}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-[15px] font-medium text-nout-texte hover:bg-[#F1F7FA] transition-colors"
+              >
+                Mon espace pro
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 to="/admin"

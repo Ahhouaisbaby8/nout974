@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Heart, Bell, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet, Menu } from 'lucide-react'
+import { Heart, Bell, User, ShoppingBag, Package, Settings as SettingsIcon, LogOut, Wallet, Menu, Store } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useHeroOverlay } from '../../context/HeroContext'
 import { getUnreadCount, subscribeToNotifications } from '../../services/notifications'
@@ -54,6 +54,7 @@ export default function Header() {
     [
       { to: `/profil/${user?.id}`, icon: <User className={ICON} />, label: 'Ma vitrine' },
       { to: '/espace-vendeur',     icon: <Wallet className={ICON} />, label: 'Espace Vendeur' },
+      { to: '/espace-pro',         icon: <Store className={ICON} />, label: 'Espace pro' },
     ],
     [
       { to: '/favoris',              icon: <Heart className={ICON} />, label: 'Mes favoris' },
