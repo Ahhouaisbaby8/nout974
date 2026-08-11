@@ -34,6 +34,8 @@ export default function CGV() {
 
         <P><strong>Défaut d'expédition.</strong> Si le vendeur n'expédie pas l'article dans un délai de <strong>7 jours</strong> après le paiement, la commande est automatiquement annulée et l'acheteur est intégralement remboursé du prix de l'article et des frais de livraison.</P>
 
+        <P><strong>Colis non pris en charge par le transporteur.</strong> Lorsqu'un bordereau d'expédition a été généré mais que le transporteur n'a enregistré aucune prise en charge du colis dans un délai de <strong>14 jours</strong>, la commande est considérée comme non honorée : elle est automatiquement annulée et l'acheteur est intégralement remboursé du prix de l'article et des frais de livraison. Un colis effectivement pris en charge, en cours d'acheminement ou mis à disposition en point relais n'est pas concerné par cette annulation.</P>
+
         <P><strong>Délais de versement.</strong> Une fois le versement déclenché, les fonds sont crédités sur le porte-monnaie du vendeur puis virés sur son compte bancaire selon les délais de notre prestataire de paiement (généralement quelques jours ouvrés).</P>
 
         <P>NOUT décline toute responsabilité en cas de litige concernant la remise de l'article, mais met à disposition un service de médiation (voir article 7).</P>
