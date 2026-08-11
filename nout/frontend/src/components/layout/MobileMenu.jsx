@@ -76,14 +76,16 @@ export default function MobileMenu({ open, onClose, isAdmin, isLoggedIn }) {
                 )}
               </Link>
             ))}
-            {/* Accès direct à SES boutiques (réservé aux connectés) — pendant mobile du lien profil desktop. */}
+            {/* Accès direct à SES boutiques (réservé aux connectés) — pendant mobile du lien profil desktop.
+                Repris de l'identité « NOUT Pro » : turquoise + badge, pour l'harmonie visuelle. */}
             {isLoggedIn && (
               <Link
                 to="/espace-pro"
                 onClick={onClose}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl text-[15px] font-medium text-nout-texte hover:bg-[#F1F7FA] transition-colors"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-[15px] font-semibold text-nout-turquoise hover:bg-[#F1F7FA] transition-colors"
               >
                 Mon espace pro
+                <span className="text-[9.5px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#EAF5F3]">Pro</span>
               </Link>
             )}
             {isAdmin && (

@@ -54,7 +54,7 @@ export default function Header() {
     [
       { to: `/profil/${user?.id}`, icon: <User className={ICON} />, label: 'Ma vitrine' },
       { to: '/espace-vendeur',     icon: <Wallet className={ICON} />, label: 'Espace Vendeur' },
-      { to: '/espace-pro',         icon: <Store className={ICON} />, label: 'Espace pro' },
+      { to: '/espace-pro',         icon: <Store className={ICON} />, label: 'Espace pro', pro: true },
     ],
     [
       { to: '/favoris',              icon: <Heart className={ICON} />, label: 'Mes favoris' },
@@ -228,15 +228,23 @@ export default function Header() {
                     {/* Liens navigation groupés */}
                     {menuGroups.map((group, gi) => (
                       <div key={gi} className={gi > 0 ? 'border-t border-[#F0F4F8] my-1 pt-1' : ''}>
-                        {group.map(({ to, icon, label }) => (
+                        {group.map(({ to, icon, label, pro }) => (
                           <Link
                             key={to}
                             to={to}
                             onClick={() => setMenuOpen(false)}
-                            className="group flex items-center gap-3 px-4 py-2.5 text-sm text-[#1A1A2E] hover:bg-[#F8FAFF] transition-colors"
+                            className={`group flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#F8FAFF] transition-colors ${
+                              pro ? 'font-semibold text-nout-turquoise' : 'text-[#1A1A2E]'
+                            }`}
                           >
-                            <span className="flex-shrink-0 transition-colors group-hover:[&>svg]:text-[#00C4B4]">{icon}</span>
+                            {/* Espace pro repris de l'identité « NOUT Pro » de la navbar : icône + texte turquoise + badge */}
+                            <span className={`flex-shrink-0 transition-colors ${pro ? '[&>svg]:!text-nout-turquoise' : 'group-hover:[&>svg]:text-[#00C4B4]'}`}>{icon}</span>
                             {label}
+                            {pro && (
+                              <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#EAF5F3] text-nout-turquoise">
+                                Pro
+                              </span>
+                            )}
                           </Link>
                         ))}
                       </div>
