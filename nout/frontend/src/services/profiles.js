@@ -27,6 +27,17 @@ export const getPublicProfile = async (userId) => {
   return { ...data, has_phone: false }
 }
 
+// Nombre de membres fondateurs déjà attribués (pour le décompte « il reste X places sur 50 »).
+// Compte les profils is_founder=true. Lecture publique (colonne non sensible). 0 en cas d'erreur.
+export const getFounderCount = async () => {
+  const { count, error } = await supabase
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_founder', true)
+  if (error) return 0
+  return count ?? 0
+}
+
 // Liste les créateurs péi (pour la page vitrine « Nos créateurs »).
 // Champs publics uniquement, triés du plus récent au plus ancien.
 export const getCreators = async (limit = 60) => {

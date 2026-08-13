@@ -305,18 +305,30 @@ export default function Settings() {
             </label>
 
             {isCreator && (
-              <div className="mt-3">
-                <label className="block text-[12px] font-medium text-nout-dark mb-1">
-                  Ton activité <span className="text-gray-400 font-normal">(optionnel)</span>
-                </label>
-                <input
-                  type="text"
-                  maxLength={80}
-                  placeholder="Ex : Bijoux en graines péi, couture créole…"
-                  value={creatorCraft}
-                  onChange={(e) => setCreatorCraft(e.target.value)}
-                  className="input-field"
-                />
+              <div className="mt-3 space-y-3">
+                {/* Avertissement / prérequis pour le badge — cadre le statut (pas juste déclaratif). */}
+                <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-3">
+                  <p className="text-[12px] font-semibold text-[#B45309] mb-1.5">À lire avant de valider</p>
+                  <ul className="text-[11.5px] text-[#8a6a1f] leading-relaxed space-y-1 list-disc pl-4">
+                    <li>Tu dois <strong>fabriquer toi-même</strong> tes articles (fait main, création originale).</li>
+                    <li>Fabrication <strong>à La Réunion (974)</strong>.</li>
+                    <li>Pas de <strong>revente</strong> d'articles achetés ailleurs sous ce badge.</li>
+                  </ul>
+                  <p className="text-[11px] text-[#8a6a1f] mt-2">Tout abus entraîne le retrait du badge « Créateur péi ».</p>
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-nout-dark mb-1">
+                    Ton activité <span className="text-gray-400 font-normal">(optionnel)</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={80}
+                    placeholder="Ex : Bijoux en graines péi, couture créole…"
+                    value={creatorCraft}
+                    onChange={(e) => setCreatorCraft(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
               </div>
             )}
           </div>
