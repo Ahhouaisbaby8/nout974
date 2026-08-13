@@ -68,12 +68,12 @@ export default function OrderToast() {
   if (!user || !toasts.length) return null
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+    <div className="fixed bottom-24 right-4 left-4 sm:left-auto sm:right-6 z-50 flex flex-col gap-2 pointer-events-none items-end">
       {toasts.map(toast => (
         <div
           key={toast.id}
           onClick={() => navigate(toast.url)}
-          className="pointer-events-auto w-[300px] bg-white rounded-xl shadow-lg flex items-center gap-3 cursor-pointer"
+          className="pointer-events-auto w-full max-w-[300px] bg-white rounded-xl shadow-lg flex items-center gap-3 cursor-pointer"
           style={{
             borderLeft: '3px solid #1A3A8F',
             padding: '12px 16px',
