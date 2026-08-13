@@ -834,8 +834,13 @@ export default function ListingDetail() {
               particuliers. Le droit de rétractation (art.&nbsp;L221-18) et la garantie légale de conformité
               (art.&nbsp;L217-4 et suivants du Code de la consommation) ne s'appliquent pas à cette transaction.
               En revanche, la garantie des défauts cachés de la chose vendue (art.&nbsp;1641 et suivants du Code
-              civil) s'applique. Les achats réalisés via le bouton «&nbsp;Acheter&nbsp;» sont couverts par notre{' '}
-              <Link to="/legal/cgv" className="underline hover:text-gray-600">Protection acheteurs</Link>.
+              civil) s'applique.{' '}
+              {isMiseEnRelation ? (
+                <>Pour cette annonce, NOUT met en relation l'acheteur et le vendeur mais ne gère pas le paiement en ligne&nbsp;: le paiement et la remise se font <strong>en direct entre les parties</strong>, hors plateforme. La Protection acheteurs NOUT ne s'y applique pas.</>
+              ) : (
+                <>Les achats réalisés via le bouton «&nbsp;Acheter&nbsp;» sont couverts par notre{' '}
+                <Link to="/legal/cgv" className="underline hover:text-gray-600">Protection acheteurs</Link>.</>
+              )}
             </p>
           </details>
 
