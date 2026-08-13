@@ -43,6 +43,14 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Coucher de soleil animé du hero : fait défiler le grand dégradé (background-size 500%)
+   d'un bord à l'autre puis revient — mouvement lent et hypnotique, en boucle. */
+@keyframes heroSunset {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 @keyframes palmSway {
   0%, 100% { transform: rotate(-2.5deg); }
   50%       { transform: rotate(2deg); }
@@ -119,6 +127,12 @@
     );
     background-size: 500% 500%;
     background-position: 0% 50%;
+    /* Coucher de soleil vivant : le dégradé défile lentement en boucle. */
+    animation: heroSunset 28s ease-in-out infinite;
+  }
+  /* Accessibilité : on fige le dégradé pour qui a désactivé les animations. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-sunset { animation: none; }
   }
 
   .palm-left  { transform-origin: bottom center; animation: palmSway  4.5s ease-in-out infinite; }
