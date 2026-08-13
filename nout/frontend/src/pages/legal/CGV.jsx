@@ -4,9 +4,13 @@ export default function CGV() {
   return (
     <LegalLayout title="Conditions Générales de Vente" lastUpdate="juin 2026">
 
-      <Section title="1. Objet">
-        <P>Les présentes Conditions Générales de Vente (CGV) s'appliquent à toutes les transactions réalisées via la plateforme NOUT entre utilisateurs particuliers (acheteur et vendeur).</P>
-        <P>NOUT agit en tant qu'intermédiaire technique et financier. La vente est conclue directement entre le vendeur et l'acheteur.</P>
+      <Section title="1. Objet et statut de NOUT">
+        <P>Les présentes Conditions Générales de Vente (CGV) s'appliquent à toutes les transactions réalisées via la plateforme NOUT entre utilisateurs (acheteur et vendeur).</P>
+        <P><strong>NOUT est une plateforme de mise en relation qui agit exclusivement en qualité d'intermédiaire technique et financier.</strong> NOUT n'est ni vendeur, ni acheteur, ni propriétaire, ni détenteur des articles proposés à la vente. Les annonces sont créées et publiées par les utilisateurs sous leur seule responsabilité.</P>
+        <P><strong>Le contrat de vente est conclu directement et exclusivement entre le vendeur et l'acheteur.</strong> NOUT n'est en aucun cas partie à ce contrat. NOUT ne fait que fournir un service technique (hébergement des annonces, mise en relation) et financier (paiement sécurisé, séquestre des fonds).</P>
+        <P>En conséquence, la <strong>garantie légale de conformité</strong> (articles L217-3 et suivants du Code de la consommation) et la <strong>garantie des vices cachés</strong> (articles 1641 et suivants du Code civil), ainsi que toute obligation relative à la description, la qualité, la conformité, la légalité et la remise de l'article, incombent <strong>exclusivement au vendeur</strong>. NOUT ne fournit aucune de ces garanties sur les articles.</P>
+        <P>Conformément à l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN), NOUT agit en qualité d'hébergeur des contenus publiés par les utilisateurs et n'est pas soumis à une obligation générale de surveillance de ces contenus. NOUT retire promptement tout contenu manifestement illicite qui lui est signalé.</P>
+        <P>La responsabilité de NOUT se limite à la bonne fourniture de ses services d'intermédiation et de paiement. NOUT met à disposition un service de médiation (article 7) et les garanties liées au paiement sécurisé (séquestre, protection acheteur), sans que cela ne fasse de NOUT une partie au contrat de vente.</P>
       </Section>
 
       <Section title="2. Prix et frais de protection acheteur">

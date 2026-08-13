@@ -49,9 +49,10 @@ export default function CGU() {
         ]} />
       </Section>
 
-      <Section title="6. Responsabilités">
-        <P>NOUT est une plateforme de mise en relation. NOUT ne garantit pas la qualité, la conformité ou la légalité des articles vendus. Les transactions sont conclues directement entre acheteur et vendeur.</P>
-        <P>Chaque utilisateur est seul responsable du contenu qu'il publie et des transactions qu'il effectue.</P>
+      <Section title="6. Statut de NOUT et responsabilités">
+        <P><strong>NOUT est une plateforme de mise en relation qui agit uniquement comme intermédiaire technique et financier.</strong> NOUT n'est ni vendeur, ni acheteur, ni propriétaire des articles proposés. Le contrat de vente est conclu directement et exclusivement entre l'acheteur et le vendeur ; NOUT n'y est pas partie.</P>
+        <P>NOUT ne garantit pas la qualité, la conformité, l'authenticité ou la légalité des articles vendus. La description des articles, leur conformité et les garanties légales (garantie de conformité, vices cachés) relèvent de la seule responsabilité du vendeur.</P>
+        <P>Chaque utilisateur est seul responsable du contenu qu'il publie et des transactions qu'il effectue. En tant qu'hébergeur au sens de la LCEN (loi du 21 juin 2004), NOUT n'exerce pas de surveillance générale a priori des annonces, mais retire promptement tout contenu manifestement illicite qui lui est signalé.</P>
       </Section>
 
       <Section title="7. Suspension et résiliation">
