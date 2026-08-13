@@ -125,7 +125,7 @@ export default function EditListing() {
     if (category !== 'beaute' && !condition) return setError("Précise l'état de l'article.")
     if (isClothing && !size)        return setError('Indique la taille.')
     if (!price || Number(price) < 0) return setError('Indique un prix valide.')
-    if (Number(price) > 50000)      return setError('Le prix maximum est 50 000 €.')
+    if (Number(price) > 500000)     return setError('Le prix maximum est 500 000 €.')
     if (!city)                      return setError('Choisis ta ville.')
 
     const finalBrand = brandSelect === '__autre__' ? brandCustom.trim() : brandSelect

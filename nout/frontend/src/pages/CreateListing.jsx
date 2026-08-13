@@ -237,7 +237,7 @@ export default function CreateListing() {
     if (isClothing && !size)        return failField('size', 'Indique la taille.')
     if (!price || Number(price) < 0) return failField('price', 'Indique un prix valide.')
     if (Number(price) > 0 && Number(price) < 1) return failField('price', 'Le prix minimum est 1 € (ou 0 € pour offrir l\'article).')
-    if (Number(price) > 50000)      return failField('price', 'Le prix maximum est 50 000 €.')
+    if (Number(price) > 500000)     return failField('price', 'Le prix maximum est 500 000 €.')
     if (!city)                      return failField('city', 'Choisis ta ville.')
     // Adresse de collecte obligatoire dès que l'article est livrable (transporteur → il faut savoir
     // où venir chercher le colis). Exclut véhicules (mise en relation) et dons à 0 € (main propre).
