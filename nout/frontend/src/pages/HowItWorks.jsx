@@ -89,7 +89,7 @@ export default function HowItWorks() {
     { title: 'Tu trouves l\'article qui te plaît', desc: 'Parcours les annonces et trouve la perle rare à La Réunion.' },
     { title: 'Tu paies en sécurité',              desc: 'Ton paiement est sécurisé et bloqué : le vendeur n\'est payé qu\'une fois l\'article remis.' },
     { title: 'Vous vous retrouvez',               desc: 'Le vendeur te contacte pour organiser la remise en main propre, ou expédie ton colis.' },
-    { title: 'Tu confirmes la réception',         desc: 'Tu donnes ton code de remise (ou tu cliques « J\'ai bien reçu »). Tant que tu n\'as rien reçu, ton argent reste protégé.' },
+    { title: 'Tu confirmes la réception',         desc: 'En main propre : tu donnes ton code à 6 chiffres au vendeur. En livraison : la réception est confirmée par le transporteur. Tant que tu n\'as rien reçu, ton argent reste protégé.' },
     { title: 'C\'est tout !',                     desc: 'L\'argent est alors libéré au vendeur. Transaction terminée, en toute confiance.' },
   ]
 
