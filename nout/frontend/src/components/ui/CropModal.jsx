@@ -10,13 +10,21 @@ async function getCroppedImg(imageSrc, pixelCrop) {
   })
   // Limite la résolution à 1200px pour éviter les crashes mémoire sur mobile (iOS/Android)
   const MAX_SIDE = 1200
-  const scale = Math.min(1, MAX_SIDE / pixelCrop.width, MAX_SIDE / pixelCrop.height)
-  const outW = Math.round(pixelCrop.width * scale)
-  const outH = Math.round(pixelCrop.height * scale)
+  // Garde : avec restrictPosition=false + dézoom, width/height pourraient être aberrants → on borne.
+  const cropW = Math.max(1, Math.abs(pixelCrop.width))
+  const cropH = Math.max(1, Math.abs(pixelCrop.height))
+  const scale = Math.min(1, MAX_SIDE / cropW, MAX_SIDE / cropH)
+  const outW = Math.round(cropW * scale)
+  const outH = Math.round(cropH * scale)
   const canvas = document.createElement('canvas')
   canvas.width  = outW
   canvas.height = outH
   const ctx = canvas.getContext('2d')
+  // Quand on dézoome pour faire tenir toute la photo (restrictPosition=false), la zone de recadrage
+  // peut dépasser l'image : on remplit d'abord le fond en BLANC (le JPEG n'a pas de transparence → sinon
+  // ces bords seraient noirs). L'article reste ainsi visible en entier sur un fond propre.
+  ctx.fillStyle = '#FFFFFF'
+  ctx.fillRect(0, 0, outW, outH)
   ctx.drawImage(
     image,
     pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
@@ -29,6 +37,11 @@ async function getCroppedImg(imageSrc, pixelCrop) {
     }, 'image/jpeg', 0.88)
   })
 }
+
+// Zoom minimum < 1 : permet de DÉZOOMER sous « l'image remplit le cadre » pour que la photo ENTIÈRE
+// tienne dans le format choisi (ex. une voiture horizontale en cadre carré). Avec restrictPosition={false},
+// l'espace autour est complété par du fond (bandes) — l'article reste visible en entier.
+const MIN_ZOOM = 0.4
 
 export default function CropModal({ imageSrc, onConfirm, onCancel }) {
   const [crop, setCrop]                       = useState({ x: 0, y: 0 })
@@ -77,6 +90,8 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
             crop={crop}
             zoom={zoom}
             aspect={aspect}
+            minZoom={MIN_ZOOM}
+            restrictPosition={false}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
@@ -111,7 +126,7 @@ export default function CropModal({ imageSrc, onConfirm, onCancel }) {
             <span className="text-xs text-gray-400">−</span>
             <input
               type="range"
-              min={1} max={3} step={0.01}
+              min={MIN_ZOOM} max={3} step={0.01}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
               className="flex-1 accent-[#00C4B4] h-1.5 cursor-pointer"

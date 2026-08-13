@@ -236,10 +236,10 @@ exports.handler = async (event) => {
     // par un insert brut, celui-ci est SERVEUR. Au-delà → remise/paiement en direct avec le vendeur.
     // Montant fixé par le user (21/07) : borne l'exposition NOUT par transaction, sans bloquer les ventes
     // légit haut de gamme. Le relever/baisser = 1 seule ligne ici.
-    const MAX_ONLINE_PAYMENT_EUR = 10000
+    const MAX_ONLINE_PAYMENT_EUR = 5000
     if (Number(prixArticle) > MAX_ONLINE_PAYMENT_EUR) {
       return { statusCode: 400, headers, body: JSON.stringify({
-        error: `Le paiement en ligne NOUT est plafonné à ${MAX_ONLINE_PAYMENT_EUR} €. Pour un montant supérieur, contacte le vendeur pour organiser la remise en direct.`,
+        error: `Le paiement en ligne NOUT est plafonné à ${MAX_ONLINE_PAYMENT_EUR} €. Au-delà, l'annonce est publiée à titre informatif : contacte le vendeur pour organiser la remise et le paiement en direct.`,
         code: 'amount_too_high',
       }) }
     }

@@ -296,6 +296,16 @@ export default function ListingDetail() {
   const category   = CATEGORIES.find(c => c.id === listing.category)
   const condition  = CONDITIONS.find(c => c.id === listing.condition)
 
+  // Plafond du paiement en ligne (aligné sur create-checkout-session.js). Au-delà, l'annonce reste
+  // visible AVEC son prix mais devient « à titre informatif » : pas d'achat en ligne, mise en relation
+  // avec le vendeur (comme les véhicules). Stripe bloque les gros montants → on ne propose pas l'achat.
+  const MAX_ONLINE_PAYMENT_EUR = 5000
+  const overOnlineCap = Number(listing.price) > MAX_ONLINE_PAYMENT_EUR
+  // « Mise en relation » = mode contact explicite, OU catégorie véhicule, OU montant au-dessus du plafond.
+  const isMiseEnRelation = listing.sale_mode === 'contact'
+    || isContactCategory(listing.category, listing.subcategory)
+    || overOnlineCap
+
   // Modèle protection acheteur : l'acheteur paie le prix + protection (10%+0,25€) + port.
   // Le vendeur, lui, reçoit le prix affiché en entier.
   const portFee        = getShippingFee(shipMethod)
@@ -638,11 +648,13 @@ export default function ListingDetail() {
               Cet article a déjà été vendu
             </div>
 
-          /* Boutons — MISE EN RELATION (véhicule : pas de paiement NOUT, remise/contact en direct) */
-          ) : (listing.sale_mode === 'contact' || isContactCategory(listing.category, listing.subcategory)) ? (
+          /* Boutons — MISE EN RELATION (véhicule OU montant > plafond : pas de paiement NOUT, remise/contact en direct) */
+          ) : isMiseEnRelation ? (
             <div className="flex flex-col gap-3 mt-2">
               <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl px-4 py-3">
-                <span className="font-semibold">Paiement et remise en direct avec le vendeur.</span> NOUT met en relation, mais ne gère pas le paiement en ligne pour cette annonce (véhicule).
+                <span className="font-semibold">Paiement et remise en direct avec le vendeur.</span> {overOnlineCap
+                  ? `NOUT met en relation, mais le paiement en ligne n'est pas disponible pour cette annonce (montant supérieur à ${MAX_ONLINE_PAYMENT_EUR.toLocaleString('fr-FR')} €). Cette annonce est publiée à titre informatif.`
+                  : 'NOUT met en relation, mais ne gère pas le paiement en ligne pour cette annonce (véhicule).'}
               </div>
               {user ? (
                 <button
