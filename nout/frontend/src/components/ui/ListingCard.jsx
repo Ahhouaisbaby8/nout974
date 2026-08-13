@@ -5,8 +5,12 @@ import { Heart, Shield, Camera, Info, X, Truck, RefreshCcw } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { addFavorite, removeFavorite } from '../../services/favorites'
 import { formatPrice, formatRelativeDate } from '../../utils/formatters'
-import { CATEGORIES, CONDITIONS } from '../../utils/categories'
+import { CATEGORIES, CONDITIONS, isContactCategory } from '../../utils/categories'
 import { computeProtectionFee, computeBuyerTotal, MIN_SHIPPING_FEE } from '../../utils/shipping'
+
+// Plafond du paiement en ligne (aligné sur create-checkout-session + ListingDetail). Au-delà,
+// l'annonce est « à titre informatif » : pas d'achat en ligne, donc PAS de protection ni de prix « incl. ».
+const MAX_ONLINE_PAYMENT_EUR = 5000
 import { thumbUrl } from '../../utils/image'
 
 import { FounderCardBadge } from './FounderBadge'
@@ -29,6 +33,11 @@ function ListingCard({ listing, isFavorited = false, isFounderSeller = false, fo
   // Modèle protection acheteur (façon Vinted) : le prix affiché est celui du vendeur, qu'il reçoit EN ENTIER.
   // À l'achat s'ajoute une protection acheteur (10% + 0,25€), + le port si livraison choisie.
   const protectionFee = computeProtectionFee(listing.price)
+  // Annonce « à titre informatif » (pas d'achat en ligne) : véhicule/contact OU montant > plafond.
+  // Dans ce cas on affiche le SEUL prix du vendeur, sans « protection incluse » (elle ne s'applique pas).
+  const isMiseEnRelation = listing.sale_mode === 'contact'
+    || isContactCategory(listing.category, listing.subcategory)
+    || Number(listing.price) > MAX_ONLINE_PAYMENT_EUR
 
   const openModal = (which) => (e) => {
     e.preventDefault()
@@ -140,16 +149,20 @@ function ListingCard({ listing, isFavorited = false, isFounderSeller = false, fo
         </p>
 
         {/* Total façon Vinted : ce que l'acheteur paie, protection incluse. PAS de port ici :
-            il n'est ajouté qu'au checkout, quand l'acheteur choisit son mode de livraison.
-            Le détail complet s'ouvre au clic sur le ⓘ. */}
-        <button
-          type="button"
-          onClick={openModal('price')}
-          className="flex items-center gap-0.5 text-[11px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
-        >
-          {formatPrice(computeBuyerTotal(listing.price, 'hand'))} · protection incluse
-          <Info size={10} className="ml-0.5" />
-        </button>
+            il n'est ajouté qu'au checkout. Masqué pour les annonces « à titre informatif »
+            (véhicule / montant > plafond) : pas d'achat en ligne → pas de protection à afficher. */}
+        {isMiseEnRelation ? (
+          <p className="text-[11px] text-nout-muted mt-0.5">Mise en relation · sans paiement en ligne</p>
+        ) : (
+          <button
+            type="button"
+            onClick={openModal('price')}
+            className="flex items-center gap-0.5 text-[11px] text-nout-muted mt-0.5 hover:text-nout-turquoise transition-colors"
+          >
+            {formatPrice(computeBuyerTotal(listing.price, 'hand'))} · protection incluse
+            <Info size={10} className="ml-0.5" />
+          </button>
+        )}
 
         <p className="text-[10px] text-nout-muted mt-1.5">
           {listing.city ? `${listing.city} · ` : ''}{formatRelativeDate(listing.created_at)}
