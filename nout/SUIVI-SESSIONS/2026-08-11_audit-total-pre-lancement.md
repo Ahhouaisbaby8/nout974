@@ -33,6 +33,11 @@
 - Fix accès Espace pro dans le menu (`d49bbda`) + style turquoise + badge Pro (`52b6408`).
 - Maquettes Espace pro premium explorées en local (artifacts, rien d'officiel) — direction « clair & aéré » Stripe/Linear + Centre de lancement + plateforme navigable complète.
 
+## 5. Fixes affichage + hero (fin de session)
+- **`30071a0`** — Mobile : toasts message/commande étaient en `w-[300px]` + `right-6` → débordaient sur petit écran (~320px). Passés en `w-full max-w-[300px]` avec marges left+right. (Amandine signale « souvent des bugs d'affichage mobile » → à continuer, elle enverra des captures des pages précises.)
+- **`3cfa338`** — 🐛 BUG hero repéré par Amandine : le dégradé « coucher de soleil » ne bougeait plus. `.hero-sunset` avait le décor (background-size 500%) mais la ligne `animation:` + les `@keyframes heroSunset` avaient disparu → dégradé figé. Remis l'animation (28s boucle) + keyframes + garde `prefers-reduced-motion`.
+- Marketing : **carrousel Insta d'intro NOUT** créé (artifact, 5 slides : accroche créole « pou nou » → problème (Vinted/FB) → solution 3 étapes → confiance/sécurité → appel 50 fondateurs) + légende + hashtags 974. Direction : sécurité + 974 + simplicité, ton créole péi.
+
 ## ⚠️ EN ATTENTE
 - Colis thomas (UBN, au relais) : ne PAS rembourser, Amandine voit le transporteur (le point relais n'a pas bipé le retrait). Un colis at_relay n'est jamais remboursé auto → en sécurité côté NOUT.
 - Délais/messages remboursement par transporteur (UBN 7j / Chronopost 14j) : validé, pas encore codé.
