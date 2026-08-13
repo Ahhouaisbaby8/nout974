@@ -5,14 +5,12 @@ import { CATEGORIES } from '../utils/categories'
 import { REUNION_CITIES_WITH_ALL } from '../utils/cities'
 import { getListings } from '../services/listings'
 import { getFavoriteIds } from '../services/favorites'
-import { getFounderCount } from '../services/profiles'
-import { FOUNDER_TOTAL } from '../components/ui/FounderBadge'
 import ListingCard from '../components/ui/ListingCard'
 import PriceRangeSection from '../components/PriceRangeSection'
 import CategoryMenu from '../components/CategoryMenu'
 import Spinner from '../components/ui/Spinner'
 import SkeletonCard from '../components/ui/SkeletonCard'
-import { Sparkles, PackageOpen, Crown } from 'lucide-react'
+import { Sparkles, PackageOpen } from 'lucide-react'
 import { useHeroRef } from '../context/HeroContext'
 
 // Exemples qui défilent lettre par lettre dans la barre de recherche
@@ -70,7 +68,6 @@ export default function Home() {
   const [loading,  setLoading]  = useState(true)
   const [favIds,   setFavIds]   = useState(new Set())
   const [typedHint, setTypedHint] = useState('')
-  const [founderTaken, setFounderTaken] = useState(null)   // nb de fondateurs déjà attribués (null = pas encore chargé)
 
   // Effet machine à écrire sur le placeholder (tant que le champ est vide)
   useEffect(() => {
@@ -120,10 +117,6 @@ export default function Home() {
     getFavoriteIds(user.id).then(setFavIds).catch(() => {})
   }, [user?.id])
 
-  // Décompte des membres fondateurs (nombre réel déjà attribué, lu en base).
-  useEffect(() => {
-    getFounderCount().then(setFounderTaken).catch(() => setFounderTaken(null))
-  }, [])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -265,33 +258,9 @@ export default function Home() {
             </button>
           </form>
 
-          {/* ── Membres Fondateurs : décompte des 50 places + prérequis ── */}
-          {founderTaken !== null && founderTaken < FOUNDER_TOTAL && (
-            <div className="hero-fade-up-2 mt-7 mx-auto max-w-md">
-              <div className="rounded-2xl bg-white/12 backdrop-blur-sm border border-white/25 px-5 py-4 text-left">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-9 h-9 rounded-xl bg-[#E0A83D] flex items-center justify-center flex-shrink-0">
-                    <Crown className="w-5 h-5 text-[#3a2a08]" />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold text-sm leading-tight">Membres fondateurs</p>
-                    <p className="text-white/80 text-[12px] leading-tight mt-0.5">
-                      Il reste <strong className="text-[#FFD874]">{FOUNDER_TOTAL - founderTaken}</strong> places sur {FOUNDER_TOTAL}
-                    </p>
-                  </div>
-                </div>
-                {/* Barre de progression des places prises */}
-                <div className="mt-3 h-1.5 rounded-full bg-white/15 overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#E0A83D] to-[#FFD874]"
-                       style={{ width: `${Math.round((founderTaken / FOUNDER_TOTAL) * 100)}%` }} />
-                </div>
-                {/* Prérequis pour décrocher le badge doré */}
-                <p className="text-white/70 text-[11.5px] leading-snug mt-3">
-                  Pour l'obtenir : crée ton compte, publie <strong className="text-white/90">5 annonces</strong> et réalise <strong className="text-white/90">au moins 1 vente ou achat</strong>. Le badge doré est à vie.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* ── Membres Fondateurs : décompte masqué sur l'accueil (à la demande).
+              Le système fondateurs (badges dorés, numéros) reste actif ailleurs.
+              Pour le réafficher : voir l'historique git (commit 81d1176). ── */}
 
         </div>
       </section>
