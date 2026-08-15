@@ -225,7 +225,7 @@ export default function Home() {
           </h1>
 
           <p className="hero-fade-up-1 text-[16px] text-white/75 mb-8 font-light">
-            La marketplace mode 100&nbsp;% réunionnaise, entre particuliers
+            La marketplace 100&nbsp;% réunionnaise, entre particuliers
           </p>
 
           {/* Barre de recherche pill */}
