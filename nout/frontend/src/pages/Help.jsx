@@ -82,6 +82,8 @@ function FaqItem({ q, a }) {
 export default function Help() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
+      <title>Aide & contact — NOUT, marketplace de La Réunion 974</title>
+      <meta name="description" content="Réponses aux questions sur l'achat, la vente, la livraison en point relais et le paiement sécurisé sur NOUT, la marketplace de La Réunion." />
 
       <div className="text-center mb-10">
         <div className="w-16 h-16 rounded-2xl bg-yellow-50 flex items-center justify-center mx-auto mb-4 text-yellow-400">

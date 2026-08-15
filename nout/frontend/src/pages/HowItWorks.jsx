@@ -135,6 +135,9 @@ export default function HowItWorks() {
 
   return (
     <>
+      <title>Comment ça marche — acheter et vendre sur NOUT (La Réunion 974)</title>
+      <meta name="description" content="Acheter et vendre d'occasion à La Réunion : paiement sécurisé, argent conservé jusqu'à réception, livraison en point relais dès 4 € ou remise en main propre." />
+
       {/* ── CSS animations injectées une fois ── */}
       <style>{`
         .hiw-fade { opacity: 0; transform: translateY(24px); transition: opacity 500ms ease, transform 500ms ease; }
