@@ -44,6 +44,10 @@ Amandine : « comment gérer si le point relais ne scanne pas le retrait ? ». R
 - **Vidéo post-it** : concept post-it (situation) → décolle → chute NOUT. Maquette interactive + **25 idées en 5 thèmes** (rupture/fin de mois/objets qui dorment/famille-cadeaux/rivaux Vinted-FB). Créole péi.
 - Voir aussi [[marketing_video_carrousels]].
 
+## 10. Bouton « Actualiser » admin — faux bug (`fe1ac61`)
+Amandine croyait que le bouton Actualiser (page Commandes admin) ne marchait pas. En fait il rechargeait bien — mais 0 nouvelle commande récente (dernière 28/07) → mêmes chiffres réaffichés + animation trop rapide à voir. Ajout retour visuel : anim maintenue min 500ms + message « ✓ À jour » 2s après rechargement.
+⚠️ **DÉSYNC 2 PC** : au push, Dawson avait déjà poussé (commits SEO `aa7d833` + retrait « mode » du hero `72f9560`). `git pull` fait (merge propre, pas de conflit). RAPPEL : toujours `git pull` avant de reprendre.
+
 ## ⏭️ RESTE (rappels)
 - Décision bouton acheteur « J'ai bien reçu » en livraison (§8).
 - SEO (dernier domaine de l'audit total, priorité de fin).
