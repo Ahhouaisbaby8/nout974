@@ -60,6 +60,7 @@ export default function ShopRoute() {
       listings={state.listings}
       wide={typeof window !== 'undefined' && window.innerWidth >= 900}
       browsable
+      standalone
     />
   )
 }

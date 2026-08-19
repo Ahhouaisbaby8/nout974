@@ -127,7 +127,10 @@ function SfCard({ l, i, pal, contact, accent, badge, sector, seed = 0, onOpen })
 // live étroit, aperçu plein écran) — les media queries regardent la fenêtre, pas le cadre.
 // `browsable` : autorise la navigation interne (fiche produit → commande, pages
 // légales). Désactivé dans les vignettes de la galerie, où la boutique est une image.
-export default function ShopPage({ shop, listings = [], isOwner = false, wide = false, browsable = false }) {
+// `standalone` : cette boutique EST la page (nout.re/<slug>). Sans ça, les 21 vignettes
+// de la galerie posaient chacune leur <title> et la dernière rendue écrasait celui de
+// la page — l'onglet affichait « Ti Piment TV — Liens » sur /boutique-templates.
+export default function ShopPage({ shop, listings = [], isOwner = false, wide = false, browsable = false, standalone = false }) {
   const accent = shop.accent_color || '#0E8C82'
   // couleur secondaire : badges, chiffres des étapes, bandeau de confiance. Par défaut =
   // la principale, pour qu'une boutique qui n'y touche pas reste cohérente.
@@ -251,7 +254,7 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
     // deux ambiances possibles : sombre (Bio) ou claire (Spot)
     return (
       <div className="min-h-[70vh]" style={bgStyle}>
-        <title>{`${shop.name} — Liens`}</title>
+        {standalone && <title>{`${shop.name} — Liens`}</title>}
         <div className="max-w-md mx-auto px-5 py-12 text-center">
           <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden ring-2" style={{ '--tw-ring-color': mut(20) }}>
             <img src={hImg} alt="" className="w-full h-full object-cover" />
@@ -298,8 +301,10 @@ export default function ShopPage({ shop, listings = [], isOwner = false, wide = 
 
   return (
     <div className="min-h-[70vh]" style={bgStyle}>
-      <title>{`${shop.name} — Boutique NOUT 974`}</title>
-      <meta name="description" content={shop.tagline || `La boutique ${shop.name} sur NOUT.`} />
+      {standalone && <>
+        <title>{`${shop.name} — Boutique NOUT 974`}</title>
+        <meta name="description" content={shop.tagline || `La boutique ${shop.name} sur NOUT.`} />
+      </>}
 
       {/* barre d'annonce (promesse escrow — pattern 14/19 des meilleurs sites) */}
       <div className="text-center text-[9.5px] font-bold uppercase tracking-wider py-1.5 px-3 text-white"
