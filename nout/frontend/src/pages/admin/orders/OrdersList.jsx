@@ -157,6 +157,7 @@ export default function OrdersList() {
   const [busy,    setBusy]    = useState(null)
   const [diag,    setDiag]    = useState(null)   // état factuel lu directement en base (fraîcheur)
   const [diagLoading, setDiagLoading] = useState(false)
+  const [justRefreshed, setJustRefreshed] = useState(false)   // affiche « ✓ À jour » un instant après un clic manuel
   const [inspectQ, setInspectQ] = useState('')   // enquête sur une commande précise (base + Stripe)
   const [inspect,  setInspect]  = useState(null)
   const [inspecting, setInspecting] = useState(false)
@@ -237,7 +238,18 @@ export default function OrdersList() {
   }, [filter])
 
   useEffect(() => { load() }, [load])
-  const runDiag = load   // le bouton « Rafraîchir » relance le même chargement complet
+
+  // Clic manuel sur « Actualiser » : recharge + retour visuel clair. Si les données arrivent très vite,
+  // on maintient l'animation un court instant pour qu'elle soit toujours perceptible, puis « ✓ À jour ».
+  const runDiag = async () => {
+    setJustRefreshed(false)
+    const started = Date.now()
+    await load()
+    const elapsed = Date.now() - started
+    if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed))
+    setJustRefreshed(true)
+    setTimeout(() => setJustRefreshed(false), 2200)
+  }
 
   // Résolution d'un litige (admin) : rembourse l'acheteur OU libère le paiement au vendeur.
   const resolve = async (orderId, action) => {
@@ -293,15 +305,23 @@ export default function OrdersList() {
                   : 'aucune'}
               </span>
             </div>
-            <button
-              onClick={runDiag}
-              disabled={diagLoading}
-              title="Recharge les commandes, les stats et la santé du système"
-              className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-nout-primary text-white text-sm font-semibold px-3.5 py-2 hover:opacity-90 disabled:opacity-60 transition-opacity"
-            >
-              <RefreshCw className={`w-4 h-4 ${diagLoading ? 'animate-spin' : ''}`} />
-              {diagLoading ? 'Actualisation…' : 'Actualiser'}
-            </button>
+            <div className="ml-auto flex items-center gap-2.5">
+              {justRefreshed && !diagLoading && (
+                <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold animate-fade-in">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  À jour
+                </span>
+              )}
+              <button
+                onClick={runDiag}
+                disabled={diagLoading}
+                title="Recharge les commandes, les stats et la santé du système"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-nout-primary text-white text-sm font-semibold px-3.5 py-2 hover:opacity-90 disabled:opacity-60 transition-opacity"
+              >
+                <RefreshCw className={`w-4 h-4 ${diagLoading ? 'animate-spin' : ''}`} />
+                {diagLoading ? 'Actualisation…' : 'Actualiser'}
+              </button>
+            </div>
           </>
         ) : (
           <span className="text-gray-400 text-xs">{diagLoading ? 'Lecture de la base…' : 'Diagnostic indisponible.'}</span>
