@@ -32,11 +32,20 @@ exports.handler = async (event) => {
     return { statusCode: 403, headers, body: JSON.stringify({ error: 'Accès réservé aux administrateurs.' }) }
   }
 
-  // Filtre : all (défaut) | active | inactive | sold
-  let filter = 'all'
-  try { filter = (JSON.parse(event.body || '{}').filter) || 'all' } catch { /* défaut */ }
+  // Corps : { filter } pour la liste, OU { id } pour le DÉTAIL d'une seule annonce (revue admin).
+  let filter = 'all', id = null
+  try { const b = JSON.parse(event.body || '{}'); filter = b.filter || 'all'; id = b.id || null } catch { /* défaut */ }
 
   try {
+    // ── DÉTAIL d'une annonce (page « Revue de l'annonce ») ──
+    if (id) {
+      const { data, error } = await supabase.from('listings')
+        .select('*, profiles(username, city)').eq('id', id).single()
+      if (error) throw new Error(error.message)
+      return { statusCode: 200, headers, body: JSON.stringify({ listing: data ?? null }) }
+    }
+
+    // ── LISTE ──
     let q = supabase.from('listings')
       .select('id, title, price, category, city, is_active, is_sold, created_at, images, profiles(username)')
       .order('created_at', { ascending: false })

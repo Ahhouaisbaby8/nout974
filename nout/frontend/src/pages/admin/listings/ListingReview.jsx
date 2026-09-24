@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../../services/supabase'
+import { adminAction } from '../../../lib/adminApi'
 import { formatPrice, formatRelativeDate } from '../../../utils/formatters'
 import { CATEGORIES, CONDITIONS } from '../../../utils/categories'
 
@@ -9,14 +10,30 @@ export default function ListingReview() {
   const navigate = useNavigate()
   const [listing, setListing] = useState(null)
 
-  useEffect(() => {
-    supabase.from('listings').select('*, profiles(username, city)').eq('id', id).single()
-      .then(({ data }) => setListing(data))
-  }, [id])
+  // Lecture VIA LE SERVEUR (service key) : une annonce désactivée d'un autre vendeur est
+  // masquée au navigateur par la RLS → la page restait bloquée sur « Chargement… ». Le serveur voit tout.
+  const load = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/.netlify/functions/admin-listings-diagnostic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify({ id }),
+    })
+    const data = await res.json()
+    if (res.ok) setListing(data.listing)
+  }
 
-  const update = async (updates) => {
-    await supabase.from('listings').update(updates).eq('id', id)
-    setListing(prev => ({ ...prev, ...updates }))
+  useEffect(() => { load() }, [id])
+
+  // Activer / désactiver via la fonction admin (le client n'a pas le droit de modifier une annonce
+  // directement — RLS/grants). On recharge ensuite pour refléter le vrai état en base.
+  const toggleActive = async () => {
+    try {
+      await adminAction(listing.is_active ? 'suspend_listing' : 'restore_listing', id)
+      await load()
+    } catch (err) {
+      alert(err.message)
+    }
   }
 
   if (!listing) return <p className="text-gray-400 text-sm">Chargement…</p>
@@ -52,7 +69,7 @@ export default function ListingReview() {
         )}
 
         <div className="flex gap-3 pt-2 border-t border-gray-100">
-          <button onClick={() => update({ is_active: !listing.is_active })}
+          <button onClick={toggleActive}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${listing.is_active ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}>
             {listing.is_active ? 'Désactiver' : 'Réactiver'}
           </button>
