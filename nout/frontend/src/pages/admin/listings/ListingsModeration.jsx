@@ -9,24 +9,32 @@ export default function ListingsModeration() {
   const [loading,  setLoading]  = useState(true)
   const [filter,   setFilter]   = useState('all')
 
-  useEffect(() => {
+  // Lecture VIA LE SERVEUR (service key) : la RLS des listings masque au navigateur les annonces
+  // désactivées d'un AUTRE vendeur → l'onglet « Inactives » restait vide. Le serveur voit tout.
+  const load = async () => {
     setLoading(true)
-    let q = supabase.from('listings')
-      .select('id, title, price, category, city, is_active, is_sold, created_at, images, profiles(username)')
-      .order('created_at', { ascending: false })
-      .limit(50)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/.netlify/functions/admin-listings-diagnostic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ filter }),
+      })
+      const data = await res.json()
+      setListings(res.ok ? (data.listings ?? []) : [])
+    } catch {
+      setListings([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    if (filter === 'active')   q = q.eq('is_active', true).eq('is_sold', false)
-    if (filter === 'inactive') q = q.eq('is_active', false)
-    if (filter === 'sold')     q = q.eq('is_sold', true)
-
-    q.then(({ data }) => setListings(data ?? [])).finally(() => setLoading(false))
-  }, [filter])
+  useEffect(() => { load() }, [filter])
 
   const toggle = async (id, newValue) => {
     try {
       await adminAction(newValue ? 'restore_listing' : 'suspend_listing', id)
-      setListings(prev => prev.map(l => l.id === id ? { ...l, is_active: newValue } : l))
+      load()   // recharge depuis le serveur → l'annonce bascule dans le bon onglet
     } catch (err) {
       alert(err.message)
     }
