@@ -23,6 +23,10 @@ const WORD_LIST = [
   'fdp', 'batard',
   // Insultes créoles réunionnaises
   'bardasse', 'kouyons',
+  // Arnaques : voyance / marabout (retour d'affection, désenvoûtement…)
+  'voyant', 'voyante', 'voyance', 'marabout', 'marabouts',
+  'medium', 'mediums', 'desenvoutement', 'envoutement',
+  'sorcellerie', 'sortilege', 'sortileges',
 ]
 
 // Phrases multi-mots — vérifiées par inclusion simple (normalisée)
@@ -45,6 +49,17 @@ const PHRASE_LIST = [
   'sale batard', 'sale batar',
   // Insultes créoles
   'va fout', 'fout moin la paix', 'ou pe ale fout',
+  // Arnaques voyance / marabout (phrases classiques)
+  'retour d affection', 'retour affectif', 'travaux occultes',
+  'rituel amour', 'rituel de retour', 'grand voyant',
+  'medium reconnu', 'don de voyance',
+  // Arnaques financières : prêt entre particuliers, placement, crypto douteux
+  'pret entre particulier', 'pret entre particuliers',
+  'offre de pret', 'offre pret', 'proposition de pret',
+  'pret d argent', 'pret rapide', 'pret sans frais',
+  'placement d argent', 'investissement garanti', 'rendement garanti',
+  'argent facile', 'gagner de l argent rapidement',
+  'multiplier votre argent', 'trading rentable',
 ]
 
 export function containsForbiddenWord(text) {
